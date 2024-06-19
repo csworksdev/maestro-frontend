@@ -1,0 +1,178 @@
+import React, { Fragment, useRef, useEffect, useState } from "react";
+import Card from "@/components/ui/Card";
+import Icon from "@/components/ui/Icon";
+import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
+import Table from "@/components/globals/table";
+import Loading from "@/components/Loading";
+import Dropdown from "@/components/ui/Dropdown";
+import Button from "@/components/ui/Button";
+import { Link, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { DeleteTrainer, getTrainerAll } from "@/axios/masterdata/trainer";
+
+const actions = [
+  // {
+  //   name: "view",
+  //   icon: "heroicons-outline:eye",
+  // },
+  {
+    name: "edit",
+    icon: "heroicons:pencil-square",
+  },
+  {
+    name: "delete",
+    icon: "heroicons-outline:trash",
+  },
+];
+
+const Trainer = () => {
+  const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadData = () => {
+    setIsLoading(true);
+    getTrainerAll()
+      .then((res) => {
+        setData(res.data.results);
+      })
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleDelete = (e) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        DeleteTrainer(e.trainer_id).then((res) => {
+          if (res.status) {
+            Swal.fire("Deleted!", "Your file has been deleted.", "success");
+            loadData();
+          }
+        });
+      }
+    });
+  };
+
+  const handleEdit = (e) => {
+    navigate("edit", {
+      state: {
+        isupdate: "true",
+        data: e,
+      },
+    });
+  };
+
+  const COLUMNS = [
+    {
+      Header: "Trainer",
+      accessor: "fullname",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Panggilan",
+      accessor: "nickname",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Jenis Kelamin",
+      accessor: "gender",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Registrasi",
+      accessor: "reg_date",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Bagi Hasil",
+      accessor: "precentage_fee",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "action",
+      accessor: "action",
+      Cell: (row) => {
+        return (
+          <div>
+            <Dropdown
+              classMenuItems="right-0 w-[140px] top-[110%]"
+              label={
+                <span className="text-xl text-center block w-full">
+                  <Icon icon="heroicons-outline:dots-vertical" />
+                </span>
+              }
+            >
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {actions.map((item, i) => (
+                  <Menu.Item key={i}>
+                    <div
+                      className={`
+                  
+                    ${
+                      item.name === "delete"
+                        ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
+                        : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
+                    }
+                     w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
+                     first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
+                      onClick={(e) =>
+                        item.name === "edit"
+                          ? handleEdit(row.row.original)
+                          : handleDelete(row.row.original)
+                      }
+                    >
+                      <span className="text-base">
+                        <Icon icon={item.icon} />
+                      </span>
+                      <span>{item.name}</span>
+                    </div>
+                  </Menu.Item>
+                ))}
+              </div>
+            </Dropdown>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 justify-end">
+      <Card title="Trainer">
+        <Button className="btn-primary ">
+          <Link to="add" isupdate="false">
+            Tambah
+          </Link>
+        </Button>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <Table listData={data} listColumn={COLUMNS} />
+        )}
+      </Card>
+    </div>
+  );
+};
+
+export default Trainer;
