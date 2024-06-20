@@ -14,7 +14,6 @@ import Select from "@/components/ui/Select";
 import Flatpickr from "react-flatpickr";
 import Loading from "@/components/Loading";
 import { DateTime } from "luxon";
-import OrderDetail from "@/pages/masterdata/orderDetail";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -150,95 +149,92 @@ const Edit = () => {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Select
-            name="product"
-            label="Produk"
-            placeholder="Pilih Produk"
-            register={register}
-            error={errors.title}
-            options={productOption}
-            defaultValue={isUpdate ? data.product : ""}
-            onChange={(e) => handleProductChange(e.target.value)}
-          />
-          <div>
-            <label className="form-label" htmlFor="order_date">
-              Tanggal Order
-            </label>
-            <Flatpickr
-              defaultValue={isUpdate ? data.order_date : ""}
-              name="order_date"
-              options={{
-                dateFormat: "Y-m-d",
-              }}
-              className="form-control py-2"
-              onChange={(date) => setValue("order_date", date[0])}
-            />
-            {errors.order_date && (
-              <p className="error-message">{errors.order_date.message}</p>
-            )}
-          </div>
-          <Textinput
-            name="promo"
-            label="Promo"
-            type="text"
-            placeholder="Masukan jumlah promo"
-            register={register}
-            error={errors.title}
-            defaultValue={isUpdate ? data.promo : ""}
-          />
-          <Textinput
-            name="price"
-            label="Harga"
-            type="text"
-            placeholder="Masukan harga"
-            register={register}
-            error={errors.title}
-            defaultValue={isUpdate ? data.price : ""}
-            disabled={true}
-            // isMask={true}
+    <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Select
+          name="product"
+          label="Produk"
+          placeholder="Pilih Produk"
+          register={register}
+          error={errors.title}
+          options={productOption}
+          defaultValue={isUpdate ? data.product : ""}
+          onChange={(e) => handleProductChange(e.target.value)}
+        />
+        <div>
+          <label className="form-label" htmlFor="order_date">
+            Tanggal Order
+          </label>
+          <Flatpickr
+            defaultValue={isUpdate ? data.order_date : ""}
+            name="order_date"
             options={{
-              numeral: true,
-              numeralDecimalScale: 1,
+              dateFormat: "Y-m-d",
             }}
+            className="form-control py-2"
+            onChange={(date) => setValue("order_date", date[0])}
           />
-          <Select
-            name="student"
-            label="Siswa"
-            placeholder="Pilih Siswa"
-            register={register}
-            error={errors.title}
-            options={studentOption}
-            defaultValue={isUpdate ? data.product : ""}
-            onChange={(e) => console.log(e.target.value)}
-          />
-          <Select
-            name="trainer"
-            label="Pelatih"
-            placeholder="Pilih pelatih"
-            register={register}
-            error={errors.title}
-            options={trainerOption}
-            defaultValue={isUpdate ? data.trainer : ""}
-          />
-          <div className="ltr:text-right rtl:text-left space-x-3">
-            <button
-              type="button"
-              className="btn text-center"
-              onClick={handleCancel}
-            >
-              Batal
-            </button>
-            <button type="submit" className="btn btn-dark text-center">
-              {isUpdate ? "Update" : "Add"} Order
-            </button>
-          </div>
-        </form>
-      </Card>
-      <OrderDetail />
-    </div>
+          {errors.order_date && (
+            <p className="error-message">{errors.order_date.message}</p>
+          )}
+        </div>
+        <Textinput
+          name="promo"
+          label="Promo"
+          type="text"
+          placeholder="Masukan jumlah promo"
+          register={register}
+          error={errors.title}
+          defaultValue={isUpdate ? data.promo : ""}
+        />
+        <Textinput
+          name="price"
+          label="Harga"
+          type="text"
+          placeholder="Masukan harga"
+          register={register}
+          error={errors.title}
+          defaultValue={isUpdate ? data.price : ""}
+          disabled={true}
+          // isMask={true}
+          options={{
+            numeral: true,
+            numeralDecimalScale: 1,
+          }}
+        />
+        <Select
+          name="student"
+          label="Siswa"
+          placeholder="Pilih Siswa"
+          register={register}
+          error={errors.title}
+          options={studentOption}
+          defaultValue={isUpdate ? data.product : ""}
+          onChange={(e) => console.log(e.target.value)}
+        />
+        <Select
+          name="trainer"
+          label="Pelatih"
+          placeholder="Pilih pelatih"
+          register={register}
+          error={errors.title}
+          options={trainerOption}
+          defaultValue={isUpdate ? data.trainer : ""}
+        />
+        <div className="ltr:text-right rtl:text-left space-x-3">
+          <button
+            type="button"
+            className="btn text-center"
+            onClick={handleCancel}
+          >
+            Batal
+          </button>
+          <button type="submit" className="btn btn-dark text-center">
+            {isUpdate ? "Update" : "Add"} Order
+          </button>
+        </div>
+      </form>
+    </Card>
   );
 };
 

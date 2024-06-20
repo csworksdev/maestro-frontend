@@ -34,7 +34,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const onSubmit = async (data) => {
     try {
-      // const response = await login(data);
+      const response = await login(data);
 
       // if (response.error) {
       //   throw new Error(response.error.message);
@@ -50,7 +50,8 @@ const LoginForm = () => {
 
       dispatch(setUser(data));
       navigate("/dashboard");
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("user", JSON.stringify("faketoken")); //fix fail refresh page
       toast.success("Login Successful");
     } catch (error) {
       toast.error(error.message);
