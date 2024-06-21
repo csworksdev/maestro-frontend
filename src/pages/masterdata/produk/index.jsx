@@ -35,7 +35,6 @@ const Produk = () => {
     getProdukAll()
       .then((res) => {
         setData(res.data.results);
-        console.log(res.data);
       })
       .finally(() => setIsLoading(false));
   };
@@ -108,7 +107,6 @@ const Produk = () => {
       accessor: "price",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
-        // return <span>{data => data["India's GDP* in crore"]}</span>;
       },
     },
     {
@@ -130,13 +128,13 @@ const Produk = () => {
                   <Menu.Item key={i}>
                     <div
                       className={`
-                  
+
                     ${
                       item.name === "delete"
                         ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
                         : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
                     }
-                     w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
+                     w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer
                      first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
                       onClick={(e) =>
                         item.name === "edit"

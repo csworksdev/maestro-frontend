@@ -14,7 +14,7 @@ import Select from "@/components/ui/Select";
 import Flatpickr from "react-flatpickr";
 import Loading from "@/components/Loading";
 import { DateTime } from "luxon";
-import OrderDetail from "@/pages/masterdata/orderDetail";
+import OrderDetail from "./orderDetail";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ const Edit = () => {
   const [productOption, setProductOption] = useState([]);
   const [studentOption, setStudentOption] = useState([]);
   const [trainerOption, setTrainerOption] = useState([]);
+  const [orderDetail, setOrderDetail] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -88,7 +89,7 @@ const Edit = () => {
 
   useEffect(() => {
     loadReference();
-  }, [loading]);
+  }, [loading, isUpdate]);
 
   const handleCancel = () => {
     navigate(-1);
@@ -143,6 +144,33 @@ const Edit = () => {
   const handleProductChange = (e) => {
     var findData = productData.find((item) => item.product_id === e);
     setValue("price", findData.price);
+    createDetail(findData);
+  };
+
+  const createDetail = (params) => {
+    setOrderDetail([]);
+    const { meetings } = params;
+    let temp = [];
+    let baseOrderDetail = {
+      order_id: data.order_id,
+      meetings: 1,
+      day: DateTime.now().toISO(),
+      time: DateTime.fromISO("17:00").toFormat("hh:mm"),
+      is_presence: false,
+    };
+
+    for (let index = 0; index < meetings; index++) {
+      if (index > 0) {
+        temp.push({
+          ...baseOrderDetail,
+          day: DateTime.fromISO(temp[index - 1].day)
+            .plus({ days: 7 })
+            .toISO(),
+          meetings: index,
+        });
+      } else temp.push({ ...baseOrderDetail, meetings: index });
+    }
+    setOrderDetail(temp);
   };
 
   if (loading) {
@@ -237,7 +265,7 @@ const Edit = () => {
           </div>
         </form>
       </Card>
-      <OrderDetail />
+      <OrderDetail params={orderDetail} />
     </div>
   );
 };
