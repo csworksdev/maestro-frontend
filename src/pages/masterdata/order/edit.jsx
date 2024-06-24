@@ -15,6 +15,7 @@ import Flatpickr from "react-flatpickr";
 import Loading from "@/components/Loading";
 import { DateTime } from "luxon";
 import OrderDetail from "./orderDetail";
+import { getKolamAll } from "@/axios/referensi/kolam";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Edit = () => {
   const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
   const [productData, setProductData] = useState([]);
+  const [kolamOption, setKolamOption] = useState([]);
   const [productOption, setProductOption] = useState([]);
   const [studentOption, setStudentOption] = useState([]);
   const [trainerOption, setTrainerOption] = useState([]);
@@ -57,11 +59,17 @@ const Edit = () => {
 
   const loadReference = async () => {
     try {
+      const kolamResponse = await getKolamAll();
       const productResponse = await getProdukAll();
       const studentResponse = await getSiswaAll();
       const trainerResponse = await getTrainerAll();
 
       setProductData(productResponse.data.results);
+      const kolamOption = kolamResponse.data.results.map((item) => ({
+        value: item.pool_id,
+        label: item.name,
+      }));
+
       const productOptions = productResponse.data.results.map((item) => ({
         value: item.product_id,
         label: item.name,
@@ -77,6 +85,7 @@ const Edit = () => {
         label: item.fullname,
       }));
 
+      setKolamOption(kolamOption);
       setProductOption(productOptions);
       setStudentOption(studentOptions);
       setTrainerOption(trainerOptions);
@@ -147,6 +156,12 @@ const Edit = () => {
     createDetail(findData);
   };
 
+  const handlePoolChange = (e) => {
+    // var findData = productData.find((item) => item.product_id === e);
+    // setValue("price", findData.price);
+    // createDetail(findData);
+  };
+
   const createDetail = (params) => {
     setOrderDetail([]);
     const { meetings } = params;
@@ -181,6 +196,16 @@ const Edit = () => {
     <div className="flex flex-col gap-5">
       <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Select
+            name="pool"
+            label="Kolam"
+            placeholder="Pilih Kolam"
+            register={register}
+            error={errors.title}
+            options={kolamOption}
+            // defaultValue={isUpdate ? data.product : ""}
+            onChange={(e) => handlePoolChange(e.target.value)}
+          />
           <Select
             name="product"
             label="Produk"
