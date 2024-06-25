@@ -86,20 +86,11 @@ const Cabang = () => {
       accessor: "action",
       Cell: (row) => {
         return (
-          <div>
-            <Dropdown
-              classMenuItems="right-0 w-[140px] top-[110%]"
-              label={
-                <span className="text-xl text-center block w-full">
-                  <Icon icon="heroicons-outline:dots-vertical" />
-                </span>
-              }
-            >
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {actions.map((item, i) => (
-                  <Menu.Item key={i}>
-                    <div
-                      className={`
+          <div className="flex space-x-2 items-center">
+            <div className="flex space-x-2">
+              {actions.map((item, i) => (
+                <div
+                  className={`
                   
                     ${
                       item.name === "delete"
@@ -108,23 +99,19 @@ const Cabang = () => {
                     }
                      w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
                      first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                      onClick={(e) =>
-                        `${
-                          item.name === "edit"
-                            ? handleEdit(row.row.original)
-                            : handleDelete(row.row.original)
-                        }`
-                      }
-                    >
-                      <span className="text-base">
-                        <Icon icon={item.icon} />
-                      </span>
-                      <span>{item.name}</span>
-                    </div>
-                  </Menu.Item>
-                ))}
-              </div>
-            </Dropdown>
+                  onClick={(e) =>
+                    item.name === "edit"
+                      ? handleEdit(row.row.original)
+                      : handleDelete(row.row.original)
+                  }
+                >
+                  <span className="text-base">
+                    <Icon icon={item.icon} />
+                  </span>
+                  <span>{item.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         );
       },

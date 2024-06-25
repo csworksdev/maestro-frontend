@@ -10,6 +10,16 @@ export const getSiswaAll = async () => {
   }
 };
 
+export const getSiswaByProduk = async () => {
+  try {
+    let response = await axiosConfig.get("/studentbyproduk/");
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const AddSiswa = async (data) => {
   console.log(data);
   try {

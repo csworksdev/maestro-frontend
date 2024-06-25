@@ -7,8 +7,8 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { AddOrder, EditOrder } from "@/axios/masterdata/order";
-import { getProdukAll } from "@/axios/masterdata/produk";
-import { getSiswaAll } from "@/axios/masterdata/siswa";
+import { getProdukPool } from "@/axios/masterdata/produk";
+import { getSiswaByProduk } from "@/axios/masterdata/siswa";
 import { getTrainerAll } from "@/axios/masterdata/trainer";
 import Select from "@/components/ui/Select";
 import Flatpickr from "react-flatpickr";
@@ -16,6 +16,10 @@ import Loading from "@/components/Loading";
 import { DateTime } from "luxon";
 import OrderDetail from "./orderDetail";
 import { getKolamAll } from "@/axios/referensi/kolam";
+import {
+  AddOrderDetail,
+  getOrderDetailByParent,
+} from "@/axios/masterdata/orderDetail";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -60,18 +64,13 @@ const Edit = () => {
   const loadReference = async () => {
     try {
       const kolamResponse = await getKolamAll();
-      const productResponse = await getProdukAll();
-      const studentResponse = await getSiswaAll();
+
+      const studentResponse = await getSiswaByProduk();
       const trainerResponse = await getTrainerAll();
 
-      setProductData(productResponse.data.results);
+      // setProductData(productResponse.data.results);
       const kolamOption = kolamResponse.data.results.map((item) => ({
         value: item.pool_id,
-        label: item.name,
-      }));
-
-      const productOptions = productResponse.data.results.map((item) => ({
-        value: item.product_id,
         label: item.name,
       }));
 
@@ -86,13 +85,33 @@ const Edit = () => {
       }));
 
       setKolamOption(kolamOption);
-      setProductOption(productOptions);
+
       setStudentOption(studentOptions);
       setTrainerOption(trainerOptions);
+
+      if (data.pool) {
+        setProductOption([]);
+        const productResponse = await getProdukPool(data.pool);
+        setProductData(productResponse.data.results);
+        const productOptions = productResponse.data.results.map((item) => ({
+          value: item.product_id,
+          label: item.name,
+        }));
+        setProductOption(productOptions);
+      } else {
+        setOrderDetail([]);
+        const orderDetailResponse = await getOrderDetailByParent(data.order_id);
+        const newState = orderDetailResponse.map({
+          ...obj,
+          day: DateTime.fromJSDate(obj.day).toFormat("yyyy-MM-dd"),
+        });
+        setOrderDetail(newState.data.results);
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+      console.log(orderDetail);
     }
   };
 
@@ -107,6 +126,16 @@ const Edit = () => {
   const handleAdd = (data) => {
     AddOrder(data).then((res) => {
       if (res.status) {
+        for (let index = 0; index < orderDetail.length; index++) {
+          const element = orderDetail[index];
+          AddOrderDetail(element).then((res) => {
+            if (res.status) {
+              // Swal.fire("Added!", "Your file has been added.", "success").then(
+              //   () => navigate(-1)
+              // );
+            }
+          });
+        }
         Swal.fire("Added!", "Your file has been added.", "success").then(() =>
           navigate(-1)
         );
@@ -141,6 +170,7 @@ const Edit = () => {
       student: newData.student,
       register_date: DateTime.fromJSDate(new Date()).toFormat("yyyy-MM-dd"),
       trainer: newData.trainer,
+      pool: newData.pool,
     };
 
     if (isUpdate) {
@@ -156,10 +186,15 @@ const Edit = () => {
     createDetail(findData);
   };
 
-  const handlePoolChange = (e) => {
-    // var findData = productData.find((item) => item.product_id === e);
-    // setValue("price", findData.price);
-    // createDetail(findData);
+  const handlePoolChange = async (e) => {
+    setProductOption([]);
+    const productResponse = await getProdukPool(e);
+    setProductData(productResponse.data.results);
+    const productOptions = productResponse.data.results.map((item) => ({
+      value: item.product_id,
+      label: item.name,
+    }));
+    setProductOption(productOptions);
   };
 
   const createDetail = (params) => {
@@ -203,7 +238,7 @@ const Edit = () => {
             register={register}
             error={errors.title}
             options={kolamOption}
-            // defaultValue={isUpdate ? data.product : ""}
+            defaultValue={isUpdate ? data.pool : ""}
             onChange={(e) => handlePoolChange(e.target.value)}
           />
           <Select

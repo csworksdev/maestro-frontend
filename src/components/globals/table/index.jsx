@@ -15,6 +15,7 @@ import Search from "@/pages/pembiayaan/components/search";
 // import Search from "../../components/search";
 import { mkConfig, generateCsv, download } from "export-to-csv";
 import Button from "@/components/ui/Button";
+import PaginationComponent from "./pagination";
 
 const IndeterminateCheckbox = React.forwardRef(
   ({ indeterminate, ...rest }, ref) => {
@@ -90,6 +91,10 @@ const Table = ({ listData, listColumn }) => {
     setGlobalFilter,
     prepareRow,
   } = tableInstance;
+
+  useEffect(() => {
+    tableInstance.pageCount = listData.count;
+  }, [listData]);
 
   const { globalFilter, pageIndex, pageSize } = state;
 
@@ -179,6 +184,7 @@ const Table = ({ listData, listColumn }) => {
             </div>
           </div>
         </div>
+        {/* <PaginationComponent pageCount={listData.count} /> */}
         <div className="md:flex md:space-y-0 space-y-5 justify-between mt-6 items-center">
           <div className=" flex items-center space-x-3 rtl:space-x-reverse">
             <span className=" flex space-x-2  rtl:space-x-reverse items-center">
