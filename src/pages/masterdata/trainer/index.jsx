@@ -34,7 +34,7 @@ const Trainer = () => {
     setIsLoading(true);
     getTrainerAll()
       .then((res) => {
-        setData(res.data);
+        setData(res.data.results);
       })
       .finally(() => setIsLoading(false));
   };

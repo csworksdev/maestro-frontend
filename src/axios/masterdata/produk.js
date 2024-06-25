@@ -2,7 +2,7 @@ import { axiosConfig } from "../config";
 
 export const getProdukAll = async () => {
   try {
-    let response = await axiosConfig.get("/product/");
+    let response = await axiosConfig.get("/api/product/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -10,7 +10,7 @@ export const getProdukAll = async () => {
 };
 export const getProdukPool = async (id) => {
   try {
-    let response = await axiosConfig.get("/productpool/" + id + "/");
+    let response = await axiosConfig.get("/api/productpool/" + id + "/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -19,7 +19,7 @@ export const getProdukPool = async (id) => {
 
 export const AddProduk = async (data) => {
   try {
-    let response = await axiosConfig.post("/product/", data);
+    let response = await axiosConfig.post("/api/product/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -28,7 +28,7 @@ export const AddProduk = async (data) => {
 
 export const EditProduk = async (id, data) => {
   try {
-    let response = await axiosConfig.put("/product/" + id + "/", data);
+    let response = await axiosConfig.put("/api/product/" + id + "/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -37,7 +37,7 @@ export const EditProduk = async (id, data) => {
 
 export const DeleteProduk = async (id) => {
   try {
-    let response = await axiosConfig.delete("/product/" + id + "/");
+    let response = await axiosConfig.delete("/api/product/" + id + "/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

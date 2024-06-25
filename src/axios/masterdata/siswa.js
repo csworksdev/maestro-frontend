@@ -2,7 +2,7 @@ import { axiosConfig } from "../config";
 
 export const getSiswaAll = async () => {
   try {
-    let response = await axiosConfig.get("/student/");
+    let response = await axiosConfig.get("/api/student/");
 
     return response;
   } catch (error) {
@@ -12,7 +12,7 @@ export const getSiswaAll = async () => {
 
 export const getSiswaByProduk = async () => {
   try {
-    let response = await axiosConfig.get("/studentbyproduk/");
+    let response = await axiosConfig.get("/api/studentbyproduk/");
 
     return response;
   } catch (error) {
@@ -23,7 +23,7 @@ export const getSiswaByProduk = async () => {
 export const AddSiswa = async (data) => {
   console.log(data);
   try {
-    let response = await axiosConfig.post("/student/", data);
+    let response = await axiosConfig.post("/api/student/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -32,7 +32,7 @@ export const AddSiswa = async (data) => {
 
 export const EditSiswa = async (id, data) => {
   try {
-    let response = await axiosConfig.put("/student/" + id + "/", data);
+    let response = await axiosConfig.put("/api/student/" + id + "/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -41,7 +41,7 @@ export const EditSiswa = async (id, data) => {
 
 export const DeleteSiswa = async (id) => {
   try {
-    let response = await axiosConfig.delete("/student/" + id + "/");
+    let response = await axiosConfig.delete("/api/student/" + id + "/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

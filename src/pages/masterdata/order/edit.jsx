@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { AddOrder, EditOrder } from "@/axios/masterdata/order";
 import { getProdukPool } from "@/axios/masterdata/produk";
-import { getSiswaByProduk } from "@/axios/masterdata/siswa";
+import { getSiswaAll } from "@/axios/masterdata/siswa";
 import { getTrainerAll } from "@/axios/masterdata/trainer";
 import Select from "@/components/ui/Select";
 import Flatpickr from "react-flatpickr";
@@ -18,6 +18,7 @@ import OrderDetail from "./orderDetail";
 import { getKolamAll } from "@/axios/referensi/kolam";
 import {
   AddOrderDetail,
+  EditOrderDetail,
   getOrderDetailByParent,
 } from "@/axios/masterdata/orderDetail";
 
@@ -65,7 +66,7 @@ const Edit = () => {
     try {
       const kolamResponse = await getKolamAll();
 
-      const studentResponse = await getSiswaByProduk();
+      const studentResponse = await getSiswaAll();
       const trainerResponse = await getTrainerAll();
 
       // setProductData(productResponse.data.results);
@@ -98,12 +99,15 @@ const Edit = () => {
           label: item.name,
         }));
         setProductOption(productOptions);
-      } else {
+      }
+
+      if (isupdate) {
         setOrderDetail([]);
         const orderDetailResponse = await getOrderDetailByParent(data.order_id);
-        const newState = orderDetailResponse.map({
-          ...obj,
-          day: DateTime.fromJSDate(obj.day).toFormat("yyyy-MM-dd"),
+        setOrderDetail(orderDetailResponse.data.results);
+        const newState = orderDetail.map({
+          ...orderDetail,
+          day: DateTime.fromJSDate(orderDetail.day).toFormat("yyyy-MM-dd"),
         });
         setOrderDetail(newState.data.results);
       }
@@ -111,7 +115,6 @@ const Edit = () => {
       console.error(error);
     } finally {
       setLoading(false);
-      console.log(orderDetail);
     }
   };
 
@@ -146,7 +149,17 @@ const Edit = () => {
   const handleUpdate = (updatedData) => {
     EditOrder(data.order_id, updatedData).then((res) => {
       if (res.status) {
-        Swal.fire("Edited!", "Your file has been edited.", "success").then(() =>
+        for (let index = 0; index < orderDetail.length; index++) {
+          const element = orderDetail[index];
+          EditOrderDetail(element).then((res) => {
+            if (res.status) {
+              // Swal.fire("Added!", "Your file has been added.", "success").then(
+              //   () => navigate(-1)
+              // );
+            }
+          });
+        }
+        Swal.fire("Added!", "Your file has been added.", "success").then(() =>
           navigate(-1)
         );
       }

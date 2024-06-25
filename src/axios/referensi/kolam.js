@@ -2,7 +2,7 @@ import { axiosConfig } from "../config";
 
 export const getKolamAll = async () => {
   try {
-    let response = await axiosConfig.get("/pool/");
+    let response = await axiosConfig.get("/api/pool/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -12,7 +12,7 @@ export const getKolamAll = async () => {
 export const AddKolam = async (data) => {
   console.log(data);
   try {
-    let response = await axiosConfig.post("/pool/", data);
+    let response = await axiosConfig.post("/api/pool/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -21,7 +21,7 @@ export const AddKolam = async (data) => {
 
 export const EditKolam = async (id, data) => {
   try {
-    let response = await axiosConfig.put("/pool/" + id + "/", data);
+    let response = await axiosConfig.put("/api/pool/" + id + "/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -30,7 +30,7 @@ export const EditKolam = async (id, data) => {
 
 export const DeleteKolam = async (id) => {
   try {
-    let response = await axiosConfig.delete("/pool/" + id + "/");
+    let response = await axiosConfig.delete("/api/pool/" + id + "/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
