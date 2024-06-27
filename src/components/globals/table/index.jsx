@@ -11,8 +11,8 @@ import {
   usePagination,
   useResizeColumns,
 } from "react-table";
-import Search from "@/pages/pembiayaan/components/search";
-// import Search from "../../components/search";
+// import Search from "@/pages/pembiayaan/components/search";
+import Search from "../table/search";
 import { mkConfig, generateCsv, download } from "export-to-csv";
 import Button from "@/components/ui/Button";
 import PaginationComponent from "./pagination";

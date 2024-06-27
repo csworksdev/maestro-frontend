@@ -13,12 +13,12 @@ import "flatpickr/dist/themes/material_green.css";
 import { DateTime } from "luxon";
 import Radio from "@/components/ui/Radio";
 
-const Edit = () => {
+const Biodata = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
-  const [selectOption, setSelectOption] = useState("false");
+  const [selectOption, setSelectOption] = useState("");
 
   const FormValidationSchema = yup
     .object({
@@ -44,6 +44,7 @@ const Edit = () => {
       if (data.dob) setValue("dob", DateTime.fromISO(data.dob).toJSDate());
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
+      // setSelectOption(data.is_active);
     }
   }, [isUpdate, data, setValue]);
 
@@ -88,7 +89,8 @@ const Edit = () => {
   };
 
   const handleOption = (e) => {
-    setSelectOption(e.target.value);
+    // setSelectOption(e.target.value);
+    setValue("is_active", e.target.value);
   };
 
   const onSubmit = (newData) => {
@@ -195,15 +197,20 @@ const Edit = () => {
             defaultValue={isUpdate ? data.precentage_fee : ""}
           />
           <div className="flex flex-wrap space-xy-5">
-            {options.map((option) => (
-              <Radio
-                label={option.label}
-                name="is_active"
-                value={option.value}
-                checked={selectOption === option.value}
-                onChange={handleOption}
-              />
-            ))}
+            <Radio
+              label="Aktif"
+              name="is_active"
+              value="true"
+              checked={data.is_active === true}
+              onChange={handleOption}
+            />
+            <Radio
+              label="Tidak Aktif"
+              name="is_active"
+              value="false"
+              checked={data.is_active === false}
+              onChange={handleOption}
+            />
           </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button
@@ -223,4 +230,4 @@ const Edit = () => {
   );
 };
 
-export default Edit;
+export default Biodata;

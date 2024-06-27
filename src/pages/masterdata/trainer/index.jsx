@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { DeleteTrainer, getTrainerAll } from "@/axios/masterdata/trainer";
+import { DateTime } from "luxon";
 
 const actions = [
   // {
@@ -92,14 +93,20 @@ const Trainer = () => {
       Header: "Jenis Kelamin",
       accessor: "gender",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        return (
+          <span>{row?.cell?.value == "L" ? "Laki-laki" : "Perempuan"}</span>
+        );
       },
     },
     {
-      Header: "Registrasi",
-      accessor: "reg_date",
+      Header: "Usia",
+      accessor: "dob",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        if (!row?.cell?.value) return <span>{row?.cell?.value}</span>;
+        const today = DateTime.now();
+        const dob = DateTime.fromISO(row?.cell?.value);
+        const age = today.diff(dob, ["years"]).years;
+        return <span>{Math.floor(age)} Tahun</span>;
       },
     },
     {
