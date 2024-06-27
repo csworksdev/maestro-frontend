@@ -30,12 +30,14 @@ const Siswa = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pageCount, setPageCount] = useState(0);
 
   const loadData = () => {
     setIsLoading(true);
     getSiswaAll()
       .then((res) => {
         setData(res.data.results);
+        setPageCount(res.data.count);
       })
       .finally(() => setIsLoading(false));
   };
@@ -107,7 +109,7 @@ const Siswa = () => {
         const today = DateTime.now();
         const dob = DateTime.fromISO(row?.cell?.value);
         const age = today.diff(dob, ["years"]).years;
-        return <span>{Math.ceil(age)} Tahun</span>;
+        return <span>{Math.floor(age)} Tahun</span>;
       },
     },
     {
@@ -158,7 +160,7 @@ const Siswa = () => {
         {isLoading ? (
           <Loading />
         ) : (
-          <Table listData={data} listColumn={COLUMNS} />
+          <Table listData={data} listColumn={COLUMNS} count={pageCount} />
         )}
       </Card>
     </div>

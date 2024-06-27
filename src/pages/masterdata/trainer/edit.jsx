@@ -1,6 +1,6 @@
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,12 +11,14 @@ import Select from "@/components/ui/Select";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/material_green.css";
 import { DateTime } from "luxon";
+import Radio from "@/components/ui/Radio";
 
 const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
+  const [selectOption, setSelectOption] = useState("false");
 
   const FormValidationSchema = yup
     .object({
@@ -50,6 +52,17 @@ const Edit = () => {
     { value: "P", label: "Perempuan" },
   ];
 
+  const options = [
+    {
+      value: "true",
+      label: "Aktif",
+    },
+    {
+      value: "false",
+      label: "Tidak Aktif",
+    },
+  ];
+
   const handleCancel = () => {
     navigate(-1);
   };
@@ -74,6 +87,10 @@ const Edit = () => {
     });
   };
 
+  const handleOption = (e) => {
+    setSelectOption(e.target.value);
+  };
+
   const onSubmit = (newData) => {
     const updatedData = {
       ...data,
@@ -82,7 +99,7 @@ const Edit = () => {
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
-      is_active: newData.is_active,
+      is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,
       reg_date: DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
@@ -177,6 +194,17 @@ const Edit = () => {
             error={errors.precentage_fee?.message}
             defaultValue={isUpdate ? data.precentage_fee : ""}
           />
+          <div className="flex flex-wrap space-xy-5">
+            {options.map((option) => (
+              <Radio
+                label={option.label}
+                name="is_active"
+                value={option.value}
+                checked={selectOption === option.value}
+                onChange={handleOption}
+              />
+            ))}
+          </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button
               type="button"

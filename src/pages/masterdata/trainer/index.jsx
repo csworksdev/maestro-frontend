@@ -103,12 +103,19 @@ const Trainer = () => {
       },
     },
     {
-      Header: "Bagi Hasil",
-      accessor: "precentage_fee",
+      Header: "Aktif",
+      accessor: "is_active",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        return <span>{row?.cell?.value ? "Aktif" : "Tidak Aktif"}</span>;
       },
     },
+    // {
+    //   Header: "Bagi Hasil",
+    //   accessor: "precentage_fee",
+    //   Cell: (row) => {
+    //     return <span>{row?.cell?.value}</span>;
+    //   },
+    // },
     {
       Header: "action",
       accessor: "action",

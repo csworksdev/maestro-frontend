@@ -37,7 +37,7 @@ const IndeterminateCheckbox = React.forwardRef(
   }
 );
 
-const Table = ({ listData, listColumn }) => {
+const Table = ({ listData, listColumn, count = null }) => {
   const columns = useMemo(() => listColumn, []);
   const data = useMemo(() => listData, []);
 
@@ -93,7 +93,7 @@ const Table = ({ listData, listColumn }) => {
   } = tableInstance;
 
   useEffect(() => {
-    tableInstance.pageCount = listData.count;
+    tableInstance.pageCount = count;
   }, [listData]);
 
   const { globalFilter, pageIndex, pageSize } = state;

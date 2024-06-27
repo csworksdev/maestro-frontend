@@ -26,7 +26,7 @@ const OrderDetail = ({ params }) => {
   });
   const onSubmit = (newData) => {};
 
-  if (!params) {
+  if (!params || params.length == 0) {
     return <Loading />;
   }
 

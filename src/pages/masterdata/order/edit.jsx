@@ -105,11 +105,11 @@ const Edit = () => {
         setOrderDetail([]);
         const orderDetailResponse = await getOrderDetailByParent(data.order_id);
         setOrderDetail(orderDetailResponse.data.results);
-        const newState = orderDetail.map({
-          ...orderDetail,
-          day: DateTime.fromJSDate(orderDetail.day).toFormat("yyyy-MM-dd"),
-        });
-        setOrderDetail(newState.data.results);
+        // const newState = orderDetail.map({
+        //   ...orderDetail,
+        //   day: DateTime.fromJSDate(orderDetail.day).toFormat("yyyy-MM-dd"),
+        // });
+        // setOrderDetail(newState.data.results);
       }
     } catch (error) {
       console.error(error);
@@ -131,6 +131,7 @@ const Edit = () => {
       if (res.status) {
         for (let index = 0; index < orderDetail.length; index++) {
           const element = orderDetail[index];
+          element.push("order_id: " + data.order_id);
           AddOrderDetail(element).then((res) => {
             if (res.status) {
               // Swal.fire("Added!", "Your file has been added.", "success").then(
@@ -151,11 +152,9 @@ const Edit = () => {
       if (res.status) {
         for (let index = 0; index < orderDetail.length; index++) {
           const element = orderDetail[index];
-          EditOrderDetail(element).then((res) => {
+          AddOrderDetail(element).then((res) => {
             if (res.status) {
-              // Swal.fire("Added!", "Your file has been added.", "success").then(
-              //   () => navigate(-1)
-              // );
+              console.log(res.status);
             }
           });
         }
@@ -217,7 +216,7 @@ const Edit = () => {
     let baseOrderDetail = {
       order_id: data.order_id,
       meetings: 1,
-      day: DateTime.now().toISO(),
+      day: null,
       time: DateTime.fromISO("17:00").toFormat("hh:mm"),
       is_presence: false,
     };
