@@ -1,7 +1,7 @@
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -13,12 +13,10 @@ import "flatpickr/dist/themes/material_green.css";
 import { DateTime } from "luxon";
 import Radio from "@/components/ui/Radio";
 
-const Biodata = () => {
+const Biodata = ({ isupdate = "false", data = {} }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
-  const [selectOption, setSelectOption] = useState("");
+  const [selectOption, setSelectOption] = useState("false");
 
   const FormValidationSchema = yup
     .object({
@@ -44,7 +42,7 @@ const Biodata = () => {
       if (data.dob) setValue("dob", DateTime.fromISO(data.dob).toJSDate());
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
-      // setSelectOption(data.is_active);
+      setSelectOption(data.is_active.toString());
     }
   }, [isUpdate, data, setValue]);
 
@@ -89,8 +87,7 @@ const Biodata = () => {
   };
 
   const handleOption = (e) => {
-    // setSelectOption(e.target.value);
-    setValue("is_active", e.target.value);
+    setSelectOption(e.target.value);
   };
 
   const onSubmit = (newData) => {
@@ -116,7 +113,7 @@ const Biodata = () => {
 
   return (
     <div>
-      <Card title={`${isUpdate ? "Update" : "Add"} Trainer`}>
+      <Card>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Textinput
             name="fullname"
@@ -197,20 +194,16 @@ const Biodata = () => {
             defaultValue={isUpdate ? data.precentage_fee : ""}
           />
           <div className="flex flex-wrap space-xy-5">
-            <Radio
-              label="Aktif"
-              name="is_active"
-              value="true"
-              checked={data.is_active === true}
-              onChange={handleOption}
-            />
-            <Radio
-              label="Tidak Aktif"
-              name="is_active"
-              value="false"
-              checked={data.is_active === false}
-              onChange={handleOption}
-            />
+            {options.map((option) => (
+              <Radio
+                key={option.value}
+                label={option.label}
+                name="is_active"
+                value={option.value}
+                checked={selectOption === option.value}
+                onChange={handleOption}
+              />
+            ))}
           </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button

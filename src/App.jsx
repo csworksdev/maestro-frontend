@@ -112,7 +112,7 @@ const EditPaket = lazy(() => import("./pages/referensi/paket/edit"));
 const Siswa = lazy(() => import("./pages/masterdata/siswa"));
 const EditSiswa = lazy(() => import("./pages/masterdata/siswa/edit"));
 const Trainer = lazy(() => import("./pages/masterdata/trainer"));
-const EditTrainer = lazy(() => import("./pages/masterdata/trainer/biodata"));
+const EditTrainer = lazy(() => import("./pages/masterdata/trainer/edit"));
 const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
 const Order = lazy(() => import("./pages/masterdata/order"));
