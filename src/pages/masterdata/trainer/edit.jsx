@@ -70,7 +70,7 @@ const Edit = () => {
               <Biodata isupdate={isupdate} data={data} />
             </Tab.Panel>
             <Tab.Panel>
-              <Jadwal />
+              <Jadwal data={data} />
             </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>

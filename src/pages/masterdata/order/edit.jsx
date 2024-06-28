@@ -101,15 +101,10 @@ const Edit = () => {
         setProductOption(productOptions);
       }
 
-      if (isupdate) {
+      if (isUpdate) {
         setOrderDetail([]);
         const orderDetailResponse = await getOrderDetailByParent(data.order_id);
         setOrderDetail(orderDetailResponse.data.results);
-        // const newState = orderDetail.map({
-        //   ...orderDetail,
-        //   day: DateTime.fromJSDate(orderDetail.day).toFormat("yyyy-MM-dd"),
-        // });
-        // setOrderDetail(newState.data.results);
       }
     } catch (error) {
       console.error(error);
@@ -235,7 +230,7 @@ const Edit = () => {
     setOrderDetail(temp);
   };
 
-  if (loading) {
+  if (loading && isUpdate) {
     return <Loading />;
   }
 
