@@ -8,7 +8,7 @@ import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 import {
   AddTrainerSchedule,
-  getTrainerScheduleAll,
+  getTrainerScheduleByTrainer,
 } from "@/axios/masterdata/trainerSchedule";
 
 // Validation schema
@@ -82,7 +82,7 @@ const CardJadwal = ({ day, time, selected, setSelected, dataKolam }) => {
               ?.split("#")[2] || "";
 
           return (
-            <div className="flex gap-2 justify-between">
+            <div className="flex gap-2 justify-between" key={i}>
               <Checkbox
                 name={`${day}#${option.value}`}
                 label={option.label}
@@ -129,77 +129,27 @@ const Jadwal = ({ data }) => {
   const loadReference = async () => {
     try {
       const kolamResponse = await getKolamAll();
-      const trainerScheduleResponse = await getTrainerScheduleAll();
+      const trainerScheduleResponse = await getTrainerScheduleByTrainer(
+        data.trainer_id
+      );
+
       const kolamOption = kolamResponse.data.results.map((item) => ({
         value: item.pool_id,
         label: item.name,
       }));
-      const schOption = kolamResponse.data.results.map((item) => ({
+      const schOption = trainerScheduleResponse.data.results.map((item) => ({
         trainer_schedule_id: item.trainer_schedule_id,
-        hari: item.day,
-        jam: item.time,
+        day: item.day,
+        time: item.time,
         pool: item.pool,
       }));
-      console.log(schOption);
-      setKolamOption(kolamOption);
 
-      setSelected([
-        "Senin#13.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Senin#14.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Senin#15.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Senin#16.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Senin#17.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#07.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#08.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#09.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#10.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#11.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#13.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#14.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#15.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#16.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Rabu#17.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#07.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#08.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#09.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#10.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#11.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#13.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#14.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#15.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#16.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Kamis#17.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#07.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#08.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#09.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#10.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#13.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#14.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#15.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#16.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Jumat#17.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#06.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#07.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#08.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#09.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#10.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#11.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#13.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#14.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#15.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#16.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Sabtu#17.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#06.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#07.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#08.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#09.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#10.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#11.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#13.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#14.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#15.00#54a7fd60-610b-4206-b028-4607fceffe24",
-        "Minggu#16.00#54a7fd60-610b-4206-b028-4607fceffe24",
-      ]);
+      schOption.forEach((item) => {
+        const key = `${item.day}#${item.time}#${item.pool}`;
+        setSelected((prevSelected) => [...prevSelected, key]);
+      });
+
+      setKolamOption(kolamOption);
     } catch (error) {
       console.error(error);
     } finally {
@@ -208,36 +158,17 @@ const Jadwal = ({ data }) => {
   };
 
   const onSubmit = (newData) => {
-    let tempData = [];
-    selected.map((item) => {
-      const [hari, jam, pool] = item.split("#");
-      const updatedData = {
-        // ...data,
-        // fullname: newData.fullname,
-        // dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
-        // gender: newData.gender,
-        // account_number: newData.account_number,
-        // precentage_fee: newData.precentage_fee,
-        // is_active: selectOption,
-        // nickname: newData.nickname,
-        // bank_account: newData.bank_account,
-        // reg_date: DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
-
-        // trainer_schedule_id : ,
+    const tempData = selected.map((item) => {
+      const [day, time, pool] = item.split("#");
+      return {
         trainer: data.trainer_id,
-        day: hari,
-        time: jam,
+        day: day,
+        time: time,
         pool: pool,
       };
-      tempData.push(updatedData);
     });
-    console.log(tempData);
 
-    // if (isUpdate) {
-    //   handleUpdate(updatedData);
-    // } else {
     handleAdd(tempData);
-    // }
   };
 
   const handleCancel = () => {
@@ -245,19 +176,20 @@ const Jadwal = ({ data }) => {
   };
 
   const handleAdd = (data) => {
-    let total_data = 1;
+    let totalData = 0;
     data.forEach((item) => {
       AddTrainerSchedule(item)
         .then((res) => {
           if (res) {
-            total_data += 1;
+            totalData += 1;
           }
         })
         .catch((errors) => {
           console.log(errors);
         });
     });
-    // if (total_data == data.length()) {
+
+    // if (totalData === data.length) {
     //   Swal.fire("Added!", "Your file has been added.", "success").then(() =>
     //     navigate(-1)
     //   );
@@ -433,11 +365,6 @@ const Jadwal = ({ data }) => {
             />
           ))}
         </div>
-        {selected.length > 0 && (
-          <div className="text-slate-900 dark:text-white">
-            Selected: [{selected.join(", ")}]
-          </div>
-        )}
         <div className="ltr:text-right rtl:text-left space-x-3">
           <button
             type="button"
