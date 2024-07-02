@@ -15,10 +15,10 @@ const actions = [
   //   name: "view",
   //   icon: "heroicons-outline:eye",
   // },
-  {
-    name: "edit",
-    icon: "heroicons:pencil-square",
-  },
+  // {
+  //   name: "edit",
+  //   icon: "heroicons:pencil-square",
+  // },
   {
     name: "delete",
     icon: "heroicons-outline:trash",

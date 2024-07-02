@@ -9,6 +9,16 @@ export const getOrderAll = async () => {
   }
 };
 
+export const FindAvailableTrainer = async (data) => {
+  try {
+    let response = await axiosConfig.get("/api/orderfindtrainer/", {
+      params: data,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
 export const AddOrder = async (data) => {
   try {
     let response = await axiosConfig.post("/api/order/", data);

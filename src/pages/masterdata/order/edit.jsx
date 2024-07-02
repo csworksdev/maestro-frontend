@@ -1,12 +1,16 @@
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Await, useLocation, useNavigate, useParams } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
-import { AddOrder, EditOrder } from "@/axios/masterdata/order";
+import {
+  AddOrder,
+  EditOrder,
+  FindAvailableTrainer,
+} from "@/axios/masterdata/order";
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getSiswaAll } from "@/axios/masterdata/siswa";
 import { getTrainerAll } from "@/axios/masterdata/trainer";
@@ -21,6 +25,7 @@ import {
   EditOrderDetail,
   getOrderDetailByParent,
 } from "@/axios/masterdata/orderDetail";
+import Radio from "@/components/ui/Radio";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -33,8 +38,13 @@ const Edit = () => {
   const [studentOption, setStudentOption] = useState([]);
   const [trainerOption, setTrainerOption] = useState([]);
   const [orderDetail, setOrderDetail] = useState([]);
-
+  const [selectGenderOption, setSelectGenderOption] = useState("L");
   const [loading, setLoading] = useState(true);
+  const [filterTrainerByPool, setFilterTrainerByPool] = useState("");
+  const [filterTrainerByDay, setFilterTrainerByDay] = useState("senin");
+  const [filterTrainerByTime, setFilterTrainerByTime] = useState("09.00");
+  const [filterTrainerByGender, setFilterTrainerByGender] = useState("L");
+  const [filterTrainerParams, setFilterTrainerParams] = useState({});
 
   const FormValidationSchema = yup
     .object({
@@ -67,9 +77,7 @@ const Edit = () => {
       const kolamResponse = await getKolamAll();
 
       const studentResponse = await getSiswaAll();
-      const trainerResponse = await getTrainerAll();
 
-      // setProductData(productResponse.data.results);
       const kolamOption = kolamResponse.data.results.map((item) => ({
         value: item.pool_id,
         label: item.name,
@@ -80,15 +88,15 @@ const Edit = () => {
         label: item.fullname,
       }));
 
-      const trainerOptions = trainerResponse.data.results.map((item) => ({
-        value: item.trainer_id,
-        label: item.fullname,
-      }));
+      // const trainerOptions = trainerResponse.data.results.map((item) => ({
+      //   value: item.trainer_id,
+      //   label: item.fullname,
+      // }));
 
       setKolamOption(kolamOption);
 
       setStudentOption(studentOptions);
-      setTrainerOption(trainerOptions);
+      // setTrainerOption(trainerOptions);
 
       if (data.pool) {
         setProductOption([]);
@@ -112,6 +120,39 @@ const Edit = () => {
       setLoading(false);
     }
   };
+
+  const jam = [
+    { value: "06.00", label: "06.00" },
+    { value: "07.00", label: "07.00" },
+    { value: "08.00", label: "08.00" },
+    { value: "09.00", label: "09.00" },
+    { value: "10.00", label: "10.00" },
+    { value: "11.00", label: "11.00" },
+    { value: "12.00", label: "12.00" },
+    { value: "13.00", label: "13.00" },
+    { value: "14.00", label: "14.00" },
+    { value: "15.00", label: "15.00" },
+    { value: "16.00", label: "16.00" },
+    { value: "17.00", label: "17.00" },
+    { value: "18.00", label: "18.00" },
+    { value: "19.00", label: "19.00" },
+    { value: "20.00", label: "20.00" },
+  ];
+
+  const hari = [
+    { value: "senin", label: "Senin" },
+    { value: "selasa", label: "Selasa" },
+    { value: "rabu", label: "Rabu" },
+    { value: "kami", label: "Kami" },
+    { value: "jumat", label: "Jumat" },
+    { value: "sabtu", label: "Sabtu" },
+    { value: "minggu", label: "Minggu" },
+  ];
+
+  const genderOption = [
+    { value: "L", label: "Laki-Laki" },
+    { value: "P", label: "Perempuan" },
+  ];
 
   useEffect(() => {
     loadReference();
@@ -202,6 +243,53 @@ const Edit = () => {
       label: item.name,
     }));
     setProductOption(productOptions);
+    setFilterTrainerByPool(e);
+    filterTrainer();
+  };
+
+  const handleGenderOption = (e) => {
+    setSelectGenderOption(e.target.value);
+    setFilterTrainerByGender(e.target.value);
+    filterTrainer();
+  };
+  const handleHariOption = (e) => {
+    setFilterTrainerByDay(e);
+    filterTrainer();
+  };
+  const handleJamOption = (e) => {
+    setFilterTrainerByTime(e);
+    filterTrainer();
+  };
+
+  const filterTrainer = async () => {
+    setTrainerOption([]);
+    if (filterTrainerByPool)
+      setFilterTrainerParams((prevItems) => ({
+        ...prevItems,
+        pool_id: filterTrainerByPool,
+      }));
+    if (filterTrainerByDay)
+      setFilterTrainerParams((prevItems) => ({
+        ...prevItems,
+        day: filterTrainerByDay,
+      }));
+    if (filterTrainerByTime)
+      setFilterTrainerParams((prevItems) => ({
+        ...prevItems,
+        time: filterTrainerByTime,
+      }));
+    if (filterTrainerByGender)
+      setFilterTrainerParams((prevItems) => ({
+        ...prevItems,
+        gender: filterTrainerByGender,
+      }));
+
+    const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
+    const TrainerOptions = trainerResponse.data.results.map((item) => ({
+      value: item.trainer_id,
+      label: item.fullname,
+    }));
+    setTrainerOption(TrainerOptions);
   };
 
   const createDetail = (params) => {
@@ -211,9 +299,11 @@ const Edit = () => {
     let baseOrderDetail = {
       order_id: data.order_id,
       meetings: 1,
-      day: null,
-      time: DateTime.fromISO("17:00").toFormat("hh:mm"),
+      day: filterTrainerByDay,
+      // time: DateTime.fromISO("17:00").toFormat("hh:mm"),
+      time: filterTrainerByTime,
       is_presence: false,
+      is_paid: false,
     };
 
     for (let index = 0; index < meetings; index++) {
@@ -248,22 +338,73 @@ const Edit = () => {
             defaultValue={isUpdate ? data.pool : ""}
             onChange={(e) => handlePoolChange(e.target.value)}
           />
-          <Select
-            name="product"
-            label="Produk"
-            placeholder="Pilih Produk"
-            register={register}
-            error={errors.title}
-            options={productOption}
-            defaultValue={isUpdate ? data.product : ""}
-            onChange={(e) => handleProductChange(e.target.value)}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              name="day"
+              label="Hari"
+              placeholder="Pilih Hari"
+              register={register}
+              error={errors.title}
+              options={hari}
+              defaultValue={"senin"}
+              onChange={(e) => handleHariOption(e.target.value)}
+            />
+            <Select
+              name="jam"
+              label="Jam"
+              placeholder="Pilih Jam"
+              register={register}
+              error={errors.title}
+              options={jam}
+              defaultValue={"09.00"}
+              onChange={(e) => handleJamOption(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap space-xy-5">
+            {genderOption.map((option) => (
+              <Radio
+                key={option.value}
+                label={option.label}
+                name="gender"
+                value={option.value}
+                checked={selectGenderOption === option.value}
+                onChange={handleGenderOption}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              name="product"
+              label="Produk"
+              placeholder="Pilih Produk"
+              register={register}
+              error={errors.title}
+              options={productOption}
+              defaultValue={isUpdate ? data.product : ""}
+              onChange={(e) => handleProductChange(e.target.value)}
+            />
+            <Textinput
+              name="price"
+              label="Harga"
+              type="text"
+              placeholder="Masukan harga"
+              register={register}
+              error={errors.title}
+              defaultValue={isUpdate ? data.price : ""}
+              disabled={true}
+              // isMask={true}
+              options={{
+                numeral: true,
+                numeralDecimalScale: 1,
+              }}
+            />
+          </div>
           <div>
             <label className="form-label" htmlFor="order_date">
               Tanggal Order
             </label>
             <Flatpickr
-              defaultValue={isUpdate ? data.order_date : ""}
+              defaultValue={isUpdate ? data.order_date : DateTime.utc().toISO()}
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
@@ -279,25 +420,10 @@ const Edit = () => {
             name="promo"
             label="Promo"
             type="text"
-            placeholder="Masukan jumlah promo"
+            placeholder="Masukan promo"
             register={register}
             error={errors.title}
             defaultValue={isUpdate ? data.promo : ""}
-          />
-          <Textinput
-            name="price"
-            label="Harga"
-            type="text"
-            placeholder="Masukan harga"
-            register={register}
-            error={errors.title}
-            defaultValue={isUpdate ? data.price : ""}
-            disabled={true}
-            // isMask={true}
-            options={{
-              numeral: true,
-              numeralDecimalScale: 1,
-            }}
           />
           <Select
             name="student"
@@ -307,7 +433,7 @@ const Edit = () => {
             error={errors.title}
             options={studentOption}
             defaultValue={isUpdate ? data.product : ""}
-            onChange={(e) => console.log(e.target.value)}
+            // onChange={(e) => console.log(e.target.value)}
           />
           <Select
             name="trainer"

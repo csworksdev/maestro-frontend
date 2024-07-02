@@ -89,20 +89,7 @@ const ProjectDetailsPage = lazy(() =>
 );
 const KanbanPage = lazy(() => import("./pages/app/kanban"));
 const CalenderPage = lazy(() => import("./pages/app/calendar"));
-const TbpSts = lazy(() => import("./pages/pembiayaan/TBP&STS"));
 const EcommercePage = lazy(() => import("./pages/ecommerce"));
-const SPP = lazy(() => import("./pages/pembiayaan/SPP"));
-const BKU = lazy(() => import("./pages/pembiayaan/BKU"));
-const LPJ = lazy(() => import("./pages/pembiayaan/LPJ"));
-const SPJ = lazy(() => import("./pages/pembiayaan/SPJ"));
-const SPTJMSPP = lazy(() => import("./pages/pembiayaan/SPTJMSPP"));
-const SPTJMSPM = lazy(() => import("./pages/pembiayaan/SPTJMSPM"));
-const PengesahanLPJ = lazy(() => import("./pages/pembiayaan/PengesahanLPJ"));
-const PengesahanSPJ = lazy(() => import("./pages/pembiayaan/PengesahanSPJ"));
-const VerifikasiSPP = lazy(() => import("./pages/pembiayaan/Verifikasi-SPP"));
-const SPM = lazy(() => import("./pages/pembiayaan/SPM-LS"));
-const VerifikasiLPJ = lazy(() => import("./pages/pembiayaan/Verifikasi-LPJ"));
-const VerifikasiSPJ = lazy(() => import("./pages/pembiayaan/Verifikasi-SPJ"));
 const Cabang = lazy(() => import("./pages/referensi/cabang"));
 const EditCabang = lazy(() => import("./pages/referensi/cabang/edit"));
 const Kolam = lazy(() => import("./pages/referensi/kolam"));
@@ -214,7 +201,6 @@ function App() {
             <Route path="icons" element={<IconPage />} />
             <Route path="notifications" element={<NotificationPage />} />
             <Route path="changelog" element={<ChangelogPage />} />
-            <Route path="tbp-sts" element={<TbpSts />} />
             <Route path="products/:id" element={<ProductDetails />} />
             <Route path="cart" element={<Cart />} />
             <Route path="wishlist" element={<Wishlist />} />
@@ -226,18 +212,6 @@ function App() {
             <Route path="customers" element={<Customers />} />
             <Route path="sellers" element={<Sellers />} />
             <Route path="invoice-ecommerce" element={<InvoiceEPage />} />
-            <Route path="spp" element={<SPP />} />
-            <Route path="bku" element={<BKU />} />
-            <Route path="lpj" element={<LPJ />} />
-            <Route path="spj" element={<SPJ />} />
-            <Route path="sptjmspp" element={<SPTJMSPP />} />
-            <Route path="sptjmspm" element={<SPTJMSPM />} />
-            <Route path="pengesahanLPJ" element={<PengesahanLPJ />} />
-            <Route path="pengesahanSPJ" element={<PengesahanSPJ />} />
-            <Route path="verifikasi-spp" element={<VerifikasiSPP />} />
-            <Route path="spm" element={<SPM />} />
-            <Route path="verifikasi-lpj" element={<VerifikasiLPJ />} />
-            <Route path="verifikasi-spj" element={<VerifikasiSPJ />} />
             <Route path="cabang">
               <Route index element={<Cabang />} />
               <Route path="add" element={<EditCabang />} />
