@@ -1,5 +1,4 @@
-import React from "react";
-import { useTable, usePagination } from "react-table";
+import React, { useState } from "react";
 import Icon from "@/components/ui/Icon";
 
 const PaginationComponent = ({
@@ -13,7 +12,8 @@ const PaginationComponent = ({
   nextPage,
   setPageSize,
 }) => {
-  console.log(pageCount);
+  const [inputPage, setInputPage] = useState(pageIndex + 1);
+
   const generatePageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 10;
@@ -41,6 +41,20 @@ const PaginationComponent = ({
     return pageNumbers;
   };
 
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInputPage(value === "" ? "" : Number(value));
+  };
+
+  const handleInputBlur = () => {
+    if (inputPage === "") {
+      setInputPage(pageIndex + 1);
+    } else {
+      const pageNumber = Math.max(1, Math.min(pageCount, inputPage)) - 1;
+      gotoPage(pageNumber);
+    }
+  };
+
   return (
     <div className="md:flex md:space-y-0 space-y-5 justify-between mt-6 items-center">
       <div className="flex items-center space-x-3 rtl:space-x-reverse">
@@ -59,43 +73,76 @@ const PaginationComponent = ({
           </select>
         </span>
       </div>
-      <ul className="flex items-center space-x-3 rtl:space-x-reverse">
-        <li className="text-xl leading-4 text-slate-900 dark:text-white rtl:rotate-180">
-          <button
-            className={`${
-              !canPreviousPage ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={() => previousPage()}
-            disabled={!canPreviousPage}
-          >
-            <Icon icon="heroicons-outline:chevron-left" />
-          </button>
-        </li>
+      <div className="flex items-center space-x-3 rtl:space-x-reverse">
+        <button
+          className={`text-xl leading-4 text-slate-900 dark:text-white ${
+            !canPreviousPage ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={() => gotoPage(0)}
+          disabled={!canPreviousPage}
+        >
+          <Icon icon="heroicons-outline:chevron-double-left" />
+        </button>
+        <button
+          className={`text-xl leading-4 text-slate-900 dark:text-white ${
+            !canPreviousPage ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={() => previousPage()}
+          disabled={!canPreviousPage}
+        >
+          <Icon icon="heroicons-outline:chevron-left" />
+        </button>
         {generatePageNumbers().map((page) => (
-          <li key={page}>
-            <button
-              aria-current="page"
-              className={`${
-                page === pageIndex
-                  ? "bg-slate-900 dark:bg-slate-600 dark:text-slate-200 text-white font-medium"
-                  : "bg-slate-100 dark:bg-slate-700 dark:text-slate-400 text-slate-900 font-normal"
-              } text-sm rounded leading-[16px] flex h-6 w-6 items-center justify-center transition-all duration-150`}
-              onClick={() => gotoPage(page)}
-            >
-              {page + 1}
-            </button>
-          </li>
-        ))}
-        <li className="text-xl leading-4 text-slate-900 dark:text-white rtl:rotate-180">
           <button
-            className={`${!canNextPage ? "opacity-50 cursor-not-allowed" : ""}`}
-            onClick={() => nextPage()}
-            disabled={!canNextPage}
+            key={page}
+            aria-current="page"
+            className={`text-sm rounded leading-[16px] flex h-6 w-6 items-center justify-center transition-all duration-150 ${
+              page === pageIndex
+                ? "bg-slate-900 dark:bg-slate-600 dark:text-slate-200 text-white font-medium"
+                : "bg-slate-100 dark:bg-slate-700 dark:text-slate-400 text-slate-900 font-normal"
+            }`}
+            onClick={() => gotoPage(page)}
           >
-            <Icon icon="heroicons-outline:chevron-right" />
+            {page + 1}
           </button>
-        </li>
-      </ul>
+        ))}
+        <button
+          className={`text-xl leading-4 text-slate-900 dark:text-white ${
+            !canNextPage ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={() => nextPage()}
+          disabled={!canNextPage}
+        >
+          <Icon icon="heroicons-outline:chevron-right" />
+        </button>
+        <button
+          className={`text-xl leading-4 text-slate-900 dark:text-white ${
+            !canNextPage ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={() => gotoPage(pageCount - 1)}
+          disabled={!canNextPage}
+        >
+          <Icon icon="heroicons-outline:chevron-double-right" />
+        </button>
+      </div>
+      <div className="flex items-center space-x-3 rtl:space-x-reverse">
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          Go to page:
+        </span>
+        <input
+          type="number"
+          className="form-control py-2"
+          value={inputPage}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          min={1}
+          max={pageCount}
+          style={{ width: "70px" }}
+        />
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          of {pageCount} Page
+        </span>
+      </div>
     </div>
   );
 };

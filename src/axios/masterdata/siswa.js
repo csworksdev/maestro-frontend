@@ -1,9 +1,10 @@
 import { axiosConfig } from "../config";
 
-export const getSiswaAll = async () => {
+export const getSiswaAll = async (data) => {
   try {
-    let response = await axiosConfig.get("/api/student/");
-
+    let response = await axiosConfig.get("/api/student/", {
+      params: data,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

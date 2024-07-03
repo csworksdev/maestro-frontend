@@ -4,26 +4,50 @@ export const menuItems = [
     title: "Report",
   },
   {
-    title: "Dashboard",
-    icon: "heroicons-outline:home",
+    title: "Revenue",
+    icon: "heroicons-outline:document-chart-bar",
     isOpen: true,
     isHide: true,
     child: [
       {
-        childtitle: "Pelatih",
-        childlink: "siswa",
+        childtitle: "Produk",
+        childlink: "produk",
       },
       {
         childtitle: "Pelatih",
         childlink: "trainer",
       },
       {
+        childtitle: "Kolam",
+        childlink: "pool",
+      },
+      {
+        childtitle: "Siswa",
+        childlink: "student",
+      },
+    ],
+  },
+  {
+    title: "Operational",
+    icon: "heroicons-outline:document-chart-bar",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
         childtitle: "Produk",
         childlink: "produk",
       },
       {
-        childtitle: "Order",
-        childlink: "order",
+        childtitle: "Pelatih",
+        childlink: "trainer",
+      },
+      {
+        childtitle: "Kolam",
+        childlink: "pool",
+      },
+      {
+        childtitle: "Siswa",
+        childlink: "student",
       },
     ],
   },
@@ -33,7 +57,7 @@ export const menuItems = [
   },
   {
     title: "Master Data",
-    icon: "heroicons-outline:home",
+    icon: "heroicons-outline:server",
     isOpen: true,
     isHide: true,
     child: [
@@ -57,7 +81,7 @@ export const menuItems = [
   },
   {
     title: "Pelatihan",
-    icon: "heroicons-outline:home",
+    icon: "heroicons-outline:academic-cap",
     isOpen: true,
     isHide: true,
     child: [
@@ -68,8 +92,8 @@ export const menuItems = [
     ],
   },
   {
-    title: "Rerefensi",
-    icon: "heroicons-outline:home",
+    title: "Referensi",
+    icon: "heroicons-outline:adjustments-vertical",
     isOpen: true,
     isHide: true,
     child: [
@@ -89,6 +113,10 @@ export const menuItems = [
         childtitle: "Periode",
         childlink: "paket",
       },
+      {
+        childtitle: "Spesialisasi",
+        childlink: "paket",
+      },
     ],
   },
   {
@@ -96,8 +124,8 @@ export const menuItems = [
     title: "Coach",
   },
   {
-    title: "Pelatihan",
-    icon: "heroicons-outline:home",
+    title: "Training",
+    icon: "heroicons-outline:academic-cap",
     isOpen: true,
     isHide: true,
     child: [

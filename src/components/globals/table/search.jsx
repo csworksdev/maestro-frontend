@@ -1,11 +1,15 @@
+import Button from "@/components/ui/Button";
 import Textinput from "@/components/ui/Textinput";
 import React, { useState } from "react";
 
-const Search = ({ filter, setFilter }) => {
-  const [value, setValue] = useState(filter);
+// const Search = ({ filter, setFilter }) => {
+const Search = ({ searchValue, handleSearch }) => {
+  const [value, setValue] = useState(searchValue);
   const onChange = (e) => {
     setValue(e.target.value);
-    setFilter(e.target.value || undefined);
+  };
+  const handleClick = (e) => {
+    handleSearch(value);
   };
   return (
     <div className="mb-3">
@@ -30,13 +34,17 @@ const Search = ({ filter, setFilter }) => {
             </div>
           </span> */}
           <div className="flex-1">
-            <div className="relative fromGroup2   ">
+            <div className="relative fromGroup2">
               <Textinput
                 value={value || ""}
                 onChange={onChange}
                 placeholder="Pencarian"
               />
-              <div className="flex text-xl absolute ltr:right-[14px] rtl:left-[14px] top-1/2 -translate-y-1/2  space-x-1 rtl:space-x-reverse"></div>
+              <div className="flex text-xl absolute ltr:right-[14px] rtl:left-[14px] top-1/2 -translate-y-1/2  space-x-1 rtl:space-x-reverse">
+                <Button className="btn-primary " onClick={handleClick}>
+                  Cari
+                </Button>
+              </div>
             </div>
           </div>
         </div>

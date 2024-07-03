@@ -2,7 +2,8 @@ import React, { Fragment, useRef, useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
-import Table from "@/components/globals/table";
+import Table from "@/components/globals/table/table";
+import PaginationComponent from "@/components/globals/table/pagination";
 import Loading from "@/components/Loading";
 import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
@@ -10,6 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { DeleteSiswa, getSiswaAll } from "@/axios/masterdata/siswa";
 import { DateTime } from "luxon";
+import Search from "@/components/globals/table/search";
 
 const actions = [
   // {
@@ -30,21 +32,61 @@ const Siswa = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [pageCount, setPageCount] = useState(0);
 
-  const loadData = () => {
-    setIsLoading(true);
-    getSiswaAll()
-      .then((res) => {
-        setData(res.data.results);
-        setPageCount(res.data.count);
-      })
-      .finally(() => setIsLoading(false));
+  const [listData, setListData] = useState({ count: 0, results: [] });
+  const [listColumn, setListColumn] = useState([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchData = async (page, size, query) => {
+    try {
+      setIsLoading(true);
+      const params = {
+        page: page + 1,
+        page_size: size,
+        search: query,
+      };
+      getSiswaAll(params)
+        .then((res) => {
+          setListData(res.data);
+        })
+        .finally(() => setIsLoading(false));
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    fetchData(pageIndex, pageSize, searchQuery);
+  }, [pageIndex, pageSize, searchQuery]);
+
+  const handlePageChange = (page) => {
+    setPageIndex(page);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+  };
+
+  const handleSearch = (query) => {
+    console.log(query);
+    setSearchQuery(query);
+    setPageIndex(0); // Reset to first page on search
+  };
+
+  // const loadData = () => {
+  //   setIsLoading(true);
+  //   getSiswaAll()
+  //     .then((res) => {
+  //       setData(res.data);
+  //     })
+  //     .finally(() => setIsLoading(false));
+  // };
+
+  // useEffect(() => {
+  //   loadData();
+  // }, []);
 
   const handleDelete = (e) => {
     Swal.fire({
@@ -160,7 +202,26 @@ const Siswa = () => {
         {isLoading ? (
           <Loading />
         ) : (
-          <Table listData={data} listColumn={COLUMNS} count={pageCount} />
+          <>
+            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            <Table
+              listData={listData}
+              listColumn={COLUMNS}
+              searchValue={searchQuery}
+              handleSearch={handleSearch}
+            />
+            <PaginationComponent
+              pageSize={pageSize}
+              pageIndex={pageIndex}
+              pageCount={Math.ceil(listData.count / pageSize)}
+              canPreviousPage={pageIndex > 0}
+              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
+              gotoPage={handlePageChange}
+              previousPage={() => handlePageChange(pageIndex - 1)}
+              nextPage={() => handlePageChange(pageIndex + 1)}
+              setPageSize={handlePageSizeChange}
+            />
+          </>
         )}
       </Card>
     </div>
