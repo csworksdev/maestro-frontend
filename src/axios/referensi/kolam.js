@@ -1,8 +1,10 @@
 import { axiosConfig } from "../config";
 
-export const getKolamAll = async () => {
+export const getKolamAll = async (data) => {
   try {
-    let response = await axiosConfig.get("/api/pool/");
+    let response = await axiosConfig.get("/api/pool/", {
+      params: data,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

@@ -9,6 +9,8 @@ import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import Search from "@/components/globals/table/search";
+import PaginationComponent from "@/components/globals/table/pagination";
 
 const actions = [
   // {
@@ -30,18 +32,58 @@ const Cabang = () => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadData = () => {
-    setIsLoading(true);
-    getCabangAll()
-      .then((res) => {
-        setData(res.data.results);
-      })
-      .finally(() => setIsLoading(false));
+  const [listData, setListData] = useState({ count: 0, results: [] });
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchData = async (page, size, query) => {
+    try {
+      setIsLoading(true);
+      const params = {
+        page: page + 1,
+        page_size: size,
+        search: query,
+      };
+      getCabangAll(params)
+        .then((res) => {
+          setListData(res.data);
+        })
+        .finally(() => setIsLoading(false));
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    fetchData(pageIndex, pageSize, searchQuery);
+  }, [pageIndex, pageSize, searchQuery]);
+
+  const handlePageChange = (page) => {
+    setPageIndex(page);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setPageIndex(0); // Reset to first page on search
+  };
+
+  // const loadData = () => {
+  //   setIsLoading(true);
+  //   getCabangAll()
+  //     .then((res) => {
+  //       setData(res.data.results);
+  //     })
+  //     .finally(() => setIsLoading(false));
+  // };
+
+  // useEffect(() => {
+  //   fetchData(pageIndex, pageSize, searchQuery);
+  // }, []);
 
   const handleDelete = (e) => {
     Swal.fire({
@@ -57,7 +99,7 @@ const Cabang = () => {
         DeleteCabang(e.branch_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            loadData();
+            fetchData(pageIndex, pageSize, searchQuery);
           }
         });
       }
@@ -129,7 +171,26 @@ const Cabang = () => {
         {isLoading ? (
           <Loading />
         ) : (
-          <Table listData={data} listColumn={COLUMNS} />
+          <>
+            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            <Table
+              listData={listData}
+              listColumn={COLUMNS}
+              searchValue={searchQuery}
+              handleSearch={handleSearch}
+            />
+            <PaginationComponent
+              pageSize={pageSize}
+              pageIndex={pageIndex}
+              pageCount={Math.ceil(listData.count / pageSize)}
+              canPreviousPage={pageIndex > 0}
+              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
+              gotoPage={handlePageChange}
+              previousPage={() => handlePageChange(pageIndex - 1)}
+              nextPage={() => handlePageChange(pageIndex + 1)}
+              setPageSize={handlePageSizeChange}
+            />
+          </>
         )}
       </Card>
     </div>

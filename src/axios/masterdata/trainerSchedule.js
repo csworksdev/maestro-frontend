@@ -2,7 +2,9 @@ import { axiosConfig } from "../config";
 
 export const getTrainerScheduleAll = async () => {
   try {
-    let response = await axiosConfig.get("/api/trainer-schedule/");
+    let response = await axiosConfig.get("/api/trainer-schedule/", {
+      params: data,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

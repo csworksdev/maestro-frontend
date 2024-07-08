@@ -1,8 +1,10 @@
 import { axiosConfig } from "../config";
 
-export const getOrderAll = async () => {
+export const getOrderAll = async (data) => {
   try {
-    let response = await axiosConfig.get("/api/order/");
+    let response = await axiosConfig.get("/api/order/", {
+      params: data,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

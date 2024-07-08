@@ -41,7 +41,11 @@ const Search = ({ searchValue, handleSearch }) => {
                 placeholder="Pencarian"
               />
               <div className="flex text-xl absolute ltr:right-[14px] rtl:left-[14px] top-1/2 -translate-y-1/2  space-x-1 rtl:space-x-reverse">
-                <Button className="btn-primary " onClick={handleClick}>
+                <Button
+                  className="btn-primary "
+                  onClick={handleClick}
+                  icon="heroicons-outline:adjustments-vertical"
+                >
                   Cari
                 </Button>
               </div>

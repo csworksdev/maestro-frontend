@@ -4,7 +4,7 @@ export const menuItems = [
     title: "Report",
   },
   {
-    title: "Revenue",
+    title: "Finance",
     icon: "heroicons-outline:document-chart-bar",
     isOpen: true,
     isHide: true,
@@ -111,11 +111,11 @@ export const menuItems = [
       },
       {
         childtitle: "Periode",
-        childlink: "paket",
+        childlink: "periodisasi",
       },
       {
-        childtitle: "Spesialisasi",
-        childlink: "paket",
+        childtitle: "Spesialisasi Terapi",
+        childlink: "spesialisasi",
       },
     ],
   },
@@ -143,6 +143,38 @@ export const menuItems = [
       },
       {
         childtitle: "Schedule",
+        childlink: "trainer",
+      },
+      {
+        childtitle: "Presence",
+        childlink: "produk",
+      },
+    ],
+  },
+  {
+    isHeadr: true,
+    title: "User Management",
+  },
+  {
+    title: "User",
+    icon: "heroicons-outline:academic-cap",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "User",
+        childlink: "siswa",
+      },
+      {
+        childtitle: "Role",
+        childlink: "order",
+      },
+      {
+        childtitle: "Permissions",
+        childlink: "trainer",
+      },
+      {
+        childtitle: "Menu",
         childlink: "trainer",
       },
       {

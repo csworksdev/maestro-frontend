@@ -11,14 +11,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { useLoginMutation } from "@/store/api/auth/authApiSlice";
 import { setUser } from "@/store/api/auth/authSlice";
 import { toast } from "react-toastify";
+import { login } from "@/axios/auth/auth";
 const schema = yup
   .object({
-    email: yup.string().email("Invalid email").required("Email is Required"),
+    // email: yup.string().email("Invalid email").required("Email is Required"),
     password: yup.string().required("Password is Required"),
   })
   .required();
 const LoginForm = () => {
-  const [login, { isLoading, isError, error, isSuccess }] = useLoginMutation();
+  // const [login, { isLoading, isError, error, isSuccess }] = useLoginMutation();
 
   const dispatch = useDispatch();
 
@@ -51,7 +52,7 @@ const LoginForm = () => {
       dispatch(setUser(data));
       navigate("/dashboard");
       // localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("user", JSON.stringify("faketoken")); //fix fail refresh page
+      localStorage.setItem("user", JSON.stringify(response.data.access)); //fix fail refresh page
       toast.success("Login Successful");
     } catch (error) {
       toast.error(error.message);
@@ -63,10 +64,10 @@ const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
       <Textinput
-        name="email"
-        label="email"
-        defaultValue="admin@maestroswim.com"
-        type="email"
+        name="username"
+        label="username"
+        // defaultValue="admin@maestroswim.com"
+        type="text"
         register={register}
         error={errors.email}
         className="h-[48px]"
@@ -75,7 +76,7 @@ const LoginForm = () => {
         name="password"
         label="password"
         type="password"
-        defaultValue="maestrobisa"
+        defaultValue="testpassword"
         register={register}
         error={errors.password}
         className="h-[48px]"
@@ -98,7 +99,7 @@ const LoginForm = () => {
         type="submit"
         text="Sign in"
         className="btn btn-dark block w-full text-center "
-        isLoading={isLoading}
+        // isLoading={isLoading}
       />
     </form>
   );

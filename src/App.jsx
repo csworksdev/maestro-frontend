@@ -96,6 +96,14 @@ const Kolam = lazy(() => import("./pages/referensi/kolam"));
 const EditKolam = lazy(() => import("./pages/referensi/kolam/edit"));
 const Paket = lazy(() => import("./pages/referensi/paket"));
 const EditPaket = lazy(() => import("./pages/referensi/paket/edit"));
+const Periodisasi = lazy(() => import("./pages/referensi/periodisasi"));
+const EditPeriodisasi = lazy(() =>
+  import("./pages/referensi/periodisasi/edit")
+);
+const Specialization = lazy(() => import("./pages/referensi/spesialisasi"));
+const EditSpecialization = lazy(() =>
+  import("./pages/referensi/spesialisasi/edit")
+);
 const Siswa = lazy(() => import("./pages/masterdata/siswa"));
 const EditSiswa = lazy(() => import("./pages/masterdata/siswa/edit"));
 const Trainer = lazy(() => import("./pages/masterdata/trainer"));
@@ -226,6 +234,16 @@ function App() {
               <Route index element={<Paket />} />
               <Route path="add" element={<EditPaket />} />
               <Route path="edit" element={<EditPaket />} />
+            </Route>
+            <Route path="periodisasi">
+              <Route index element={<Periodisasi />} />
+              <Route path="add" element={<EditPeriodisasi />} />
+              <Route path="edit" element={<EditPeriodisasi />} />
+            </Route>
+            <Route path="spesialisasi">
+              <Route index element={<Specialization />} />
+              <Route path="add" element={<EditSpecialization />} />
+              <Route path="edit" element={<EditSpecialization />} />
             </Route>
             <Route path="siswa">
               <Route index element={<Siswa />} />

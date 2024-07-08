@@ -3,15 +3,17 @@ import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
 import Table from "@/components/globals/table/table";
-import PaginationComponent from "@/components/globals/table/pagination";
 import Loading from "@/components/Loading";
 import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { DeleteSiswa, getSiswaAll } from "@/axios/masterdata/siswa";
-import { DateTime } from "luxon";
+import {
+  DeleteSpecialization,
+  getSpecializationAll,
+} from "@/axios/referensi/specialization";
 import Search from "@/components/globals/table/search";
+import PaginationComponent from "@/components/globals/table/pagination";
 
 const actions = [
   // {
@@ -28,7 +30,7 @@ const actions = [
   },
 ];
 
-const Siswa = () => {
+const Specialization = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +48,7 @@ const Siswa = () => {
         page_size: size,
         search: query,
       };
-      getSiswaAll(params)
+      getSpecializationAll(params)
         .then((res) => {
           setListData(res.data);
         })
@@ -73,19 +75,6 @@ const Siswa = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // const loadData = () => {
-  //   setIsLoading(true);
-  //   getSiswaAll()
-  //     .then((res) => {
-  //       setData(res.data);
-  //     })
-  //     .finally(() => setIsLoading(false));
-  // };
-
-  // useEffect(() => {
-  //   fetchData(pageIndex, pageSize, searchQuery);
-  // }, []);
-
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
@@ -97,7 +86,7 @@ const Siswa = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteSiswa(e.student_id).then((res) => {
+        DeleteSpecialization(e.package_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);
@@ -116,40 +105,42 @@ const Siswa = () => {
     });
   };
 
+  const handleDate = (value) => {
+    if (typeof value !== "string" || !value.includes("-")) {
+      return "Invalid date format";
+    }
+
+    // Function to convert month number to month name
+    const monthNames = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    // Split the value into year and month
+    const [year, month] = value.split("-");
+
+    // Convert month number to month name
+    const monthName = monthNames[parseInt(month, 10) - 1];
+
+    return monthName.concat("-", year);
+  };
+
   const COLUMNS = [
     {
-      Header: "Nama Lengkap",
-      accessor: "fullname",
-      size: 500,
+      Header: "Specialization",
+      accessor: "name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Nama Panggilan",
-      accessor: "nickname",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Jenis Kelamin",
-      accessor: "gender",
-      Cell: (row) => {
-        return (
-          <span>{row?.cell?.value == "L" ? "Laki-laki" : "Perempuan"}</span>
-        );
-      },
-    },
-    {
-      Header: "Usia",
-      accessor: "dob",
-      Cell: (row) => {
-        if (!row?.cell?.value) return <span>{row?.cell?.value}</span>;
-        const today = DateTime.now();
-        const dob = DateTime.fromISO(row?.cell?.value);
-        const age = today.diff(dob, ["years"]).years;
-        return <span>{Math.floor(age)} Tahun</span>;
       },
     },
     {
@@ -191,7 +182,7 @@ const Siswa = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Siswa">
+      <Card title="Spesialisasi">
         <Button className="btn-primary ">
           <Link to="add" isupdate="false">
             Tambah
@@ -226,4 +217,4 @@ const Siswa = () => {
   );
 };
 
-export default Siswa;
+export default Specialization;

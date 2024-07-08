@@ -38,8 +38,6 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
   return (
     <>
       <Card noborder>
-        {/* <Search filter={globalFilter} setFilter={setGlobalFilter} /> */}
-
         <div className="overflow-x-auto -mx-6">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden">

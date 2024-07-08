@@ -1,8 +1,8 @@
 import { axiosConfig } from "../config";
 
-export const getPaketAll = async (data) => {
+export const getPeriodisasiAll = async (data) => {
   try {
-    let response = await axiosConfig.get("/api/package/", {
+    let response = await axiosConfig.get("/api/periodisasi/", {
       params: data,
     });
     return response;
@@ -11,27 +11,27 @@ export const getPaketAll = async (data) => {
   }
 };
 
-export const AddPaket = async (data) => {
+export const AddPeriodisasi = async (data) => {
   try {
-    let response = await axiosConfig.post("/api/package/", data);
+    let response = await axiosConfig.post("/api/periodisasi/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
   }
 };
 
-export const EditPaket = async (id, data) => {
+export const EditPeriodisasi = async (id, data) => {
   try {
-    let response = await axiosConfig.put("/api/package/" + id + "/", data);
+    let response = await axiosConfig.put("/api/periodisasi/" + id + "/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
   }
 };
 
-export const DeletePaket = async (id) => {
+export const DeletePeriodisasi = async (id) => {
   try {
-    let response = await axiosConfig.delete("/api/package/" + id + "/");
+    let response = await axiosConfig.delete("/api/periodisasi/" + id + "/");
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

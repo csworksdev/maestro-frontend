@@ -1,10 +1,8 @@
 import { axiosConfig } from "../config";
 
-export const getCabangAll = async (data) => {
+export const login = async (data) => {
   try {
-    let response = await axiosConfig.get("/api/branch/", {
-      params: data,
-    });
+    let response = await axiosConfig.post("/auth/users/login/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

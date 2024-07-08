@@ -1,8 +1,10 @@
 import { axiosConfig } from "../config";
 
-export const getProdukAll = async () => {
+export const getProdukAll = async (data) => {
   try {
-    let response = await axiosConfig.get("/api/product/");
+    let response = await axiosConfig.get("/api/product/", {
+      params: data,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

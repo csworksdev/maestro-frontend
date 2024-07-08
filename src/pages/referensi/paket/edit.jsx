@@ -30,7 +30,9 @@ const Edit = () => {
     mode: "all",
   });
 
-  const handleCancel = () => {};
+  const handleCancel = () => {
+    navigate(-1);
+  };
 
   const handleAdd = (data) => {
     AddPaket(data).then((res) => {
@@ -72,14 +74,7 @@ const Edit = () => {
     if (isUpdate) {
       handleUpdate(updatedData);
     } else {
-      handleAdd({
-        name: data.name,
-        expired_days: data.expired_days,
-        duration: data.duration,
-        min_age: data.min_age ?? 0,
-        max_age: data.max_age ?? 0,
-        max_student: data.max_student ?? 0,
-      });
+      handleAdd(updatedData);
     }
   };
 
