@@ -1,7 +1,7 @@
 export const menuItems = [
   {
     isHeadr: true,
-    title: "Report",
+    title: "Dashboard",
   },
   {
     title: "Finance",
@@ -131,23 +131,23 @@ export const menuItems = [
     child: [
       {
         childtitle: "Dashboard",
-        childlink: "siswa",
+        childlink: "coach/dashboard",
       },
       {
-        childtitle: "Revenue",
-        childlink: "order",
+        childtitle: "Earning",
+        childlink: "coach/earning",
       },
       {
         childtitle: "Performance",
-        childlink: "trainer",
+        childlink: "coach/performance",
       },
       {
         childtitle: "Schedule",
-        childlink: "trainer",
+        childlink: "coach/schedule",
       },
       {
         childtitle: "Presence",
-        childlink: "produk",
+        childlink: "coach/presence",
       },
     ],
   },
@@ -163,23 +163,19 @@ export const menuItems = [
     child: [
       {
         childtitle: "User",
-        childlink: "siswa",
+        childlink: "user",
       },
       {
         childtitle: "Role",
-        childlink: "order",
-      },
-      {
-        childtitle: "Permissions",
-        childlink: "trainer",
+        childlink: "role",
       },
       {
         childtitle: "Menu",
-        childlink: "trainer",
+        childlink: "menu",
       },
       {
-        childtitle: "Presence",
-        childlink: "produk",
+        childtitle: "Permissions",
+        childlink: "permissions",
       },
     ],
   },

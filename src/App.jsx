@@ -90,6 +90,21 @@ const ProjectDetailsPage = lazy(() =>
 const KanbanPage = lazy(() => import("./pages/app/kanban"));
 const CalenderPage = lazy(() => import("./pages/app/calendar"));
 const EcommercePage = lazy(() => import("./pages/ecommerce"));
+
+const ProductDetails = lazy(() => import("./pages/ecommerce/productDetails"));
+const Cart = lazy(() => import("./pages/ecommerce/cart"));
+const Wishlist = lazy(() => import("./pages/ecommerce/wish-list"));
+const Orders = lazy(() => import("./pages/ecommerce/orders"));
+const OrderDetails = lazy(() => import("./pages/ecommerce/orderDetails"));
+const Checkout = lazy(() => import("./pages/ecommerce/checkout"));
+const EditProduct = lazy(() => import("./pages/ecommerce/edit-product"));
+const Customers = lazy(() => import("./pages/ecommerce/customers"));
+const Sellers = lazy(() => import("./pages/ecommerce/sellers"));
+const AddProduct = lazy(() => import("./pages/ecommerce/add-product"));
+const InvoiceEPage = lazy(() => import("./pages/ecommerce/invoice-ecompage"));
+const Home = lazy(() => import("./pages/index"));
+
+// Referensi
 const Cabang = lazy(() => import("./pages/referensi/cabang"));
 const EditCabang = lazy(() => import("./pages/referensi/cabang/edit"));
 const Kolam = lazy(() => import("./pages/referensi/kolam"));
@@ -104,6 +119,8 @@ const Specialization = lazy(() => import("./pages/referensi/spesialisasi"));
 const EditSpecialization = lazy(() =>
   import("./pages/referensi/spesialisasi/edit")
 );
+
+// Master Data
 const Siswa = lazy(() => import("./pages/masterdata/siswa"));
 const EditSiswa = lazy(() => import("./pages/masterdata/siswa/edit"));
 const Trainer = lazy(() => import("./pages/masterdata/trainer"));
@@ -112,18 +129,29 @@ const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
 const Order = lazy(() => import("./pages/masterdata/order"));
 const EditOrder = lazy(() => import("./pages/masterdata/order/edit"));
-const ProductDetails = lazy(() => import("./pages/ecommerce/productDetails"));
-const Cart = lazy(() => import("./pages/ecommerce/cart"));
-const Wishlist = lazy(() => import("./pages/ecommerce/wish-list"));
-const Orders = lazy(() => import("./pages/ecommerce/orders"));
-const OrderDetails = lazy(() => import("./pages/ecommerce/orderDetails"));
-const Checkout = lazy(() => import("./pages/ecommerce/checkout"));
-const EditProduct = lazy(() => import("./pages/ecommerce/edit-product"));
-const Customers = lazy(() => import("./pages/ecommerce/customers"));
-const Sellers = lazy(() => import("./pages/ecommerce/sellers"));
-const AddProduct = lazy(() => import("./pages/ecommerce/add-product"));
-const InvoiceEPage = lazy(() => import("./pages/ecommerce/invoice-ecompage"));
 
+// Coach
+const CoachDashboard = lazy(() => import("./pages/coach/dashboard"));
+const CoachEarning = lazy(() => import("./pages/coach/earning"));
+const CoachPerformance = lazy(() => import("./pages/coach/performance"));
+const CoachSchedule = lazy(() => import("./pages/coach/schedule"));
+const CoachPresence = lazy(() => import("./pages/coach/presence"));
+
+// User Management
+const UMUser = lazy(() => import("./pages/usermanagement/user"));
+const UMMenu = lazy(() => import("./pages/usermanagement/menu"));
+const UMRole = lazy(() => import("./pages/usermanagement/role"));
+const UMPermissions = lazy(() => import("./pages/usermanagement/permission"));
+
+const isAuthenticated = () => !!localStorage.getItem("user");
+
+const AuthenticatedRoute = ({ children }) => {
+  return isAuthenticated() ? children : <Navigate to="/login" />;
+};
+
+const PublicRoute = ({ children }) => {
+  return isAuthenticated() ? <Navigate to="/dashboard" /> : children;
+};
 function App() {
   return (
     <main className="App relative">
@@ -131,21 +159,198 @@ function App() {
         <Routes>
           <Route path="/" element={<AuthLayout />}>
             <Route index element={<Login />} />
-            <Route path="login2" element={<Login2 />} />
-            <Route path="login3" element={<Login3 />} />
-            <Route path="register" element={<Register />} />
-            <Route path="register2" element={<Register2 />} />
-            <Route path="register3" element={<Register3 />} />
-            <Route path="forgot-password" element={<ForgotPass />} />
-            <Route path="forgot-password2" element={<ForgotPass2 />} />
-            <Route path="forgot-password3" element={<ForgotPass3 />} />
-            <Route path="lock-screen" element={<LockScreen />} />
-            <Route path="lock-screen2" element={<LockScreen2 />} />
-            <Route path="lock-screen3" element={<LockScreen3 />} />
+            <Route
+              path="login2"
+              element={
+                <PublicRoute>
+                  <Login2 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="login3"
+              element={
+                <PublicRoute>
+                  <Login3 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="register"
+              element={
+                <PublicRoute>
+                  <Register />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="register2"
+              element={
+                <PublicRoute>
+                  <Register2 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="register3"
+              element={
+                <PublicRoute>
+                  <Register3 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPass />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="forgot-password2"
+              element={
+                <PublicRoute>
+                  <ForgotPass2 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="forgot-password3"
+              element={
+                <PublicRoute>
+                  <ForgotPass3 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="lock-screen"
+              element={
+                <PublicRoute>
+                  <LockScreen />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="lock-screen2"
+              element={
+                <PublicRoute>
+                  <LockScreen2 />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="lock-screen3"
+              element={
+                <PublicRoute>
+                  <LockScreen3 />
+                </PublicRoute>
+              }
+            />
           </Route>
-          <Route path="/*" element={<Layout />}>
+          <Route
+            path="/*"
+            element={
+              <AuthenticatedRoute>
+                <Layout />
+              </AuthenticatedRoute>
+            }
+          >
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="ecommerce" element={<Ecommerce />} />
+            {/* Reference */}
+            <Route path="cabang">
+              <Route index element={<Cabang />} />
+              <Route path="add" element={<EditCabang />} />
+              <Route path="edit" element={<EditCabang />} />
+            </Route>
+            <Route path="kolam">
+              <Route index element={<Kolam />} />
+              <Route path="add" element={<EditKolam />} />
+              <Route path="edit" element={<EditKolam />} />
+            </Route>
+            <Route path="paket">
+              <Route index element={<Paket />} />
+              <Route path="add" element={<EditPaket />} />
+              <Route path="edit" element={<EditPaket />} />
+            </Route>
+            <Route path="periodisasi">
+              <Route index element={<Periodisasi />} />
+              <Route path="add" element={<EditPeriodisasi />} />
+              <Route path="edit" element={<EditPeriodisasi />} />
+            </Route>
+            <Route path="spesialisasi">
+              <Route index element={<Specialization />} />
+              <Route path="add" element={<EditSpecialization />} />
+              <Route path="edit" element={<EditSpecialization />} />
+            </Route>
+            {/* Master Data */}
+            <Route path="siswa">
+              <Route index element={<Siswa />} />
+              <Route path="add" element={<EditSiswa />} />
+              <Route path="edit" element={<EditSiswa />} />
+            </Route>
+            <Route path="trainer">
+              <Route index element={<Trainer />} />
+              <Route path="add" element={<EditTrainer />} />
+              <Route path="edit" element={<EditTrainer />} />
+            </Route>
+            <Route path="produk">
+              <Route index element={<Produk />} />
+              <Route path="add" element={<EditProduk />} />
+              <Route path="edit" element={<EditProduk />} />
+            </Route>
+            <Route path="order">
+              <Route index element={<Order />} />
+              <Route path="add" element={<EditOrder />} />
+              <Route path="edit" element={<EditOrder />} />
+            </Route>
+            {/* Coach */}
+            <Route path="coach">
+              <Route index path="dashboard" element={<CoachDashboard />} />
+              <Route path="earning" element={<CoachEarning />} />
+              <Route path="performance" element={<CoachPerformance />} />
+              <Route path="schedule" element={<CoachSchedule />} />
+              <Route path="presence" element={<CoachPresence />} />
+            </Route>
+            {/* User Management */}
+            <Route path="user">
+              <Route index element={<UMUser />} />
+              {/* <Route path="add" element={<EditOrder />} />
+              <Route path="edit" element={<EditOrder />} /> */}
+            </Route>
+            <Route path="menu">
+              <Route index element={<UMMenu />} />
+              {/* <Route path="add" element={<EditOrder />} />
+              <Route path="edit" element={<EditOrder />} /> */}
+            </Route>
+            <Route path="role">
+              <Route index element={<UMRole />} />
+              {/* <Route path="add" element={<EditOrder />} />
+              <Route path="edit" element={<EditOrder />} /> */}
+            </Route>
+            <Route path="permissions">
+              <Route index element={<UMPermissions />} />
+              {/* <Route path="add" element={<EditOrder />} />
+              <Route path="edit" element={<EditOrder />} /> */}
+            </Route>
+            <Route path="*" element={<Navigate to="/404" />} />
+          </Route>
+          <Route path="/404" element={<Error />} />
+          <Route path="/coming-soon" element={<ComingSoonPage />} />
+          <Route
+            path="/under-construction"
+            element={<UnderConstructionPage />}
+          />
+        </Routes>
+      </Suspense>
+    </main>
+  );
+}
+
+export default App;
+
+{
+  /* <Route path="ecommerce" element={<Ecommerce />} />
             <Route path="crm" element={<CrmPage />} />
             <Route path="project" element={<ProjectPage />} />
             <Route path="banking" element={<BankingPage />} />
@@ -219,64 +424,5 @@ function App() {
             <Route path="edit-product" element={<EditProduct />} />
             <Route path="customers" element={<Customers />} />
             <Route path="sellers" element={<Sellers />} />
-            <Route path="invoice-ecommerce" element={<InvoiceEPage />} />
-            <Route path="cabang">
-              <Route index element={<Cabang />} />
-              <Route path="add" element={<EditCabang />} />
-              <Route path="edit" element={<EditCabang />} />
-            </Route>
-            <Route path="kolam">
-              <Route index element={<Kolam />} />
-              <Route path="add" element={<EditKolam />} />
-              <Route path="edit" element={<EditKolam />} />
-            </Route>
-            <Route path="paket">
-              <Route index element={<Paket />} />
-              <Route path="add" element={<EditPaket />} />
-              <Route path="edit" element={<EditPaket />} />
-            </Route>
-            <Route path="periodisasi">
-              <Route index element={<Periodisasi />} />
-              <Route path="add" element={<EditPeriodisasi />} />
-              <Route path="edit" element={<EditPeriodisasi />} />
-            </Route>
-            <Route path="spesialisasi">
-              <Route index element={<Specialization />} />
-              <Route path="add" element={<EditSpecialization />} />
-              <Route path="edit" element={<EditSpecialization />} />
-            </Route>
-            <Route path="siswa">
-              <Route index element={<Siswa />} />
-              <Route path="add" element={<EditSiswa />} />
-              <Route path="edit" element={<EditSiswa />} />
-            </Route>
-            <Route path="trainer">
-              <Route index element={<Trainer />} />
-              <Route path="add" element={<EditTrainer />} />
-              <Route path="edit" element={<EditTrainer />} />
-            </Route>
-            <Route path="produk">
-              <Route index element={<Produk />} />
-              <Route path="add" element={<EditProduk />} />
-              <Route path="edit" element={<EditProduk />} />
-            </Route>
-            <Route path="order">
-              <Route index element={<Order />} />
-              <Route path="add" element={<EditOrder />} />
-              <Route path="edit" element={<EditOrder />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/404" />} />
-          </Route>
-          <Route path="/404" element={<Error />} />
-          <Route path="/coming-soon" element={<ComingSoonPage />} />
-          <Route
-            path="/under-construction"
-            element={<UnderConstructionPage />}
-          />
-        </Routes>
-      </Suspense>
-    </main>
-  );
+            <Route path="invoice-ecommerce" element={<InvoiceEPage />} /> */
 }
-
-export default App;

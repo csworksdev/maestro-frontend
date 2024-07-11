@@ -3,12 +3,12 @@ import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
 import Table from "@/components/globals/table/table";
+import { DeleteUsers, getUsersAll } from "@/axios/userManagement/user";
 import Loading from "@/components/Loading";
 import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { DeleteOrder, getOrderAll } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 
@@ -27,7 +27,7 @@ const actions = [
   },
 ];
 
-const Order = () => {
+const Users = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +45,7 @@ const Order = () => {
         page_size: size,
         search: query,
       };
-      getOrderAll(params)
+      getUsersAll(params)
         .then((res) => {
           setListData(res.data);
         })
@@ -72,19 +72,6 @@ const Order = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // const loadData = () => {
-  //   setIsLoading(true);
-  //   getOrderAll()
-  //     .then((res) => {
-  //       setData(res.data.results);
-  //     })
-  //     .finally(() => setIsLoading(false));
-  // };
-
-  // useEffect(() => {
-  //   fetchData(pageIndex, pageSize, searchQuery);
-  // }, []);
-
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
@@ -96,7 +83,7 @@ const Order = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteOrder(e.order_id).then((res) => {
+        DeleteUsers(e.branch_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);
@@ -117,50 +104,8 @@ const Order = () => {
 
   const COLUMNS = [
     {
-      Header: "Kolam",
-      accessor: "pool_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Produk",
-      accessor: "product_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Tanggal Order",
-      accessor: "order_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Promo",
-      accessor: "promo",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Harga",
-      accessor: "price",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Siswa",
-      accessor: "student_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Pelatih",
-      accessor: "trainer_name",
+      Header: "Users",
+      accessor: "name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
@@ -204,7 +149,7 @@ const Order = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Order">
+      <Card title="Users">
         <Button className="btn-primary ">
           <Link to="add" isupdate="false">
             Tambah
@@ -239,4 +184,4 @@ const Order = () => {
   );
 };
 
-export default Order;
+export default Users;

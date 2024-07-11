@@ -94,14 +94,18 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
     const updatedData = {
       ...data,
       fullname: newData.fullname,
-      dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
+      dob: isUpdate
+        ? data.dob
+        : DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
       is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,
-      reg_date: DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
+      reg_date: isUpdate
+        ? data.reg_date
+        : DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
     };
 
     if (isUpdate) {

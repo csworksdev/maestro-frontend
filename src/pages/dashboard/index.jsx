@@ -12,12 +12,12 @@ import RadarChart from "../../components/partials/widget/chart/radar-chart";
 import HomeBredCurbs from "./HomeBredCurbs";
 
 const Dashboard = () => {
-  const [filterMap, setFilterMap] = useState("usa");
+  const [filterMap, setFilterMap] = useState("global");
   return (
     <div>
-      {/* <HomeBredCurbs title="Dashboard" /> */}
+      <HomeBredCurbs title="Dashboard" />
       {/* <Print /> */}
-      {/* <div className="grid grid-cols-12 gap-5 mb-5">
+      <div className="grid grid-cols-12 gap-5 mb-5">
         <div className="2xl:col-span-3 lg:col-span-4 col-span-12">
           <ImageBlock1 />
         </div>
@@ -123,7 +123,7 @@ const Dashboard = () => {
             </div>
           </Card>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 };

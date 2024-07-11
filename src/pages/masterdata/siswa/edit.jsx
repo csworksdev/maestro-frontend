@@ -86,7 +86,9 @@ const Edit = () => {
       parent: newData.parent,
       phone: newData.phone,
       address: newData.address,
-      dob: DateTime.fromJSDate(newData.dob ?? data.dob).toFormat("yyyy-MM-dd"),
+      dob: isUpdate
+        ? data.dob
+        : DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
       pob: newData.pob,
     };
 

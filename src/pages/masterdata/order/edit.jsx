@@ -74,7 +74,9 @@ const Edit = () => {
 
   const loadReference = async () => {
     try {
-      const kolamResponse = await getKolamAll();
+      const kolamResponse = await getKolamAll({
+        page_size: 50,
+      });
 
       const studentResponse = await getSiswaAll();
 
@@ -87,11 +89,6 @@ const Edit = () => {
         value: item.student_id,
         label: item.fullname,
       }));
-
-      // const trainerOptions = trainerResponse.data.results.map((item) => ({
-      //   value: item.trainer_id,
-      //   label: item.fullname,
-      // }));
 
       setKolamOption(kolamOption);
 
@@ -109,11 +106,11 @@ const Edit = () => {
         setProductOption(productOptions);
       }
 
-      if (isUpdate) {
-        setOrderDetail([]);
-        const orderDetailResponse = await getOrderDetailByParent(data.order_id);
-        setOrderDetail(orderDetailResponse.data.results);
-      }
+      // if (isUpdate) {
+      //   setOrderDetail([]);
+      //   const orderDetailResponse = await getOrderDetailByParent(data.order_id);
+      //   setOrderDetail(orderDetailResponse.data.results);
+      // }
     } catch (error) {
       console.error(error);
     } finally {
@@ -165,20 +162,18 @@ const Edit = () => {
   const handleAdd = (data) => {
     AddOrder(data).then((res) => {
       if (res.status) {
-        for (let index = 0; index < orderDetail.length; index++) {
-          const element = orderDetail[index];
-          element.push("order_id: " + data.order_id);
-          AddOrderDetail(element).then((res) => {
-            if (res.status) {
-              // Swal.fire("Added!", "Your file has been added.", "success").then(
-              //   () => navigate(-1)
-              // );
-            }
-          });
-        }
-        Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-          navigate(-1)
-        );
+        Swal.fire("Added!", "Your file has been added.", "success").then(() => {
+          navigate(-1);
+          for (let index = 0; index < orderDetail.length; index++) {
+            const element = orderDetail[index];
+            element.push("order_id: " + data.order_id);
+            AddOrderDetail(element).then((addres) => {
+              if (addres.status) {
+                console.log("finnish");
+              }
+            });
+          }
+        });
       }
     });
   };
@@ -205,18 +200,22 @@ const Edit = () => {
     const updatedData = {
       ...data,
       order_id: newData.order_id,
-      order_date: DateTime.fromJSDate(
-        newData.order_date ?? data.order_date
-      ).toFormat("yyyy-MM-dd"),
+      order_date: isUpdate
+        ? data.order_date
+        : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
       product: newData.product,
       promo: newData.promo,
-      expire_date: DateTime.now().plus({ days: 60 }).toFormat("yyyy-MM-dd"),
+      expire_date: isUpdate
+        ? data.expire_date
+        : DateTime.now().plus({ days: 60 }).toFormat("yyyy-MM-dd"),
       is_finish: newData.is_finish,
       notes: newData.notes,
       price: newData.price,
       is_paid: newData.is_paid,
       student: newData.student,
-      register_date: DateTime.fromJSDate(new Date()).toFormat("yyyy-MM-dd"),
+      register_date: isUpdate
+        ? data.register_date
+        : DateTime.fromJSDate(new Date()).toFormat("yyyy-MM-dd"),
       trainer: newData.trainer,
       pool: newData.pool,
     };
@@ -231,7 +230,7 @@ const Edit = () => {
   const handleProductChange = (e) => {
     var findData = productData.find((item) => item.product_id === e);
     setValue("price", findData.price);
-    createDetail(findData);
+    // createDetail(findData);
   };
 
   const handlePoolChange = async (e) => {
@@ -244,45 +243,49 @@ const Edit = () => {
     }));
     setProductOption(productOptions);
     setFilterTrainerByPool(e);
-    filterTrainer();
+    // Ensure filterTrainer runs after state updates
+    setTimeout(() => {
+      filterTrainer();
+      setValue("price", "");
+      setValue("product", "");
+    }, 0);
   };
 
   const handleGenderOption = (e) => {
     setSelectGenderOption(e.target.value);
     setFilterTrainerByGender(e.target.value);
-    filterTrainer();
+    // Ensure filterTrainer runs after state updates
+    setTimeout(() => {
+      filterTrainer();
+    }, 0);
   };
+
   const handleHariOption = (e) => {
     setFilterTrainerByDay(e);
-    filterTrainer();
+    // Ensure filterTrainer runs after state updates
+    setTimeout(() => {
+      filterTrainer();
+    }, 0);
   };
+
   const handleJamOption = (e) => {
     setFilterTrainerByTime(e);
-    filterTrainer();
+    // Ensure filterTrainer runs after state updates
+    setTimeout(() => {
+      filterTrainer();
+    }, 0);
   };
 
   const filterTrainer = async () => {
     setTrainerOption([]);
-    if (filterTrainerByPool)
-      setFilterTrainerParams((prevItems) => ({
-        ...prevItems,
-        pool_id: filterTrainerByPool,
-      }));
-    if (filterTrainerByDay)
-      setFilterTrainerParams((prevItems) => ({
-        ...prevItems,
-        day: filterTrainerByDay,
-      }));
-    if (filterTrainerByTime)
-      setFilterTrainerParams((prevItems) => ({
-        ...prevItems,
-        time: filterTrainerByTime,
-      }));
-    if (filterTrainerByGender)
-      setFilterTrainerParams((prevItems) => ({
-        ...prevItems,
-        gender: filterTrainerByGender,
-      }));
+    setFilterTrainerParams((prevItems) => ({
+      ...prevItems,
+      day: filterTrainerByDay || prevItems.day,
+      time: filterTrainerByTime || prevItems.time,
+      gender: filterTrainerByGender || prevItems.gender,
+      pool_id: filterTrainerByPool || prevItems.pool_id,
+      is_active: true,
+    }));
 
     const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
     const TrainerOptions = trainerResponse.data.results.map((item) => ({
@@ -458,7 +461,7 @@ const Edit = () => {
           </div>
         </form>
       </Card>
-      <OrderDetail params={orderDetail} />
+      {/* <OrderDetail params={orderDetail} /> */}
     </div>
   );
 };

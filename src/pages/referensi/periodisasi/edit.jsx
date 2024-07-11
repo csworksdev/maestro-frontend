@@ -52,7 +52,6 @@ const Edit = () => {
 
   // edit event
   const handleUpdate = (updatedData) => {
-    console.log(updatedData);
     EditPeriodisasi(data.periode_id, updatedData).then((res) => {
       if (res.status)
         Swal.fire(
@@ -65,16 +64,17 @@ const Edit = () => {
   };
 
   const onSubmit = (newData) => {
+    console.log(data);
     const updatedData = {
       ...data,
       name: newData.name,
       month: newData.month,
-      start_date: DateTime.fromJSDate(
-        newData.start_date ?? data.start_date
-      ).toFormat("yyyy-MM-dd"),
-      end_date: DateTime.fromJSDate(newData.end_date ?? data.end_date).toFormat(
-        "yyyy-MM-dd"
-      ),
+      start_date: isUpdate
+        ? data.start_date
+        : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
+      end_date: isUpdate
+        ? data.end_date
+        : DateTime.fromJSDate(newData.end_date).toFormat("yyyy-MM-dd"),
     }; // Create the updated todo object
 
     if (isUpdate) {
