@@ -44,7 +44,13 @@ const Edit = () => {
   const [filterTrainerByDay, setFilterTrainerByDay] = useState("senin");
   const [filterTrainerByTime, setFilterTrainerByTime] = useState("09.00");
   const [filterTrainerByGender, setFilterTrainerByGender] = useState("L");
-  const [filterTrainerParams, setFilterTrainerParams] = useState({});
+  const [filterTrainerParams, setFilterTrainerParams] = useState({
+    day: "",
+    time: "",
+    gender: "",
+    pool_id: "",
+    is_active: true,
+  });
 
   const FormValidationSchema = yup
     .object({
@@ -163,16 +169,26 @@ const Edit = () => {
     AddOrder(data).then((res) => {
       if (res.status) {
         Swal.fire("Added!", "Your file has been added.", "success").then(() => {
-          navigate(-1);
-          for (let index = 0; index < orderDetail.length; index++) {
-            const element = orderDetail[index];
-            element.push("order_id: " + data.order_id);
-            AddOrderDetail(element).then((addres) => {
+          const temp = orderDetail.map((item, index) => {
+            item.order = res.data.order_id;
+            item.day = filterTrainerByDay;
+            item.time = filterTrainerByTime;
+            item.schedule_date = DateTime.fromISO(data.start_date)
+              .plus({ days: 7 * (index + 1) })
+              .toFormat("yyyy-MM-dd");
+            return item;
+          });
+          for (let index = 0; index < temp.length; index++) {
+            // (temp[index].schedule_date = DateTime.fromISO(data.start_date)
+            //   .plus({ days: 7 * (index + 1) })
+            //   .toFormat("yyyy-MM-dd")),
+            AddOrderDetail(temp[index], data).then((addres) => {
               if (addres.status) {
                 console.log("finnish");
               }
             });
           }
+          navigate(-1);
         });
       }
     });
@@ -181,17 +197,17 @@ const Edit = () => {
   const handleUpdate = (updatedData) => {
     EditOrder(data.order_id, updatedData).then((res) => {
       if (res.status) {
-        for (let index = 0; index < orderDetail.length; index++) {
-          const element = orderDetail[index];
-          AddOrderDetail(element).then((res) => {
-            if (res.status) {
-              console.log(res.status);
-            }
-          });
-        }
-        Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-          navigate(-1)
-        );
+        Swal.fire("Added!", "Your file has been added.", "success").then(() => {
+          navigate(-1);
+          for (let index = 0; index < orderDetail.length; index++) {
+            const element = orderDetail[index];
+            AddOrderDetail(element).then((res) => {
+              if (res.status) {
+                console.log(res.status);
+              }
+            });
+          }
+        });
       }
     });
   };
@@ -202,20 +218,22 @@ const Edit = () => {
       order_id: newData.order_id,
       order_date: isUpdate
         ? data.order_date
-        : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
+        : DateTime.now().toFormat("yyyy-MM-dd"),
       product: newData.product,
       promo: newData.promo,
       expire_date: isUpdate
         ? data.expire_date
-        : DateTime.now().plus({ days: 60 }).toFormat("yyyy-MM-dd"),
+        : DateTime.fromJSDate(newData.start_date)
+            .plus({ days: 60 })
+            .toFormat("yyyy-MM-dd"),
       is_finish: newData.is_finish,
       notes: newData.notes,
       price: newData.price,
       is_paid: newData.is_paid,
       student: newData.student,
-      register_date: isUpdate
-        ? data.register_date
-        : DateTime.fromJSDate(new Date()).toFormat("yyyy-MM-dd"),
+      start_date: isUpdate
+        ? data.start_date
+        : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
       trainer: newData.trainer,
       pool: newData.pool,
     };
@@ -228,9 +246,9 @@ const Edit = () => {
   };
 
   const handleProductChange = (e) => {
-    var findData = productData.find((item) => item.product_id === e);
+    const findData = productData.find((item) => item.product_id === e);
     setValue("price", findData.price);
-    // createDetail(findData);
+    createDetail(findData);
   };
 
   const handlePoolChange = async (e) => {
@@ -243,82 +261,71 @@ const Edit = () => {
     }));
     setProductOption(productOptions);
     setFilterTrainerByPool(e);
-    // Ensure filterTrainer runs after state updates
-    setTimeout(() => {
-      filterTrainer();
-      setValue("price", "");
-      setValue("product", "");
-    }, 0);
   };
 
   const handleGenderOption = (e) => {
     setSelectGenderOption(e.target.value);
     setFilterTrainerByGender(e.target.value);
-    // Ensure filterTrainer runs after state updates
-    setTimeout(() => {
-      filterTrainer();
-    }, 0);
   };
 
   const handleHariOption = (e) => {
     setFilterTrainerByDay(e);
-    // Ensure filterTrainer runs after state updates
-    setTimeout(() => {
-      filterTrainer();
-    }, 0);
   };
 
   const handleJamOption = (e) => {
     setFilterTrainerByTime(e);
-    // Ensure filterTrainer runs after state updates
-    setTimeout(() => {
-      filterTrainer();
-    }, 0);
   };
 
-  const filterTrainer = async () => {
-    setTrainerOption([]);
-    setFilterTrainerParams((prevItems) => ({
-      ...prevItems,
-      day: filterTrainerByDay || prevItems.day,
-      time: filterTrainerByTime || prevItems.time,
-      gender: filterTrainerByGender || prevItems.gender,
-      pool_id: filterTrainerByPool || prevItems.pool_id,
-      is_active: true,
+  useEffect(() => {
+    setFilterTrainerParams((prevParams) => ({
+      ...prevParams,
+      pool_id: filterTrainerByPool,
     }));
+    // Reset product selection and price when pool changes
+    setValue("price", "");
+    setValue("product", "");
+  }, [filterTrainerByPool]);
 
-    const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
-    const TrainerOptions = trainerResponse.data.results.map((item) => ({
-      value: item.trainer_id,
-      label: item.fullname,
+  useEffect(() => {
+    setFilterTrainerParams((prevParams) => ({
+      ...prevParams,
+      gender: filterTrainerByGender,
+      day: filterTrainerByDay,
+      time: filterTrainerByTime,
     }));
-    setTrainerOption(TrainerOptions);
-  };
+  }, [filterTrainerByGender, filterTrainerByDay, filterTrainerByTime]);
+
+  useEffect(() => {
+    const filterTrainer = async () => {
+      const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
+      const trainerOptions = trainerResponse.data.results.map((item) => ({
+        value: item.trainer_id,
+        label: item.fullname,
+      }));
+      setTrainerOption(trainerOptions);
+    };
+    filterTrainer();
+  }, [filterTrainerParams]);
 
   const createDetail = (params) => {
     setOrderDetail([]);
     const { meetings } = params;
     let temp = [];
     let baseOrderDetail = {
-      order_id: data.order_id,
-      meetings: 1,
       day: filterTrainerByDay,
-      // time: DateTime.fromISO("17:00").toFormat("hh:mm"),
+      // schedule_date: data.start_date,
       time: filterTrainerByTime,
       is_presence: false,
       is_paid: false,
     };
 
-    for (let index = 0; index < meetings; index++) {
+    for (let index = 1; index <= meetings; index++) {
       if (index > 0) {
         temp.push({
           ...baseOrderDetail,
-          day: DateTime.fromISO(temp[index - 1].day)
-            .plus({ days: 7 })
-            .toISO(),
-          meetings: index,
+          meet: index,
         });
-      } else temp.push({ ...baseOrderDetail, meetings: index });
+      } else temp.push({ ...baseOrderDetail, meet: index });
     }
     setOrderDetail(temp);
   };
@@ -402,7 +409,7 @@ const Edit = () => {
               }}
             />
           </div>
-          <div>
+          <div className="hidden">
             <label className="form-label" htmlFor="order_date">
               Tanggal Order
             </label>
@@ -414,9 +421,27 @@ const Edit = () => {
               }}
               className="form-control py-2"
               onChange={(date) => setValue("order_date", date[0])}
+              disabled={true}
             />
             {errors.order_date && (
               <p className="error-message">{errors.order_date.message}</p>
+            )}
+          </div>
+          <div>
+            <label className="form-label" htmlFor="start_date">
+              Tanggal Mulai
+            </label>
+            <Flatpickr
+              defaultValue={isUpdate ? data.start_date : DateTime.utc().toISO()}
+              name="start_date"
+              options={{
+                dateFormat: "Y-m-d",
+              }}
+              className="form-control py-2 bg-black-50 from-black-900"
+              onChange={(date) => setValue("start_date", date[0])}
+            />
+            {errors.start_date && (
+              <p className="error-message">{errors.start_date.message}</p>
             )}
           </div>
           <Textinput
