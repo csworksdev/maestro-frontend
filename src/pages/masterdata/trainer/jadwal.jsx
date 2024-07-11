@@ -128,7 +128,11 @@ const Jadwal = ({ data }) => {
 
   const loadReference = async () => {
     try {
-      const kolamResponse = await getKolamAll();
+      const params = {
+        page: 1,
+        page_size: 200,
+      };
+      const kolamResponse = await getKolamAll(params);
       const trainerScheduleResponse = await getTrainerScheduleByTrainer(
         data.trainer_id
       );
