@@ -50,3 +50,12 @@ export const DeleteTrainerSchedule = async (id) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const UpdateTrainerSchedule = async (data) => {
+  try {
+    let response = await axiosConfig.put("/api/traineravailupdate/", data);
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

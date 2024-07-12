@@ -26,6 +26,7 @@ import {
   getOrderDetailByParent,
 } from "@/axios/masterdata/orderDetail";
 import Radio from "@/components/ui/Radio";
+import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const Edit = () => {
   const [selectGenderOption, setSelectGenderOption] = useState("L");
   const [loading, setLoading] = useState(true);
   const [filterTrainerByPool, setFilterTrainerByPool] = useState("");
-  const [filterTrainerByDay, setFilterTrainerByDay] = useState("senin");
+  const [filterTrainerByDay, setFilterTrainerByDay] = useState("Senin");
   const [filterTrainerByTime, setFilterTrainerByTime] = useState("09.00");
   const [filterTrainerByGender, setFilterTrainerByGender] = useState("L");
   const [filterTrainerParams, setFilterTrainerParams] = useState({
@@ -49,7 +50,6 @@ const Edit = () => {
     time: "",
     gender: "",
     pool_id: "",
-    is_active: true,
   });
 
   const FormValidationSchema = yup
@@ -143,13 +143,13 @@ const Edit = () => {
   ];
 
   const hari = [
-    { value: "senin", label: "Senin" },
-    { value: "selasa", label: "Selasa" },
-    { value: "rabu", label: "Rabu" },
-    { value: "kami", label: "Kami" },
-    { value: "jumat", label: "Jumat" },
-    { value: "sabtu", label: "Sabtu" },
-    { value: "minggu", label: "Minggu" },
+    { value: "Senin", label: "Senin" },
+    { value: "Selasa", label: "Selasa" },
+    { value: "Rabu", label: "Rabu" },
+    { value: "Kami", label: "Kami" },
+    { value: "Jumat", label: "Jumat" },
+    { value: "Sabtu", label: "Sabtu" },
+    { value: "Minggu", label: "Minggu" },
   ];
 
   const genderOption = [
@@ -183,12 +183,23 @@ const Edit = () => {
             //   .plus({ days: 7 * (index + 1) })
             //   .toFormat("yyyy-MM-dd")),
             AddOrderDetail(temp[index], data).then((addres) => {
-              if (addres.status) {
+              if (addres.status == "success") {
                 console.log("finnish");
               }
             });
           }
-          navigate(-1);
+
+          // update trainer avail
+          const params = {
+            coach: data.trainer,
+            day: filterTrainerByDay,
+            time: filterTrainerByTime,
+            is_free: false,
+          };
+          UpdateTrainerSchedule(params).then((results) => {
+            console.log(results);
+            navigate(-1);
+          });
         });
       }
     });
@@ -297,6 +308,7 @@ const Edit = () => {
 
   useEffect(() => {
     const filterTrainer = async () => {
+      setTrainerOption([]);
       const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
       const trainerOptions = trainerResponse.data.results.map((item) => ({
         value: item.trainer_id,
@@ -330,6 +342,13 @@ const Edit = () => {
     setOrderDetail(temp);
   };
 
+  const getNearestDay = (date) => {
+    const day = date.getDay();
+    const nextMonday = new Date(date);
+    nextMonday.setDate(date.getDate() + ((8 - day) % 7));
+    return nextMonday;
+  };
+
   if (loading && isUpdate) {
     return <Loading />;
   }
@@ -356,7 +375,7 @@ const Edit = () => {
               register={register}
               error={errors.title}
               options={hari}
-              defaultValue={"senin"}
+              defaultValue={"Senin"}
               onChange={(e) => handleHariOption(e.target.value)}
             />
             <Select
@@ -436,6 +455,7 @@ const Edit = () => {
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",
+                minDate: DateTime.now().toFormat("yyyy-MM-dd"),
               }}
               className="form-control py-2 bg-black-50 from-black-900"
               onChange={(date) => setValue("start_date", date[0])}
