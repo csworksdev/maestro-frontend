@@ -197,7 +197,6 @@ const Edit = () => {
             is_free: false,
           };
           UpdateTrainerSchedule(params).then((results) => {
-            console.log(results);
             navigate(-1);
           });
         });

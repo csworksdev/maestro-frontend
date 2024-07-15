@@ -131,11 +131,11 @@ const Order = lazy(() => import("./pages/masterdata/order"));
 const EditOrder = lazy(() => import("./pages/masterdata/order/edit"));
 
 // Coach
-const CoachDashboard = lazy(() => import("./pages/coach/dashboard"));
-const CoachEarning = lazy(() => import("./pages/coach/earning"));
-const CoachPerformance = lazy(() => import("./pages/coach/performance"));
-const CoachSchedule = lazy(() => import("./pages/coach/schedule"));
-const CoachPresence = lazy(() => import("./pages/coach/presence"));
+const CoachDashboard = lazy(() => import("./pages/trainer/dashboard"));
+const CoachEarning = lazy(() => import("./pages/trainer/earning"));
+const CoachPerformance = lazy(() => import("./pages/trainer/performance"));
+const CoachSchedule = lazy(() => import("./pages/trainer/schedule"));
+const CoachPresence = lazy(() => import("./pages/trainer/presence"));
 
 // User Management
 const UMUser = lazy(() => import("./pages/usermanagement/user"));
