@@ -157,11 +157,15 @@ const Presence = () => {
                         item.schedule_date
                       ).toFormat("yyyy-MM-dd")}
                       name="real_date"
-                      options={{ dateFormat: "Y-m-d" }}
+                      options={{
+                        dateFormat: "Y-m-d",
+                        maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                      }}
                       className="form-control py-2"
                       onChange={(date) =>
                         handleChangeDay(item.order_detail_id, date)
                       }
+                      readOnly={false}
                     />
                   </div>
                   <div>

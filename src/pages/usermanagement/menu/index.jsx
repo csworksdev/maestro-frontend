@@ -3,7 +3,7 @@ import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
 import Table from "@/components/globals/table/table";
-import { DeleteMenus, getMenusAll } from "@/axios/userManagement/permission";
+import { DeleteMenus, getMenusAll } from "@/axios/userManagement/menu";
 import Loading from "@/components/Loading";
 import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
