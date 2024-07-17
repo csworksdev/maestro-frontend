@@ -9,28 +9,20 @@ import Submenu from "./Submenu";
 
 const Navmenu = ({ menus }) => {
   const [activeSubmenu, setActiveSubmenu] = useState(null);
+  const [activeMultiMenu, setMultiMenu] = useState(null);
 
   const toggleSubmenu = (i) => {
-    if (activeSubmenu === i) {
-      setActiveSubmenu(null);
-    } else {
-      setActiveSubmenu(i);
-    }
+    setActiveSubmenu((prev) => (prev === i ? null : i));
+  };
+
+  const toggleMultiMenu = (j) => {
+    setMultiMenu((prev) => (prev === j ? null : j));
   };
 
   const location = useLocation();
   const locationName = location.pathname.replace("/", "");
   const [mobileMenu, setMobileMenu] = useMobileMenu();
-  const [activeMultiMenu, setMultiMenu] = useState(null);
   const dispatch = useDispatch();
-
-  const toggleMultiMenu = (j) => {
-    if (activeMultiMenu === j) {
-      setMultiMenu(null);
-    } else {
-      setMultiMenu(j);
-    }
-  };
 
   const isLocationMatch = (targetLocation) => {
     return (
@@ -72,72 +64,70 @@ const Navmenu = ({ menus }) => {
     if (mobileMenu) {
       setMobileMenu(false);
     }
-  }, [location]);
+  }, [location, menus, dispatch, mobileMenu, setMobileMenu]);
 
   return (
-    <>
-      <ul>
-        {menus.map((item, i) => (
-          <li
-            key={i}
-            className={` single-sidebar-menu 
-              ${item.child ? "item-has-children" : ""}
-              ${activeSubmenu === i ? "open" : ""}
-              ${locationName === item.link ? "menu-item-active" : ""}`}
-          >
-            {/* single menu with no childred*/}
-            {!item.child && !item.isHeadr && (
-              <NavLink className="menu-link" to={item.link}>
-                <span className="menu-icon flex-grow-0">
+    <ul>
+      {menus.map((item, i) => (
+        <li
+          key={i}
+          className={`single-sidebar-menu 
+            ${item.child ? "item-has-children" : ""}
+            ${activeSubmenu === i ? "open" : ""}
+            ${locationName === item.link ? "menu-item-active" : ""}`}
+        >
+          {/* Single menu without children */}
+          {!item.child && !item.isHeadr && (
+            <NavLink className="menu-link" to={item.link}>
+              <span className="menu-icon flex-grow-0">
+                <Icon icon={item.icon} />
+              </span>
+              <div className="text-box flex-grow">{item.title}</div>
+              {item.badge && <span className="menu-badge">{item.badge}</span>}
+            </NavLink>
+          )}
+          {/* Menu label */}
+          {item.isHeadr && !item.child && (
+            <div className="menulabel">{item.title}</div>
+          )}
+          {/* Submenu parent */}
+          {item.child && (
+            <div
+              className={`menu-link ${
+                activeSubmenu === i
+                  ? "parent_active not-collapsed"
+                  : "collapsed"
+              }`}
+              onClick={() => toggleSubmenu(i)}
+            >
+              <div className="flex-1 flex items-start">
+                <span className="menu-icon">
                   <Icon icon={item.icon} />
                 </span>
-                <div className="text-box flex-grow">{item.title}</div>
-                {item.badge && <span className="menu-badge">{item.badge}</span>}
-              </NavLink>
-            )}
-            {/* only for menulabel */}
-            {item.isHeadr && !item.child && (
-              <div className="menulabel">{item.title}</div>
-            )}
-            {/*    !!sub menu parent   */}
-            {item.child && (
-              <div
-                className={`menu-link ${
-                  activeSubmenu === i
-                    ? "parent_active not-collapsed"
-                    : "collapsed"
-                }`}
-                onClick={() => toggleSubmenu(i)}
-              >
-                <div className="flex-1 flex items-start">
-                  <span className="menu-icon">
-                    <Icon icon={item.icon} />
-                  </span>
-                  <div className="text-box">{item.title}</div>
-                </div>
-                <div className="flex-0">
-                  <div
-                    className={`menu-arrow transform transition-all duration-300 ${
-                      activeSubmenu === i ? " rotate-90" : ""
-                    }`}
-                  >
-                    <Icon icon="heroicons-outline:chevron-right" />
-                  </div>
+                <div className="text-box">{item.title}</div>
+              </div>
+              <div className="flex-0">
+                <div
+                  className={`menu-arrow transform transition-all duration-300 ${
+                    activeSubmenu === i ? "rotate-90" : ""
+                  }`}
+                >
+                  <Icon icon="heroicons-outline:chevron-right" />
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            <Submenu
-              activeSubmenu={activeSubmenu}
-              item={item}
-              i={i}
-              toggleMultiMenu={toggleMultiMenu}
-              activeMultiMenu={activeMultiMenu}
-            />
-          </li>
-        ))}
-      </ul>
-    </>
+          <Submenu
+            activeSubmenu={activeSubmenu}
+            item={item}
+            i={i}
+            toggleMultiMenu={toggleMultiMenu}
+            activeMultiMenu={activeMultiMenu}
+          />
+        </li>
+      ))}
+    </ul>
   );
 };
 

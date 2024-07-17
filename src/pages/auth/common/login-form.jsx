@@ -19,8 +19,7 @@ const schema = yup
   })
   .required();
 const LoginForm = () => {
-  // const [login, { isLoading, isError, error, isSuccess }] = useLoginMutation();
-
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const {
@@ -32,27 +31,14 @@ const LoginForm = () => {
     //
     mode: "all",
   });
-  const navigate = useNavigate();
+
   const onSubmit = async (data) => {
     try {
       const response = await login(data);
 
-      // if (response.error) {
-      //   throw new Error(response.error.message);
-      // }
-
-      // if (response.data.error) {
-      //   throw new Error(response.data.error);
-      // }
-
-      // if (!response.data.token) {
-      //   throw new Error("Invalid credentials");
-      // }
-
       dispatch(setUser(data));
-      navigate("/dashboard");
-      // localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("user", JSON.stringify(response.data.access)); //fix fail refresh page
+      localStorage.setItem("user", JSON.stringify(response.data.access)); // Fix fail refresh page
+      navigate("/app/dashboard"); // Redirect to dashboard after successful login
       toast.success("Login Successful");
     } catch (error) {
       toast.error(error.message);

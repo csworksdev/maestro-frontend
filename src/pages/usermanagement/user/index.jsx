@@ -104,8 +104,8 @@ const Users = () => {
 
   const COLUMNS = [
     {
-      Header: "Users",
-      accessor: "name",
+      Header: "Username",
+      accessor: "username",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },

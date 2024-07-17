@@ -226,23 +226,15 @@ const button = () => {
       </Card>
       <Card title="Router Link">
         <div className="space-xy-5">
-          <Button text="primary" className="btn-primary" link="/dashboard" />
-          <Button
-            text="secondary"
-            className=" btn-secondary"
-            link="/dashboard"
-          />
-          <Button text="success" className=" btn-success" link="/dashboard" />
-          <Button text="info" className=" btn-info" link="/dashboard" />
-          <Button text="warning" className=" btn-warning" link="/dashboard" />
-          <Button text="danger" className=" btn-danger" link="/dashboard" />
-          <Button text="Dark" className=" btn-dark" link="/dashboard" />
-          <Button text="Light" className=" btn-light" link="/dashboard" />
-          <Button
-            text="White"
-            className=" bg-white text-slate-900"
-            link="/dashboard"
-          />
+          <Button text="primary" className="btn-primary" link="/" />
+          <Button text="secondary" className=" btn-secondary" link="/" />
+          <Button text="success" className=" btn-success" link="/" />
+          <Button text="info" className=" btn-info" link="/" />
+          <Button text="warning" className=" btn-warning" link="/" />
+          <Button text="danger" className=" btn-danger" link="/" />
+          <Button text="Dark" className=" btn-dark" link="/" />
+          <Button text="Light" className=" btn-light" link="/" />
+          <Button text="White" className=" bg-white text-slate-900" link="/" />
         </div>
       </Card>
     </div>

@@ -4,7 +4,8 @@ import { Navigate } from "react-router-dom";
 const isAuthenticated = () => !!localStorage.getItem("user");
 
 const AuthenticatedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
+  const authStatus = isAuthenticated();
+  return authStatus ? children : <Navigate to="/auth/login" />;
 };
 
 export default AuthenticatedRoute;

@@ -3,12 +3,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./layout/Layout";
 import AuthLayout from "./layout/AuthLayout";
 import Loading from "@/components/Loading";
+import AuthenticatedRoute from "./layout/AuthenticatedRoute";
+import PublicRoute from "./layout/PublicRoute";
 
 const Dashboard = lazy(() => import("./pages/dashboard"));
-const Ecommerce = lazy(() => import("./pages/dashboard/ecommerce"));
-const CrmPage = lazy(() => import("./pages/dashboard/crm"));
-const ProjectPage = lazy(() => import("./pages/dashboard/project"));
-const BankingPage = lazy(() => import("./pages/dashboard/banking"));
 const Login = lazy(() => import("./pages/auth/login"));
 const Login2 = lazy(() => import("./pages/auth/login2"));
 const Login3 = lazy(() => import("./pages/auth/login3"));
@@ -22,89 +20,10 @@ const LockScreen = lazy(() => import("./pages/auth/lock-screen"));
 const LockScreen2 = lazy(() => import("./pages/auth/lock-screen2"));
 const LockScreen3 = lazy(() => import("./pages/auth/lock-screen3"));
 const Error = lazy(() => import("./pages/404"));
-const Button = lazy(() => import("./pages/components/button"));
-const Dropdown = lazy(() => import("./pages/components/dropdown"));
-const Badges = lazy(() => import("./pages/components/badges"));
-const Colors = lazy(() => import("./pages/components/colors"));
-const Typography = lazy(() => import("./pages/components/typography"));
-const Alert = lazy(() => import("./pages/components/alert"));
-const Progressbar = lazy(() => import("./pages/components/progress-bar"));
-const Card = lazy(() => import("./pages/components/card"));
-const Image = lazy(() => import("./pages/components/image"));
-const Placeholder = lazy(() => import("./pages/components/placeholder"));
-const Tooltip = lazy(() => import("./pages/components/tooltip-popover"));
-const Modal = lazy(() => import("./pages/components/modal"));
-const Carousel = lazy(() => import("./pages/components/carousel"));
-const Pagination = lazy(() => import("./pages/components/pagination"));
-const TabsAc = lazy(() => import("./pages/components/tab-accordion"));
-const Video = lazy(() => import("./pages/components/video"));
-const InputPage = lazy(() => import("./pages/forms/input"));
-const TextareaPage = lazy(() => import("./pages/forms/textarea"));
-const CheckboxPage = lazy(() => import("./pages/forms/checkbox"));
-const RadioPage = lazy(() => import("./pages/forms/radio-button"));
-const SwitchPage = lazy(() => import("./pages/forms/switch"));
-const InputGroupPage = lazy(() => import("./pages/forms/input-group"));
-const InputlayoutPage = lazy(() => import("./pages/forms/input-layout"));
-const InputMask = lazy(() => import("./pages/forms/input-mask"));
-const FormValidation = lazy(() => import("./pages/forms/form-validation"));
-const FileInput = lazy(() => import("./pages/forms/file-input"));
-const FormRepeater = lazy(() => import("./pages/forms/form-repeater"));
-const FormWizard = lazy(() => import("./pages/forms/form-wizard"));
-const SelectPage = lazy(() => import("./pages/forms/select"));
-const Flatpicker = lazy(() => import("./pages/forms/date-time-picker"));
-const AppexChartPage = lazy(() => import("./pages/chart/appex-chart"));
-const ChartJs = lazy(() => import("./pages/chart/chartjs"));
-const Recharts = lazy(() => import("./pages/chart/recharts"));
-const MapPage = lazy(() => import("./pages/map"));
-const BasicTablePage = lazy(() => import("./pages/table/table-basic"));
-const TanstackTable = lazy(() => import("./pages/table/react-table"));
-const InvoicePage = lazy(() => import("./pages/utility/invoice"));
-const InvoiceAddPage = lazy(() => import("./pages/utility/invoice-add"));
-const InvoicePreviewPage = lazy(() =>
-  import("./pages/utility/invoice-preview")
-);
-const InvoiceEditPage = lazy(() => import("./pages/utility/invoice-edit"));
-const PricingPage = lazy(() => import("./pages/utility/pricing"));
-const BlankPage = lazy(() => import("./pages/utility/blank-page"));
 const ComingSoonPage = lazy(() => import("./pages/utility/coming-soon"));
 const UnderConstructionPage = lazy(() =>
   import("./pages/utility/under-construction")
 );
-const BlogPage = lazy(() => import("./pages/utility/blog"));
-const BlogDetailsPage = lazy(() => import("./pages/utility/blog/blog-details"));
-const FaqPage = lazy(() => import("./pages/utility/faq"));
-const Settings = lazy(() => import("./pages/utility/settings"));
-const Profile = lazy(() => import("./pages/utility/profile"));
-const IconPage = lazy(() => import("./pages/icons"));
-const NotificationPage = lazy(() => import("./pages/utility/notifications"));
-const ChangelogPage = lazy(() => import("./pages/changelog"));
-const BasicWidget = lazy(() => import("./pages/widget/basic-widget"));
-const StatisticWidget = lazy(() => import("./pages/widget/statistic-widget"));
-const TodoPage = lazy(() => import("./pages/app/todo"));
-const EmailPage = lazy(() => import("./pages/app/email"));
-const ChatPage = lazy(() => import("./pages/app/chat"));
-const ProjectPostPage = lazy(() => import("./pages/app/projects"));
-const ProjectDetailsPage = lazy(() =>
-  import("./pages/app/projects/project-details")
-);
-const KanbanPage = lazy(() => import("./pages/app/kanban"));
-const CalenderPage = lazy(() => import("./pages/app/calendar"));
-const EcommercePage = lazy(() => import("./pages/ecommerce"));
-
-const ProductDetails = lazy(() => import("./pages/ecommerce/productDetails"));
-const Cart = lazy(() => import("./pages/ecommerce/cart"));
-const Wishlist = lazy(() => import("./pages/ecommerce/wish-list"));
-const Orders = lazy(() => import("./pages/ecommerce/orders"));
-const OrderDetails = lazy(() => import("./pages/ecommerce/orderDetails"));
-const Checkout = lazy(() => import("./pages/ecommerce/checkout"));
-const EditProduct = lazy(() => import("./pages/ecommerce/edit-product"));
-const Customers = lazy(() => import("./pages/ecommerce/customers"));
-const Sellers = lazy(() => import("./pages/ecommerce/sellers"));
-const AddProduct = lazy(() => import("./pages/ecommerce/add-product"));
-const InvoiceEPage = lazy(() => import("./pages/ecommerce/invoice-ecompage"));
-const Home = lazy(() => import("./pages/index"));
-
-// Referensi
 const Cabang = lazy(() => import("./pages/referensi/cabang"));
 const EditCabang = lazy(() => import("./pages/referensi/cabang/edit"));
 const Kolam = lazy(() => import("./pages/referensi/kolam"));
@@ -119,8 +38,6 @@ const Specialization = lazy(() => import("./pages/referensi/spesialisasi"));
 const EditSpecialization = lazy(() =>
   import("./pages/referensi/spesialisasi/edit")
 );
-
-// Master Data
 const Siswa = lazy(() => import("./pages/masterdata/siswa"));
 const EditSiswa = lazy(() => import("./pages/masterdata/siswa/edit"));
 const Trainer = lazy(() => import("./pages/masterdata/trainer"));
@@ -129,127 +46,47 @@ const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
 const Order = lazy(() => import("./pages/masterdata/order"));
 const EditOrder = lazy(() => import("./pages/masterdata/order/edit"));
-
-// Coach
 const CoachDashboard = lazy(() => import("./pages/trainer/dashboard"));
 const CoachEarning = lazy(() => import("./pages/trainer/earning"));
 const CoachPerformance = lazy(() => import("./pages/trainer/performance"));
 const CoachSchedule = lazy(() => import("./pages/trainer/schedule"));
 const CoachPresence = lazy(() => import("./pages/trainer/presence"));
-
-// User Management
 const UMUser = lazy(() => import("./pages/usermanagement/user"));
 const UMMenu = lazy(() => import("./pages/usermanagement/menu"));
 const UMRole = lazy(() => import("./pages/usermanagement/role"));
 const UMPermissions = lazy(() => import("./pages/usermanagement/permission"));
 
-const isAuthenticated = () => !!localStorage.getItem("user");
-
-const AuthenticatedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
-};
-
-const PublicRoute = ({ children }) => {
-  return isAuthenticated() ? <Navigate to="/dashboard" /> : children;
-};
 function App() {
   return (
     <main className="App relative">
       <Suspense fallback={<Loading />}>
         <Routes>
-          <Route path="/" element={<AuthLayout />}>
-            <Route index element={<Login />} />
-            <Route
-              path="login2"
-              element={
-                <PublicRoute>
-                  <Login2 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="login3"
-              element={
-                <PublicRoute>
-                  <Login3 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="register"
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="register2"
-              element={
-                <PublicRoute>
-                  <Register2 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="register3"
-              element={
-                <PublicRoute>
-                  <Register3 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="forgot-password"
-              element={
-                <PublicRoute>
-                  <ForgotPass />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="forgot-password2"
-              element={
-                <PublicRoute>
-                  <ForgotPass2 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="forgot-password3"
-              element={
-                <PublicRoute>
-                  <ForgotPass3 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="lock-screen"
-              element={
-                <PublicRoute>
-                  <LockScreen />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="lock-screen2"
-              element={
-                <PublicRoute>
-                  <LockScreen2 />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="lock-screen3"
-              element={
-                <PublicRoute>
-                  <LockScreen3 />
-                </PublicRoute>
-              }
-            />
-          </Route>
+          {/* Public Routes */}
           <Route
-            path="/*"
+            path="/auth"
+            element={
+              <PublicRoute>
+                <AuthLayout />
+              </PublicRoute>
+            }
+          >
+            <Route path="login" element={<Login />} />
+            <Route path="login2" element={<Login2 />} />
+            <Route path="login3" element={<Login3 />} />
+            <Route path="register" element={<Register />} />
+            <Route path="register2" element={<Register2 />} />
+            <Route path="register3" element={<Register3 />} />
+            <Route path="forgot-password" element={<ForgotPass />} />
+            <Route path="forgot-password2" element={<ForgotPass2 />} />
+            <Route path="forgot-password3" element={<ForgotPass3 />} />
+            <Route path="lock-screen" element={<LockScreen />} />
+            <Route path="lock-screen2" element={<LockScreen2 />} />
+            <Route path="lock-screen3" element={<LockScreen3 />} />
+          </Route>
+
+          {/* Authenticated Routes */}
+          <Route
+            path="/app"
             element={
               <AuthenticatedRoute>
                 <Layout />
@@ -257,7 +94,6 @@ function App() {
             }
           >
             <Route path="dashboard" element={<Dashboard />} />
-            {/* Reference */}
             <Route path="cabang">
               <Route index element={<Cabang />} />
               <Route path="add" element={<EditCabang />} />
@@ -283,7 +119,6 @@ function App() {
               <Route path="add" element={<EditSpecialization />} />
               <Route path="edit" element={<EditSpecialization />} />
             </Route>
-            {/* Master Data */}
             <Route path="siswa">
               <Route index element={<Siswa />} />
               <Route path="add" element={<EditSiswa />} />
@@ -304,43 +139,30 @@ function App() {
               <Route path="add" element={<EditOrder />} />
               <Route path="edit" element={<EditOrder />} />
             </Route>
-            {/* Coach */}
             <Route path="coach">
-              <Route index path="dashboard" element={<CoachDashboard />} />
+              <Route index element={<CoachDashboard />} />
               <Route path="earning" element={<CoachEarning />} />
               <Route path="performance" element={<CoachPerformance />} />
               <Route path="schedule" element={<CoachSchedule />} />
               <Route path="presence" element={<CoachPresence />} />
             </Route>
-            {/* User Management */}
             <Route path="user">
               <Route index element={<UMUser />} />
-              {/* <Route path="add" element={<EditOrder />} />
-              <Route path="edit" element={<EditOrder />} /> */}
             </Route>
             <Route path="menu">
               <Route index element={<UMMenu />} />
-              {/* <Route path="add" element={<EditOrder />} />
-              <Route path="edit" element={<EditOrder />} /> */}
             </Route>
             <Route path="role">
               <Route index element={<UMRole />} />
-              {/* <Route path="add" element={<EditOrder />} />
-              <Route path="edit" element={<EditOrder />} /> */}
             </Route>
             <Route path="permissions">
               <Route index element={<UMPermissions />} />
-              {/* <Route path="add" element={<EditOrder />} />
-              <Route path="edit" element={<EditOrder />} /> */}
             </Route>
             <Route path="*" element={<Navigate to="/404" />} />
           </Route>
-          <Route path="/404" element={<Error />} />
-          <Route path="/coming-soon" element={<ComingSoonPage />} />
-          <Route
-            path="/under-construction"
-            element={<UnderConstructionPage />}
-          />
+
+          {/* Catch-all Route */}
+          <Route path="*" element={<Navigate to="/auth/login" />} />
         </Routes>
       </Suspense>
     </main>
@@ -348,81 +170,3 @@ function App() {
 }
 
 export default App;
-
-{
-  /* <Route path="ecommerce" element={<Ecommerce />} />
-            <Route path="crm" element={<CrmPage />} />
-            <Route path="project" element={<ProjectPage />} />
-            <Route path="banking" element={<BankingPage />} />
-            <Route path="todo" element={<TodoPage />} />
-            <Route path="email" element={<EmailPage />} />
-            <Route path="chat" element={<ChatPage />} />
-            <Route path="projects" element={<ProjectPostPage />} />
-            <Route path="projects/:id" element={<ProjectDetailsPage />} />
-            <Route path="project-details" element={<ProjectDetailsPage />} />
-            <Route path="kanban" element={<KanbanPage />} />
-            <Route path="calender" element={<CalenderPage />} />
-            <Route path="button" element={<Button />} />
-            <Route path="dropdown" element={<Dropdown />} />
-            <Route path="badges" element={<Badges />} />
-            <Route path="colors" element={<Colors />} />
-            <Route path="typography" element={<Typography />} />
-            <Route path="alert" element={<Alert />} />
-            <Route path="progress-bar" element={<Progressbar />} />
-            <Route path="card" element={<Card />} />
-            <Route path="image" element={<Image />} />
-            <Route path="Placeholder" element={<Placeholder />} />
-            <Route path="tooltip-popover" element={<Tooltip />} />
-            <Route path="modal" element={<Modal />} />
-            <Route path="carousel" element={<Carousel />} />
-            <Route path="Paginations" element={<Pagination />} />
-            <Route path="tab-accordion" element={<TabsAc />} />
-            <Route path="video" element={<Video />} />
-            <Route path="input" element={<InputPage />} />
-            <Route path="textarea" element={<TextareaPage />} />
-            <Route path="checkbox" element={<CheckboxPage />} />
-            <Route path="radio-button" element={<RadioPage />} />
-            <Route path="switch" element={<SwitchPage />} />
-            <Route path="input-group" element={<InputGroupPage />} />
-            <Route path="input-layout" element={<InputlayoutPage />} />
-            <Route path="input-mask" element={<InputMask />} />
-            <Route path="form-validation" element={<FormValidation />} />
-            <Route path="file-input" element={<FileInput />} />
-            <Route path="form-repeater" element={<FormRepeater />} />
-            <Route path="form-wizard" element={<FormWizard />} />
-            <Route path="select" element={<SelectPage />} />
-            <Route path="date-time-picker" element={<Flatpicker />} />
-            <Route path="appex-chart" element={<AppexChartPage />} />
-            <Route path="chartjs" element={<ChartJs />} />
-            <Route path="recharts" element={<Recharts />} />
-            <Route path="map" element={<MapPage />} />
-            <Route path="table-basic" element={<BasicTablePage />} />
-            <Route path="react-table" element={<TanstackTable />} />
-            <Route path="invoice" element={<InvoicePage />} />
-            <Route path="invoice-add" element={<InvoiceAddPage />} />
-            <Route path="invoice-preview" element={<InvoicePreviewPage />} />
-            <Route path="invoice-edit" element={<InvoiceEditPage />} />
-            <Route path="pricing" element={<PricingPage />} />
-            <Route path="blank-page" element={<BlankPage />} />
-            <Route path="blog" element={<BlogPage />} />
-            <Route path="blog-details" element={<BlogDetailsPage />} />
-            <Route path="faq" element={<FaqPage />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="basic" element={<BasicWidget />} />
-            <Route path="statistic" element={<StatisticWidget />} />
-            <Route path="icons" element={<IconPage />} />
-            <Route path="notifications" element={<NotificationPage />} />
-            <Route path="changelog" element={<ChangelogPage />} />
-            <Route path="products/:id" element={<ProductDetails />} />
-            <Route path="cart" element={<Cart />} />
-            <Route path="wishlist" element={<Wishlist />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="order-details" element={<OrderDetails />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="add-product" element={<AddProduct />} />
-            <Route path="edit-product" element={<EditProduct />} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="sellers" element={<Sellers />} />
-            <Route path="invoice-ecommerce" element={<InvoiceEPage />} /> */
-}

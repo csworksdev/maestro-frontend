@@ -12,7 +12,6 @@ export const getKolamAll = async (data) => {
 };
 
 export const AddKolam = async (data) => {
-  console.log(data);
   try {
     let response = await axiosConfig.post("/api/pool/", data);
     return response;

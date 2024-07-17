@@ -22,7 +22,6 @@ export const getSiswaByProduk = async () => {
 };
 
 export const AddSiswa = async (data) => {
-  console.log(data);
   try {
     let response = await axiosConfig.post("/api/student/", data);
     return response;
