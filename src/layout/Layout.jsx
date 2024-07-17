@@ -18,7 +18,6 @@ import Loading from "@/components/Loading";
 import { motion } from "framer-motion";
 
 const Layout = () => {
-  console.log("layout");
   const { width, breakpoints } = useWidth();
   const [collapsed] = useSidebar();
   const navigate = useNavigate();

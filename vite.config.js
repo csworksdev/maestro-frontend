@@ -26,4 +26,8 @@ export default defineConfig({
     react(),
     reactRefresh(),
   ],
+
+  build: {
+    sourcemap: false,
+  },
 });

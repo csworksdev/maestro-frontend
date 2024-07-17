@@ -75,8 +75,10 @@ const PaginationComponent = ({
       </div>
       <div className="flex items-center space-x-3 rtl:space-x-reverse">
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white ${
-            !canPreviousPage ? "opacity-50 cursor-not-allowed" : ""
+          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+            !canPreviousPage
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:scale-110"
           }`}
           onClick={() => gotoPage(0)}
           disabled={!canPreviousPage}
@@ -84,8 +86,10 @@ const PaginationComponent = ({
           <Icon icon="heroicons-outline:chevron-double-left" />
         </button>
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white ${
-            !canPreviousPage ? "opacity-50 cursor-not-allowed" : ""
+          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+            !canPreviousPage
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:scale-110"
           }`}
           onClick={() => previousPage()}
           disabled={!canPreviousPage}
@@ -96,10 +100,10 @@ const PaginationComponent = ({
           <button
             key={page}
             aria-current="page"
-            className={`text-sm rounded leading-[16px] flex h-6 w-6 items-center justify-center transition-all duration-150 ${
+            className={`text-sm rounded leading-[16px] flex h-6 w-6 items-center justify-center transition-all duration-300 ${
               page === pageIndex
-                ? "bg-slate-900 dark:bg-slate-600 dark:text-slate-200 text-white font-medium"
-                : "bg-slate-100 dark:bg-slate-700 dark:text-slate-400 text-slate-900 font-normal"
+                ? "bg-blue-500 text-white font-medium"
+                : "bg-slate-100 dark:bg-slate-700 dark:text-slate-400 text-slate-900 font-normal hover:bg-blue-200"
             }`}
             onClick={() => gotoPage(page)}
           >
@@ -107,8 +111,8 @@ const PaginationComponent = ({
           </button>
         ))}
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white ${
-            !canNextPage ? "opacity-50 cursor-not-allowed" : ""
+          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+            !canNextPage ? "opacity-50 cursor-not-allowed" : "hover:scale-110"
           }`}
           onClick={() => nextPage()}
           disabled={!canNextPage}
@@ -116,8 +120,8 @@ const PaginationComponent = ({
           <Icon icon="heroicons-outline:chevron-right" />
         </button>
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white ${
-            !canNextPage ? "opacity-50 cursor-not-allowed" : ""
+          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+            !canNextPage ? "opacity-50 cursor-not-allowed" : "hover:scale-110"
           }`}
           onClick={() => gotoPage(pageCount - 1)}
           disabled={!canNextPage}

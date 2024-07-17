@@ -87,8 +87,8 @@ const Edit = () => {
       phone: newData.phone,
       address: newData.address,
       dob: isUpdate
-        ? data.dob
-        : DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
+        ? DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd")
+        : data.dob,
       pob: newData.pob,
     };
 

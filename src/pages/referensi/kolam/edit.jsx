@@ -39,7 +39,11 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    getCabangAll().then((res) => {
+    const params = {
+      page: 1,
+      page_size: 50,
+    };
+    getCabangAll(params).then((res) => {
       const fetchedBranch = res.data.results;
       const mappedOption = fetchedBranch.map((item) => ({
         value: item.branch_id,
