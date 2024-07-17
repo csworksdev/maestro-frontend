@@ -105,7 +105,7 @@ const Roles = () => {
   const COLUMNS = [
     {
       Header: "Roles",
-      accessor: "name",
+      accessor: "role_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },

@@ -111,6 +111,13 @@ const Users = () => {
       },
     },
     {
+      Header: "Email",
+      accessor: "email",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
       Header: "action",
       accessor: "action",
       Cell: (row) => {

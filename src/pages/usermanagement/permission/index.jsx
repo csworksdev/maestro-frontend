@@ -108,7 +108,7 @@ const Permissions = () => {
   const COLUMNS = [
     {
       Header: "Permissions",
-      accessor: "name",
+      accessor: "permission_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },

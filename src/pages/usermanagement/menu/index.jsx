@@ -105,7 +105,14 @@ const Menus = () => {
   const COLUMNS = [
     {
       Header: "Menus",
-      accessor: "name",
+      accessor: "menu_name",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Route",
+      accessor: "route",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },

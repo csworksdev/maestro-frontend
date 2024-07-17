@@ -52,9 +52,15 @@ const CoachPerformance = lazy(() => import("./pages/trainer/performance"));
 const CoachSchedule = lazy(() => import("./pages/trainer/schedule"));
 const CoachPresence = lazy(() => import("./pages/trainer/presence"));
 const UMUser = lazy(() => import("./pages/usermanagement/user"));
+const UMUserEdit = lazy(() => import("./pages/usermanagement/user/edit"));
 const UMMenu = lazy(() => import("./pages/usermanagement/menu"));
+const UMMenuEdit = lazy(() => import("./pages/usermanagement/menu/edit"));
 const UMRole = lazy(() => import("./pages/usermanagement/role"));
+const UMRoleEdit = lazy(() => import("./pages/usermanagement/role/edit"));
 const UMPermissions = lazy(() => import("./pages/usermanagement/permission"));
+const UMPermissionsEdit = lazy(() =>
+  import("./pages/usermanagement/permission/edit")
+);
 
 function App() {
   return (
@@ -148,15 +154,23 @@ function App() {
             </Route>
             <Route path="user">
               <Route index element={<UMUser />} />
+              <Route path="add" element={<UMUserEdit />} />
+              <Route path="edit" element={<UMUserEdit />} />
             </Route>
             <Route path="menu">
               <Route index element={<UMMenu />} />
+              <Route path="add" element={<UMMenuEdit />} />
+              <Route path="edit" element={<UMMenuEdit />} />
             </Route>
             <Route path="role">
               <Route index element={<UMRole />} />
+              <Route path="add" element={<UMRoleEdit />} />
+              <Route path="edit" element={<UMRoleEdit />} />
             </Route>
             <Route path="permissions">
               <Route index element={<UMPermissions />} />
+              <Route path="add" element={<UMPermissionsEdit />} />
+              <Route path="edit" element={<UMPermissionsEdit />} />
             </Route>
             <Route path="*" element={<Navigate to="/404" />} />
           </Route>

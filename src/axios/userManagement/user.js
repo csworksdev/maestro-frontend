@@ -13,7 +13,7 @@ export const getUsersAll = async (data) => {
 
 export const AddUsers = async (data) => {
   try {
-    let response = await axiosConfig.post("/auth/users/", data);
+    let response = await axiosConfig.post("/auth/users/register/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
