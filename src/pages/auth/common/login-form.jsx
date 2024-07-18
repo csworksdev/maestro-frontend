@@ -62,7 +62,7 @@ const LoginForm = () => {
         name="password"
         label="password"
         type="password"
-        defaultValue="testpassword"
+        // defaultValue="testpassword"
         register={register}
         error={errors.password}
         className="h-[48px]"

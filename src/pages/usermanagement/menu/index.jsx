@@ -83,7 +83,7 @@ const Menus = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteMenus(e.branch_id).then((res) => {
+        DeleteMenus(e.menu_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);

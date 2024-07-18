@@ -86,7 +86,7 @@ const Permissions = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeletePermissions(e.branch_id).then((res) => {
+        DeletePermissions(e.permission_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);
