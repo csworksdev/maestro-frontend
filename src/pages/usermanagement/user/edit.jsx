@@ -1,18 +1,23 @@
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { AddUsers, EditUsers } from "@/axios/userManagement/user";
+import Select from "@/components/ui/Select";
+import { getRolesAll } from "@/axios/userManagement/role";
+import Loading from "@/components/Loading";
 
 const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [roleOption, setRoleOption] = useState([]);
   const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
+  const [loading, setLoading] = useState(true);
 
   const FormValidationSchema = yup
     .object({
@@ -34,6 +39,31 @@ const Edit = () => {
     resolver: yupResolver(FormValidationSchema),
     mode: "all",
   });
+
+  const loadReference = () => {
+    try {
+      getRolesAll().then((res) => {
+        const fetched = res.data.results;
+        const mappedOption = fetched
+          .sort(function (a, b) {
+            return a.role_name.localeCompare(b.role_name);
+          })
+          .map((item) => ({
+            value: item.role_id,
+            label: item.role_name,
+          }));
+        setRoleOption(mappedOption);
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReference();
+  }, []);
 
   const handleCancel = () => {
     navigate(-1);
@@ -81,6 +111,10 @@ const Edit = () => {
     }
   };
 
+  if (loading) {
+    return <Loading />; // Show a loading spinner while data is being fetched
+  }
+
   return (
     <div>
       <Card title={isUpdate ? "Update User" : "Add User"}>
@@ -104,6 +138,15 @@ const Edit = () => {
             register={register}
             error={errors.email}
             defaultValue={isUpdate ? data.email : ""}
+          />
+          <Select
+            name="role"
+            label="Role"
+            placeholder="Pilih role"
+            register={register}
+            error={errors.role}
+            options={roleOption}
+            defaultValue={isUpdate ? data.role : ""}
           />
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button

@@ -1,10 +1,11 @@
 import React from "react";
-import { menuItems } from "@/constant/data";
+// import { menuItems } from "@/constant/data";
 import Icon from "@/components/ui/Icon";
 import { Link } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 
 const HorizentalMenu = () => {
+  let menuItems = JSON.parse(localStorage.getItem("menuItems"));
   return (
     <div className="main-menu">
       <ul>

@@ -13,12 +13,12 @@ import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 
 const actions = [
-  // {
-  //   name: "view",
-  //   icon: "heroicons-outline:eye",
-  // },
   {
-    name: "edit",
+    name: "Menu",
+    icon: "heroicons-outline:bars-3",
+  },
+  {
+    name: "Edit",
     icon: "heroicons:pencil-square",
   },
   {
@@ -131,7 +131,9 @@ const Roles = () => {
                   onClick={(e) =>
                     item.name === "edit"
                       ? handleEdit(row.row.original)
-                      : handleDelete(row.row.original)
+                      : item.name === "delete"
+                      ? handleDelete(row.row.original)
+                      : ""
                   }
                 >
                   <span className="text-base">

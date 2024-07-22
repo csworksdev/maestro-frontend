@@ -135,10 +135,10 @@ const Presence = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 justify-end gap-5">
+    <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1">
       {Object.keys(groupedData).map((fullname, i) => (
         <Card title={fullname} key={i}>
-          <div className="grid grid-cols-4 justify-end gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {groupedData[fullname]
               .sort((a, b) => a.meet - b.meet)
               .map((item) => (
@@ -165,7 +165,7 @@ const Presence = () => {
                       onChange={(date) =>
                         handleChangeDay(item.order_detail_id, date)
                       }
-                      readOnly={false}
+                      style={{ background: "#ffffff", color: "inherit" }}
                     />
                   </div>
                   <div>

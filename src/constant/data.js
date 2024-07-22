@@ -1,4 +1,39 @@
-export const menuItems = [
+export let menuItems = [];
+
+export const menuSuperUser = [
+  {
+    isHeadr: true,
+    title: "User Management",
+  },
+  {
+    title: "User",
+    icon: "heroicons-outline:academic-cap",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "User",
+        childlink: "user",
+      },
+      {
+        childtitle: "Role",
+        childlink: "role",
+      },
+      {
+        childtitle: "Menu",
+        childlink: "menu",
+      },
+      {
+        childtitle: "Permissions",
+        childlink: "permissions",
+      },
+    ],
+  },
+];
+
+export const menuFinance = [];
+
+export const menuChief = [
   {
     isHeadr: true,
     title: "Dashboard",
@@ -51,6 +86,44 @@ export const menuItems = [
       },
     ],
   },
+];
+
+export const menuTrainer = [
+  {
+    isHeadr: true,
+    title: "Coach",
+  },
+  {
+    title: "Training",
+    icon: "heroicons-outline:academic-cap",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Dashboard",
+        childlink: "coach/dashboard",
+      },
+      {
+        childtitle: "Earning",
+        childlink: "coach/earning",
+      },
+      {
+        childtitle: "Performance",
+        childlink: "coach/performance",
+      },
+      {
+        childtitle: "Schedule",
+        childlink: "coach/schedule",
+      },
+      {
+        childtitle: "Presence",
+        childlink: "coach/presence",
+      },
+    ],
+  },
+];
+
+export const menuAdmin = [
   {
     isHeadr: true,
     title: "Admin",
@@ -116,66 +189,6 @@ export const menuItems = [
       {
         childtitle: "Spesialisasi Terapi",
         childlink: "spesialisasi",
-      },
-    ],
-  },
-  {
-    isHeadr: true,
-    title: "Coach",
-  },
-  {
-    title: "Training",
-    icon: "heroicons-outline:academic-cap",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Dashboard",
-        childlink: "coach/dashboard",
-      },
-      {
-        childtitle: "Earning",
-        childlink: "coach/earning",
-      },
-      {
-        childtitle: "Performance",
-        childlink: "coach/performance",
-      },
-      {
-        childtitle: "Schedule",
-        childlink: "coach/schedule",
-      },
-      {
-        childtitle: "Presence",
-        childlink: "coach/presence",
-      },
-    ],
-  },
-  {
-    isHeadr: true,
-    title: "User Management",
-  },
-  {
-    title: "User",
-    icon: "heroicons-outline:academic-cap",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "User",
-        childlink: "user",
-      },
-      {
-        childtitle: "Role",
-        childlink: "role",
-      },
-      {
-        childtitle: "Menu",
-        childlink: "menu",
-      },
-      {
-        childtitle: "Permissions",
-        childlink: "permissions",
       },
     ],
   },

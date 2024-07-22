@@ -116,114 +116,108 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
   };
 
   return (
-    <div>
-      <Card>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Textinput
-            name="fullname"
-            label="Nama Trainer"
-            type="text"
-            placeholder="Masukan Nama Trainer"
-            register={register}
-            error={errors.fullname?.message}
-            defaultValue={isUpdate ? data.fullname : ""}
+    <Card title="Biodata">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Textinput
+          name="fullname"
+          label="Nama Trainer"
+          type="text"
+          placeholder="Masukan Nama Trainer"
+          register={register}
+          error={errors.fullname?.message}
+          defaultValue={isUpdate ? data.fullname : ""}
+        />
+        <Textinput
+          name="nickname"
+          label="Panggilan"
+          type="text"
+          placeholder="Masukan Panggilan"
+          register={register}
+          error={errors.nickname?.message}
+          defaultValue={isUpdate ? data.nickname : ""}
+        />
+        <Select
+          name="gender"
+          label="Jenis Kelamin"
+          placeholder="Pilih gender"
+          register={register}
+          error={errors.gender?.message}
+          defaultValue={isUpdate ? data.gender : ""}
+          options={gender}
+        />
+        <div>
+          <label className="form-label" htmlFor="dob">
+            Tanggal Lahir
+          </label>
+          <Flatpickr
+            defaultValue={
+              isUpdate ? DateTime.fromISO(data.dob).toFormat("yyyy-MM-dd") : ""
+            }
+            name="dob"
+            options={{
+              dateFormat: "Y-m-d",
+            }}
+            className="form-control py-2"
+            onChange={(date) => setValue("dob", date[0])}
           />
-          <Textinput
-            name="nickname"
-            label="Panggilan"
-            type="text"
-            placeholder="Masukan Panggilan"
-            register={register}
-            error={errors.nickname?.message}
-            defaultValue={isUpdate ? data.nickname : ""}
+          {errors.dob && <p className="error-message">{errors.dob.message}</p>}
+        </div>
+        <div>
+          <label className="form-label" htmlFor="reg_date">
+            Tanggal Registrasi
+          </label>
+          <Flatpickr
+            defaultValue={
+              isUpdate
+                ? DateTime.fromISO(data.reg_date).toFormat("yyyy-MM-dd")
+                : ""
+            }
+            name="reg_date"
+            options={{
+              dateFormat: "Y-m-d",
+            }}
+            className="form-control py-2"
+            onChange={(date) => setValue("reg_date", date[0])}
           />
-          <Select
-            name="gender"
-            label="Jenis Kelamin"
-            placeholder="Pilih gender"
-            register={register}
-            error={errors.gender?.message}
-            defaultValue={isUpdate ? data.gender : ""}
-            options={gender}
-          />
-          <div>
-            <label className="form-label" htmlFor="dob">
-              Tanggal Lahir
-            </label>
-            <Flatpickr
-              defaultValue={
-                isUpdate
-                  ? DateTime.fromISO(data.dob).toFormat("yyyy-MM-dd")
-                  : ""
-              }
-              name="dob"
-              options={{
-                dateFormat: "Y-m-d",
-              }}
-              className="form-control py-2"
-              onChange={(date) => setValue("dob", date[0])}
+          {errors.reg_date && (
+            <p className="error-message">{errors.reg_date.message}</p>
+          )}
+        </div>
+        <Textinput
+          name="precentage_fee"
+          label="Bagi Hasil"
+          type="number"
+          placeholder="Masukan bagi hasil"
+          register={register}
+          error={errors.precentage_fee?.message}
+          defaultValue={isUpdate ? data.precentage_fee : ""}
+        />
+        <div className="flex flex-wrap space-xy-5">
+          {options.map((option) => (
+            <Radio
+              key={option.value}
+              label={option.label}
+              name="is_active"
+              value={option.value}
+              checked={selectOption === option.value}
+              onChange={handleOption}
             />
-            {errors.dob && (
-              <p className="error-message">{errors.dob.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="form-label" htmlFor="reg_date">
-              Tanggal Registrasi
-            </label>
-            <Flatpickr
-              defaultValue={
-                isUpdate
-                  ? DateTime.fromISO(data.reg_date).toFormat("yyyy-MM-dd")
-                  : ""
-              }
-              name="reg_date"
-              options={{
-                dateFormat: "Y-m-d",
-              }}
-              className="form-control py-2"
-              onChange={(date) => setValue("reg_date", date[0])}
-            />
-            {errors.reg_date && (
-              <p className="error-message">{errors.reg_date.message}</p>
-            )}
-          </div>
-          <Textinput
-            name="precentage_fee"
-            label="Bagi Hasil"
-            type="number"
-            placeholder="Masukan bagi hasil"
-            register={register}
-            error={errors.precentage_fee?.message}
-            defaultValue={isUpdate ? data.precentage_fee : ""}
-          />
-          <div className="flex flex-wrap space-xy-5">
-            {options.map((option) => (
-              <Radio
-                key={option.value}
-                label={option.label}
-                name="is_active"
-                value={option.value}
-                checked={selectOption === option.value}
-                onChange={handleOption}
-              />
-            ))}
-          </div>
-          <div className="ltr:text-right rtl:text-left space-x-3">
-            <button
-              type="button"
-              className="btn text-center"
-              onClick={handleCancel}
-            >
-              Batal
-            </button>
-            <button type="submit" className="btn btn-dark text-center">
-              {isUpdate ? "Update" : "Add"} Trainer
-            </button>
-          </div>
-        </form>
-      </Card>
-    </div>
+          ))}
+        </div>
+        <div className="ltr:text-right rtl:text-left space-x-3">
+          <button
+            type="button"
+            className="btn text-center"
+            onClick={handleCancel}
+          >
+            Batal
+          </button>
+          <button type="submit" className="btn btn-dark text-center">
+            {isUpdate ? "Update" : "Add"} Trainer
+          </button>
+        </div>
+      </form>
+    </Card>
   );
 };
 

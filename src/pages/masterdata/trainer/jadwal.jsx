@@ -69,9 +69,35 @@ const CardJadwal = ({ day, time, selected, setSelected, dataKolam }) => {
     });
   };
 
+  const handleCheckAllChange = (day) => {
+    const allChecked = time.every((option) =>
+      selected.some((item) => item.startsWith(`${day}#${option.value}`))
+    );
+
+    if (allChecked) {
+      setSelected(selected.filter((item) => !item.startsWith(`${day}#`)));
+    } else {
+      const newSelections = time.map(
+        (option) => `${day}#${option.value}#defaultPool`
+      );
+      setSelected((prevSelected) => [
+        ...prevSelected.filter((item) => !item.startsWith(`${day}#`)),
+        ...newSelections,
+      ]);
+    }
+  };
+
   return (
     <Card title={day} titleClass="align-center">
       <div className="space-y-4">
+        <Checkbox
+          name={`${day}#checkall`}
+          label="Check All"
+          checked={time.every((option) =>
+            selected.some((item) => item.startsWith(`${day}#${option.value}`))
+          )}
+          onChange={() => handleCheckAllChange(day)}
+        />
         {time.map((option, i) => {
           const isChecked = selected.some((item) =>
             item.startsWith(`${day}#${option.value}`)
@@ -348,7 +374,7 @@ const Jadwal = ({ data }) => {
   }
 
   return (
-    <>
+    <Card title="Jadwal Pelatih">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           {mockdata.map((item, i) => (
@@ -375,7 +401,7 @@ const Jadwal = ({ data }) => {
           </button>
         </div>
       </form>
-    </>
+    </Card>
   );
 };
 

@@ -1,5 +1,6 @@
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
+import Checkbox from "@/components/ui/Checkbox"; // Assuming there's a Checkbox component for handling boolean fields
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -17,6 +18,11 @@ const Edit = () => {
   const FormValidationSchema = yup
     .object({
       menu_name: yup.string().required("Menu name is required"),
+      route: yup.string().required("Route is required"),
+      icon: yup.string(),
+      is_header: yup.boolean(),
+      is_open: yup.boolean(),
+      is_hide: yup.boolean(),
     })
     .required();
 
@@ -61,10 +67,15 @@ const Edit = () => {
       });
   };
 
-  const onSubmit = (newdata) => {
+  const onSubmit = (newData) => {
     const updatedData = {
       ...data,
-      menu_name: newdata.menu_name,
+      menu_name: newData.menu_name,
+      route: newData.route,
+      icon: newData.icon,
+      is_header: newData.is_header,
+      is_open: newData.is_open,
+      is_hide: newData.is_hide,
     };
     if (isUpdate) {
       handleUpdate(updatedData);
@@ -79,13 +90,57 @@ const Edit = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Textinput
             name="menu_name"
-            label="Menu"
+            label="Menu Name"
             id="menu_name"
             type="text"
-            placeholder="Enter Name"
+            placeholder="Enter Menu Name"
             register={register}
             error={errors.menu_name}
             defaultValue={isUpdate ? data.menu_name : ""}
+          />
+          <Textinput
+            name="route"
+            label="Route"
+            id="route"
+            type="text"
+            placeholder="Enter Route"
+            register={register}
+            error={errors.route}
+            defaultValue={isUpdate ? data.route : ""}
+          />
+          <Textinput
+            name="icon"
+            label="Icon"
+            id="icon"
+            type="text"
+            placeholder="Enter Icon"
+            register={register}
+            error={errors.icon}
+            defaultValue={isUpdate ? data.icon : ""}
+          />
+          <Checkbox
+            name="is_header"
+            label="Is Header"
+            id="is_header"
+            register={register}
+            error={errors.is_header}
+            defaultChecked={isUpdate ? data.is_header : false}
+          />
+          <Checkbox
+            name="is_open"
+            label="Is Open"
+            id="is_open"
+            register={register}
+            error={errors.is_open}
+            defaultChecked={isUpdate ? data.is_open : false}
+          />
+          <Checkbox
+            name="is_hide"
+            label="Is Hide"
+            id="is_hide"
+            register={register}
+            error={errors.is_hide}
+            defaultChecked={isUpdate ? data.is_hide : false}
           />
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button

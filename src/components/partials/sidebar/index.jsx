@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import SidebarLogo from "./Logo";
 import Navmenu from "./Navmenu";
-import { menuItems } from "@/constant/data";
+// import { menuItems } from "@/constant/data";
 import SimpleBar from "simplebar-react";
 import useSidebar from "@/hooks/useSidebar";
 import useSemiDark from "@/hooks/useSemiDark";
@@ -10,6 +10,8 @@ import useSkin from "@/hooks/useSkin";
 const Sidebar = () => {
   const scrollableNodeRef = useRef(null);
   const [scroll, setScroll] = useState(false);
+
+  let menuItems = JSON.parse(localStorage.getItem("menuItems"));
 
   useEffect(() => {
     const handleScroll = () => {
