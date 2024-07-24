@@ -11,6 +11,17 @@ export const getSiswaAll = async (data) => {
   }
 };
 
+export const searchSiswa = async (data) => {
+  try {
+    let response = await axiosConfig.get("/api/student/", {
+      params: data,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const getSiswaByProduk = async () => {
   try {
     let response = await axiosConfig.get("/api/studentbyproduk/");

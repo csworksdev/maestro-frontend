@@ -116,7 +116,7 @@ const Edit = () => {
   }
 
   return (
-    <div>
+    <>
       <Card title={isUpdate ? "Update User" : "Add User"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Textinput
@@ -162,7 +162,7 @@ const Edit = () => {
           </div>
         </form>
       </Card>
-    </div>
+    </>
   );
 };
 

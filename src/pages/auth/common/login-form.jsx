@@ -13,6 +13,7 @@ import { setUser } from "@/store/api/auth/authSlice";
 import { toast } from "react-toastify";
 import { login } from "@/axios/auth/auth";
 import Menu from "@/constant/menu";
+
 const schema = yup
   .object({
     // email: yup.string().email("Invalid email").required("Email is Required"),
@@ -38,8 +39,12 @@ const LoginForm = () => {
       const response = await login(data);
 
       dispatch(setUser(data));
-      Menu(response.data.roles);
-      localStorage.setItem("user", JSON.stringify(response.data.access)); // Fix fail refresh page
+      // dispatch(setUser(response));
+      Menu(response.data.data.roles);
+      localStorage.setItem("user", JSON.stringify(response.data.access));
+      localStorage.setItem("userid", response.data.data.user_id);
+      localStorage.setItem("username", response.data.data.user_name);
+      localStorage.setItem("roles", response.data.data.roles);
       navigate("/app/dashboard"); // Redirect to dashboard after successful login
       toast.success("Login Successful");
     } catch (error) {

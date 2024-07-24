@@ -1,31 +1,31 @@
-import Card from "@/components/ui/Card";
-import Textinput from "@/components/ui/Textinput";
-import React, { useEffect, useState } from "react";
-import { Await, useLocation, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
+import AsyncSelect from "react-select/async"; // Import AsyncSelect
+import Select from "@/components/ui/Select";
+import Flatpickr from "react-flatpickr";
+import { DateTime } from "luxon";
+import Card from "@/components/ui/Card";
+import Textinput from "@/components/ui/Textinput";
+import Loading from "@/components/Loading";
+import Radio from "@/components/ui/Radio";
 import {
   AddOrder,
   EditOrder,
   FindAvailableTrainer,
 } from "@/axios/masterdata/order";
 import { getProdukPool } from "@/axios/masterdata/produk";
-import { getSiswaAll } from "@/axios/masterdata/siswa";
+import { getSiswaAll, searchSiswa } from "@/axios/masterdata/siswa"; // Import searchSiswa function
 import { getTrainerAll } from "@/axios/masterdata/trainer";
-import Select from "@/components/ui/Select";
-import Flatpickr from "react-flatpickr";
-import Loading from "@/components/Loading";
-import { DateTime } from "luxon";
-import OrderDetail from "./orderDetail";
 import { getKolamAll } from "@/axios/referensi/kolam";
 import {
   AddOrderDetail,
   EditOrderDetail,
   getOrderDetailByParent,
 } from "@/axios/masterdata/orderDetail";
-import Radio from "@/components/ui/Radio";
 import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 
 const Edit = () => {
@@ -37,6 +37,8 @@ const Edit = () => {
   const [kolamOption, setKolamOption] = useState([]);
   const [productOption, setProductOption] = useState([]);
   const [studentOption, setStudentOption] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]); // State for selected students
+  const [defaultStudentOptions, setDefaultStudentOptions] = useState([]); // State for default student options
   const [trainerOption, setTrainerOption] = useState([]);
   const [orderDetail, setOrderDetail] = useState([]);
   const [selectGenderOption, setSelectGenderOption] = useState("L");
@@ -51,6 +53,7 @@ const Edit = () => {
     gender: "",
     pool_id: "",
   });
+  const [maxStudents, setMaxStudents] = useState(0); // State for max students
 
   const FormValidationSchema = yup
     .object({
@@ -71,19 +74,24 @@ const Edit = () => {
   useEffect(() => {
     if (isUpdate) {
       if (data.product) setValue("product", data.product);
-      if (data.student) setValue("student", data.student);
+      if (data.students) {
+        const transformedStudents = data.students.map((student) => ({
+          value: student.student_id,
+          label:
+            studentOption.find((opt) => opt.value === student.student_id)
+              ?.label || "",
+        }));
+        setSelectedStudents(transformedStudents);
+      }
       if (data.trainer) setValue("trainer", data.trainer);
       if (data.order_date) setValue("order_date", data.order_date);
       if (data.price) setValue("price", data.price);
     }
-  }, [isUpdate, data, setValue]);
+  }, [isUpdate, data, setValue, studentOption]);
 
-  const loadReference = async () => {
+  const loadReference = useCallback(async () => {
     try {
-      const kolamResponse = await getKolamAll({
-        page_size: 50,
-      });
-
+      const kolamResponse = await getKolamAll({ page_size: 50 });
       const studentResponse = await getSiswaAll();
 
       const kolamOption = kolamResponse.data.results.map((item) => ({
@@ -97,9 +105,8 @@ const Edit = () => {
       }));
 
       setKolamOption(kolamOption);
-
       setStudentOption(studentOptions);
-      // setTrainerOption(trainerOptions);
+      setDefaultStudentOptions(studentOptions.slice(0, 10)); // Set default options
 
       if (data.pool) {
         setProductOption([]);
@@ -111,18 +118,16 @@ const Edit = () => {
         }));
         setProductOption(productOptions);
       }
-
-      // if (isUpdate) {
-      //   setOrderDetail([]);
-      //   const orderDetailResponse = await getOrderDetailByParent(data.order_id);
-      //   setOrderDetail(orderDetailResponse.data.results);
-      // }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [data.pool]);
+
+  useEffect(() => {
+    loadReference();
+  }, [loadReference]);
 
   const jam = [
     { value: "06.00", label: "06.00" },
@@ -146,7 +151,7 @@ const Edit = () => {
     { value: "Senin", label: "Senin" },
     { value: "Selasa", label: "Selasa" },
     { value: "Rabu", label: "Rabu" },
-    { value: "Kami", label: "Kami" },
+    { value: "Kamis", label: "Kamis" },
     { value: "Jumat", label: "Jumat" },
     { value: "Sabtu", label: "Sabtu" },
     { value: "Minggu", label: "Minggu" },
@@ -156,10 +161,6 @@ const Edit = () => {
     { value: "L", label: "Laki-Laki" },
     { value: "P", label: "Perempuan" },
   ];
-
-  useEffect(() => {
-    loadReference();
-  }, [loading, isUpdate]);
 
   const handleCancel = () => {
     navigate(-1);
@@ -179,12 +180,9 @@ const Edit = () => {
             return item;
           });
           for (let index = 0; index < temp.length; index++) {
-            // (temp[index].schedule_date = DateTime.fromISO(data.start_date)
-            //   .plus({ days: 7 * (index + 1) })
-            //   .toFormat("yyyy-MM-dd")),
             AddOrderDetail(temp[index], data).then((addres) => {
-              if (addres.status == "success") {
-                console.log("finnish");
+              if (addres.status === "success") {
+                console.log("finished");
               }
             });
           }
@@ -196,7 +194,7 @@ const Edit = () => {
             time: filterTrainerByTime,
             is_free: false,
           };
-          UpdateTrainerSchedule(params).then((results) => {
+          UpdateTrainerSchedule(params).then(() => {
             navigate(-1);
           });
         });
@@ -207,17 +205,19 @@ const Edit = () => {
   const handleUpdate = (updatedData) => {
     EditOrder(data.order_id, updatedData).then((res) => {
       if (res.status) {
-        Swal.fire("Added!", "Your file has been added.", "success").then(() => {
-          navigate(-1);
-          for (let index = 0; index < orderDetail.length; index++) {
-            const element = orderDetail[index];
-            AddOrderDetail(element).then((res) => {
-              if (res.status) {
-                console.log(res.status);
-              }
-            });
+        Swal.fire("Updated!", "Your file has been updated.", "success").then(
+          () => {
+            navigate(-1);
+            for (let index = 0; index < orderDetail.length; index++) {
+              const element = orderDetail[index];
+              AddOrderDetail(element).then((res) => {
+                if (res.status) {
+                  console.log(res.status);
+                }
+              });
+            }
           }
-        });
+        );
       }
     });
   };
@@ -240,7 +240,9 @@ const Edit = () => {
       notes: newData.notes,
       price: newData.price,
       is_paid: newData.is_paid,
-      student: newData.student,
+      students: selectedStudents.map((student) => ({
+        student_id: student.value,
+      })), // Convert to list of dictionaries
       start_date: isUpdate
         ? data.start_date
         : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
@@ -258,6 +260,7 @@ const Edit = () => {
   const handleProductChange = (e) => {
     const findData = productData.find((item) => item.product_id === e);
     setValue("price", findData.price);
+    setMaxStudents(findData.max_student); // Set the max student limit from the package
     createDetail(findData);
   };
 
@@ -324,7 +327,6 @@ const Edit = () => {
     let temp = [];
     let baseOrderDetail = {
       day: filterTrainerByDay,
-      // schedule_date: data.start_date,
       time: filterTrainerByTime,
       is_presence: false,
       is_paid: false,
@@ -341,12 +343,48 @@ const Edit = () => {
     setOrderDetail(temp);
   };
 
-  const getNearestDay = (date) => {
-    const day = date.getDay();
-    const nextMonday = new Date(date);
-    nextMonday.setDate(date.getDate() + ((8 - day) % 7));
-    return nextMonday;
+  const handleStudentChange = (selectedOptions) => {
+    if (selectedOptions.length <= maxStudents) {
+      setSelectedStudents(selectedOptions);
+    } else {
+      Swal.fire(
+        "Limit Exceeded",
+        `You can only select up to ${maxStudents} students.`,
+        "warning"
+      );
+    }
   };
+
+  const loadOptions = async (inputValue, callback) => {
+    try {
+      const response = await searchSiswa({ search: inputValue });
+      const students = response.data.results.map((student) => ({
+        value: student.student_id,
+        label: student.fullname,
+      }));
+      callback(students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      callback([]);
+    }
+  };
+
+  const defaultOptions = async () => {
+    try {
+      const response = await getSiswaAll({ page_size: 10 });
+      const students = response.data.results.map((student) => ({
+        value: student.student_id,
+        label: student.fullname,
+      }));
+      setDefaultStudentOptions(students);
+    } catch (error) {
+      console.error("Error fetching default students:", error);
+    }
+  };
+
+  useEffect(() => {
+    defaultOptions();
+  }, []);
 
   if (loading && isUpdate) {
     return <Loading />;
@@ -388,7 +426,7 @@ const Edit = () => {
               onChange={(e) => handleJamOption(e.target.value)}
             />
           </div>
-          <div className="flex flex-wrap space-xy-5">
+          <div className="flex flex-wrap space-x-5">
             {genderOption.map((option) => (
               <Radio
                 key={option.value}
@@ -420,7 +458,6 @@ const Edit = () => {
               error={errors.title}
               defaultValue={isUpdate ? data.price : ""}
               disabled={true}
-              // isMask={true}
               options={{
                 numeral: true,
                 numeralDecimalScale: 1,
@@ -472,16 +509,22 @@ const Edit = () => {
             error={errors.title}
             defaultValue={isUpdate ? data.promo : ""}
           />
-          <Select
-            name="student"
-            label="Siswa"
-            placeholder="Pilih Siswa"
-            register={register}
-            error={errors.title}
-            options={studentOption}
-            defaultValue={isUpdate ? data.product : ""}
-            // onChange={(e) => console.log(e.target.value)}
-          />
+          <div>
+            <label className="form-label" htmlFor="start_date">
+              Siswa
+            </label>
+            <AsyncSelect
+              name="students"
+              label="Siswa"
+              placeholder="Pilih Siswa"
+              isMulti
+              defaultOptions={defaultStudentOptions}
+              loadOptions={loadOptions}
+              value={selectedStudents}
+              onChange={handleStudentChange}
+              isOptionDisabled={() => selectedStudents.length >= maxStudents}
+            />
+          </div>
           <Select
             name="trainer"
             label="Pelatih"
@@ -505,7 +548,6 @@ const Edit = () => {
           </div>
         </form>
       </Card>
-      {/* <OrderDetail params={orderDetail} /> */}
     </div>
   );
 };

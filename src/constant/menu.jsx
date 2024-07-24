@@ -33,7 +33,6 @@ const Menu = (role = "") => {
       ];
       break;
   }
-  console.log(menuItems);
 
   localStorage.setItem("menuItems", JSON.stringify(menuItems));
 };

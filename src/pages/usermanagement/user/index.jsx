@@ -11,6 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Modal from "@/components/ui/Modal";
 
 const actions = [
   // {
@@ -162,6 +163,32 @@ const Users = () => {
             Tambah
           </Link>
         </Button>
+        <Modal
+          title="Primary"
+          label="Primary "
+          labelClass="btn-outline-primary"
+          themeClass="bg-primary-500"
+          uncontrol
+          footerContent={
+            <Button
+              text="Accept"
+              className="btn-primary "
+              onClick={() => {
+                alert("use Control Modal");
+              }}
+            />
+          }
+        >
+          <h4 className="font-medium text-lg mb-3 text-slate-900">
+            Lorem ipsum dolor sit.
+          </h4>
+          <div className="text-base text-slate-600 dark:text-slate-300">
+            Oat cake ice cream candy chocolate cake chocolate cake cotton candy
+            dragée apple pie. Brownie carrot cake candy canes bonbon fruitcake
+            topping halvah. Cake sweet roll cake cheesecake cookie chocolate
+            cake liquorice.
+          </div>
+        </Modal>
         {isLoading ? (
           <Loading />
         ) : (

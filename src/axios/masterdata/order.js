@@ -41,9 +41,10 @@ export const EditOrder = async (id, data) => {
 
 export const DeleteOrder = async (id) => {
   try {
-    let response = await axiosConfig.delete("/api/order/" + id + "/");
+    const response = await axiosConfig.delete(`/api/order/${id}/`);
     return response;
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error deleting order:", error);
+    return { status: "error", message: error.message };
   }
 };

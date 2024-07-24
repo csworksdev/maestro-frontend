@@ -7,10 +7,13 @@ import Swal from "sweetalert2";
 import { EditOrderDetail } from "@/axios/masterdata/orderDetail";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
+import { useSelector } from "react-redux";
 
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
+  const roles = localStorage.getItem("roles");
+  const userid = localStorage.getItem("userid");
 
   const time = [
     { value: "06.00", label: "06.00" },
@@ -33,7 +36,10 @@ const Presence = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const res = await getPresenceAll();
+      let res = [];
+      if (roles === "Trainer") res = await getPresenceById(userid);
+      else res = await getPresenceAll();
+      // res = await getPresenceAll();
       setListData(res.data.data);
     } catch (error) {
       console.error("Error fetching data", error);
