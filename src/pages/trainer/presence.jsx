@@ -54,7 +54,7 @@ const Presence = () => {
       const res = await EditOrderDetail(order_detail_id, updatedData);
       if (res) {
         Swal.fire({
-          title: `Siswa "${updatedData.fullname}"`,
+          title: `Siswa "${updatedData.student_names}"`,
           text: `Hari: ${updatedData.real_date}, Jam: ${updatedData.real_time}`,
           icon: "success",
           confirmButtonText: "OK",
@@ -129,10 +129,13 @@ const Presence = () => {
   }, []);
 
   const groupedData = listData.reduce((acc, item) => {
-    if (!acc[item.fullname]) {
-      acc[item.fullname] = [];
+    if (!acc[item.trainer_fullname]) {
+      acc[item.trainer_fullname] = {};
     }
-    acc[item.fullname].push(item);
+    if (!acc[item.trainer_fullname][item.student_names]) {
+      acc[item.trainer_fullname][item.student_names] = [];
+    }
+    acc[item.trainer_fullname][item.student_names].push(item);
     return acc;
   }, {});
 
@@ -141,69 +144,76 @@ const Presence = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1">
-      {Object.keys(groupedData).map((fullname, i) => (
-        <Card title={fullname} key={i}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {groupedData[fullname]
-              .sort((a, b) => a.meet - b.meet)
-              .map((item) => (
-                <Card
-                  key={item.order_detail_id}
-                  title={`Pertemuan ke ${item.meet}`}
-                  subtitle={`${item.day} - ${item.time}`}
-                  noborder
-                >
-                  <div>
-                    <label className="form-label" htmlFor="real_date">
-                      Tanggal Kehadiran
-                    </label>
-                    <Flatpickr
-                      defaultValue={DateTime.fromISO(
-                        item.schedule_date
-                      ).toFormat("yyyy-MM-dd")}
-                      name="real_date"
-                      options={{
-                        dateFormat: "Y-m-d",
-                        maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
-                      }}
-                      className="form-control py-2"
-                      onChange={(date) =>
-                        handleChangeDay(item.order_detail_id, date)
-                      }
-                      style={{ background: "#ffffff", color: "inherit" }}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label" htmlFor="real_time">
-                      Jam kehadiran
-                    </label>
-                    <select
-                      name="real_time"
-                      defaultValue={item.time}
-                      onChange={(e) =>
-                        handleChangeTime(item.order_detail_id, e.target.value)
-                      }
-                      className="form-select"
+    <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
+      {Object.keys(groupedData).map((trainer_name, i) => (
+        <Card title={trainer_name} key={i}>
+          {Object.keys(groupedData[trainer_name]).map((student_name, j) => (
+            <Card title={student_name} key={j}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {groupedData[trainer_name][student_name]
+                  .sort((a, b) => a.meet - b.meet)
+                  .map((item, k) => (
+                    <Card
+                      key={`${item.order_detail_id}-${k}`}
+                      title={`Pertemuan ke ${item.meet}`}
+                      subtitle={`${item.day} - ${item.time}`}
+                      noborder
                     >
-                      {time.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="mt-4 space-x-4 rtl:space-x-reverse">
-                    <Button
-                      onClick={() => handleHadir(item.order_detail_id)}
-                      className="btn inline-flex justify-center btn-primary btn-sm"
-                    >
-                      Hadir
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-          </div>
+                      <div>
+                        <label className="form-label" htmlFor="real_date">
+                          Tanggal Kehadiran
+                        </label>
+                        <Flatpickr
+                          defaultValue={DateTime.fromISO(
+                            item.schedule_date
+                          ).toFormat("yyyy-MM-dd")}
+                          name="real_date"
+                          options={{
+                            dateFormat: "Y-m-d",
+                            maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                          }}
+                          className="form-control py-2"
+                          onChange={(date) =>
+                            handleChangeDay(item.order_detail_id, date)
+                          }
+                          style={{ background: "#ffffff", color: "inherit" }}
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label" htmlFor="real_time">
+                          Jam kehadiran
+                        </label>
+                        <select
+                          name="real_time"
+                          defaultValue={item.time}
+                          onChange={(e) =>
+                            handleChangeTime(
+                              item.order_detail_id,
+                              e.target.value
+                            )
+                          }
+                          className="form-select"
+                        >
+                          {time.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="mt-4 space-x-4 rtl:space-x-reverse">
+                        <Button
+                          onClick={() => handleHadir(item.order_detail_id)}
+                          className="btn inline-flex justify-center btn-primary btn-sm"
+                        >
+                          Hadir
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+              </div>
+            </Card>
+          ))}
         </Card>
       ))}
     </div>

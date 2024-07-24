@@ -1,9 +1,13 @@
 import { axiosConfig } from "../config";
 
-export const getSiswaAll = async (data) => {
+export const getSiswaAll = async (data, studentIds = []) => {
   try {
+    const params = { ...data };
+    if (studentIds.length > 0) {
+      params.student_ids = studentIds.join(",");
+    }
     let response = await axiosConfig.get("/api/student/", {
-      params: data,
+      params,
     });
     return response;
   } catch (error) {

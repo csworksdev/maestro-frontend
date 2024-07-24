@@ -371,7 +371,9 @@ const Edit = () => {
 
   const defaultOptions = async () => {
     try {
-      const response = await getSiswaAll({ page_size: 10 });
+      const response = await getSiswaAll({
+        page_size: 10,
+      });
       const students = response.data.results.map((student) => ({
         value: student.student_id,
         label: student.fullname,
