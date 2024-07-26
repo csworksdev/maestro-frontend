@@ -49,7 +49,6 @@ const Presence = () => {
   };
 
   const handleUpdate = async (order_detail_id, updatedData) => {
-    console.log(updatedData);
     try {
       const res = await EditOrderDetail(order_detail_id, updatedData);
       if (res) {
@@ -146,9 +145,9 @@ const Presence = () => {
   return (
     <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
       {Object.keys(groupedData).map((trainer_name, i) => (
-        <Card title={trainer_name} key={i}>
+        <Card title={"Coach " + trainer_name} key={i}>
           {Object.keys(groupedData[trainer_name]).map((student_name, j) => (
-            <Card title={student_name} key={j}>
+            <Card title={student_name.replace(",", " & ")} key={j}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {groupedData[trainer_name][student_name]
                   .sort((a, b) => a.meet - b.meet)

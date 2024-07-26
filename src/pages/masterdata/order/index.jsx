@@ -47,7 +47,20 @@ const Order = () => {
       };
       getOrderAll(params)
         .then((res) => {
+          // const updateData = res.data.map(i => ({ ...i }));
+
+          // updateData.results.map((item) => {
+          //   const test = item.students
+          //     .map((i) => i.student_fullname)
+          //     .join(", ");
+
+          //   item.students = test;
+          //   return item;
+          // });
           setListData(res.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching order data:", error);
         })
         .finally(() => setIsLoading(false));
     } catch (error) {
@@ -140,7 +153,7 @@ const Order = () => {
     },
     {
       Header: "Siswa",
-      accessor: "student_name",
+      accessor: "students",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },

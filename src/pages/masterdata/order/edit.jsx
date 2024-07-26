@@ -54,6 +54,7 @@ const Edit = () => {
     pool_id: "",
   });
   const [maxStudents, setMaxStudents] = useState(0); // State for max students
+  const [trainerList, setTrainerList] = useState(0);
 
   const FormValidationSchema = yup
     .object({
@@ -168,12 +169,22 @@ const Edit = () => {
 
   const handleAdd = (data) => {
     AddOrder(data).then((res) => {
-      if (res.status) {
+      if (res.status === 200) {
         Swal.fire("Added!", "Your file has been added.", "success").then(() => {
+          const product = productData.find(
+            (item) => item.product_id === data.product
+          );
+          const trainer = trainerList.find(
+            (i) => i.trainer_id === data.trainer
+          );
           const temp = orderDetail.map((item, index) => {
             item.order = res.data.order_id;
             item.day = filterTrainerByDay;
             item.time = filterTrainerByTime;
+            item.price_per_meet =
+              (data.price * parseInt(trainer.precentage_fee)) /
+              100 /
+              product.meetings;
             item.schedule_date = DateTime.fromISO(data.start_date)
               .plus({ days: 7 * (index + 1) })
               .toFormat("yyyy-MM-dd");
@@ -223,6 +234,10 @@ const Edit = () => {
   };
 
   const onSubmit = (newData) => {
+    const product = productData.find(
+      (item) => item.product_id === newData.product
+    );
+    const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
     const updatedData = {
       ...data,
       order_id: newData.order_id,
@@ -248,6 +263,9 @@ const Edit = () => {
         : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
       trainer: newData.trainer,
       pool: newData.pool,
+      package: product.package,
+      trainer_percentage: parseInt(trainer.precentage_fee),
+      company_percentage: 100 - trainer.precentage_fee,
     };
 
     if (isUpdate) {
@@ -316,6 +334,7 @@ const Edit = () => {
         value: item.trainer_id,
         label: item.fullname,
       }));
+      setTrainerList(trainerResponse.data.results);
       setTrainerOption(trainerOptions);
     };
     filterTrainer();

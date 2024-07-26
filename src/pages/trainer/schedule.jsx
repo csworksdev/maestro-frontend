@@ -13,10 +13,13 @@ const Schedule = () => {
   const calendarComponentRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const roles = localStorage.getItem("roles");
+  const userid = localStorage.getItem("userid");
+
   const transformDataForCalendar = (events) => {
     return events.map((event) => ({
       id: event.order_detail_id,
-      title: event.fullname + " pertemuan ke:" + event.meet,
+      title: `Coach ${event.trainer_fullname} \n ${event.student_names} \n Pertemuan ${event.meet}`,
       start: new Date(event.schedule_date + " " + event.time.replace(".", ":")),
       end: new Date(event.schedule_date + " " + event.time.replace(".", ":")),
       className: "custom-event",
@@ -26,7 +29,9 @@ const Schedule = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const res = await getPresenceAll();
+      let res = [];
+      if (roles === "Trainer") res = await getPresenceById(userid);
+      else res = await getPresenceAll();
       const transformedData = transformDataForCalendar(res.data.data);
       setEvents(transformedData);
     } catch (error) {
