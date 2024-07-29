@@ -105,10 +105,10 @@ const Presence = () => {
           is_presence: true,
           real_date:
             item.real_date ||
-            DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd"),
+            DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
           presence_day:
             item.presence_day ||
-            DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd"),
+            DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
           real_time: item.real_time || item.time,
         };
       }

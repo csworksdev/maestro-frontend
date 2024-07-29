@@ -16,3 +16,14 @@ export const getEarningById = async (trainer_id) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const getEarningListById = async (trainer_id) => {
+  try {
+    let response = await axiosConfig.get(
+      "/api/earning/list/" + trainer_id + "/"
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

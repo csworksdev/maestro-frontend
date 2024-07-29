@@ -220,7 +220,7 @@ const statistics = [
     name: shapeLine3,
     title: "Growth",
     count: "+5.0%",
-    bg: "bg-[#EAE5FF] dark:bg-slate-900	",
+    bg: "bg-[#faf4a5] dark:bg-slate-900	",
   },
 ];
 const GroupChart1 = () => {

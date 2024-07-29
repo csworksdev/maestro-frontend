@@ -61,6 +61,7 @@ const UMPermissions = lazy(() => import("./pages/usermanagement/permission"));
 const UMPermissionsEdit = lazy(() =>
   import("./pages/usermanagement/permission/edit")
 );
+const TrainerCourseReminder = lazy(() => import("./pages/trainer/reminder"));
 
 function App() {
   return (
@@ -151,6 +152,7 @@ function App() {
               <Route path="performance" element={<CoachPerformance />} />
               <Route path="schedule" element={<CoachSchedule />} />
               <Route path="presence" element={<CoachPresence />} />
+              <Route path="reminder" element={<TrainerCourseReminder />} />
             </Route>
             <Route path="user">
               <Route index element={<UMUser />} />

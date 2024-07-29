@@ -108,8 +108,8 @@ export const menuTrainer = [
         childlink: "coach/earning",
       },
       {
-        childtitle: "Performance",
-        childlink: "coach/performance",
+        childtitle: "Reminder",
+        childlink: "coach/reminder",
       },
       {
         childtitle: "Schedule",
