@@ -70,7 +70,7 @@ const Schedule = () => {
 
 const renderEventContent = (eventInfo) => {
   return (
-    <div className="break-words whitespace-normal p-1 bg-success-400">
+    <div className="break-words whitespace-normal p-1 bg-indigo-300">
       {eventInfo.event.title}
     </div>
   );

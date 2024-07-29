@@ -181,6 +181,7 @@ const Paket = () => {
                       ? handleEdit(row.row.original)
                       : handleDelete(row.row.original)
                   }
+                  key={i}
                 >
                   <span className="text-base">
                     <Icon icon={item.icon} />

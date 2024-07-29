@@ -19,14 +19,14 @@ export const menuSuperUser = [
         childtitle: "Role",
         childlink: "role",
       },
-      {
-        childtitle: "Menu",
-        childlink: "menu",
-      },
-      {
-        childtitle: "Permissions",
-        childlink: "permissions",
-      },
+      // {
+      //   childtitle: "Menu",
+      //   childlink: "menu",
+      // },
+      // {
+      //   childtitle: "Permissions",
+      //   childlink: "permissions",
+      // },
     ],
   },
 ];
@@ -159,8 +159,12 @@ export const menuAdmin = [
     isHide: true,
     child: [
       {
-        childtitle: "Jadwal",
-        childlink: "spp",
+        childtitle: "Reminder",
+        childlink: "course/reminder",
+      },
+      {
+        childtitle: "Schedule",
+        childlink: "course/schedule",
       },
     ],
   },

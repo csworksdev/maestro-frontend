@@ -28,7 +28,7 @@ const actions = [
   },
 ];
 
-const Cabang = () => {
+const Reminder = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,4 +130,4 @@ const Cabang = () => {
   );
 };
 
-export default Cabang;
+export default Reminder;
