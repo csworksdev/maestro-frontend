@@ -21,10 +21,10 @@ const actions = [
     name: "edit",
     icon: "heroicons:pencil-square",
   },
-  {
-    name: "delete",
-    icon: "heroicons-outline:trash",
-  },
+  // {
+  //   name: "delete",
+  //   icon: "heroicons-outline:trash",
+  // },
 ];
 
 const Order = () => {
@@ -47,16 +47,18 @@ const Order = () => {
       };
       getOrderAll(params)
         .then((res) => {
-          // const updateData = res.data.map(i => ({ ...i }));
+          const updateData = res.data.results.map((item) => ({
+            ...item,
+            listname: item.students.map((i) => i.student_fullname).join(", "),
+          }));
 
-          // updateData.results.map((item) => {
-          //   const test = item.students
-          //     .map((i) => i.student_fullname)
-          //     .join(", ");
-
-          //   item.students = test;
-          //   return item;
-          // });
+          res = {
+            ...res,
+            data: {
+              ...res.data,
+              results: updateData,
+            },
+          };
           setListData(res.data);
         })
         .catch((error) => {
@@ -153,7 +155,7 @@ const Order = () => {
     },
     {
       Header: "Siswa",
-      accessor: "students",
+      accessor: "listname",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
@@ -183,10 +185,12 @@ const Order = () => {
                     }
                      w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
                      first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                  onClick={(e) =>
-                    item.name === "edit"
-                      ? handleEdit(row.row.original)
-                      : handleDelete(row.row.original)
+                  onClick={
+                    (e) =>
+                      // item.name === "edit"
+                      //   ?
+                      handleEdit(row.row.original)
+                    // : handleDelete(row.row.original)
                   }
                   key={i}
                 >

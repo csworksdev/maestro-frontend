@@ -76,12 +76,15 @@ const Edit = () => {
     if (isUpdate) {
       if (data.product) setValue("product", data.product);
       if (data.students) {
-        const transformedStudents = data.students.map((student) => ({
-          value: student.student_id,
-          label:
-            studentOption.find((opt) => opt.value === student.student_id)
-              ?.label || "",
-        }));
+        const transformedStudents = data.students.map((student) => {
+          const option = studentOption.find(
+            (opt) => opt.value === student.student_id
+          );
+          return {
+            value: student.student_id,
+            label: option ? option.label : student.fullname,
+          };
+        });
         setSelectedStudents(transformedStudents);
       }
       if (data.trainer) setValue("trainer", data.trainer);
@@ -104,6 +107,13 @@ const Edit = () => {
         value: item.student_id,
         label: item.fullname,
       }));
+
+      data.students.map((item) => {
+        studentOptions.push({
+          value: item.student_id,
+          label: item.student_fullname,
+        });
+      });
 
       setKolamOption(kolamOption);
       setStudentOption(studentOptions);
