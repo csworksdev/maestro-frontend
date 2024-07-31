@@ -13,7 +13,14 @@
       "request": "launch",
       "url": "http://localhost:5173",
       "webRoot": "${workspaceFolder}/src",
-      "runtimeArgs": ["--remote-debugging-port=9222"]
+      "port": 9222,
+      "preLaunchTask": "Run npm dev",
+      "userDataDir": "${workspaceFolder}/.vscode/chrome",
+      "trace": true,
+      "pathMapping": {
+        "/": "${workspaceFolder}/src"
+      },
+      "runtimeExecutable": null // Remove or set to null to allow guess mode
     }
   ]
 }

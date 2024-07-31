@@ -344,6 +344,13 @@ const Edit = () => {
         value: item.trainer_id,
         label: item.fullname,
       }));
+      if (isUpdate) {
+        trainerOptions.push({
+          value: data.trainer,
+          label: data.trainer_name,
+        });
+      }
+      console.log(trainerOptions);
       setTrainerList(trainerResponse.data.results);
       setTrainerOption(trainerOptions);
     };
@@ -458,6 +465,9 @@ const Edit = () => {
             />
           </div>
           <div className="flex flex-wrap space-x-5">
+            <label className="form-label" htmlFor="gender">
+              Gender
+            </label>
             {genderOption.map((option) => (
               <Radio
                 key={option.value}
