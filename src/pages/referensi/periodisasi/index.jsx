@@ -50,6 +50,7 @@ const Periodisasi = () => {
       };
       getPeriodisasiAll(params)
         .then((res) => {
+          res.data.results.sort((a, b) => a.month - b.month);
           setListData(res.data);
         })
         .finally(() => setIsLoading(false));

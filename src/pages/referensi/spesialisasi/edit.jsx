@@ -93,7 +93,11 @@ const Edit = () => {
             defaultValue={isUpdate ? data.name : ""}
           />
           <div className="ltr:text-right rtl:text-left  space-x-3">
-            <button className="btn text-center" onClick={() => handleCancel()}>
+            <button
+              type="button"
+              className="btn text-center"
+              onClick={() => handleCancel()}
+            >
               batal
             </button>
             <button className="btn btn-dark  text-center">

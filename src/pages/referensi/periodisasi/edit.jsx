@@ -40,7 +40,7 @@ const Edit = () => {
 
   const handleAdd = (data) => {
     AddPeriodisasi(data).then((res) => {
-      if (res.status)
+      if (res)
         Swal.fire(
           "Added!",
           "Your file has been Added.",
@@ -53,7 +53,7 @@ const Edit = () => {
   // edit event
   const handleUpdate = (updatedData) => {
     EditPeriodisasi(data.periode_id, updatedData).then((res) => {
-      if (res.status)
+      if (res)
         Swal.fire(
           "Edited!",
           "Your file has been Edited.",
@@ -64,18 +64,26 @@ const Edit = () => {
   };
 
   const onSubmit = (newData) => {
-    console.log(data);
+    const parseDate = (date, fallback) => {
+      if (date instanceof Date && !isNaN(date)) {
+        return date;
+      } else if (typeof date === "string" && !isNaN(Date.parse(date))) {
+        return new Date(date);
+      } else {
+        return fallback;
+      }
+    };
+
+    const startDate = parseDate(newData.start_date, new Date(data.start_date));
+    const endDate = parseDate(newData.end_date, new Date(data.end_date));
+
     const updatedData = {
       ...data,
       name: newData.name,
       month: newData.month,
-      start_date: isUpdate
-        ? data.start_date
-        : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
-      end_date: isUpdate
-        ? data.end_date
-        : DateTime.fromJSDate(newData.end_date).toFormat("yyyy-MM-dd"),
-    }; // Create the updated todo object
+      start_date: DateTime.fromJSDate(startDate).toFormat("yyyy-MM-dd"),
+      end_date: DateTime.fromJSDate(endDate).toFormat("yyyy-MM-dd"),
+    };
 
     if (isUpdate) {
       handleUpdate(updatedData);
@@ -146,7 +154,11 @@ const Edit = () => {
             </div>
           </div>
           <div className="ltr:text-right rtl:text-left  space-x-3">
-            <button className="btn text-center" onClick={() => handleCancel()}>
+            <button
+              type="button"
+              className="btn text-center"
+              onClick={() => handleCancel()}
+            >
               batal
             </button>
             <button className="btn btn-dark  text-center">

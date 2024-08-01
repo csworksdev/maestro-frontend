@@ -16,3 +16,15 @@ export const getPresenceById = async (trainer_id) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const UpdatePresenceById = async (id, data) => {
+  try {
+    let response = await axiosConfig.put(
+      "/api/presence/hadir/" + id + "/",
+      data
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

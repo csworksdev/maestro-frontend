@@ -108,12 +108,14 @@ const Edit = () => {
         label: item.fullname,
       }));
 
-      data.students.map((item) => {
-        studentOptions.push({
-          value: item.student_id,
-          label: item.student_fullname,
+      if (isUpdate) {
+        data.students.map((item) => {
+          studentOptions.push({
+            value: item.student_id,
+            label: item.student_fullname,
+          });
         });
-      });
+      }
 
       setKolamOption(kolamOption);
       setStudentOption(studentOptions);
@@ -350,7 +352,6 @@ const Edit = () => {
           label: data.trainer_name,
         });
       }
-      console.log(trainerOptions);
       setTrainerList(trainerResponse.data.results);
       setTrainerOption(trainerOptions);
     };

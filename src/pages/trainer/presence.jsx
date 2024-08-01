@@ -4,7 +4,7 @@ import { getPresenceAll, getPresenceById } from "@/axios/trainer/presence";
 import Loading from "@/components/Loading";
 import Button from "@/components/ui/Button";
 import Swal from "sweetalert2";
-import { EditOrderDetail } from "@/axios/masterdata/orderDetail";
+import { UpdatePresenceById } from "@/axios/trainer/presence";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 import { useSelector } from "react-redux";
@@ -50,7 +50,7 @@ const Presence = () => {
 
   const handleUpdate = async (order_detail_id, updatedData) => {
     try {
-      const res = await EditOrderDetail(order_detail_id, updatedData);
+      const res = await UpdatePresenceById(order_detail_id, updatedData);
       if (res) {
         Swal.fire({
           title: `Siswa "${updatedData.student_names}"`,

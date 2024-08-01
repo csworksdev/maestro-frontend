@@ -12,11 +12,13 @@ import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/material_green.css";
 import { DateTime } from "luxon";
 import Radio from "@/components/ui/Radio";
+import { getCabangAll } from "@/axios/referensi/cabang";
 
 const Biodata = ({ isupdate = "false", data = {} }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
   const [selectOption, setSelectOption] = useState("false");
+  const [branchOption, setBranchOption] = useState([]);
 
   const FormValidationSchema = yup
     .object({
@@ -45,6 +47,21 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       setSelectOption(data.is_active.toString());
     }
   }, [isUpdate, data, setValue]);
+
+  useEffect(() => {
+    const params = {
+      page: 1,
+      page_size: 50,
+    };
+    getCabangAll(params).then((res) => {
+      const fetchedBranch = res.data.results;
+      const mappedOption = fetchedBranch.map((item) => ({
+        value: item.branch_id,
+        label: item.name,
+      }));
+      setBranchOption(mappedOption);
+    });
+  }, []);
 
   const gender = [
     { value: "L", label: "Laki-laki" },
@@ -106,6 +123,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       reg_date: isUpdate
         ? data.reg_date
         : DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
+      branch: newData.branch,
     };
 
     if (isUpdate) {
@@ -204,6 +222,15 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             />
           ))}
         </div>
+        <Select
+          name="branch"
+          label="Cabang"
+          placeholder="Pilih Cabang"
+          register={register}
+          error={errors.branch?.message}
+          options={branchOption}
+          defaultValue={isUpdate ? data.branch : ""}
+        />
         <div className="ltr:text-right rtl:text-left space-x-3">
           <button
             type="button"

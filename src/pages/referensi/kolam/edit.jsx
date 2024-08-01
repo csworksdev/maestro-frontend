@@ -38,6 +38,10 @@ const Edit = () => {
     mode: "all",
   });
 
+  const handleCancel = () => {
+    navigate(-1);
+  };
+
   useEffect(() => {
     const params = {
       page: 1,
@@ -140,6 +144,13 @@ const Edit = () => {
           defaultValue={isUpdate ? data.branch : ""}
         />
         <div className="ltr:text-right rtl:text-left space-x-3">
+          <button
+            type="button"
+            className="btn text-center"
+            onClick={() => handleCancel()}
+          >
+            batal
+          </button>
           <button className="btn btn-dark text-center" type="submit">
             {isUpdate ? "Update" : "Add"} Kolam
           </button>

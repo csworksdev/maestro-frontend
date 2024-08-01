@@ -48,7 +48,11 @@ const Edit = () => {
 
   const loadReference = () => {
     try {
-      getKolamAll().then((res) => {
+      const params = {
+        page: 1,
+        page_size: 50,
+      };
+      getKolamAll(params).then((res) => {
         const fetched = res.data.results;
         const mappedOption = fetched.map((item) => ({
           value: item.pool_id,
@@ -56,7 +60,7 @@ const Edit = () => {
         }));
         setPoolOption(mappedOption);
       });
-      getPaketAll().then((res) => {
+      getPaketAll(params).then((res) => {
         const fetched = res.data.results;
         const mappedOption = fetched.map((item) => ({
           value: item.package_id,
@@ -176,7 +180,11 @@ const Edit = () => {
             defaultValue={isUpdate ? data.price : ""}
           />
           <div className="ltr:text-right rtl:text-left  space-x-3">
-            <button className="btn text-center" onClick={() => handleCancel()}>
+            <button
+              type="button"
+              className="btn text-center"
+              onClick={() => handleCancel()}
+            >
               batal
             </button>
             <button className="btn btn-dark  text-center">

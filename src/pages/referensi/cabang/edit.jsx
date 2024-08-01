@@ -30,6 +30,10 @@ const Edit = () => {
     mode: "all",
   });
 
+  const handleCancel = () => {
+    navigate(-1);
+  };
+
   const handleAdd = (data) => {
     AddCabang(data).then((res) => {
       if (res.status)
@@ -85,6 +89,13 @@ const Edit = () => {
             defaultValue={isUpdate ? data.name : ""}
           />
           <div className="ltr:text-right rtl:text-left  space-x-3">
+            <button
+              type="button"
+              className="btn text-center"
+              onClick={() => handleCancel()}
+            >
+              batal
+            </button>
             <button className="btn btn-dark  text-center">
               {isUpdate ? "Update" : "Add"} Cabang
             </button>
