@@ -11,234 +11,57 @@ import Swal from "sweetalert2";
 import { DeleteOrder, getOrderAll } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
+import OrderActive from "./orderActive";
 
-const actions = [
-  // {
-  //   name: "view",
-  //   icon: "heroicons-outline:eye",
-  // },
+const buttons = [
   {
-    name: "edit",
-    icon: "heroicons:pencil-square",
+    title: "Active",
+    icon: "heroicons-outline:home",
   },
-  // {
-  //   name: "delete",
-  //   icon: "heroicons-outline:trash",
-  // },
+  {
+    title: "Finished",
+    icon: "heroicons-outline:user",
+  },
 ];
 
 const Order = () => {
-  const navigate = useNavigate();
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [listData, setListData] = useState({ count: 0, results: [] });
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const fetchData = async (page, size, query) => {
-    try {
-      setIsLoading(true);
-      const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
-      };
-      getOrderAll(params)
-        .then((res) => {
-          const updateData = res.data.results.map((item) => ({
-            ...item,
-            listname: item.students.map((i) => i.student_fullname).join(", "),
-          }));
-
-          res = {
-            ...res,
-            data: {
-              ...res.data,
-              results: updateData,
-            },
-          };
-          setListData(res.data);
-        })
-        .catch((error) => {
-          console.error("Error fetching order data:", error);
-        })
-        .finally(() => setIsLoading(false));
-    } catch (error) {
-      console.error("Error fetching data", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
-
-  const handlePageChange = (page) => {
-    setPageIndex(page);
-  };
-
-  const handlePageSizeChange = (size) => {
-    setPageSize(size);
-  };
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    setPageIndex(0); // Reset to first page on search
-  };
-
-  const handleDelete = (e) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#22c55e",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        DeleteOrder(e.order_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
-        });
-      }
-    });
-  };
-
-  const handleEdit = (e) => {
-    navigate("edit", {
-      state: {
-        isupdate: "true",
-        data: e,
-      },
-    });
-  };
-
-  const COLUMNS = [
-    {
-      Header: "Kolam",
-      accessor: "pool_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Produk",
-      accessor: "product_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Tanggal Order",
-      accessor: "order_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Promo",
-      accessor: "promo",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Harga",
-      accessor: "price",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Siswa",
-      accessor: "listname",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Pelatih",
-      accessor: "trainer_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "action",
-      accessor: "action",
-      Cell: (row) => {
-        return (
-          <div className="flex space-x-2 items-center">
-            <div className="flex space-x-2">
-              {actions.map((item, i) => (
-                <div
-                  className={`
-                  
-                    ${
-                      item.name === "delete"
-                        ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
-                        : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
-                    }
-                     w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
-                     first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                  onClick={
-                    (e) =>
-                      // item.name === "edit"
-                      //   ?
-                      handleEdit(row.row.original)
-                    // : handleDelete(row.row.original)
-                  }
-                  key={i}
-                >
-                  <span className="text-base">
-                    <Icon icon={item.icon} />
-                  </span>
-                  <span>{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      },
-    },
-  ];
-
   return (
     <div className="grid grid-cols-1 justify-end">
       <Card title="Order">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <>
-            <Search searchValue={searchQuery} handleSearch={handleSearch} />
-            <Table
-              listData={listData}
-              listColumn={COLUMNS}
-              searchValue={searchQuery}
-              handleSearch={handleSearch}
-            />
-            <PaginationComponent
-              pageSize={pageSize}
-              pageIndex={pageIndex}
-              pageCount={Math.ceil(listData.count / pageSize)}
-              canPreviousPage={pageIndex > 0}
-              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
-              gotoPage={handlePageChange}
-              previousPage={() => handlePageChange(pageIndex - 1)}
-              nextPage={() => handlePageChange(pageIndex + 1)}
-              setPageSize={handlePageSizeChange}
-            />
-          </>
-        )}
+        <Tab.Group>
+          <Tab.List className="lg:space-x-8 md:space-x-4 space-x-0 rtl:space-x-reverse">
+            {buttons.map((item, i) => (
+              <Tab as={Fragment} key={i}>
+                {({ selected }) => (
+                  <button
+                    className={` text-sm font-medium mb-7 capitalize bg-white
+             dark:bg-slate-800 ring-0 foucs:ring-0 focus:outline-none px-2
+              transition duration-150 before:transition-all before:duration-150 relative 
+              before:absolute before:left-1/2 before:bottom-[-6px] before:h-[1.5px] before:bg-primary-500 
+              before:-translate-x-1/2 
+              
+              ${
+                selected
+                  ? "text-primary-500 before:w-full"
+                  : "text-slate-500 before:w-0 dark:text-slate-300"
+              }
+              `}
+                  >
+                    {item.title}
+                  </button>
+                )}
+              </Tab>
+            ))}
+          </Tab.List>
+          <Tab.Panels>
+            <Tab.Panel>
+              <OrderActive is_finished={false} />
+            </Tab.Panel>
+            <Tab.Panel>
+              <OrderActive is_finished={true} />
+            </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
       </Card>
     </div>
   );

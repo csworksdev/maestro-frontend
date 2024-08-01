@@ -181,7 +181,7 @@ const Edit = () => {
 
   const handleAdd = (data) => {
     AddOrder(data).then((res) => {
-      if (res.status === 200) {
+      if (res) {
         Swal.fire("Added!", "Your file has been added.", "success").then(() => {
           const product = productData.find(
             (item) => item.product_id === data.product
