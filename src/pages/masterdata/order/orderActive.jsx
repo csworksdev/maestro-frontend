@@ -28,7 +28,6 @@ const actions = [
 ];
 
 const OrderActive = ({ is_finished }) => {
-  console.log(is_finished);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 

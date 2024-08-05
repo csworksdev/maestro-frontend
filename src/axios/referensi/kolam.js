@@ -11,6 +11,20 @@ export const getKolamAll = async (data) => {
   }
 };
 
+export const getKolamByBranch = async (branch_id, data) => {
+  try {
+    let response = await axiosConfig.get(
+      "/api/pool/branch/" + branch_id + "/",
+      {
+        params: data,
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const AddKolam = async (data) => {
   try {
     let response = await axiosConfig.post("/api/pool/", data);

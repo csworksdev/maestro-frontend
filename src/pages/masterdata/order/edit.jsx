@@ -18,15 +18,15 @@ import {
   FindAvailableTrainer,
 } from "@/axios/masterdata/order";
 import { getProdukPool } from "@/axios/masterdata/produk";
-import { getSiswaAll, searchSiswa } from "@/axios/masterdata/siswa"; // Import searchSiswa function
-import { getTrainerAll } from "@/axios/masterdata/trainer";
-import { getKolamAll } from "@/axios/referensi/kolam";
 import {
-  AddOrderDetail,
-  EditOrderDetail,
-  getOrderDetailByParent,
-} from "@/axios/masterdata/orderDetail";
+  getSiswaAll,
+  getSiswaByBranch,
+  searchSiswa,
+} from "@/axios/masterdata/siswa"; // Import searchSiswa function
+import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
+import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
 import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
+import { getCabangAll } from "@/axios/referensi/cabang";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -43,6 +43,7 @@ const Edit = () => {
   const [orderDetail, setOrderDetail] = useState([]);
   const [selectGenderOption, setSelectGenderOption] = useState("L");
   const [loading, setLoading] = useState(true);
+  const [filterTrainerByBranch, setFilterTrainerByBranch] = useState("");
   const [filterTrainerByPool, setFilterTrainerByPool] = useState("");
   const [filterTrainerByDay, setFilterTrainerByDay] = useState("Senin");
   const [filterTrainerByTime, setFilterTrainerByTime] = useState("09.00");
@@ -55,6 +56,7 @@ const Edit = () => {
   });
   const [maxStudents, setMaxStudents] = useState(0); // State for max students
   const [trainerList, setTrainerList] = useState(0);
+  const [branchOption, setBranchOption] = useState([]);
 
   const FormValidationSchema = yup
     .object({
@@ -95,18 +97,28 @@ const Edit = () => {
 
   const loadReference = useCallback(async () => {
     try {
-      const kolamResponse = await getKolamAll({ page_size: 50 });
-      const studentResponse = await getSiswaAll();
+      const params = {
+        page: 1,
+        page_size: 50,
+      };
+      // const kolamResponse = await getKolamByBranch(params);
+      // const studentResponse = await getSiswaAll();
+      const branchResponse = await getCabangAll(params);
 
-      const kolamOption = kolamResponse.data.results.map((item) => ({
-        value: item.pool_id,
+      const branchOption = branchResponse.data.results.map((item) => ({
+        value: item.branch_id,
         label: item.name,
       }));
 
-      const studentOptions = studentResponse.data.results.map((item) => ({
-        value: item.student_id,
-        label: item.fullname,
-      }));
+      // const kolamOption = kolamResponse.data.results.map((item) => ({
+      //   value: item.pool_id,
+      //   label: item.name,
+      // }));
+
+      // const studentOptions = studentResponse.data.results.map((item) => ({
+      //   value: item.student_id,
+      //   label: item.fullname,
+      // }));
 
       if (isUpdate) {
         data.students.map((item) => {
@@ -117,9 +129,10 @@ const Edit = () => {
         });
       }
 
-      setKolamOption(kolamOption);
-      setStudentOption(studentOptions);
-      setDefaultStudentOptions(studentOptions.slice(0, 10)); // Set default options
+      setBranchOption(branchOption);
+      // setKolamOption(kolamOption);
+      // setStudentOption(studentOptions);
+      // setDefaultStudentOptions(studentOptions.slice(0, 10)); // Set default options
 
       if (data.pool) {
         setProductOption([]);
@@ -137,6 +150,62 @@ const Edit = () => {
       setLoading(false);
     }
   }, [data.pool]);
+
+  // const loadReferenceX = useCallback(async () => {
+  //   try {
+  //     const params = {
+  //       page: 1,
+  //       page_size: 50,
+  //     };
+  //     const kolamResponse = await getKolamAll(params);
+  //     const studentResponse = await getSiswaAll();
+  //     const branchResponse = await getCabangAll(params);
+
+  //     const branchOption = branchResponse.data.results.map((item) => ({
+  //       value: item.branch_id,
+  //       label: item.name,
+  //     }));
+
+  //     const kolamOption = kolamResponse.data.results.map((item) => ({
+  //       value: item.pool_id,
+  //       label: item.name,
+  //     }));
+
+  //     const studentOptions = studentResponse.data.results.map((item) => ({
+  //       value: item.student_id,
+  //       label: item.fullname,
+  //     }));
+
+  //     if (isUpdate) {
+  //       data.students.map((item) => {
+  //         studentOptions.push({
+  //           value: item.student_id,
+  //           label: item.student_fullname,
+  //         });
+  //       });
+  //     }
+
+  //     setBranchOption(branchOption);
+  //     setKolamOption(kolamOption);
+  //     setStudentOption(studentOptions);
+  //     setDefaultStudentOptions(studentOptions.slice(0, 10)); // Set default options
+
+  //     if (data.pool) {
+  //       setProductOption([]);
+  //       const productResponse = await getProdukPool(data.pool);
+  //       setProductData(productResponse.data.results);
+  //       const productOptions = productResponse.data.results.map((item) => ({
+  //         value: item.product_id,
+  //         label: item.name,
+  //       }));
+  //       setProductOption(productOptions);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [data.pool]);
 
   useEffect(() => {
     loadReference();
@@ -287,6 +356,57 @@ const Edit = () => {
     }
   };
 
+  const handleBranchChange = async (e) => {
+    const branch_id = e.target.value;
+    setFilterTrainerByBranch(branch_id);
+    try {
+      const params = {
+        page: 1,
+        page_size: 50,
+      };
+      const kolamResponse = await getKolamByBranch(branch_id, params);
+      const studentResponse = await getSiswaByBranch(branch_id, params);
+      const kolamOption = kolamResponse.data.results.map((item) => ({
+        value: item.pool_id,
+        label: item.name,
+      }));
+
+      const studentOptions = studentResponse.data.results.map((item) => ({
+        value: item.student_id,
+        label: item.fullname,
+      }));
+
+      if (isUpdate) {
+        data.students.map((item) => {
+          studentOptions.push({
+            value: item.student_id,
+            label: item.student_fullname,
+          });
+        });
+      }
+
+      console.log(studentOptions);
+      setKolamOption(kolamOption);
+      setStudentOption(studentOptions);
+      setDefaultStudentOptions(studentOptions.slice(0, 10)); // Set default options
+
+      if (data.pool) {
+        setProductOption([]);
+        const productResponse = await getProdukPool(data.pool);
+        setProductData(productResponse.data.results);
+        const productOptions = productResponse.data.results.map((item) => ({
+          value: item.product_id,
+          label: item.name,
+        }));
+        setProductOption(productOptions);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleProductChange = (e) => {
     const findData = productData.find((item) => item.product_id === e);
     setValue("price", findData.price);
@@ -339,23 +459,25 @@ const Edit = () => {
   }, [filterTrainerByGender, filterTrainerByDay, filterTrainerByTime]);
 
   useEffect(() => {
-    const filterTrainer = async () => {
-      setTrainerOption([]);
-      const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
-      const trainerOptions = trainerResponse.data.results.map((item) => ({
-        value: item.trainer_id,
-        label: item.fullname,
-      }));
-      if (isUpdate) {
-        trainerOptions.push({
-          value: data.trainer,
-          label: data.trainer_name,
-        });
-      }
-      setTrainerList(trainerResponse.data.results);
-      setTrainerOption(trainerOptions);
-    };
-    filterTrainer();
+    if (filterTrainerByBranch) {
+      const filterTrainer = async () => {
+        setTrainerOption([]);
+        const trainerResponse = await FindAvailableTrainer(filterTrainerParams);
+        const trainerOptions = trainerResponse.data.results.map((item) => ({
+          value: item.trainer_id,
+          label: item.fullname,
+        }));
+        if (isUpdate) {
+          trainerOptions.push({
+            value: data.trainer,
+            label: data.trainer_name,
+          });
+        }
+        setTrainerList(trainerResponse.data.results);
+        setTrainerOption(trainerOptions);
+      };
+      filterTrainer();
+    }
   }, [filterTrainerParams]);
 
   const createDetail = (params) => {
@@ -406,7 +528,7 @@ const Edit = () => {
     }
   };
 
-  const defaultOptions = async () => {
+  const StudentDefaultOptions = async () => {
     try {
       const response = await getSiswaAll({
         page_size: 10,
@@ -422,7 +544,7 @@ const Edit = () => {
   };
 
   useEffect(() => {
-    defaultOptions();
+    // StudentDefaultOptions();
   }, []);
 
   if (loading && isUpdate) {
@@ -433,6 +555,16 @@ const Edit = () => {
     <div className="flex flex-col gap-5">
       <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Select
+            name="branch"
+            label="Cabang"
+            placeholder="Pilih Cabang"
+            register={register}
+            error={errors.branch?.message}
+            options={branchOption}
+            defaultValue={isUpdate ? data.branch : ""}
+            onChange={handleBranchChange}
+          />
           <Select
             name="pool"
             label="Kolam"
@@ -480,7 +612,22 @@ const Edit = () => {
               />
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-wrap space-x-5">
+            <label className="form-label" htmlFor="product">
+              Product
+            </label>
+            {productData.map((option) => (
+              <Radio
+                key={option.value}
+                label={option.label}
+                name="product"
+                value={option.value}
+                checked={selectGenderOption === option.value}
+                onChange={handleGenderOption}
+              />
+            ))}
+          </div>
+          {/* <div className="grid grid-cols-2 gap-4">
             <Select
               name="product"
               label="Produk"
@@ -505,7 +652,7 @@ const Edit = () => {
                 numeralDecimalScale: 1,
               }}
             />
-          </div>
+          </div> */}
           <div className="hidden">
             <label className="form-label" htmlFor="order_date">
               Tanggal Order

@@ -15,6 +15,20 @@ export const getSiswaAll = async (data, studentIds = []) => {
   }
 };
 
+export const getSiswaByBranch = async (branch_id, data) => {
+  try {
+    let response = await axiosConfig.get(
+      "/api/student/branch/" + branch_id + "/",
+      {
+        data,
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const searchSiswa = async (data) => {
   try {
     let response = await axiosConfig.get("/api/student/", {
