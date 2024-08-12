@@ -18,6 +18,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
   const [selectOption, setSelectOption] = useState("false");
+  const [mobileOption, setMobileOption] = useState("false");
   const [branchOption, setBranchOption] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,6 +68,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
       setSelectOption(data.is_active.toString());
+      setMobileOption(data.mobile.toString());
     }
   }, [isUpdate, data, setValue]);
 
@@ -83,6 +85,17 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
     {
       value: "false",
       label: "Tidak Aktif",
+    },
+  ];
+
+  const mobile = [
+    {
+      value: "true",
+      label: "Ya",
+    },
+    {
+      value: "false",
+      label: "Tidak",
     },
   ];
 
@@ -112,6 +125,9 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
 
   const handleOption = (e) => {
     setSelectOption(e.target.value);
+  };
+  const handleMobileOption = (e) => {
+    setMobileOption(e.target.value);
   };
 
   const onSubmit = (newData) => {
@@ -227,7 +243,37 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
           defaultValue={isUpdate ? data.precentage_fee : ""}
           disabled={loading}
         />
+
+        <Select
+          name="branch"
+          label="Cabang"
+          placeholder="Pilih Cabang"
+          register={register}
+          error={errors.branch?.message}
+          options={branchOption}
+          defaultValue={isUpdate ? data.branch : ""}
+          disabled={loading}
+        />
         <div className="flex flex-wrap space-xy-5">
+          <label className="form-label" htmlFor="mobile">
+            Mobile
+          </label>
+          {mobile.map((option) => (
+            <Radio
+              key={option.value}
+              label={option.label}
+              name="mobile"
+              value={option.value}
+              checked={mobileOption === option.value}
+              onChange={handleMobileOption}
+              disabled={loading}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap space-xy-5">
+          <label className="form-label" htmlFor="is_active">
+            Status Pelatih
+          </label>
           {options.map((option) => (
             <Radio
               key={option.value}
@@ -240,16 +286,6 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             />
           ))}
         </div>
-        <Select
-          name="branch"
-          label="Cabang"
-          placeholder="Pilih Cabang"
-          register={register}
-          error={errors.branch?.message}
-          options={branchOption}
-          defaultValue={isUpdate ? data.branch : ""}
-          disabled={loading}
-        />
         <div className="ltr:text-right rtl:text-left space-x-3">
           <button
             type="button"

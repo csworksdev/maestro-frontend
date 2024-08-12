@@ -59,7 +59,7 @@ const LoginForm = () => {
       <Textinput
         name="username"
         label="username"
-        // defaultValue="admin@maestroswim.com"
+        defaultValue=""
         type="text"
         register={register}
         error={errors.email}
@@ -69,7 +69,7 @@ const LoginForm = () => {
         name="password"
         label="password"
         type="password"
-        // defaultValue="testpassword"
+        defaultValue=""
         register={register}
         error={errors.password}
         className="h-[48px]"

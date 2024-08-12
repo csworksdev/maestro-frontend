@@ -146,10 +146,6 @@ export const menuAdmin = [
         childtitle: "Produk",
         childlink: "produk",
       },
-      {
-        childtitle: "Order",
-        childlink: "order",
-      },
     ],
   },
   {
@@ -163,7 +159,27 @@ export const menuAdmin = [
         childlink: "course/reminder",
       },
       {
-        childtitle: "Schedule",
+        childtitle: "Jadwal",
+        childlink: "course/schedule",
+      },
+    ],
+  },
+  {
+    title: "Order",
+    icon: "heroicons-outline:academic-cap",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Order",
+        childlink: "order",
+      },
+      {
+        childtitle: "Selesai",
+        childlink: "course/schedule",
+      },
+      {
+        childtitle: "Waiting List",
         childlink: "course/schedule",
       },
     ],

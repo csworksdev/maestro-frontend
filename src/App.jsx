@@ -44,8 +44,8 @@ const Trainer = lazy(() => import("./pages/masterdata/trainer"));
 const EditTrainer = lazy(() => import("./pages/masterdata/trainer/edit"));
 const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
-const Order = lazy(() => import("./pages/masterdata/order"));
-const EditOrder = lazy(() => import("./pages/masterdata/order/edit"));
+const Order = lazy(() => import("./pages/order/index"));
+const EditOrder = lazy(() => import("./pages/order/edit"));
 const CoachDashboard = lazy(() => import("./pages/trainer/dashboard"));
 const CoachEarning = lazy(() => import("./pages/trainer/earning"));
 const CoachPerformance = lazy(() => import("./pages/trainer/performance"));
@@ -103,6 +103,7 @@ function App() {
             }
           >
             <Route path="dashboard" element={<Dashboard />} />
+            //#region referensi
             <Route path="cabang">
               <Route index element={<Cabang />} />
               <Route path="add" element={<EditCabang />} />
@@ -128,6 +129,9 @@ function App() {
               <Route path="add" element={<EditSpecialization />} />
               <Route path="edit" element={<EditSpecialization />} />
             </Route>
+            //#endregion
+            {/*  */}
+            //#region master data
             <Route path="siswa">
               <Route index element={<Siswa />} />
               <Route path="add" element={<EditSiswa />} />
@@ -143,11 +147,17 @@ function App() {
               <Route path="add" element={<EditProduk />} />
               <Route path="edit" element={<EditProduk />} />
             </Route>
+            //#endregion
+            {/*  */}
+            //#region order
             <Route path="order">
               <Route index element={<Order />} />
               <Route path="add" element={<EditOrder />} />
               <Route path="edit" element={<EditOrder />} />
             </Route>
+            //#endregion
+            {/*  */}
+            //#region Trainer
             <Route path="coach">
               <Route index element={<CoachDashboard />} />
               <Route path="earning" element={<CoachEarning />} />
@@ -156,6 +166,9 @@ function App() {
               <Route path="presence" element={<CoachPresence />} />
               <Route path="reminder" element={<TrainerCourseReminder />} />
             </Route>
+            //#endregion
+            {/*  */}
+            //#region Pelatihan
             <Route path="course">
               <Route index element={<CoachDashboard />} />
               {/* <Route path="earning" element={<CoachEarning />} />
@@ -165,6 +178,9 @@ function App() {
               {/* <Route path="presence" element={<CoachPresence />} />
               <Route path="reminder" element={<TrainerCourseReminder />} /> */}
             </Route>
+            //#endregion
+            {/*  */}
+            //#region User Management
             <Route path="user">
               <Route index element={<UMUser />} />
               <Route path="add" element={<UMUserEdit />} />
@@ -185,6 +201,7 @@ function App() {
               <Route path="add" element={<UMPermissionsEdit />} />
               <Route path="edit" element={<UMPermissionsEdit />} />
             </Route>
+            //#endregion
             <Route path="*" element={<Navigate to="/404" />} />
           </Route>
 
