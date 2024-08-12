@@ -153,6 +153,13 @@ const Siswa = () => {
       },
     },
     {
+      Header: "Cabang",
+      accessor: "branch_name",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
       Header: "action",
       accessor: "action",
       Cell: (row) => {

@@ -1,3 +1,4 @@
+// src/components/Jadwal.js
 import { getKolamAll } from "@/axios/referensi/kolam";
 import Loading from "@/components/Loading";
 import Card from "@/components/ui/Card";
@@ -9,7 +10,10 @@ import { useNavigate } from "react-router-dom";
 import {
   AddTrainerSchedule,
   getTrainerScheduleByTrainer,
+  DeleteTrainerSchedule,
 } from "@/axios/masterdata/trainerSchedule";
+import { mockdata } from "@/constant/jadwal-default";
+import Swal from "sweetalert2";
 
 // Validation schema
 const FormValidationSchema = yup.object({}).required();
@@ -47,7 +51,15 @@ const Select = ({ name, placeholder, options, value, disabled, onChange }) => (
   </select>
 );
 
-const CardJadwal = ({ day, time, selected, setSelected, dataKolam }) => {
+const CardJadwal = ({
+  day,
+  time,
+  selected,
+  setSelected,
+  dataKolam,
+  defaultPool,
+  setDefaultPool,
+}) => {
   const handleCheckboxChange = (day, timeValue) => {
     const key = `${day}#${timeValue}`;
     if (selected.some((item) => item.startsWith(`${day}#${timeValue}`))) {
@@ -78,7 +90,7 @@ const CardJadwal = ({ day, time, selected, setSelected, dataKolam }) => {
       setSelected(selected.filter((item) => !item.startsWith(`${day}#`)));
     } else {
       const newSelections = time.map(
-        (option) => `${day}#${option.value}#defaultPool`
+        (option) => `${day}#${option.value}#${defaultPool}`
       );
       setSelected((prevSelected) => [
         ...prevSelected.filter((item) => !item.startsWith(`${day}#`)),
@@ -90,14 +102,16 @@ const CardJadwal = ({ day, time, selected, setSelected, dataKolam }) => {
   return (
     <Card title={day} titleClass="align-center">
       <div className="space-y-4">
-        <Checkbox
-          name={`${day}#checkall`}
-          label="Check All"
-          checked={time.every((option) =>
-            selected.some((item) => item.startsWith(`${day}#${option.value}`))
-          )}
-          onChange={() => handleCheckAllChange(day)}
-        />
+        <div className="flex items-center gap-4">
+          <Checkbox
+            name={`${day}#checkall`}
+            label="Check All"
+            checked={time.every((option) =>
+              selected.some((item) => item.startsWith(`${day}#${option.value}`))
+            )}
+            onChange={() => handleCheckAllChange(day)}
+          />
+        </div>
         {time.map((option, i) => {
           const isChecked = selected.some((item) =>
             item.startsWith(`${day}#${option.value}`)
@@ -137,6 +151,7 @@ const Jadwal = ({ data }) => {
   const [selected, setSelected] = useState([]);
   const [kolamOption, setKolamOption] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [defaultPool, setDefaultPool] = useState("");
   const navigate = useNavigate();
 
   const {
@@ -157,6 +172,7 @@ const Jadwal = ({ data }) => {
       const params = {
         page: 1,
         page_size: 200,
+        is_active: true,
       };
       const kolamResponse = await getKolamAll(params);
       const trainerScheduleResponse = await getTrainerScheduleByTrainer(
@@ -197,177 +213,44 @@ const Jadwal = ({ data }) => {
         pool: pool,
       };
     });
-
     handleAdd(tempData);
+  };
+
+  const handleAdd = async (tempData) => {
+    try {
+      const previousSchedules = await getTrainerScheduleByTrainer(
+        data.trainer_id
+      );
+
+      if (previousSchedules.data.results.length > 0 && tempData.length === 0) {
+        await DeleteTrainerSchedule(data.trainer_id);
+      }
+
+      let totalData = 0;
+      for (const item of tempData) {
+        try {
+          const res = await AddTrainerSchedule(item);
+          if (res) {
+            totalData += 1;
+          }
+        } catch (errors) {
+          console.log(errors);
+        }
+      }
+
+      if (totalData === tempData.length) {
+        Swal.fire("Added!", "Your file has been added.", "success").then(() =>
+          navigate(-1)
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleCancel = () => {
     navigate(-1);
   };
-
-  const handleAdd = (data) => {
-    let totalData = 0;
-    data.forEach((item) => {
-      AddTrainerSchedule(item)
-        .then((res) => {
-          if (res) {
-            totalData += 1;
-          }
-        })
-        .catch((errors) => {
-          console.log(errors);
-        });
-    });
-
-    // if (totalData === data.length) {
-    //   Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-    //     navigate(-1)
-    //   );
-    // }
-  };
-
-  const mockdata = [
-    {
-      day: "Senin",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-    {
-      day: "Selasa",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-    {
-      day: "Rabu",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-    {
-      day: "Kamis",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-    {
-      day: "Jumat",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-    {
-      day: "Sabtu",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-    {
-      day: "Minggu",
-      time: [
-        { value: "06.00", label: "06.00" },
-        { value: "07.00", label: "07.00" },
-        { value: "08.00", label: "08.00" },
-        { value: "09.00", label: "09.00" },
-        { value: "10.00", label: "10.00" },
-        { value: "11.00", label: "11.00" },
-        { value: "12.00", label: "12.00" },
-        { value: "13.00", label: "13.00" },
-        { value: "14.00", label: "14.00" },
-        { value: "15.00", label: "15.00" },
-        { value: "16.00", label: "16.00" },
-        { value: "17.00", label: "17.00" },
-        { value: "18.00", label: "18.00" },
-        { value: "19.00", label: "19.00" },
-        { value: "20.00", label: "20.00" },
-      ],
-    },
-  ];
 
   if (loading) {
     return <Loading />;
@@ -376,6 +259,13 @@ const Jadwal = ({ data }) => {
   return (
     <Card title="Jadwal Pelatih">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Select
+          name="defaultPool"
+          placeholder="Default Pool"
+          options={[{ value: "", label: "Pilih Kolam" }, ...kolamOption]}
+          value={defaultPool}
+          onChange={(e) => setDefaultPool(e.target.value)}
+        />
         <div className="grid grid-cols-3 gap-4">
           {mockdata.map((item, i) => (
             <CardJadwal
@@ -385,20 +275,20 @@ const Jadwal = ({ data }) => {
               selected={selected}
               setSelected={setSelected}
               dataKolam={kolamOption}
+              defaultPool={defaultPool}
+              setDefaultPool={setDefaultPool}
             />
           ))}
         </div>
         <div className="ltr:text-right rtl:text-left space-x-3">
-          <button
-            type="button"
-            className="btn text-center"
-            onClick={handleCancel}
-          >
-            Batal
-          </button>
-          <button type="submit" className="btn btn-dark text-center">
-            Save Jadwal
-          </button>
+          <div className="btn-group">
+            <button type="button" className="btn" onClick={handleCancel}>
+              Batal
+            </button>
+            <button type="submit" className="btn btn-dark">
+              Save Jadwal
+            </button>
+          </div>
         </div>
       </form>
     </Card>

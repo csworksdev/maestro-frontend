@@ -189,7 +189,7 @@ const OrderActive = ({ is_finished }) => {
                   onClick={
                     (e) =>
                       // item.name === "edit"
-                      //   ?
+                      // ?
                       handleEdit(row.row.original)
                     // : handleDelete(row.row.original)
                   }

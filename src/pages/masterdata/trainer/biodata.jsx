@@ -60,8 +60,13 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
         label: item.name,
       }));
       setBranchOption(mappedOption);
+
+      // Ensure the branch is set only after options are loaded
+      if (isUpdate && data.branch) {
+        setValue("branch", data.branch);
+      }
     });
-  }, []);
+  }, [isUpdate, data, setValue]);
 
   const gender = [
     { value: "L", label: "Laki-laki" },
@@ -111,18 +116,14 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
     const updatedData = {
       ...data,
       fullname: newData.fullname,
-      dob: isUpdate
-        ? data.dob
-        : DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
+      dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
       is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,
-      reg_date: isUpdate
-        ? data.reg_date
-        : DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
+      reg_date: DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
       branch: newData.branch,
     };
 

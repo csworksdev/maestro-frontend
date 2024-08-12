@@ -1,6 +1,6 @@
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,12 +11,14 @@ import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
+import { getCabangAll } from "@/axios/referensi/cabang";
 
 const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
+  const [branchOption, setBranchOption] = useState([]);
 
   const FormValidationSchema = yup
     .object({
@@ -43,6 +45,18 @@ const Edit = () => {
   });
 
   useEffect(() => {
+    const params = {
+      page: 1,
+      page_size: 50,
+    };
+    getCabangAll(params).then((res) => {
+      const fetchedBranch = res.data.results;
+      const mappedOption = fetchedBranch.map((item) => ({
+        value: item.branch_id,
+        label: item.name,
+      }));
+      setBranchOption(mappedOption);
+    });
     if (isUpdate && data.dob) {
       setValue("dob", data.dob);
     }
@@ -182,6 +196,15 @@ const Edit = () => {
               <p className="error-message">{errors.dob.message}</p>
             )}
           </div>
+          <Select
+            name="branch"
+            label="Cabang"
+            placeholder="Pilih Cabang"
+            register={register}
+            error={errors.branch?.message}
+            options={branchOption}
+            defaultValue={isUpdate ? data.branch : ""}
+          />
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button
               type="button"
