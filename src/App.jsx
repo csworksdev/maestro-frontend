@@ -44,8 +44,10 @@ const Trainer = lazy(() => import("./pages/masterdata/trainer"));
 const EditTrainer = lazy(() => import("./pages/masterdata/trainer/edit"));
 const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
-const Order = lazy(() => import("./pages/order/index"));
-const EditOrder = lazy(() => import("./pages/order/edit"));
+const Order = lazy(() => import("./pages/order/active/index"));
+const OrderFinished = lazy(() => import("./pages/order/finished/index"));
+const Waitinglist = lazy(() => import("./pages/order/waitinglist/index"));
+const EditOrder = lazy(() => import("./pages/order/active/edit"));
 const CoachDashboard = lazy(() => import("./pages/trainer/dashboard"));
 const CoachEarning = lazy(() => import("./pages/trainer/earning"));
 const CoachPerformance = lazy(() => import("./pages/trainer/performance"));
@@ -154,6 +156,11 @@ function App() {
               <Route index element={<Order />} />
               <Route path="add" element={<EditOrder />} />
               <Route path="edit" element={<EditOrder />} />
+              <Route
+                path="finished"
+                element={<OrderFinished is_finished={true} />}
+              />
+              <Route path="waitinglist" element={<Waitinglist />} />
             </Route>
             //#endregion
             {/*  */}

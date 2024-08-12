@@ -73,19 +73,6 @@ const Kolam = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // const loadData = () => {
-  //   setIsLoading(true);
-  //   getKolamAll()
-  //     .then((res) => {
-  //       setData(res.data.results);
-  //     })
-  //     .finally(() => setIsLoading(false));
-  // };
-
-  // useEffect(() => {
-  //   fetchData(pageIndex, pageSize, searchQuery);
-  // }, []);
-
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
@@ -141,6 +128,13 @@ const Kolam = () => {
     {
       Header: "Cabang",
       accessor: "branch_name",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Notes",
+      accessor: "notes",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },

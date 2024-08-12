@@ -28,6 +28,7 @@ import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
 import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
+import Textarea from "@/components/ui/Textarea";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -62,17 +63,18 @@ const Edit = () => {
   const [loadingError, setLoadingError] = useState(null);
   const [studentLoadingError, setStudentLoadingError] = useState(null);
   const [trainerLoadingError, setTrainerLoadingError] = useState(null);
+  const [poolNotes, setPoolNotes] = useState(null);
 
   const FormValidationSchema = yup
     .object({
-      branch: yup.string().required("Branch is required"),
-      pool: yup.string().required("Pool is required"),
-      day: yup.string().required("Day is required"),
-      jam: yup.string().required("Time is required"),
-      start_date: yup.date().required("Start date is required"),
-      students: yup.array().min(1, "At least one student is required"),
-      trainer: yup.string().required("Trainer is required"),
-      product: yup.string().required("Product is required"),
+      // branch: yup.string().required("Branch is required"),
+      // pool: yup.string().required("Pool is required"),
+      // day: yup.string().required("Day is required"),
+      // jam: yup.string().required("Time is required"),
+      // start_date: yup.date().required("Start date is required"),
+      // students: yup.array().min(1, "At least one student is required"),
+      // trainer: yup.string().required("Trainer is required"),
+      // product: yup.string().required("Product is required"),
     })
     .required();
 
@@ -263,7 +265,6 @@ const Edit = () => {
             .plus({ days: 60 })
             .toFormat("yyyy-MM-dd"),
       is_finish: newData.is_finish,
-      notes: newData.notes,
       price: product.price,
       is_paid: newData.is_paid,
       students: selectedStudents.map((student) => ({
@@ -278,6 +279,7 @@ const Edit = () => {
       trainer_percentage: parseInt(trainer.precentage_fee),
       company_percentage: 100 - trainer.precentage_fee,
       branch: isUpdate ? data.branch : newData.branch,
+      notes: isUpdate ? data.notes : newData.notes,
     };
 
     if (isUpdate) {
@@ -300,6 +302,7 @@ const Edit = () => {
       const kolamOption = kolamResponse.data.results.map((item) => ({
         value: item.pool_id,
         label: item.name,
+        notes: item.notes,
       }));
 
       const studentOptions = studentResponse.data.results.map((item) => ({
@@ -363,6 +366,11 @@ const Edit = () => {
       setLoadingError(error);
       Swal.fire("Error", "Failed to load pool data.", "error");
     }
+    setPoolNotes("");
+    const pool_notes = kolamOption.find(
+      (item) => item.value === e.target.value
+    );
+    setPoolNotes(pool_notes.notes);
   };
 
   const handleGenderOption = (e) => {
@@ -529,6 +537,15 @@ const Edit = () => {
             defaultValue={isUpdate ? data.pool : ""}
             onChange={handlePoolChange}
           />
+          <Textarea
+            name="notes"
+            label="Catatan"
+            type="text"
+            register={register}
+            placeholder=""
+            value={poolNotes}
+            disabled
+          />
           <div className="grid grid-cols-2 gap-4">
             <Select
               name="day"
@@ -553,7 +570,7 @@ const Edit = () => {
           </div>
           <div className="flex flex-wrap space-x-5">
             <label className="form-label" htmlFor="gender">
-              Gender
+              Gender Pelatih
             </label>
             {genderOption.map((option) => (
               <Radio

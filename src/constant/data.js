@@ -176,11 +176,11 @@ export const menuAdmin = [
       },
       {
         childtitle: "Selesai",
-        childlink: "course/schedule",
+        childlink: "order/finished",
       },
       {
         childtitle: "Waiting List",
-        childlink: "course/schedule",
+        childlink: "order/waitinglist",
       },
     ],
   },

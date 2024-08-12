@@ -143,6 +143,15 @@ const Edit = () => {
           options={branchOption}
           defaultValue={isUpdate ? data.branch : ""}
         />
+        <Textarea
+          name="notes"
+          label="Catatan"
+          type="text"
+          placeholder="Catatan"
+          register={register}
+          error={errors.notes?.message}
+          defaultValue={isUpdate ? data.notes : ""}
+        />
         <div className="ltr:text-right rtl:text-left space-x-3">
           <button
             type="button"
