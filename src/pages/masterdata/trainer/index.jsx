@@ -158,13 +158,13 @@ const Trainer = () => {
         return <span>{row?.cell?.value ? "Aktif" : "Tidak Aktif"}</span>;
       },
     },
-    // {
-    //   Header: "Bagi Hasil",
-    //   accessor: "precentage_fee",
-    //   Cell: (row) => {
-    //     return <span>{row?.cell?.value}</span>;
-    //   },
-    // },
+    {
+      Header: "Cabang",
+      accessor: "branch_name",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
     {
       Header: "action",
       accessor: "action",

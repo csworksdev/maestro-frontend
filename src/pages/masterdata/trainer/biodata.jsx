@@ -1,5 +1,3 @@
-import Card from "@/components/ui/Card";
-import Textinput from "@/components/ui/Textinput";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -13,12 +11,15 @@ import "flatpickr/dist/themes/material_green.css";
 import { DateTime } from "luxon";
 import Radio from "@/components/ui/Radio";
 import { getCabangAll } from "@/axios/referensi/cabang";
+import Card from "@/components/ui/Card";
+import Textinput from "@/components/ui/Textinput";
 
 const Biodata = ({ isupdate = "false", data = {} }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
   const [selectOption, setSelectOption] = useState("false");
   const [branchOption, setBranchOption] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const FormValidationSchema = yup
     .object({
@@ -40,32 +41,33 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
   });
 
   useEffect(() => {
+    const params = {
+      page: 1,
+      page_size: 50,
+    };
+    getCabangAll(params)
+      .then((res) => {
+        const fetchedBranch = res.data.results;
+        const mappedOption = fetchedBranch.map((item) => ({
+          value: item.branch_id,
+          label: item.name,
+        }));
+        setBranchOption(mappedOption);
+
+        if (isUpdate && data.branch) {
+          setValue("branch", data.branch);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
     if (isUpdate) {
       if (data.dob) setValue("dob", DateTime.fromISO(data.dob).toJSDate());
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
       setSelectOption(data.is_active.toString());
     }
-  }, [isUpdate, data, setValue]);
-
-  useEffect(() => {
-    const params = {
-      page: 1,
-      page_size: 50,
-    };
-    getCabangAll(params).then((res) => {
-      const fetchedBranch = res.data.results;
-      const mappedOption = fetchedBranch.map((item) => ({
-        value: item.branch_id,
-        label: item.name,
-      }));
-      setBranchOption(mappedOption);
-
-      // Ensure the branch is set only after options are loaded
-      if (isUpdate && data.branch) {
-        setValue("branch", data.branch);
-      }
-    });
   }, [isUpdate, data, setValue]);
 
   const gender = [
@@ -134,6 +136,14 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <Card title="Biodata">
+        <p>Loading...</p>
+      </Card>
+    );
+  }
+
   return (
     <Card title="Biodata">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -145,6 +155,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
           register={register}
           error={errors.fullname?.message}
           defaultValue={isUpdate ? data.fullname : ""}
+          disabled={loading}
         />
         <Textinput
           name="nickname"
@@ -154,6 +165,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
           register={register}
           error={errors.nickname?.message}
           defaultValue={isUpdate ? data.nickname : ""}
+          disabled={loading}
         />
         <Select
           name="gender"
@@ -163,6 +175,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
           error={errors.gender?.message}
           defaultValue={isUpdate ? data.gender : ""}
           options={gender}
+          disabled={loading}
         />
         <div>
           <label className="form-label" htmlFor="dob">
@@ -178,6 +191,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             }}
             className="form-control py-2"
             onChange={(date) => setValue("dob", date[0])}
+            disabled={loading}
           />
           {errors.dob && <p className="error-message">{errors.dob.message}</p>}
         </div>
@@ -197,6 +211,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             }}
             className="form-control py-2"
             onChange={(date) => setValue("reg_date", date[0])}
+            disabled={loading}
           />
           {errors.reg_date && (
             <p className="error-message">{errors.reg_date.message}</p>
@@ -210,6 +225,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
           register={register}
           error={errors.precentage_fee?.message}
           defaultValue={isUpdate ? data.precentage_fee : ""}
+          disabled={loading}
         />
         <div className="flex flex-wrap space-xy-5">
           {options.map((option) => (
@@ -220,6 +236,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
               value={option.value}
               checked={selectOption === option.value}
               onChange={handleOption}
+              disabled={loading}
             />
           ))}
         </div>
@@ -231,16 +248,22 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
           error={errors.branch?.message}
           options={branchOption}
           defaultValue={isUpdate ? data.branch : ""}
+          disabled={loading}
         />
         <div className="ltr:text-right rtl:text-left space-x-3">
           <button
             type="button"
             className="btn text-center"
             onClick={handleCancel}
+            disabled={loading}
           >
             Batal
           </button>
-          <button type="submit" className="btn btn-dark text-center">
+          <button
+            type="submit"
+            className="btn btn-dark text-center"
+            disabled={loading}
+          >
             {isUpdate ? "Update" : "Add"} Trainer
           </button>
         </div>
