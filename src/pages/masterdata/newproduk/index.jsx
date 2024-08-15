@@ -8,7 +8,7 @@ import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { DeleteOrder, getOrderExpired } from "@/axios/masterdata/order";
+import { DeleteNewProduk, getNewProdukAll } from "@/axios/masterdata/newproduk";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 
@@ -21,14 +21,15 @@ const actions = [
     name: "edit",
     icon: "heroicons:pencil-square",
   },
-  // {
-  //   name: "delete",
-  //   icon: "heroicons-outline:trash",
-  // },
+  {
+    name: "delete",
+    icon: "heroicons-outline:trash",
+  },
 ];
 
-const OrderFinished = ({ is_finished }) => {
+const NewProduk = () => {
   const navigate = useNavigate();
+  const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [listData, setListData] = useState({ count: 0, results: [] });
@@ -39,31 +40,14 @@ const OrderFinished = ({ is_finished }) => {
   const fetchData = async (page, size, query) => {
     try {
       setIsLoading(true);
-      setListData();
       const params = {
         page: page + 1,
         page_size: size,
-        is_finished: is_finished,
         search: query,
       };
-      getOrderExpired(params)
+      getNewProdukAll(params)
         .then((res) => {
-          const updateData = res.data.results.map((item) => ({
-            ...item,
-            listname: item.students.map((i) => i.student_fullname).join(", "),
-          }));
-
-          res = {
-            ...res,
-            data: {
-              ...res.data,
-              results: updateData,
-            },
-          };
           setListData(res.data);
-        })
-        .catch((error) => {
-          console.error("Error fetching order data:", error);
         })
         .finally(() => setIsLoading(false));
     } catch (error) {
@@ -99,7 +83,7 @@ const OrderFinished = ({ is_finished }) => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteOrder(e.order_id).then((res) => {
+        DeleteNewProduk(e.product_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);
@@ -120,29 +104,22 @@ const OrderFinished = ({ is_finished }) => {
 
   const COLUMNS = [
     {
-      Header: "Kolam",
-      accessor: "pool_name",
+      Header: "NewProduk",
+      accessor: "name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
     },
     {
-      Header: "Produk",
-      accessor: "product_name",
+      Header: "Paket",
+      accessor: "package_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
     },
     {
-      Header: "Tanggal Order",
-      accessor: "order_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Promo",
-      accessor: "promo",
+      Header: "Pertemuan",
+      accessor: "meetings",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
@@ -150,20 +127,6 @@ const OrderFinished = ({ is_finished }) => {
     {
       Header: "Harga",
       accessor: "price",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Siswa",
-      accessor: "listname",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Pelatih",
-      accessor: "trainer_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
@@ -186,12 +149,10 @@ const OrderFinished = ({ is_finished }) => {
                     }
                      w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
                      first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                  onClick={
-                    (e) =>
-                      // item.name === "edit"
-                      // ?
-                      handleEdit(row.row.original)
-                    // : handleDelete(row.row.original)
+                  onClick={(e) =>
+                    item.name === "edit"
+                      ? handleEdit(row.row.original)
+                      : handleDelete(row.row.original)
                   }
                   key={i}
                 >
@@ -209,33 +170,40 @@ const OrderFinished = ({ is_finished }) => {
   ];
 
   return (
-    <>
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <Card title={"Order Selesai"}>
-          <Search searchValue={searchQuery} handleSearch={handleSearch} />
-          <Table
-            listData={listData}
-            listColumn={COLUMNS}
-            searchValue={searchQuery}
-            handleSearch={handleSearch}
-          />
-          <PaginationComponent
-            pageSize={pageSize}
-            pageIndex={pageIndex}
-            pageCount={Math.ceil(listData.count / pageSize)}
-            canPreviousPage={pageIndex > 0}
-            canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
-            gotoPage={handlePageChange}
-            previousPage={() => handlePageChange(pageIndex - 1)}
-            nextPage={() => handlePageChange(pageIndex + 1)}
-            setPageSize={handlePageSizeChange}
-          />
-        </Card>
-      )}
-    </>
+    <div className="grid grid-cols-1 justify-end">
+      <Card title="NewProduk">
+        <Button className="btn-primary ">
+          <Link to="add" isupdate="false">
+            Tambah
+          </Link>
+        </Button>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            <Table
+              listData={listData}
+              listColumn={COLUMNS}
+              searchValue={searchQuery}
+              handleSearch={handleSearch}
+            />
+            <PaginationComponent
+              pageSize={pageSize}
+              pageIndex={pageIndex}
+              pageCount={Math.ceil(listData.count / pageSize)}
+              canPreviousPage={pageIndex > 0}
+              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
+              gotoPage={handlePageChange}
+              previousPage={() => handlePageChange(pageIndex - 1)}
+              nextPage={() => handlePageChange(pageIndex + 1)}
+              setPageSize={handlePageSizeChange}
+            />
+          </>
+        )}
+      </Card>
+    </div>
   );
 };
 
-export default OrderFinished;
+export default NewProduk;

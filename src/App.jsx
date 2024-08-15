@@ -44,9 +44,12 @@ const Trainer = lazy(() => import("./pages/masterdata/trainer"));
 const EditTrainer = lazy(() => import("./pages/masterdata/trainer/edit"));
 const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
-const Order = lazy(() => import("./pages/order/active/index"));
-const OrderFinished = lazy(() => import("./pages/order/finished/index"));
-const Waitinglist = lazy(() => import("./pages/order/waitinglist/index"));
+const NewProduk = lazy(() => import("./pages/masterdata/newproduk"));
+const EditNewProduk = lazy(() => import("./pages/masterdata/newproduk/edit"));
+const Order = lazy(() => import("./pages/order/active"));
+const OrderFinished = lazy(() => import("./pages/order/finished"));
+const OrderExpired = lazy(() => import("./pages/order/expired"));
+const Waitinglist = lazy(() => import("./pages/order/waitinglist"));
 const EditOrder = lazy(() => import("./pages/order/active/edit"));
 const CoachDashboard = lazy(() => import("./pages/trainer/dashboard"));
 const CoachEarning = lazy(() => import("./pages/trainer/earning"));
@@ -149,6 +152,11 @@ function App() {
               <Route path="add" element={<EditProduk />} />
               <Route path="edit" element={<EditProduk />} />
             </Route>
+            <Route path="newproduk">
+              <Route index element={<NewProduk />} />
+              <Route path="add" element={<EditNewProduk />} />
+              <Route path="edit" element={<EditNewProduk />} />
+            </Route>
             //#endregion
             {/*  */}
             //#region order
@@ -160,6 +168,7 @@ function App() {
                 path="finished"
                 element={<OrderFinished is_finished={true} />}
               />
+              <Route path="expired" element={<OrderExpired />} />
               <Route path="waitinglist" element={<Waitinglist />} />
             </Route>
             //#endregion

@@ -7,13 +7,14 @@ import Swal from "sweetalert2";
 import { UpdatePresenceById } from "@/axios/trainer/presence";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
-import { useSelector } from "react-redux";
+import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
 
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
   const roles = localStorage.getItem("roles");
   const userid = localStorage.getItem("userid");
+  const [periode, setPeriode] = useState([]);
 
   const time = [
     { value: "06.00", label: "06.00" },
@@ -41,6 +42,10 @@ const Presence = () => {
       else res = await getPresenceAll();
       // res = await getPresenceAll();
       setListData(res.data.data);
+
+      const periodeResults = await getPeriodisasiToday();
+      setPeriode(periodeResults.data.results[0]);
+      console.log(periodeResults.data.results[0]);
     } catch (error) {
       console.error("Error fetching data", error);
     } finally {
@@ -170,6 +175,7 @@ const Presence = () => {
                           options={{
                             dateFormat: "Y-m-d",
                             maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                            minDate: periode.start_date,
                           }}
                           className="form-control py-2"
                           onChange={(date) =>

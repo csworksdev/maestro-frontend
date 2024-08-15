@@ -146,6 +146,10 @@ export const menuAdmin = [
         childtitle: "Produk",
         childlink: "produk",
       },
+      {
+        childtitle: "New Produk",
+        childlink: "newproduk",
+      },
     ],
   },
   {
@@ -177,6 +181,10 @@ export const menuAdmin = [
       {
         childtitle: "Selesai",
         childlink: "order/finished",
+      },
+      {
+        childtitle: "Expired",
+        childlink: "order/expired",
       },
       {
         childtitle: "Waiting List",

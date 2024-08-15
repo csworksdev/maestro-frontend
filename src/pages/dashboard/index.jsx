@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import ImageBlock1 from "@/components/partials/widget/block/image-block-1";
 import GroupChart1 from "@/components/partials/widget/chart/group-chart-1";
@@ -10,9 +10,20 @@ import RecentActivity from "@/components/partials/widget/recent-activity";
 import MostSales from "../../components/partials/widget/most-sales";
 import RadarChart from "../../components/partials/widget/chart/radar-chart";
 import HomeBredCurbs from "./HomeBredCurbs";
+import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
 
 const Dashboard = () => {
   const [filterMap, setFilterMap] = useState("global");
+
+  useEffect(() => {
+    async function getPeriod() {
+      const periodisasi = await getPeriodisasiToday();
+      console.log(periodisasi.data.results);
+    }
+
+    getPeriod();
+  }, []);
+
   return (
     <div>
       <HomeBredCurbs title="Dashboard" />

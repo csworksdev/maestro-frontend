@@ -11,6 +11,15 @@ export const getPeriodisasiAll = async (data) => {
   }
 };
 
+export const getPeriodisasiToday = async () => {
+  try {
+    let response = await axiosConfig.get("/api/periodisasi/today/");
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const AddPeriodisasi = async (data) => {
   try {
     let response = await axiosConfig.post("/api/periodisasi/", data);

@@ -27,7 +27,7 @@ const actions = [
   // },
 ];
 
-const OrderFinished = ({ is_finished }) => {
+const OrderActive = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,7 +43,6 @@ const OrderFinished = ({ is_finished }) => {
       const params = {
         page: page + 1,
         page_size: size,
-        is_finished: is_finished,
         search: query,
       };
       getOrderExpired(params)
@@ -213,7 +212,7 @@ const OrderFinished = ({ is_finished }) => {
       {isLoading ? (
         <Loading />
       ) : (
-        <Card title={"Order Selesai"}>
+        <Card title={"Order Expired"}>
           <Search searchValue={searchQuery} handleSearch={handleSearch} />
           <Table
             listData={listData}
@@ -238,4 +237,4 @@ const OrderFinished = ({ is_finished }) => {
   );
 };
 
-export default OrderFinished;
+export default OrderActive;

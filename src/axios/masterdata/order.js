@@ -11,6 +11,17 @@ export const getOrderAll = async (data) => {
   }
 };
 
+export const getOrderExpired = async (data) => {
+  try {
+    let response = await axiosConfig.get("/api/order/expired/", {
+      params: data,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const FindAvailableTrainer = async (data) => {
   try {
     let response = await axiosConfig.get("/api/orderfindtrainer/", {
