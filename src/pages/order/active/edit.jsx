@@ -12,11 +12,7 @@ import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
 import Loading from "@/components/Loading";
 import Radio from "@/components/ui/Radio";
-import {
-  AddOrder,
-  EditOrder,
-  FindAvailableTrainer,
-} from "@/axios/masterdata/order";
+import { EditOrder, FindAvailableTrainer } from "@/axios/masterdata/order";
 import { getProdukPool } from "@/axios/masterdata/produk";
 import {
   getSiswaAll,
@@ -33,8 +29,7 @@ import Textarea from "@/components/ui/Textarea";
 const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isupdate = "false", data = {} } = location.state ?? {};
-  const isUpdate = isupdate === "true";
+  const { data = {} } = location.state ?? {};
   const [productData, setProductData] = useState([]);
   const [kolamOption, setKolamOption] = useState([]);
   const [productOption, setProductOption] = useState([]);
@@ -67,14 +62,14 @@ const Edit = () => {
 
   const FormValidationSchema = yup
     .object({
-      // branch: yup.string().required("Branch is required"),
-      // pool: yup.string().required("Pool is required"),
-      // day: yup.string().required("Day is required"),
-      // jam: yup.string().required("Time is required"),
-      // start_date: yup.date().required("Start date is required"),
-      // students: yup.array().min(1, "At least one student is required"),
-      // trainer: yup.string().required("Trainer is required"),
-      // product: yup.string().required("Product is required"),
+      branch: yup.string().required("Branch is required"),
+      pool: yup.string().required("Pool is required"),
+      day: yup.string().required("Day is required"),
+      jam: yup.string().required("Time is required"),
+      start_date: yup.date().required("Start date is required"),
+      students: yup.array().min(1, "At least one student is required"),
+      trainer: yup.string().required("Trainer is required"),
+      product: yup.string().required("Product is required"),
     })
     .required();
 
@@ -88,138 +83,111 @@ const Edit = () => {
     mode: "all",
   });
 
-  const fillFormFields = (data) => {
-    if (data.product) setValue("product", data.product);
-    if (data.students) {
-      const transformedStudents = data.students.map((student) => {
-        const option = studentOption.find(
-          (opt) => opt.value === student.student_id
-        );
-        return {
-          value: student.student_id,
-          label: option ? option.label : student.fullname,
-        };
-      });
-      setSelectedStudents(transformedStudents);
-    }
-    if (data.trainer) setValue("trainer", data.trainer);
-    if (data.order_date) setValue("order_date", data.order_date);
-    if (data.price) setValue("price", data.price);
-  };
+  useEffect(() => {
+    // if (branchOption.length > 0) {
+    //   // Set form field values only if they haven't been set before
+    //   setValue("branch", data.branch);
+    //   if (kolamOption.length > 0) {
+    //     const poolOptions = kolamOption.map((pool) => ({
+    //       value: pool.value,
+    //       label: pool.label,
+    //     }));
+    //     setKolamOption(poolOptions);
+    //     setValue("pool", data.pool);
+    //   }
+    //   setValue("product", data.product);
+    //   setValue("day", data.day);
+    //   setValue("jam", data.time);
+    //   setValue("start_date", data.start_date);
+    //   setValue("promo", data.promo);
+    //   const transformedStudents = data.students.map((student) => ({
+    //     value: student.student_id,
+    //     label: student.student_fullname,
+    //   }));
+    //   setSelectedStudents(transformedStudents);
+    //   setValue("students", transformedStudents);
+    //   setValue("trainer", data.trainer);
+    // }
+    // Empty dependency array to run this effect only once on mount
+  }, []); // <-- IMPORTANT: No dependencies except the data passed initially
 
   useEffect(() => {
-    if (isUpdate) {
-      fillFormFields(data);
-    }
-  }, [isUpdate, data, setValue, studentOption]);
-
-  const loadReference = useCallback(async () => {
-    try {
-      const params = {
-        page: 1,
-        page_size: 50,
-      };
-      const branchResponse = await getCabangAll(params);
-
-      const branchOption = branchResponse.data.results.map((item) => ({
-        value: item.branch_id,
-        label: item.name,
-      }));
-
-      setBranchOption(branchOption);
-
-      if (isUpdate) {
-        const studentOptions = data.students.map((item) => ({
-          value: item.student_id,
-          label: item.student_fullname,
-        }));
-        setStudentOption(studentOptions);
-      }
-
-      if (data.pool) {
-        setProductOption([]);
-        const productResponse = await getProdukPool(data.pool);
-        setProductData(productResponse.data.results);
-        const productOptions = productResponse.data.results.map((item) => ({
-          value: item.product_id,
+    const loadReference = async () => {
+      try {
+        const params = { page: 1, page_size: 50 };
+        const branchResponse = await getCabangAll(params);
+        const branchOptions = branchResponse.data.results.map((item) => ({
+          value: item.branch_id,
           label: item.name,
-          price: item.price,
         }));
-        setProductOption(productOptions);
-      }
-    } catch (error) {
-      setLoadingError(error);
-      Swal.fire("Error", "Failed to load reference data.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [data.pool, isUpdate]);
+        setBranchOption(branchOptions);
 
-  useEffect(() => {
+        // setvalue branch
+        setValue("branch", data.branch);
+        handleBranchChange({ target: { value: data.branch } });
+
+        // setvalue pool
+        setValue("pool", data.pool);
+        handlePoolChange({ target: { value: data.pool } });
+
+        setValue("day", data.day);
+        setValue("jam", data.time);
+
+        if (data.pool) {
+          const productResponse = await getProdukPool(data.pool);
+          const productOptions = productResponse.data.results.map((item) => ({
+            value: item.product_id,
+            label: item.name,
+            price: item.price,
+          }));
+          setProductOption(productOptions);
+          setProductData(productResponse.data.results);
+
+          // setvalue product
+          setValue("product", data.product);
+          handleProductChange({ target: { value: data.product } });
+        }
+
+        setValue("promo", data.promo);
+        const transformedStudents = data.students.map((student) => ({
+          value: student.student_id,
+          label: student.student_fullname,
+        }));
+        setSelectedStudents(transformedStudents);
+        setValue("students", transformedStudents);
+        setValue("trainer", data.trainer);
+
+        // const studentOptions = data.students.map((item) => ({
+        //   value: item.student_id,
+        //   label: item.student_fullname,
+        // }));
+        // setStudentOption(studentOptions);
+      } catch (error) {
+        setLoadingError(error);
+        Swal.fire("Error", "Failed to load reference data.", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadReference();
-  }, [loadReference]);
+    // Empty dependency array ensures this effect runs only once on mount
+  }, []); // <-- This effect should only run once when the component mounts
 
   const handleCancel = () => {
     navigate(-1);
   };
 
-  const handleAdd = (data) => {
-    AddOrder(data)
-      .then((res) => {
-        if (res) {
-          Swal.fire("Added!", "Your order has been added.", "success").then(
-            () => {
-              const product = productData.find(
-                (item) => item.product_id === data.product
-              );
-              const trainer = trainerList.find(
-                (i) => i.trainer_id === data.trainer
-              );
-              const temp = orderDetail.map((item, index) => {
-                item.order = res.data.order_id;
-                item.day = filterTrainerByDay;
-                item.time = filterTrainerByTime;
-                item.price_per_meet =
-                  (data.price * parseInt(trainer.precentage_fee)) /
-                  100 /
-                  product.meetings;
-                item.schedule_date = DateTime.fromISO(data.start_date)
-                  .plus({ days: 7 * (index + 1) })
-                  .toFormat("yyyy-MM-dd");
-                return item;
-              });
-              for (let index = 0; index < temp.length; index++) {
-                AddOrderDetail(temp[index], data).then((addres) => {
-                  if (addres.status === "success") {
-                    console.log("finished");
-                  }
-                });
-              }
-
-              const params = {
-                coach: data.trainer,
-                day: filterTrainerByDay,
-                time: filterTrainerByTime,
-                is_free: false,
-              };
-              UpdateTrainerSchedule(params).then(() => {
-                navigate(-1);
-              });
-            }
-          );
-        }
-      })
-      .catch((error) => {
-        Swal.fire("Error", "Failed to add order.", "error");
-      });
-  };
-
-  const handleUpdate = (updatedData) => {
-    EditOrder(data.order_id, updatedData)
-      .then((res) => {
-        if (res.status) {
-          Swal.fire("Updated!", "Your order has been updated.", "success").then(
-            () => {
+  const handleUpdate = useCallback(
+    (updatedData) => {
+      EditOrder(data.order_id, updatedData)
+        .then((res) => {
+          if (res.status) {
+            Swal.fire(
+              "Updated!",
+              "Your order has been updated.",
+              "success"
+            ).then(() => {
               navigate(-1);
               for (let index = 0; index < orderDetail.length; index++) {
                 const element = orderDetail[index];
@@ -237,57 +205,61 @@ const Edit = () => {
                     );
                   });
               }
-            }
-          );
-        }
-      })
-      .catch((error) => {
-        Swal.fire("Error", "Failed to update order.", "error");
-      });
-  };
+            });
+          }
+        })
+        .catch((error) => {
+          Swal.fire("Error", "Failed to update order.", "error");
+        });
+    },
+    [data.order_id, orderDetail, navigate]
+  );
 
-  const onSubmit = (newData) => {
-    const product = productData.find(
-      (item) => item.product_id === selectProductOption
-    );
-    const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
-    const updatedData = {
-      ...data,
-      order_id: newData.order_id,
-      order_date: isUpdate
-        ? data.order_date
-        : DateTime.now().toFormat("yyyy-MM-dd"),
-      product: product.product_id,
-      promo: newData.promo,
-      expire_date: isUpdate
-        ? data.expire_date
-        : DateTime.fromJSDate(newData.start_date)
+  const onSubmit = useCallback(
+    (newData) => {
+      const product = productData.find(
+        (item) => item.product_id === selectProductOption
+      );
+      const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
+      const updatedData = {
+        ...data,
+        order_id: newData.order_id,
+        order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
+        product: product.product_id,
+        promo: newData.promo,
+        expire_date:
+          DateTime.fromJSDate(newData.start_date)
             .plus({ days: 60 })
-            .toFormat("yyyy-MM-dd"),
-      is_finish: newData.is_finish,
-      price: product.price,
-      is_paid: newData.is_paid,
-      students: selectedStudents.map((student) => ({
-        student_id: student.value,
-      })),
-      start_date: isUpdate
-        ? data.start_date
-        : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
-      trainer: newData.trainer,
-      pool: newData.pool,
-      package: product.package,
-      trainer_percentage: parseInt(trainer.precentage_fee),
-      company_percentage: 100 - trainer.precentage_fee,
-      branch: isUpdate ? data.branch : newData.branch,
-      notes: isUpdate ? data.notes : newData.notes,
-    };
+            .toFormat("yyyy-MM-dd") ?? data.expire_date,
+        is_finish: newData.is_finish,
+        price: product.price,
+        is_paid: newData.is_paid,
+        students: selectedStudents.map((student) => ({
+          student_id: student.value,
+        })),
+        start_date:
+          DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
+          data.start_date,
+        trainer: newData.trainer,
+        pool: newData.pool,
+        package: product.package,
+        trainer_percentage: parseInt(trainer.precentage_fee),
+        company_percentage: 100 - trainer.precentage_fee,
+        branch: newData.branch ?? data.branch,
+        notes: newData.notes ?? data.notes,
+      };
 
-    if (isUpdate) {
       handleUpdate(updatedData);
-    } else {
-      handleAdd(updatedData);
-    }
-  };
+    },
+    [
+      data,
+      productData,
+      trainerList,
+      selectedStudents,
+      selectProductOption,
+      handleUpdate,
+    ]
+  );
 
   const handleBranchChange = async (e) => {
     const branch_id = e.target.value;
@@ -310,14 +282,12 @@ const Edit = () => {
         label: item.fullname,
       }));
 
-      if (isUpdate) {
-        data.students.map((item) => {
-          studentOptions.push({
-            value: item.student_id,
-            label: item.student_fullname,
-          });
+      data.students.map((item) => {
+        studentOptions.push({
+          value: item.student_id,
+          label: item.student_fullname,
         });
-      }
+      });
 
       setKolamOption(kolamOption);
       setStudentOption(studentOptions);
@@ -341,14 +311,17 @@ const Edit = () => {
     }
   };
 
-  const handleProductChange = (e) => {
-    setSelectProductOption(e.target.value);
-    const findData = productData.find(
-      (item) => item.product_id === e.target.value
-    );
-    setMaxStudents(findData.max_student);
-    createDetail(findData);
-  };
+  const handleProductChange = useCallback(
+    (e) => {
+      setSelectProductOption(e.target.value);
+      const findData = productData.find(
+        (item) => item.product_id === e.target.value
+      );
+      setMaxStudents(findData.max_student);
+      createDetail(findData);
+    },
+    [productData]
+  );
 
   const handlePoolChange = async (e) => {
     setProductOption([]);
@@ -373,18 +346,18 @@ const Edit = () => {
     setPoolNotes(pool_notes.notes);
   };
 
-  const handleGenderOption = (e) => {
+  const handleGenderOption = useCallback((e) => {
     setSelectGenderOption(e.target.value);
     setFilterTrainerByGender(e.target.value);
-  };
+  }, []);
 
-  const handleHariOption = (e) => {
+  const handleHariOption = useCallback((e) => {
     setFilterTrainerByDay(e.target.value);
-  };
+  }, []);
 
-  const handleJamOption = (e) => {
+  const handleJamOption = useCallback((e) => {
     setFilterTrainerByTime(e.target.value);
-  };
+  }, []);
 
   useEffect(() => {
     setFilterTrainerParams((prevParams) => ({
@@ -416,12 +389,10 @@ const Edit = () => {
             value: item.trainer_id,
             label: item.fullname,
           }));
-          if (isUpdate) {
-            trainerOptions.push({
-              value: data.trainer,
-              label: data.trainer_name,
-            });
-          }
+          trainerOptions.push({
+            value: data.trainer,
+            label: data.trainer_name,
+          });
           setTrainerList(trainerResponse.data.results);
           setTrainerOption(trainerOptions);
         } catch (error) {
@@ -434,7 +405,6 @@ const Edit = () => {
   }, [
     filterTrainerParams,
     filterTrainerByBranch,
-    isUpdate,
     data.trainer,
     data.trainer_name,
   ]);
@@ -459,17 +429,20 @@ const Edit = () => {
     setOrderDetail(temp);
   };
 
-  const handleStudentChange = (selectedOptions) => {
-    if (selectedOptions.length <= maxStudents) {
-      setSelectedStudents(selectedOptions);
-    } else {
-      Swal.fire(
-        "Limit Exceeded",
-        `You can only select up to ${maxStudents} students.`,
-        "warning"
-      );
-    }
-  };
+  const handleStudentChange = useCallback(
+    (selectedOptions) => {
+      if (selectedOptions.length <= maxStudents) {
+        setSelectedStudents(selectedOptions);
+      } else {
+        Swal.fire(
+          "Limit Exceeded",
+          `You can only select up to ${maxStudents} students.`,
+          "warning"
+        );
+      }
+    },
+    [maxStudents]
+  );
 
   const loadOptions = async (inputValue, callback) => {
     try {
@@ -506,13 +479,13 @@ const Edit = () => {
     StudentDefaultOptions();
   }, []);
 
-  if (loading && isUpdate) {
+  if (loading) {
     return <Loading />;
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
+      <Card title={"Update Order"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {loadingError && (
             <p className="error-message">{loadingError.message}</p>
@@ -524,7 +497,7 @@ const Edit = () => {
             register={register}
             error={errors.branch?.message}
             options={branchOption}
-            defaultValue={isUpdate ? data.branch : ""}
+            defaultValue={""}
             onChange={handleBranchChange}
           />
           <Select
@@ -534,7 +507,7 @@ const Edit = () => {
             register={register}
             error={errors.pool?.message}
             options={kolamOption}
-            defaultValue={isUpdate ? data.pool : ""}
+            defaultValue={""}
             onChange={handlePoolChange}
           />
           <Textarea
@@ -544,6 +517,7 @@ const Edit = () => {
             register={register}
             placeholder=""
             value={poolNotes}
+            defaultValue={poolNotes ?? " "}
             disabled
           />
           <div className="grid grid-cols-2 gap-4">
@@ -610,9 +584,8 @@ const Edit = () => {
             </label>
             <Flatpickr
               defaultValue={
-                isUpdate
-                  ? data.order_date
-                  : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
+                DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd") ??
+                data.order_date
               }
               name="order_date"
               options={{
@@ -631,10 +604,10 @@ const Edit = () => {
               Tanggal Mulai
             </label>
             <Flatpickr
-              defaultValue={
-                isUpdate
-                  ? data.start_date
-                  : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
+              value={
+                data.start_date
+                  ? DateTime.fromISO(data.start_date).toFormat("yyyy-MM-dd")
+                  : ""
               }
               name="start_date"
               options={{
@@ -644,6 +617,7 @@ const Edit = () => {
               className="form-control py-2 bg-black-50 from-black-900"
               onChange={(date) => setValue("start_date", date[0])}
             />
+
             {errors.start_date && (
               <p className="error-message">{errors.start_date.message}</p>
             )}
@@ -655,7 +629,7 @@ const Edit = () => {
             placeholder="Masukan promo"
             register={register}
             error={errors.promo?.message}
-            defaultValue={isUpdate ? data.promo : ""}
+            defaultValue={data.promo ?? ""}
           />
           <div>
             <label className="form-label" htmlFor="students">
@@ -686,7 +660,7 @@ const Edit = () => {
             register={register}
             error={errors.trainer?.message}
             options={trainerOption}
-            defaultValue={isUpdate ? data.trainer : ""}
+            defaultValue={data.trainer ?? ""}
           />
           {trainerLoadingError && (
             <p className="error-message">{trainerLoadingError.message}</p>
@@ -697,7 +671,7 @@ const Edit = () => {
                 Batal
               </button>
               <button type="submit" className="btn btn-dark">
-                {isUpdate ? "Update" : "Add"} Order
+                Update Order
               </button>
             </div>
           </div>

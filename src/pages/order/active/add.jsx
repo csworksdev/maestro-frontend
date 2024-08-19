@@ -195,6 +195,7 @@ const Add = () => {
                   }
                 });
               }
+
               const params = {
                 coach: data.trainer,
                 day: filterTrainerByDay,
@@ -279,7 +280,8 @@ const Add = () => {
       company_percentage: 100 - trainer.precentage_fee,
       branch: isUpdate ? data.branch : newData.branch,
       notes: isUpdate ? data.notes : newData.notes,
-      total: product.price * selectedStudents.length,
+      day: newData.day,
+      time: newData.jam,
     };
 
     if (isUpdate) {

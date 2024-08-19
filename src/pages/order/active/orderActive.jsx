@@ -120,6 +120,14 @@ const OrderActive = ({ is_finished }) => {
 
   const COLUMNS = [
     {
+      Header: "Siswa",
+      accessor: "listname",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+
+    {
       Header: "Kolam",
       accessor: "pool_name",
       Cell: (row) => {
@@ -141,6 +149,20 @@ const OrderActive = ({ is_finished }) => {
       },
     },
     {
+      Header: "Hari (Jadwal)",
+      accessor: "day",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Jam (Jadwal)",
+      accessor: "time",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
       Header: "Promo",
       accessor: "promo",
       Cell: (row) => {
@@ -150,13 +172,6 @@ const OrderActive = ({ is_finished }) => {
     {
       Header: "Harga",
       accessor: "price",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Siswa",
-      accessor: "listname",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
