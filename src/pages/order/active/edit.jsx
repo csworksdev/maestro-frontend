@@ -142,10 +142,6 @@ const Edit = () => {
           }));
           setProductOption(productOptions);
           setProductData(productResponse.data.results);
-
-          // setvalue product
-          setValue("product", data.product);
-          handleProductChange({ target: { value: data.product } });
         }
 
         setValue("promo", data.promo);
@@ -156,6 +152,12 @@ const Edit = () => {
         setSelectedStudents(transformedStudents);
         setValue("students", transformedStudents);
         setValue("trainer", data.trainer);
+
+        setValue("order_date", data.order_date);
+
+        // setvalue product
+        setValue("product", data.product);
+        handleProductChange({ target: { value: data.product } });
 
         // const studentOptions = data.students.map((item) => ({
         //   value: item.student_id,
@@ -178,16 +180,12 @@ const Edit = () => {
     navigate(-1);
   };
 
-  const handleUpdate = useCallback(
-    (updatedData) => {
-      EditOrder(data.order_id, updatedData)
-        .then((res) => {
-          if (res.status) {
-            Swal.fire(
-              "Updated!",
-              "Your order has been updated.",
-              "success"
-            ).then(() => {
+  const handleUpdate = (updatedData) => {
+    EditOrder(data.order_id, updatedData)
+      .then((res) => {
+        if (res.status) {
+          Swal.fire("Updated!", "Your order has been updated.", "success").then(
+            () => {
               navigate(-1);
               for (let index = 0; index < orderDetail.length; index++) {
                 const element = orderDetail[index];
@@ -205,61 +203,52 @@ const Edit = () => {
                     );
                   });
               }
-            });
-          }
-        })
-        .catch((error) => {
-          Swal.fire("Error", "Failed to update order.", "error");
-        });
-    },
-    [data.order_id, orderDetail, navigate]
-  );
+            }
+          );
+        }
+      })
+      .catch((error) => {
+        Swal.fire("Error", "Failed to update order.", "error");
+      });
+  };
 
-  const onSubmit = useCallback(
-    (newData) => {
-      const product = productData.find(
-        (item) => item.product_id === selectProductOption
-      );
-      const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
-      const updatedData = {
-        ...data,
-        order_id: newData.order_id,
-        order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
-        product: product.product_id,
-        promo: newData.promo,
-        expire_date:
-          DateTime.fromJSDate(newData.start_date)
-            .plus({ days: 60 })
-            .toFormat("yyyy-MM-dd") ?? data.expire_date,
-        is_finish: newData.is_finish,
-        price: product.price,
-        is_paid: newData.is_paid,
-        students: selectedStudents.map((student) => ({
-          student_id: student.value,
-        })),
-        start_date:
-          DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
-          data.start_date,
-        trainer: newData.trainer,
-        pool: newData.pool,
-        package: product.package,
-        trainer_percentage: parseInt(trainer.precentage_fee),
-        company_percentage: 100 - trainer.precentage_fee,
-        branch: newData.branch ?? data.branch,
-        notes: newData.notes ?? data.notes,
-      };
+  const onSubmit = (newData) => {
+    const product = productData.find(
+      (item) => item.product_id === selectProductOption
+    );
+    const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
+    const updatedData = {
+      ...data,
+      order_id: newData.order_id,
+      order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
+      product: product.product_id,
+      promo: newData.promo,
+      expire_date:
+        DateTime.fromJSDate(newData.start_date)
+          .plus({ days: 60 })
+          .toFormat("yyyy-MM-dd") ?? data.expire_date,
+      is_finish: newData.is_finish,
+      price: product.price,
+      is_paid: newData.is_paid,
+      students: selectedStudents.map((student) => ({
+        student_id: student.value,
+      })),
+      start_date:
+        DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
+        data.start_date,
+      trainer: newData.trainer,
+      pool: newData.pool,
+      package: product.package,
+      trainer_percentage: parseInt(trainer.precentage_fee),
+      company_percentage: 100 - trainer.precentage_fee,
+      branch: newData.branch ?? data.branch,
+      notes: newData.notes ?? data.notes,
+      day: newData.day,
+      time: newData.jam,
+    };
 
-      handleUpdate(updatedData);
-    },
-    [
-      data,
-      productData,
-      trainerList,
-      selectedStudents,
-      selectProductOption,
-      handleUpdate,
-    ]
-  );
+    handleUpdate(updatedData);
+  };
 
   const handleBranchChange = async (e) => {
     const branch_id = e.target.value;
@@ -311,17 +300,14 @@ const Edit = () => {
     }
   };
 
-  const handleProductChange = useCallback(
-    (e) => {
-      setSelectProductOption(e.target.value);
-      const findData = productData.find(
-        (item) => item.product_id === e.target.value
-      );
-      setMaxStudents(findData.max_student);
-      createDetail(findData);
-    },
-    [productData]
-  );
+  const handleProductChange = (e) => {
+    setSelectProductOption(e.target.value);
+    const findData = productData.find(
+      (item) => item.product_id === e.target.value
+    );
+    setMaxStudents(findData.max_student);
+    createDetail(findData);
+  };
 
   const handlePoolChange = async (e) => {
     setProductOption([]);
