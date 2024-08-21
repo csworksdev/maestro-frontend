@@ -264,7 +264,7 @@ const Add = () => {
         : DateTime.fromJSDate(newData.start_date)
             .plus({ days: 60 })
             .toFormat("yyyy-MM-dd"),
-      is_finish: newData.is_finish,
+      is_finish: false,
       price: product.price,
       is_paid: newData.is_paid,
       students: selectedStudents.map((student) => ({
@@ -282,6 +282,7 @@ const Add = () => {
       notes: isUpdate ? data.notes : newData.notes,
       day: newData.day,
       time: newData.jam,
+      grand_total: selectedStudents.length * product.price,
     };
 
     if (isUpdate) {
@@ -541,11 +542,11 @@ const Add = () => {
           />
           <Textarea
             name="notes"
-            label="Catatan"
+            label="Catatan kolam renang"
             type="text"
             register={register}
             placeholder=""
-            value={poolNotes}
+            value={poolNotes ?? ""}
             disabled
           />
           <div className="grid grid-cols-2 gap-4">

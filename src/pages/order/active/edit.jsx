@@ -84,34 +84,6 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    // if (branchOption.length > 0) {
-    //   // Set form field values only if they haven't been set before
-    //   setValue("branch", data.branch);
-    //   if (kolamOption.length > 0) {
-    //     const poolOptions = kolamOption.map((pool) => ({
-    //       value: pool.value,
-    //       label: pool.label,
-    //     }));
-    //     setKolamOption(poolOptions);
-    //     setValue("pool", data.pool);
-    //   }
-    //   setValue("product", data.product);
-    //   setValue("day", data.day);
-    //   setValue("jam", data.time);
-    //   setValue("start_date", data.start_date);
-    //   setValue("promo", data.promo);
-    //   const transformedStudents = data.students.map((student) => ({
-    //     value: student.student_id,
-    //     label: student.student_fullname,
-    //   }));
-    //   setSelectedStudents(transformedStudents);
-    //   setValue("students", transformedStudents);
-    //   setValue("trainer", data.trainer);
-    // }
-    // Empty dependency array to run this effect only once on mount
-  }, []); // <-- IMPORTANT: No dependencies except the data passed initially
-
-  useEffect(() => {
     const loadReference = async () => {
       try {
         const params = { page: 1, page_size: 50 };
@@ -131,7 +103,9 @@ const Edit = () => {
         handlePoolChange({ target: { value: data.pool } });
 
         setValue("day", data.day);
+        handleHariOption({ target: { value: data.day } });
         setValue("jam", data.time);
+        handleJamOption({ target: { value: data.time } });
 
         if (data.pool) {
           const productResponse = await getProdukPool(data.pool);
@@ -149,11 +123,12 @@ const Edit = () => {
           value: student.student_id,
           label: student.student_fullname,
         }));
+
+        setValue("order_date", data.order_date);
+        setValue("start_date", data.start_date);
         setSelectedStudents(transformedStudents);
         setValue("students", transformedStudents);
         setValue("trainer", data.trainer);
-
-        setValue("order_date", data.order_date);
 
         // setvalue product
         setValue("product", data.product);
@@ -166,7 +141,7 @@ const Edit = () => {
         // setStudentOption(studentOptions);
       } catch (error) {
         setLoadingError(error);
-        Swal.fire("Error", "Failed to load reference data.", "error");
+        // Swal.fire("Error", "Failed to load reference data.", "error");
       } finally {
         setLoading(false);
       }
@@ -245,6 +220,7 @@ const Edit = () => {
       notes: newData.notes ?? data.notes,
       day: newData.day,
       time: newData.jam,
+      grand_total: selectedStudents.length * product.price,
     };
 
     handleUpdate(updatedData);
@@ -289,6 +265,7 @@ const Edit = () => {
         const productOptions = productResponse.data.results.map((item) => ({
           value: item.product_id,
           label: item.name,
+          price: item.price,
         }));
         setProductOption(productOptions);
       }
@@ -305,31 +282,33 @@ const Edit = () => {
     const findData = productData.find(
       (item) => item.product_id === e.target.value
     );
-    setMaxStudents(findData.max_student);
+    // setMaxStudents(findData.max_student);
     createDetail(findData);
   };
 
   const handlePoolChange = async (e) => {
-    setProductOption([]);
-    try {
-      const productResponse = await getProdukPool(e.target.value);
-      setProductData(productResponse.data.results);
-      const productOptions = productResponse.data.results.map((item) => ({
-        value: item.product_id,
-        label: item.name,
-        price: item.price,
-      }));
-      setProductOption(productOptions);
-      setFilterTrainerByPool(e.target.value);
-    } catch (error) {
-      setLoadingError(error);
-      Swal.fire("Error", "Failed to load pool data.", "error");
+    if (kolamOption) {
+      setProductOption([]);
+      try {
+        const productResponse = await getProdukPool(e.target.value);
+        setProductData(productResponse.data.results);
+        const productOptions = productResponse.data.results.map((item) => ({
+          value: item.product_id,
+          label: item.name,
+          price: item.price,
+        }));
+        setProductOption(productOptions);
+        setFilterTrainerByPool(e.target.value);
+      } catch (error) {
+        setLoadingError(error);
+        Swal.fire("Error", "Failed to load pool data.", "error");
+      }
+      setPoolNotes("");
+      const pool_notes = kolamOption.find(
+        (item) => item.value === e.target.value
+      );
+      setPoolNotes(pool_notes.notes);
     }
-    setPoolNotes("");
-    const pool_notes = kolamOption.find(
-      (item) => item.value === e.target.value
-    );
-    setPoolNotes(pool_notes.notes);
   };
 
   const handleGenderOption = useCallback((e) => {
@@ -473,9 +452,9 @@ const Edit = () => {
     <div className="flex flex-col gap-5">
       <Card title={"Update Order"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {loadingError && (
+          {/* {loadingError && (
             <p className="error-message">{loadingError.message}</p>
-          )}
+          )} */}
           <Select
             name="branch"
             label="Cabang"
@@ -515,7 +494,7 @@ const Edit = () => {
               error={errors.day?.message}
               options={hari}
               defaultValue={"Senin"}
-              onChange={handleHariOption}
+              onChange={(date) => handleHariOption(date)}
             />
             <Select
               name="jam"
@@ -525,7 +504,7 @@ const Edit = () => {
               error={errors.jam?.message}
               options={jam}
               defaultValue={"09.00"}
-              onChange={handleJamOption}
+              onChange={(time) => handleJamOption(time)}
             />
           </div>
           <div className="flex flex-wrap space-x-5">
@@ -564,7 +543,8 @@ const Edit = () => {
               ))}
             </div>
           </div>
-          <div className="hidden">
+          {/* <div className="hidden"> */}
+          <div>
             <label className="form-label" htmlFor="order_date">
               Tanggal Order
             </label>
@@ -587,27 +567,23 @@ const Edit = () => {
           </div>
           <div>
             <label className="form-label" htmlFor="start_date">
-              Tanggal Mulai
+              Tanggal Order
             </label>
             <Flatpickr
-              value={
-                data.start_date
-                  ? DateTime.fromISO(data.start_date).toFormat("yyyy-MM-dd")
-                  : ""
-              }
+              defaultValue={data.start_date}
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",
-                minDate: DateTime.now().toFormat("yyyy-MM-dd"),
               }}
-              className="form-control py-2 bg-black-50 from-black-900"
+              className="form-control py-2"
               onChange={(date) => setValue("start_date", date[0])}
+              disabled={false}
             />
-
             {errors.start_date && (
               <p className="error-message">{errors.start_date.message}</p>
             )}
           </div>
+
           <Textinput
             name="promo"
             label="Promo"

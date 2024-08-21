@@ -21,10 +21,10 @@ const actions = [
     name: "edit",
     icon: "heroicons:pencil-square",
   },
-  // {
-  //   name: "delete",
-  //   icon: "heroicons-outline:trash",
-  // },
+  {
+    name: "delete",
+    icon: "heroicons-outline:trash",
+  },
 ];
 
 const OrderActive = ({ is_finished }) => {
@@ -171,7 +171,7 @@ const OrderActive = ({ is_finished }) => {
     },
     {
       Header: "Harga",
-      accessor: "price",
+      accessor: "grand_total",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
