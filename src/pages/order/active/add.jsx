@@ -175,26 +175,31 @@ const Add = () => {
               const trainer = trainerList.find(
                 (i) => i.trainer_id === data.trainer
               );
-              const temp = orderDetail.map((item, index) => {
-                item.order = res.data.order_id;
-                item.day = filterTrainerByDay;
-                item.time = filterTrainerByTime;
-                item.price_per_meet =
-                  (data.price * parseInt(trainer.precentage_fee)) /
-                  100 /
-                  product.meetings;
-                item.schedule_date = DateTime.fromISO(data.start_date)
-                  .plus({ days: 7 * (index + 1) })
-                  .toFormat("yyyy-MM-dd");
-                return item;
-              });
-              for (let index = 0; index < temp.length; index++) {
-                AddOrderDetail(temp[index], data).then((addres) => {
-                  if (addres.status === "success") {
-                    console.log("finished");
-                  }
+
+              selectedStudents.map((student) => {
+                const temp = orderDetail.map((item, index) => {
+                  item.order = res.data.order_id;
+                  item.day = filterTrainerByDay;
+                  item.time = filterTrainerByTime;
+                  item.price_per_meet =
+                    (data.price * parseInt(trainer.precentage_fee)) /
+                    100 /
+                    product.meetings;
+                  item.schedule_date = DateTime.fromISO(data.start_date)
+                    .plus({ days: 7 * (index + 1) })
+                    .toFormat("yyyy-MM-dd");
+                  item.student = student.value;
+                  return item;
                 });
-              }
+
+                for (let index = 0; index < temp.length; index++) {
+                  AddOrderDetail(temp[index], data).then((addres) => {
+                    if (addres.status === "success") {
+                      console.log("finished");
+                    }
+                  });
+                }
+              });
 
               const params = {
                 coach: data.trainer,

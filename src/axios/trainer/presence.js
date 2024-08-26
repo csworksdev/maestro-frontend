@@ -17,10 +17,10 @@ export const getPresenceById = async (trainer_id) => {
   }
 };
 
-export const UpdatePresenceById = async (id, data) => {
+export const UpdatePresenceById = async (order_detail_id, data) => {
   try {
     let response = await axiosConfig.put(
-      "/api/presence/hadir/" + id + "/",
+      "/api/presence/hadir/" + order_detail_id + "/",
       data
     );
     return response;

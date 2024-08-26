@@ -8,6 +8,7 @@ import { UpdatePresenceById } from "@/axios/trainer/presence";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
+import { meets } from "@/constant/data";
 
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +46,6 @@ const Presence = () => {
 
       const periodeResults = await getPeriodisasiToday();
       setPeriode(periodeResults.data.results[0]);
-      console.log(periodeResults.data.results[0]);
     } catch (error) {
       console.error("Error fetching data", error);
     } finally {
@@ -53,9 +53,9 @@ const Presence = () => {
     }
   };
 
-  const handleUpdate = async (order_detail_id, updatedData) => {
+  const handleUpdate = async (order_id, updatedData) => {
     try {
-      const res = await UpdatePresenceById(order_detail_id, updatedData);
+      const res = await UpdatePresenceById(order_id, updatedData);
       if (res) {
         Swal.fire({
           title: `Siswa "${updatedData.student_names}"`,
@@ -73,6 +73,32 @@ const Presence = () => {
     } catch (error) {
       console.error("Error updating data", error);
     }
+  };
+
+  const handleHadir = (order_detail_id) => {
+    const updatedData = listData.map((item) => {
+      if (item.order_detail_id === order_detail_id) {
+        return {
+          ...item,
+          is_presence: true,
+          real_date:
+            item.real_date ||
+            DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
+          presence_day: DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
+          real_time: item.real_time || item.time,
+        };
+      }
+      return item;
+    });
+
+    const updatedItem = updatedData.find(
+      (item) => item.order_detail_id === order_detail_id
+    );
+
+    setListData(updatedData);
+    console.log(updatedItem);
+    handleUpdate(order_detail_id, updatedItem);
+    // handleUpdate(updatedItem.order, updatedItem);
   };
 
   const handleChangeDay = (id, date) => {
@@ -102,35 +128,20 @@ const Presence = () => {
     );
   };
 
-  const handleHadir = (order_detail_id) => {
-    const updatedData = listData.map((item) => {
-      if (item.order_detail_id === order_detail_id) {
-        return {
-          ...item,
-          is_presence: true,
-          real_date:
-            item.real_date ||
-            DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
-          presence_day:
-            item.presence_day ||
-            DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
-          real_time: item.real_time || item.time,
-        };
-      }
-      return item;
-    });
-
-    const updatedItem = updatedData.find(
-      (item) => item.order_detail_id === order_detail_id
-    );
-
-    setListData(updatedData);
-    handleUpdate(order_detail_id, updatedItem);
-  };
-
   useEffect(() => {
     fetchData();
   }, []);
+
+  // const groupedData = listData.reduce((acc, item) => {
+  //   if (!acc[item.trainer_fullname]) {
+  //     acc[item.trainer_fullname] = {};
+  //   }
+  //   if (!acc[item.trainer_fullname][item.student_names]) {
+  //     acc[item.trainer_fullname][item.student_names] = [];
+  //   }
+  //   acc[item.trainer_fullname][item.student_names].push(item);
+  //   return acc;
+  // }, {});
 
   const groupedData = listData.reduce((acc, item) => {
     if (!acc[item.trainer_fullname]) {
@@ -139,7 +150,17 @@ const Presence = () => {
     if (!acc[item.trainer_fullname][item.student_names]) {
       acc[item.trainer_fullname][item.student_names] = [];
     }
-    acc[item.trainer_fullname][item.student_names].push(item);
+
+    // Check if the meet has already been added
+    const existingMeet = acc[item.trainer_fullname][item.student_names].find(
+      (meetItem) => meetItem.meet === item.meet
+    );
+
+    // Only add the meet if it hasn't been added before
+    if (!existingMeet) {
+      acc[item.trainer_fullname][item.student_names].push(item);
+    }
+
     return acc;
   }, {});
 
@@ -152,16 +173,16 @@ const Presence = () => {
       {Object.keys(groupedData).map((trainer_name, i) => (
         <Card title={"Coach " + trainer_name} key={i}>
           {Object.keys(groupedData[trainer_name]).map((student_name, j) => (
-            <Card title={student_name.replace(",", " & ")} key={j}>
+            <Card title={student_name.replace(",", ", ")} key={j}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {groupedData[trainer_name][student_name]
                   .sort((a, b) => a.meet - b.meet)
                   .map((item, k) => (
                     <Card
-                      key={`${item.order_detail_id}-${k}`}
+                      key={`${item.order}-${k}`}
                       title={`Pertemuan ke ${item.meet}`}
                       subtitle={`${item.day} - ${item.time}`}
-                      noborder
+                      // noborder
                     >
                       <div>
                         <label className="form-label" htmlFor="real_date">
