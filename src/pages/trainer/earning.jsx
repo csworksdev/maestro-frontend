@@ -72,25 +72,25 @@ const Earning = () => {
 
   const statistics = [
     {
-      title: "Total Earning",
-      count: "Rp. 9.999.999",
+      title: "Total Pendapatan",
+      count: "Rp. 0",
       bg: "bg-[#E5F9FF] dark:bg-slate-900",
     },
+    // {
+    //   title: "Available Earning",
+    //   count: "Rp. 7.000.000",
+    //   bg: "bg-[#FFEDE5] dark:bg-slate-900",
+    // },
     {
-      title: "Available Earning",
-      count: "Rp. 7.000.000",
-      bg: "bg-[#FFEDE5] dark:bg-slate-900",
-    },
-    {
-      title: "Unpaid",
-      count: "Rp. 5.000.000",
+      title: "Bulan ini",
+      count: "Rp. 0",
       bg: "bg-[#EAE5FF] dark:bg-slate-900",
     },
-    {
-      title: "Potential",
-      count: "Rp. 5.000.000",
-      bg: "bg-[#faf4a5] dark:bg-slate-900",
-    },
+    // {
+    //   title: "Potential",
+    //   count: "Rp. 5.000.000",
+    //   bg: "bg-[#faf4a5] dark:bg-slate-900",
+    // },
   ];
 
   if (isLoading) {
@@ -104,9 +104,9 @@ const Earning = () => {
   const earningBlock = () => {
     const { total, available, unpaid, potencial } = listDataDashboard;
     statistics[0].count = "Rp. " + addCommas(total);
-    statistics[1].count = "Rp. " + addCommas(available);
-    statistics[2].count = "Rp. " + addCommas(unpaid);
-    statistics[3].count = "Rp. " + addCommas(potencial);
+    // statistics[1].count = "Rp. " + addCommas(available);
+    statistics[1].count = "Rp. " + addCommas(unpaid);
+    // statistics[3].count = "Rp. " + addCommas(potencial);
     return (
       <>
         {statistics.map((item, i) => (
