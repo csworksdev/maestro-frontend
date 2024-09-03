@@ -422,7 +422,11 @@ const Add = () => {
           );
           const trainerOptions = trainerResponse.data.results.map((item) => ({
             value: item.trainer_id,
-            label: item.fullname,
+            label:
+              item.fullname +
+              " (" +
+              item.unfinished_order_count +
+              " order aktif)",
           }));
           if (isUpdate) {
             trainerOptions.push({
