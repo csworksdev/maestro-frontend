@@ -48,7 +48,8 @@ const LoginForm = () => {
       navigate("/app/dashboard"); // Redirect to dashboard after successful login
       toast.success("Login Successful");
     } catch (error) {
-      toast.error(error.message);
+      // toast.error(error.message);
+      toast.error(data);
     }
   };
 

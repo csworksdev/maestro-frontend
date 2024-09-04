@@ -15,6 +15,8 @@ function Button({
   link,
   onClick,
   div,
+  target,
+  rel,
 }) {
   return (
     <>
@@ -144,6 +146,8 @@ function Button({
       {link && !div && (
         <Link
           to={link}
+          target={target}
+          rel={rel}
           className={`btn btn inline-flex justify-center   ${
             isLoading ? " pointer-events-none" : ""
           }

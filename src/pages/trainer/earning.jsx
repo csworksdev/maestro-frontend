@@ -63,10 +63,26 @@ const Earning = () => {
     if (!acc[item.trainer_fullname]) {
       acc[item.trainer_fullname] = {};
     }
-    if (!acc[item.trainer_fullname][item.student_names]) {
-      acc[item.trainer_fullname][item.student_names] = [];
+
+    // Extract student names from the students_info array
+    const studentNames = item.students_info
+      .map((student) => convertToTitleCase(student.fullname))
+      .join(", ");
+
+    if (!acc[item.trainer_fullname][studentNames]) {
+      acc[item.trainer_fullname][studentNames] = [];
     }
-    acc[item.trainer_fullname][item.student_names].push(item);
+
+    // Check if the meet has already been added
+    const existingMeet = acc[item.trainer_fullname][studentNames].find(
+      (meetItem) => meetItem.meet === item.meet
+    );
+
+    // Only add the meet if it hasn't been added before
+    if (!existingMeet) {
+      acc[item.trainer_fullname][studentNames].push(item);
+    }
+
     return acc;
   }, {});
 
@@ -97,8 +113,9 @@ const Earning = () => {
     return <Loading />;
   }
 
-  const addCommas = (num) =>
-    num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const addCommas = (num) => {
+    if (num) num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
   const removeNonNumeric = (num) => num.toString().replace(/[^0-9]/g, "");
 
   const earningBlock = () => {

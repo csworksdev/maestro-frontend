@@ -20,6 +20,8 @@ const Menu = (role = "") => {
     case "Trainer":
       menuItems = [...menuTrainer];
       break;
+    case "Opd":
+      break;
     case "Chief":
       menuItems = [...menuChief];
       break;
