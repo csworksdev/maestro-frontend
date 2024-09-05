@@ -7,7 +7,9 @@
     "dev": "vite",
     "host": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start-admin": "vite --host admin.localhost --port 3001",
+    "start-trainer": "vite --host trainer.localhost --port 3002"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.4",
