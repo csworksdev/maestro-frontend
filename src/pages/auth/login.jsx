@@ -43,10 +43,12 @@ const login = () => {
               </div>
               <div className="text-center 2xl:mb-10 mb-4">
                 <h4 className="font-medium">Sign in</h4>
-                <div className="text-slate-500 text-base">Maestro Swim App</div>
+                <div className="text-slate-500 text-base">
+                  Maestro Swim Admin
+                </div>
               </div>
               <LoginForm />
-              <div className="relative border-b-[#9AA2AF] border-opacity-[16%] border-b pt-6">
+              {/* <div className="relative border-b-[#9AA2AF] border-opacity-[16%] border-b pt-6">
                 <div className="absolute inline-block bg-white dark:bg-slate-800 dark:text-slate-400 left-1/2 top-1/2 transform -translate-x-1/2 px-4 min-w-max text-sm text-slate-500 font-normal">
                   Or continue with
                 </div>
@@ -62,7 +64,7 @@ const login = () => {
                 >
                   Sign up
                 </Link>
-              </div>
+              </div> */}
             </div>
             <div className="auth-footer text-center">
               Copyright 2024, Maestro Swim Bisa

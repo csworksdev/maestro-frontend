@@ -14,21 +14,9 @@ const RegisterAdmin = lazy(() => import("./pages/auth/register"));
 const RegisterTrainer = lazy(() => import("./pages/auth/register2"));
 const ForgotPassAdmin = lazy(() => import("./pages/auth/forgot-password"));
 const ForgotPassTrainer = lazy(() => import("./pages/auth/forgot-password2"));
-const Error = lazy(() => import("./pages/404"));
+const ErrorPage = lazy(() => import("./pages/404"));
 const CoachDashboard = lazy(() => import("./pages/trainer/dashboard"));
 
-const Login = lazy(() => import("./pages/auth/login"));
-const Login2 = lazy(() => import("./pages/auth/login2"));
-const Login3 = lazy(() => import("./pages/auth/login3"));
-const Register = lazy(() => import("./pages/auth/register"));
-const Register2 = lazy(() => import("./pages/auth/register2"));
-const Register3 = lazy(() => import("./pages/auth/register3"));
-const ForgotPass = lazy(() => import("./pages/auth/forgot-password"));
-const ForgotPass2 = lazy(() => import("./pages/auth/forgot-password2"));
-const ForgotPass3 = lazy(() => import("./pages/auth/forgot-password3"));
-const LockScreen = lazy(() => import("./pages/auth/lock-screen"));
-const LockScreen2 = lazy(() => import("./pages/auth/lock-screen2"));
-const LockScreen3 = lazy(() => import("./pages/auth/lock-screen3"));
 const ComingSoonPage = lazy(() => import("./pages/utility/coming-soon"));
 const UnderConstructionPage = lazy(() =>
   import("./pages/utility/under-construction")
@@ -79,19 +67,18 @@ const TrainerCourseReminder = lazy(() => import("./pages/trainer/reminder"));
 const CourseReminder = lazy(() => import("./pages/pelatihan/reminder"));
 const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
 
-function App() {
+const App = () => {
   const hostname = window.location.hostname;
-  let subdomain = hostname.split(".")[0]; // Assumes subdomains are first (admin.domain.com or trainer.domain.com)
+  const subdomain = hostname.split(".")[0]; // Assumes subdomains are first (admin.domain.com or trainer.domain.com)
 
-  // Debugging: Check the detected subdomain
-  console.log("Detected subdomain:", subdomain);
+  console.log("Subdomain detected:", subdomain); // Debug subdomain
 
   return (
     <main className="App relative">
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Admin Routes */}
-          {subdomain === "admin" && (
+          {(subdomain === "admin" || hostname === "maestro-front.web.app") && (
             <>
               {/* Public Routes for Admin */}
               <Route
@@ -217,8 +204,7 @@ function App() {
                   <Route path="edit" element={<UMPermissionsEdit />} />
                 </Route>
                 //#endregion
-                <Route path="*" element={<Navigate to="/404" />} />
-                {/* Admin-specific routes can be added here */}
+                <Route path="*" element={<ErrorPage />} />
               </Route>
             </>
           )}
@@ -249,9 +235,7 @@ function App() {
                   </AuthenticatedRoute>
                 }
               >
-                <Route path="coach" element={<CoachDashboard />} />
-                {/* Trainer-specific routes can be added here */}
-                //#region Trainer
+                <Route path="dashboard" element={<CoachDashboard />} />
                 <Route path="coach">
                   <Route index element={<CoachDashboard />} />
                   <Route path="earning" element={<CoachEarning />} />
@@ -260,8 +244,7 @@ function App() {
                   <Route path="presence" element={<CoachPresence />} />
                   <Route path="reminder" element={<TrainerCourseReminder />} />
                 </Route>
-                //#endregion
-                <Route path="*" element={<Navigate to="/404" />} />
+                <Route path="*" element={<ErrorPage />} />
               </Route>
             </>
           )}
@@ -272,6 +255,6 @@ function App() {
       </Suspense>
     </main>
   );
-}
+};
 
 export default App;

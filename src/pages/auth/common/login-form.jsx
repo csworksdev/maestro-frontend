@@ -76,11 +76,11 @@ const LoginForm = () => {
         className="h-[48px]"
       />
       <div className="flex justify-between">
-        <Checkbox
+        {/* <Checkbox
           value={checked}
           onChange={() => setChecked(!checked)}
           label="Keep me signed in"
-        />
+        /> */}
         <Link
           to="/forgot-password"
           className="text-sm text-slate-800 dark:text-slate-400 leading-6 font-medium"
