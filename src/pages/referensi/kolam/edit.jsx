@@ -133,6 +133,12 @@ const Edit = () => {
           register={register}
           error={errors.phone?.message}
           defaultValue={isUpdate ? data.phone : ""}
+          isMask={true}
+          options={{
+            blocks: [4, 4, 5],
+            delimiter: " ",
+            numericOnly: true,
+          }}
         />
         <Select
           name="branch"
