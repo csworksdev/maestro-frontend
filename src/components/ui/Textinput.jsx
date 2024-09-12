@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Cleave from "cleave.js/react";
 import "cleave.js/dist/addons/cleave-phone.us";
+
 const Textinput = ({
   type,
   label,
@@ -27,12 +28,20 @@ const Textinput = ({
   options,
   onFocus,
   defaultValue,
-
+  handleClick, // Pass handleClick as a prop to trigger on Enter
   ...rest
 }) => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => {
     setOpen(!open);
+  };
+
+  // Keydown event handler
+  const handleKeyDown = (e) => {
+    if (e.keyCode === 13) {
+      // Check if Enter key is pressed
+      handleClick && handleClick(); // Trigger handleClick if provided
+    }
   };
 
   return (
@@ -66,6 +75,7 @@ const Textinput = ({
             disabled={disabled}
             id={id}
             onChange={onChange}
+            onKeyDown={handleKeyDown} // Add keydown event listener
           />
         )}
         {!name && !isMask && (
@@ -78,6 +88,7 @@ const Textinput = ({
             defaultValue={defaultValue}
             onChange={onChange}
             id={id}
+            onKeyDown={handleKeyDown} // Add keydown event listener
           />
         )}
         {name && isMask && (
@@ -95,6 +106,7 @@ const Textinput = ({
             onChange={onChange}
             defaultValue={defaultValue}
             options={options}
+            onKeyDown={handleKeyDown} // Add keydown event listener
           />
         )}
         {!name && isMask && (
@@ -109,6 +121,7 @@ const Textinput = ({
             readOnly={readonly}
             disabled={disabled}
             onChange={onChange}
+            onKeyDown={handleKeyDown} // Add keydown event listener
           />
         )}
         {/* icon */}

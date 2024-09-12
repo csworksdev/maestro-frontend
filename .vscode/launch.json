@@ -9,10 +9,10 @@
       "name": "Launch Chrome against localhost, with sourcemaps",
       "type": "chrome",
       "request": "launch",
-      "url": "http://trainer.localhost:3002/",
+      "url": "http://admin.localhost:3001/",
       // This forces chrome to run a brand new instance, allowing existing
       // chrome windows to stay open.
-      "userDataDir": "${workspaceRoot}/.vscode/chrome",
+      "userDataDir": "${workspaceRoot}/.vscode/chrome/guest",
       "sourceMaps": true,
       "webRoot": "${workspaceRoot}",
       //"diagnosticLogging": true,
@@ -22,7 +22,7 @@
       "name": "Attach to Chrome, with sourcemaps",
       "type": "chrome",
       "request": "attach",
-      "url": "http://trainer.localhost:3002/",
+      "url": "http://admin.localhost:3001/",
       "port": 9222,
       "sourceMaps": true,
       "webRoot": "${workspaceRoot}",

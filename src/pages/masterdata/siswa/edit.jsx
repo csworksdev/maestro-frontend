@@ -24,7 +24,7 @@ const Edit = () => {
     .object({
       fullname: yup.string().required("Nama Lengkap is required"),
       gender: yup.string().required("Jenis Kelamin is required"),
-      phone: yup.string().required("Telephone is required"),
+      phone: yup.string().required("Telephone is required").min(10).max(13),
       address: yup.string().required("Alamat is required"),
       pob: yup.string().required("Tempat Lahir is required"),
       dob: yup.date().required("Tanggal Lahir is required"),
@@ -161,6 +161,12 @@ const Edit = () => {
             register={register}
             error={errors.phone?.message}
             defaultValue={isUpdate ? data.phone : ""}
+            isMask={true}
+            options={{
+              blocks: [4, 4, 5],
+              delimiter: " ",
+              numericOnly: true,
+            }}
           />
           <Textarea
             name="address"

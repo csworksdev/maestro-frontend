@@ -33,6 +33,7 @@ const Search = ({ searchValue, handleSearch, theme = "light" }) => {
               : "border-gray-300 bg-white text-gray-900"
           }`}
           aria-label="Search Input"
+          handleClick={handleClick}
         />
         <Button
           className={`absolute inset-y-0 right-0 flex items-center pr-3 btn-primary ${

@@ -70,15 +70,14 @@ const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
 const App = () => {
   const hostname = window.location.hostname;
   const subdomain = hostname.split(".")[0]; // Assumes subdomains are first (admin.domain.com or trainer.domain.com)
-
-  console.log("Subdomain detected:", subdomain); // Debug subdomain
+  const port = window.location.port; // Assumes subdomains are first (admin.domain.com or trainer.domain.com)
 
   return (
     <main className="App relative">
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Admin Routes */}
-          {(subdomain === "admin" || hostname === "maestro-front.web.app") && (
+          {(subdomain === "admin" || port === 3001) && (
             <>
               {/* Public Routes for Admin */}
               <Route
@@ -210,7 +209,7 @@ const App = () => {
           )}
 
           {/* Trainer Routes */}
-          {subdomain === "trainer" && (
+          {(subdomain === "trainer" || port === 3002) && (
             <>
               {/* Public Routes for Trainer */}
               <Route
