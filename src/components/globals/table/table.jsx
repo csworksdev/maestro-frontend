@@ -35,6 +35,14 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
 
   const { globalFilter } = state;
 
+  // Inline styles for sticky column
+  const stickyRightStyle = {
+    position: "sticky",
+    right: 0,
+    backgroundColor: "#fff",
+    zIndex: 1,
+  };
+
   return (
     <>
       <Card noborder>
@@ -48,14 +56,19 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
                 <thead className="border-t border-slate-100 dark:border-slate-800">
                   {headerGroups.map((headerGroup) => (
                     <tr {...headerGroup.getHeaderGroupProps()}>
-                      {headerGroup.headers.map((column) => (
+                      {headerGroup.headers.map((column, i) => (
                         <th
                           {...column.getHeaderProps(
                             column.getSortByToggleProps()
                           )}
                           scope="col"
                           className="table-th"
-                          style={{ width: column.width || "auto" }}
+                          style={{
+                            width: column.width || "auto",
+                            ...(i === headerGroup.headers.length - 1
+                              ? stickyRightStyle
+                              : {}),
+                          }} // Apply stickyRightStyle to the last header
                         >
                           {column.render("Header")}
                           <span>
@@ -78,11 +91,16 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
                     prepareRow(row);
                     return (
                       <tr {...row.getRowProps()}>
-                        {row.cells.map((cell) => (
+                        {row.cells.map((cell, i) => (
                           <td
                             {...cell.getCellProps()}
                             className="table-td"
-                            style={{ width: cell.column.width || "auto" }}
+                            style={{
+                              width: cell.column.width || "auto",
+                              ...(i === row.cells.length - 1
+                                ? stickyRightStyle
+                                : {}),
+                            }} // Apply stickyRightStyle to the last cell in each row
                           >
                             {cell.render("Cell")}
                           </td>

@@ -146,10 +146,10 @@ export const menuAdmin = [
         childtitle: "Produk",
         childlink: "produk",
       },
-      {
-        childtitle: "New Produk",
-        childlink: "newproduk",
-      },
+      // {
+      //   childtitle: "New Produk",
+      //   childlink: "newproduk",
+      // },
     ],
   },
   {

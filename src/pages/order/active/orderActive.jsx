@@ -21,10 +21,10 @@ const actions = [
     name: "edit",
     icon: "heroicons:pencil-square",
   },
-  {
-    name: "delete",
-    icon: "heroicons-outline:trash",
-  },
+  // {
+  //   name: "delete",
+  //   icon: "heroicons-outline:trash",
+  // },
 ];
 
 const OrderActive = ({ is_finished }) => {

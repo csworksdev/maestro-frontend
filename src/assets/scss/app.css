@@ -1935,3 +1935,11 @@
 }
 @layer utilities {
 } /*# sourceMappingURL=app.css.map */
+
+.sticky-right {
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  right: 0;
+  background-color: #fff; /* Ensure it's not transparent when fixed */
+  z-index: 1; /* Ensure it stays on top of other elements */
+}

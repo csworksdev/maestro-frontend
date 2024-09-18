@@ -209,7 +209,7 @@ const App = () => {
           )}
 
           {/* Trainer Routes */}
-          {(subdomain === "trainer" || port === 3002) && (
+          {(subdomain === "coach" || port === 3002) && (
             <>
               {/* Public Routes for Trainer */}
               <Route

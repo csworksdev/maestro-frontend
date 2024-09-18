@@ -7,6 +7,7 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { AddPaket, EditPaket } from "@/axios/referensi/paket";
+import { min } from "d3-array";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -98,28 +99,39 @@ const Edit = () => {
             placeholder="Masukan jumlah hari"
             register={register}
             error={errors.title}
-            options={{ numeral: true, numeralPositiveOnly: true }}
+            isMask={true}
+            options={{
+              block: [2],
+              numericOnly: true,
+            }}
             defaultValue={isUpdate ? data.expired_days : ""}
           />
           <Textinput
             name="duration"
-            label="Durasi"
+            label="Durasi (menit)"
             type="number"
             placeholder="Masukan jumlah menit"
             register={register}
             error={errors.title}
-            options={{ numeral: true, numeralPositiveOnly: true }}
+            isMask={true}
+            options={{
+              block: [2],
+              numericOnly: true,
+            }}
             defaultValue={isUpdate ? data.duration : ""}
           />
           <Textinput
             name="min_age"
-            label="Minimal usia"
+            label="Minimal usia (tahun)"
             type="number"
             // placeholder="Masukan minimal s"
             register={register}
             error={errors.title}
-            options={{ numeral: true, numeralPositiveOnly: true }}
             defaultValue={isUpdate ? data.min_age : ""}
+            isMask={true}
+            options={{
+              numericOnly: true,
+            }}
           />
           <Textinput
             name="max_age"
@@ -128,8 +140,12 @@ const Edit = () => {
             // placeholder="Masukan Nama Paket"
             register={register}
             error={errors.title}
-            options={{ numeral: true, numeralPositiveOnly: true }}
             defaultValue={isUpdate ? data.max_age : ""}
+            isMask={true}
+            options={{
+              block: [2],
+              numericOnly: true,
+            }}
           />
           <Textinput
             name="max_student"
@@ -138,8 +154,13 @@ const Edit = () => {
             // placeholder="Masukan Nama Paket"
             register={register}
             error={errors.title}
-            options={{ numeral: true, numeralPositiveOnly: true }}
             defaultValue={isUpdate ? data.max_student : ""}
+            isMask={true}
+            options={{
+              block: [1],
+              numericOnly: true,
+              min: 1,
+            }}
           />
           <div className="ltr:text-right rtl:text-left  space-x-3">
             <button
