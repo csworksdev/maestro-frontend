@@ -24,7 +24,8 @@ const Search = ({ searchValue, handleSearch, theme = "light" }) => {
     <div className={`mb-4 flex justify-end ${themeClasses}`}>
       <div className="relative w-full max-w-md">
         <Textinput
-          value={value || ""}
+          // value={value || ""}
+          defaultValue={searchValue}
           onChange={onChange}
           placeholder="Pencarian"
           className={`w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 ${
