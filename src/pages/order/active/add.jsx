@@ -694,7 +694,11 @@ const Add = () => {
           <Select
             name="trainer"
             label="Pelatih"
-            placeholder="Pilih pelatih"
+            placeholder={
+              trainerOption.length == 0
+                ? "Pelatih tidak tersedia"
+                : "Pilih pelatih"
+            }
             register={register}
             error={errors.trainer?.message}
             options={trainerOption}

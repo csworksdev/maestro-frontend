@@ -204,13 +204,15 @@ const Jadwal = ({ data }) => {
   };
 
   const onSubmit = (newData) => {
-    const tempData = selected.map((item) => {
+    const uniqueSelected = [...new Set(selected)]; // Removes duplicate entries in selected
+    const tempData = uniqueSelected.map((item) => {
       const [day, time, pool] = item.split("#");
       return {
         trainer: data.trainer_id,
         day: day,
         time: time,
         pool: pool,
+        is_free: true,
       };
     });
     handleAdd(tempData);
