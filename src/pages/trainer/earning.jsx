@@ -65,7 +65,7 @@ const Earning = () => {
     }
 
     // Extract student names from the students_info array
-    const studentNames = item.students_info
+    const studentNames = item.students_names
       .map((student) => convertToTitleCase(student.fullname))
       .join(", ");
 

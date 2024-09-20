@@ -72,19 +72,6 @@ const Paket = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // const loadData = () => {
-  //   setIsLoading(true);
-  //   getPaketAll()
-  //     .then((res) => {
-  //       setData(res.data.results);
-  //     })
-  //     .finally(() => setIsLoading(false));
-  // };
-
-  // useEffect(() => {
-  //   fetchData(pageIndex, pageSize, searchQuery);
-  // }, []);
-
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
