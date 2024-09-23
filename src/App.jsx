@@ -69,15 +69,14 @@ const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
 
 const App = () => {
   const hostname = window.location.hostname;
-  const subdomain = hostname.split(".")[0]; // Assumes subdomains are first (admin.domain.com or trainer.domain.com)
-  const port = window.location.port; // Assumes subdomains are first (admin.domain.com or trainer.domain.com)
+  const subdomain = hostname.split(".")[0];
 
   return (
     <main className="App relative">
       <Suspense fallback={<Loading />}>
         <Routes>
           {/* Admin Routes */}
-          {(subdomain === "admin" || port === 3001) && (
+          {subdomain === "admin" && (
             <>
               {/* Public Routes for Admin */}
               <Route
@@ -209,7 +208,7 @@ const App = () => {
           )}
 
           {/* Trainer Routes */}
-          {(subdomain === "coach" || port === 3002) && (
+          {subdomain === "coach" && (
             <>
               {/* Public Routes for Trainer */}
               <Route
