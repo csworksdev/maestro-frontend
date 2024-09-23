@@ -16,4 +16,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MAESTRO_FRONTEND }}
           channelId: live
-          projectId: maestro-frontend
+          projectId: maestro-front
