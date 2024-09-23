@@ -23,7 +23,7 @@ const login2 = () => {
                 </Link>
               </div>
               <div className="text-center 2xl:mb-10 mb-4">
-                <h4 className="font-medium">Sign in Trainer</h4>
+                <h4 className="font-medium">Sign in Coach</h4>
                 <div className="text-slate-500 dark:text-slate-400 text-base">
                   Sign in to your account to start using Dashcode
                 </div>
@@ -66,7 +66,7 @@ const login2 = () => {
             </div>
             <div>
               <div className="black-500-title max-w-[525px] mx-auto pb-20 text-center">
-                Maestro Swim Trainer
+                Maestro Swim Coach
               </div>
             </div>
           </div>
