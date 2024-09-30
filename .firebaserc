@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "maestro-front"
-  }
+    "default": "maestro-front",
+    "production": "maestro-front"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }
