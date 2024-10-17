@@ -248,7 +248,7 @@ const App = () => {
           )}
 
           {/* Fallback for unknown routes */}
-          <Route path="*" element={<Navigate to={`/auth/login`} />} />
+          <Route path="*" element={<Navigate to="/auth/login" replace />} />
         </Routes>
       </Suspense>
     </main>
