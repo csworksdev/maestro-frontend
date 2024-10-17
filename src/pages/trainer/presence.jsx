@@ -178,8 +178,9 @@ const Presence = () => {
   // WhatsApp link generator function
   const getWhatsAppLink = (phone, name) => {
     const countryCode = "+62"; // Indonesia country code, modify as per your requirement
-    // return `https://wa.me/${countryCode}${phone}`;
-    return `https://web.whatsapp.com/send/?phone=${countryCode}${phone}&text=hi, ${name}&type=phone_number&app_absent=0`;
+    return `https://wa.me/${countryCode}${phone}/?text=hi, ${name}`;
+    // return `https://web.whatsapp.com/send/?phone=${countryCode}${phone}&text=hi, ${name}&type=phone_number&app_absent=0`;
+    // return `https://web.whatsapp.com/send/?phone=${countryCode}${phone}&text=hi, ${name}&type=phone_number&app_absent=0`;
   };
 
   const StudentCard = ({ studentsInfo }) => {

@@ -13,7 +13,7 @@
       // This forces chrome to run a brand new instance, allowing existing
       // chrome windows to stay open.
       "userDataDir": "${workspaceRoot}/.vscode/chrome/guest",
-      "sourceMaps": true,
+      "sourceMaps": false,
       "webRoot": "${workspaceRoot}",
       //"diagnosticLogging": true,
       "sourceMapPathOverrides": { "webpack:///./*": "${webRoot}/*" }
@@ -24,7 +24,7 @@
       "request": "attach",
       "url": "http://admin.localhost:3001/",
       "port": 9222,
-      "sourceMaps": true,
+      "sourceMaps": false,
       "webRoot": "${workspaceRoot}",
       "sourceMapPathOverrides": { "webpack:///./*": "${webRoot}/*" }
     }

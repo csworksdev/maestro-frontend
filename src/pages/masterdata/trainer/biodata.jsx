@@ -68,7 +68,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
       setSelectOption(data.is_active.toString());
-      setMobileOption(data.mobile.toString());
+      setMobileOption(data.is_fulltime.toString());
     }
   }, [isUpdate, data, setValue]);
 
@@ -264,7 +264,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
               label={option.label}
               name="mobile"
               value={option.value}
-              checked={mobileOption === option.value}
+              checked={mobileOption !== option.value}
               onChange={handleMobileOption}
               disabled={loading}
             />

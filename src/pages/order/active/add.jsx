@@ -29,6 +29,7 @@ import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
+import sourceData from "./source.json";
 
 const Add = () => {
   const navigate = useNavigate();
@@ -249,6 +250,124 @@ const Add = () => {
       .catch((error) => {
         Swal.fire("Error", "Failed to update order.", "error");
       });
+  };
+
+  // bulk insert
+  const handleAddBulk = (data) => {
+    AddOrder(data)
+      .then((res) => {
+        if (res.data.status === "success") {
+          const result = res.data.message;
+
+          let temp1 = [];
+          let baseOrderDetail = {
+            day: filterTrainerByDay,
+            time: filterTrainerByTime,
+            is_presence: false,
+            is_paid: false,
+          };
+
+          for (let index = 1; index <= data.meet; index++) {
+            temp1.push({
+              ...baseOrderDetail,
+              meet: index,
+            });
+          }
+          // setOrderDetail(temp1);
+
+          result.students.map((student) => {
+            const temp = temp1.map((item, index) => {
+              const i = index + 1;
+              item.order = res.data.message.order_id;
+              item.price_per_meet = data.price_per_meet;
+              item.schedule_date = DateTime.fromISO(data.order_date)
+                .plus({ days: 7 * (index + 1) })
+                .toFormat("yyyy-MM-dd");
+              item.student = student.student_id;
+              item.meet = index;
+              item.day = DateTime.fromISO(data.order_date)
+                .setLocale("id")
+                .toLocaleString({ weekday: "long" });
+              item.time = "-";
+              const pertemuan = "p" + i;
+              const pertemuancek = pertemuan + "_c";
+              // if (
+              //   data[pertemuan] !== undefined &&
+              //   !_.isEmpty(data[pertemuan])
+              // ) {
+              //   item.presence_day = DateTime.fromISO(data[pertemuan]).toFormat(
+              //     "yyyy-MM-dd"
+              //   );
+              // } else {
+              //   item.presence_day = null; // Set to null if empty
+              // }
+
+              item.is_presence = data[pertemuancek] === 0 ? "False" : "True";
+
+              return item;
+            });
+
+            for (let index = 0; index < temp.length; index++) {
+              AddOrderDetail(temp[index], data).then((addres) => {});
+            }
+          });
+        }
+      })
+      .catch((error) => {
+        Swal.fire("Error", "Failed to add order.", "error");
+      });
+  };
+
+  // bulk insert
+  const onSubmitBulk = (newData) => {
+    sourceData.map((item) => {
+      let studentslist = [{ student_id: item.student_id }];
+
+      const updatedData = {
+        // order_id: newData.order_id,
+        order_date: item.tgl_transaksi,
+        product: item.product_id,
+        promo: item.promo,
+        expire_date: item.tgl_habis,
+        is_finish: false,
+        price: item.price,
+        is_paid: false,
+        students: studentslist,
+        start_date: item.tgl_transaksi,
+        trainer: item.trainer_id,
+        pool: item.pool_id,
+        package: item.package_id,
+        trainer_percentage: item.presentase * 100,
+        company_percentage: 100 - item.pk * 100,
+        branch: item.branch_id,
+        notes: "-",
+        day: item.day,
+        time: item.jam,
+        // grand_total: item.students.length * product.price, //for group
+        grand_total: item.price,
+
+        // detail
+        meet: item.meet,
+        price_per_meet: item.price_per_meet,
+        p1: item.p1,
+        p2: item.p2,
+        p3: item.p3,
+        p4: item.p4,
+        p5: item.p5,
+        p6: item.p6,
+        p7: item.p7,
+        p8: item.p8,
+        p1_c: item.p1_c,
+        p2_c: item.p2_c,
+        p3_c: item.p3_c,
+        p4_c: item.p4_c,
+        p5_c: item.p5_c,
+        p6_c: item.p6_c,
+        p7_c: item.p7_c,
+        p8_c: item.p8_c,
+      };
+      handleAddBulk(updatedData);
+    });
   };
 
   const onSubmit = (newData) => {
