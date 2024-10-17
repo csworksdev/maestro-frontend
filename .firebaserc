@@ -1,7 +1,8 @@
 {
   "projects": {
     "default": "maestro-front",
-    "production": "maestro-front"
+    "production": "maestro-front",
+    "prod": "maestro-front"
   },
   "targets": {},
   "etags": {},
