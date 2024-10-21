@@ -178,18 +178,18 @@ export const menuAdmin = [
         childtitle: "Order",
         childlink: "order",
       },
-      {
-        childtitle: "Selesai",
-        childlink: "order/finished",
-      },
-      {
-        childtitle: "Expired",
-        childlink: "order/expired",
-      },
-      {
-        childtitle: "Waiting List",
-        childlink: "order/waitinglist",
-      },
+      // {
+      //   childtitle: "Selesai",
+      //   childlink: "order/finished",
+      // },
+      // {
+      //   childtitle: "Expired",
+      //   childlink: "order/expired",
+      // },
+      // {
+      //   childtitle: "Waiting List",
+      //   childlink: "order/waitinglist",
+      // },
     ],
   },
   {
