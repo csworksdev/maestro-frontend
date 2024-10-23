@@ -64,10 +64,8 @@ const Earning = () => {
       acc[item.trainer_fullname] = {};
     }
 
-    // Extract student names from the students_info array
-    const studentNames = item.students_names
-      .map((student) => convertToTitleCase(student.fullname))
-      .join(", ");
+    // Extract student names from the student_names array and join them into a single string
+    const studentNames = item.student_names.join(", ");
 
     if (!acc[item.trainer_fullname][studentNames]) {
       acc[item.trainer_fullname][studentNames] = [];
@@ -114,8 +112,12 @@ const Earning = () => {
   }
 
   const addCommas = (num) => {
-    if (num) num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    return num;
   };
+
   const removeNonNumeric = (num) => num.toString().replace(/[^0-9]/g, "");
 
   const earningBlock = () => {
@@ -186,6 +188,7 @@ const Earning = () => {
                       >
                         <div>Tanggal : {item.real_date}</div>
                         <div>Jam : {item.real_time}</div>
+                        <div>Kolam : {item.pool_name}</div>
                       </Card>
                     ))}
                 </div>

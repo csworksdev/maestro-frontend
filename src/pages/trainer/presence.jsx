@@ -65,11 +65,7 @@ const Presence = () => {
           icon: "success",
           confirmButtonText: "OK",
         }).then(() => {
-          setListData((prevListData) =>
-            prevListData.filter(
-              (item) => item.order_detail_id !== order_detail_id
-            )
-          );
+          fetchData();
         });
       }
     } catch (error) {
@@ -179,8 +175,6 @@ const Presence = () => {
   const getWhatsAppLink = (phone, name) => {
     const countryCode = "+62"; // Indonesia country code, modify as per your requirement
     return `https://wa.me/${countryCode}${phone}/?text=hi, ${name}`;
-    // return `https://web.whatsapp.com/send/?phone=${countryCode}${phone}&text=hi, ${name}&type=phone_number&app_absent=0`;
-    // return `https://web.whatsapp.com/send/?phone=${countryCode}${phone}&text=hi, ${name}&type=phone_number&app_absent=0`;
   };
 
   const StudentCard = ({ studentsInfo }) => {
@@ -226,77 +220,98 @@ const Presence = () => {
   return (
     <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
       {Object.keys(groupedData).map((trainer_name, i) => (
-        <Card subtitle={"Coach " + trainer_name} key={i}>
-          {Object.keys(groupedData[trainer_name]).map((student_name, j) => (
-            <Card subtitle={student_name.replace(",", ", ")} key={j}>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StudentCard studentsInfo={listData[j].students_info} />
-                {groupedData[trainer_name][student_name]
-                  .sort((a, b) => a.meet - b.meet)
-                  .map((item, k) => (
-                    <Card
-                      key={`${item.order}-${k}`}
-                      title={`Pertemuan ke ${item.meet}`}
-                      subtitle={`${item.day} - ${item.time}`}
-                      // noborder
-                    >
-                      <div>
-                        <label className="form-label" htmlFor="real_date">
-                          Tanggal Kehadiran
-                        </label>
-                        <Flatpickr
-                          defaultValue={DateTime.fromISO(
-                            item.schedule_date
-                          ).toFormat("yyyy-MM-dd")}
-                          name="real_date"
-                          options={{
-                            dateFormat: "Y-m-d",
-                            maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
-                            minDate: periode.start_date,
-                          }}
-                          className="form-control py-2"
-                          onChange={(date) =>
-                            handleChangeDay(item.order_detail_id, date)
-                          }
-                          style={{ background: "#ffffff", color: "inherit" }}
-                        />
-                      </div>
-                      <div>
-                        <label className="form-label" htmlFor="real_time">
-                          Jam kehadiran
-                        </label>
-                        <select
-                          name="real_time"
-                          defaultValue={item.time}
-                          onChange={(e) =>
-                            handleChangeTime(
-                              item.order_detail_id,
-                              e.target.value
-                            )
-                          }
-                          className="form-select"
+        // <Card subtitle={"Coach " + trainer_name} key={i}>
+        <>
+          {Object.keys(groupedData[trainer_name] || {}).map(
+            (student_name, j) => {
+              // Assuming that groupedData contains the pool_name in the first item for each student
+              const poolName =
+                groupedData[trainer_name][student_name]?.[0]?.pool_name ||
+                "Pool not specified";
+
+              return (
+                <Card
+                  subtitle={`${student_name.replace(",", ", ")} - ${poolName}`}
+                  key={j}
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <StudentCard
+                      studentsInfo={
+                        groupedData[trainer_name][student_name]?.[0]
+                          ?.students_info || []
+                      }
+                    />
+                    {groupedData[trainer_name][student_name]
+                      .sort((a, b) => a.meet - b.meet)
+                      .map((item, k) => (
+                        <Card
+                          key={`${item.order}-${k}`}
+                          title={`Pertemuan ke ${item.meet}`}
+                          subtitle={`${item.day} - ${item.time}`}
                         >
-                          {time.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="mt-4 space-x-4 rtl:space-x-reverse">
-                        <Button
-                          onClick={() => handleHadir(item.order_detail_id)}
-                          className="btn inline-flex justify-center btn-primary btn-sm"
-                        >
-                          Hadir
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-              </div>
-            </Card>
-          ))}
-        </Card>
+                          <div>
+                            <label className="form-label" htmlFor="real_date">
+                              Tanggal Kehadiran
+                            </label>
+                            <Flatpickr
+                              defaultValue={DateTime.fromISO(
+                                item.schedule_date
+                              ).toFormat("yyyy-MM-dd")}
+                              name="real_date"
+                              options={{
+                                dateFormat: "Y-m-d",
+                                maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                                minDate: periode.start_date,
+                              }}
+                              className="form-control py-2"
+                              onChange={(date) =>
+                                handleChangeDay(item.order_detail_id, date)
+                              }
+                              style={{
+                                background: "#ffffff",
+                                color: "inherit",
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label className="form-label" htmlFor="real_time">
+                              Jam kehadiran
+                            </label>
+                            <select
+                              name="real_time"
+                              defaultValue={item.time}
+                              onChange={(e) =>
+                                handleChangeTime(
+                                  item.order_detail_id,
+                                  e.target.value
+                                )
+                              }
+                              className="form-select"
+                            >
+                              {time.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="mt-4 space-x-4 rtl:space-x-reverse">
+                            <Button
+                              onClick={() => handleHadir(item.order_detail_id)}
+                              className="btn inline-flex justify-center btn-primary btn-sm"
+                            >
+                              Hadir
+                            </Button>
+                          </div>
+                        </Card>
+                      ))}
+                  </div>
+                </Card>
+              );
+            }
+          )}
+        </>
+        // </Card>
       ))}
     </div>
   );
