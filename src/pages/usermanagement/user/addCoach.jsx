@@ -1,4 +1,4 @@
-import { getTrainerAll } from "@/axios/masterdata/trainer";
+import { getTrainerAll, getTrainerAllNew } from "@/axios/masterdata/trainer";
 import PaginationComponent from "@/components/globals/table/pagination";
 import Search from "@/components/globals/table/search";
 import Table from "@/components/globals/table/table";
@@ -23,22 +23,41 @@ const AddCoach = ({ handleSelectTrainer }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [listData, setListData] = useState({ count: 0, results: [] });
+  const [listNewData, setListNewData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchData = async (page, size, query) => {
+  // const fetchData = async (page, size, query) => {
+  //   try {
+  //     setIsLoading(true);
+  //     const params = {
+  //       page: page + 1,
+  //       page_size: size,
+  //       search: query,
+  //       is_active: true,
+  //     };
+  //     getTrainerAll(params)
+  //       .then((res) => {
+  //         setListData(res.data);
+  //       })
+  //       .finally(() => setIsLoading(false));
+  //   } catch (error) {
+  //     console.error("Error fetching data", error);
+  //   }
+  // };
+
+  const fetchDataNewTrainer = async (page, size, query) => {
     try {
-      setIsLoading(true);
       const params = {
         page: page + 1,
         page_size: size,
         search: query,
         is_active: true,
       };
-      getTrainerAll(params)
+      getTrainerAllNew(params)
         .then((res) => {
-          setListData(res.data);
+          setListNewData(res.data);
         })
         .finally(() => setIsLoading(false));
     } catch (error) {
@@ -47,7 +66,8 @@ const AddCoach = ({ handleSelectTrainer }) => {
   };
 
   useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
+    // fetchData(pageIndex, pageSize, searchQuery);
+    fetchDataNewTrainer(pageIndex, pageSize, searchQuery);
   }, [pageIndex, pageSize, searchQuery]);
 
   const handlePageChange = (page) => {
@@ -133,7 +153,7 @@ const AddCoach = ({ handleSelectTrainer }) => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
-              listData={listData}
+              listData={listNewData}
               listColumn={COLUMNS}
               searchValue={searchQuery}
               handleSearch={handleSearch}
@@ -141,9 +161,11 @@ const AddCoach = ({ handleSelectTrainer }) => {
             <PaginationComponent
               pageSize={pageSize}
               pageIndex={pageIndex}
-              pageCount={Math.ceil(listData.count / pageSize)}
+              pageCount={Math.ceil(listNewData.count / pageSize)}
               canPreviousPage={pageIndex > 0}
-              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
+              canNextPage={
+                pageIndex < Math.ceil(listNewData.count / pageSize) - 1
+              }
               gotoPage={handlePageChange}
               previousPage={() => handlePageChange(pageIndex - 1)}
               nextPage={() => handlePageChange(pageIndex + 1)}

@@ -11,6 +11,17 @@ export const getTrainerAll = async (data) => {
   }
 };
 
+export const getTrainerAllNew = async (data) => {
+  try {
+    let response = await axiosConfig.get("/api/trainer/new/", {
+      params: data,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const AddTrainer = async (data) => {
   try {
     let response = await axiosConfig.post("/api/trainer/", data);

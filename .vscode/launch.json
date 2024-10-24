@@ -1,32 +1,34 @@
 {
-  // Use IntelliSense to learn about possible Node.js debug attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
-
   "configurations": [
     {
       "name": "Launch Chrome against localhost, with sourcemaps",
       "type": "chrome",
       "request": "launch",
-      "url": "http://admin.localhost:3001/",
-      // This forces chrome to run a brand new instance, allowing existing
-      // chrome windows to stay open.
-      "userDataDir": "${workspaceRoot}/.vscode/chrome/guest",
-      "sourceMaps": false,
-      "webRoot": "${workspaceRoot}",
-      //"diagnosticLogging": true,
-      "sourceMapPathOverrides": { "webpack:///./*": "${webRoot}/*" }
+      "url": "http://admin.localhost:3001",
+      "webRoot": "${workspaceFolder}",
+      "userDataDir": "${workspaceFolder}/.vscode/chrome/guest_${random}",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///*": "*",
+        "webpack:///src/*": "${webRoot}/*"
+      },
+      "preLaunchTask": "start-admin" // Run npm run start-admin before launching Chrome
     },
     {
       "name": "Attach to Chrome, with sourcemaps",
       "type": "chrome",
       "request": "attach",
-      "url": "http://admin.localhost:3001/",
       "port": 9222,
-      "sourceMaps": false,
-      "webRoot": "${workspaceRoot}",
-      "sourceMapPathOverrides": { "webpack:///./*": "${webRoot}/*" }
+      "url": "http://admin.localhost:3001",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///*": "*",
+        "webpack:///src/*": "${webRoot}/*"
+      }
     }
   ]
 }

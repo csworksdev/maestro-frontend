@@ -171,7 +171,7 @@ const Users = () => {
               Tambah User
             </Link>
           </Button>
-          {/* <AddCoach handleSelectTrainer={handleSelectTrainer} /> */}
+          <AddCoach handleSelectTrainer={handleSelectTrainer} />
         </div>
         {isLoading ? (
           <Loading />

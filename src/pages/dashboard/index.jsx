@@ -18,7 +18,6 @@ const Dashboard = () => {
   useEffect(() => {
     async function getPeriod() {
       const periodisasi = await getPeriodisasiToday();
-      console.log(periodisasi.data.results);
     }
 
     getPeriod();
