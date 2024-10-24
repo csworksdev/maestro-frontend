@@ -26,75 +26,13 @@ const layoutSlice = createSlice({
   name: "layout",
   initialState,
   reducers: {
-    handleDarkMode: (state, action) => {
-      state.darkMode = action.payload;
-      window.localStorage.setItem("darkMode", JSON.stringify(action.payload));
-    },
-    handleSidebarCollapsed: (state, action) => {
-      state.isCollapsed = action.payload;
-      window.localStorage.setItem(
-        "sidebarCollapsed",
-        JSON.stringify(action.payload)
-      );
-    },
-    handleCustomizer: (state, action) => {
-      state.customizer = action.payload;
-    },
-    handleSemiDarkMode: (state, action) => {
-      state.semiDarkMode = action.payload;
-      window.localStorage.setItem(
-        "semiDarkMode",
-        JSON.stringify(action.payload)
-      );
-    },
-    handleRtl: (state, action) => {
-      state.isRTL = action.payload;
-      window.localStorage.setItem("direction", JSON.stringify(action.payload));
-    },
-    handleSkin: (state, action) => {
-      state.skin = action.payload;
-      window.localStorage.setItem("skin", JSON.stringify(action.payload));
-    },
-    handleContentWidth: (state, action) => {
-      state.contentWidth = action.payload;
-    },
-    handleType: (state, action) => {
-      state.type = action.payload;
-      window.localStorage.setItem("type", JSON.stringify(action.payload));
-    },
-    handleMenuHidden: (state, action) => {
-      state.menuHidden = action.payload;
-    },
-    handleNavBarType: (state, action) => {
-      state.navBarType = action.payload;
-    },
-    handleFooterType: (state, action) => {
-      state.footerType = action.payload;
-    },
-    handleMobileMenu: (state, action) => {
-      state.mobileMenu = action.payload;
-    },
-    handleMonoChrome: (state, action) => {
-      state.isMonochrome = action.payload;
-      window.localStorage.setItem("monochrome", JSON.stringify(action.payload));
+    handleSetting: (state, action) => {
+      const { key, value } = action.payload;
+      state[key] = value;
+      window.localStorage.setItem(key, JSON.stringify(value));
     },
   },
 });
 
-export const {
-  handleDarkMode,
-  handleSidebarCollapsed,
-  handleCustomizer,
-  handleSemiDarkMode,
-  handleRtl,
-  handleSkin,
-  handleContentWidth,
-  handleType,
-  handleMenuHidden,
-  handleNavBarType,
-  handleFooterType,
-  handleMobileMenu,
-  handleMonoChrome,
-} = layoutSlice.actions;
-
+export const { handleSetting } = layoutSlice.actions;
 export default layoutSlice.reducer;

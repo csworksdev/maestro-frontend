@@ -3,10 +3,7 @@ import useDarkMode from "@/hooks/useDarkMode";
 import { Link } from "react-router-dom";
 import useWidth from "@/hooks/useWidth";
 
-import MainLogo from "@/assets/images/logo/logo.svg";
-import LogoWhite from "@/assets/images/logo/logo-white.svg";
-import MobileLogo from "@/assets/images/logo/logo.png";
-import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
+import MainLogo from "@/assets/images/logo/logo.png";
 const Logo = () => {
   const [isDark] = useDarkMode();
   const { width, breakpoints } = useWidth();
@@ -16,13 +13,13 @@ const Logo = () => {
       <Link to="/">
         {width >= breakpoints.xl ? (
           <img
-            src={isDark ? LogoWhite : MainLogo}
+            src={MainLogo}
             alt=""
             style={{ width: "64px", height: "64px" }}
           />
         ) : (
           <img
-            src={isDark ? MobileLogoWhite : MobileLogo}
+            src={MainLogo}
             alt=""
             style={{ width: "64px", height: "64px" }}
           />

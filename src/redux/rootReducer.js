@@ -1,8 +1,9 @@
 import layout from "./layoutSlice";
-import auth from "./slicers/authSlice";
+import auth from "./slices/authSlice";
 
 const rootReducer = {
   layout,
   auth,
 };
+
 export default rootReducer;
