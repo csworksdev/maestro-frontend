@@ -1,3 +1,4 @@
+import { register } from "@/axios/auth/auth";
 import { getTrainerAll, getTrainerAllNew } from "@/axios/masterdata/trainer";
 import PaginationComponent from "@/components/globals/table/pagination";
 import Search from "@/components/globals/table/search";
@@ -7,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { Icon } from "@iconify/react";
 import React, { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 const actions = [
   // {
@@ -83,9 +85,28 @@ const AddCoach = ({ handleSelectTrainer }) => {
     setPageIndex(0); // Reset to first page on search
   };
 
+  const handleUpdate = (updatedData) => {
+    register(updatedData)
+      .then((res) => {
+        if (res) {
+          Swal.fire("Edited!", "User has been edited.", "success").then(() =>
+            closeModal()
+          );
+        }
+      })
+      .catch((error) => {
+        Swal.fire("Error!", "There was an error editing the user.", "error");
+      });
+  };
+
   const handlePilih = (e) => {
-    handleSelectTrainer(e);
-    closeModal();
+    const updatedData = {
+      user_id: e.trainer_id,
+      username: e.nickname,
+      email: e.email,
+      password_hash: "maestrobisa",
+    };
+    handleUpdate(updatedData);
   };
 
   const COLUMNS = [

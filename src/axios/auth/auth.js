@@ -17,3 +17,12 @@ export const logout = async (data) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const register = async (data) => {
+  try {
+    let response = await axiosConfig.post("/auth/users/register/", data);
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
