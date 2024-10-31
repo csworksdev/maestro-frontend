@@ -5,7 +5,7 @@
       "name": "Launch Chrome against localhost, with sourcemaps",
       "type": "chrome",
       "request": "launch",
-      "url": "http://admin.localhost:3001",
+      "url": "http://coach.localhost:3002",
       "webRoot": "${workspaceFolder}",
       "userDataDir": "${workspaceFolder}/.vscode/chrome/guest_${random}",
       "sourceMaps": true,
@@ -14,14 +14,14 @@
         "webpack:///*": "*",
         "webpack:///src/*": "${webRoot}/*"
       },
-      "preLaunchTask": "start-admin" // Run npm run start-admin before launching Chrome
+      "preLaunchTask": "npm: start-coach" // Run npm run start-coach before launching Chrome
     },
     {
       "name": "Attach to Chrome, with sourcemaps",
       "type": "chrome",
       "request": "attach",
       "port": 9222,
-      "url": "http://admin.localhost:3001",
+      "url": "http://coach.localhost:3002",
       "webRoot": "${workspaceFolder}",
       "sourceMaps": true,
       "sourceMapPathOverrides": {

@@ -31,16 +31,22 @@ const LoginForm = () => {
     mode: "all",
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (NewData) => {
     try {
-      const response = await login(data);
-      const { refresh, access, data: userData } = response;
+      const response = await login(NewData);
+      const { refresh, access, data: data } = response.data;
 
-      // Dispatch to Redux store without storing in localStorage
-      dispatch(setUser({ refresh, access, data: userData }));
+      // // Dispatch to Redux store without storing in localStorage
+      // dispatch(setUser({ refresh, access, data: userData }));
+      localStorage.setItem("refresh", refresh);
+      localStorage.setItem("access", access);
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("userid", data.user_id);
+      localStorage.setItem("username", data.user_name);
+      localStorage.setItem("roles", data.roles);
 
       // Update the menu based on user roles
-      Menu(userData.roles);
+      Menu(data.roles);
 
       // Navigate to dashboard upon successful login
       navigate("/app/dashboard");

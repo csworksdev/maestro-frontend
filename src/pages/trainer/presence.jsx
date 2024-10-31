@@ -94,7 +94,6 @@ const Presence = () => {
     );
 
     setListData(updatedData);
-    console.log(updatedItem);
     handleUpdate(order_detail_id, updatedItem);
     // handleUpdate(updatedItem.order, updatedItem);
   };
@@ -253,6 +252,11 @@ const Presence = () => {
                             <label className="form-label" htmlFor="real_date">
                               Tanggal Kehadiran
                             </label>
+                            {console.log(
+                              DateTime.fromISO(item.schedule_date).toFormat(
+                                "yyyy-MM-dd"
+                              )
+                            )}
                             <Flatpickr
                               defaultValue={DateTime.fromISO(
                                 item.schedule_date

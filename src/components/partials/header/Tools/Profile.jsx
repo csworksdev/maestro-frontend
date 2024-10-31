@@ -40,6 +40,14 @@ const Profile = () => {
   const handleLogout = () => {
     // Clear user data from local storage
     localStorage.removeItem("user");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("action");
+    localStorage.removeItem("menuItems");
+    localStorage.removeItem("roles");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userid");
+    localStorage.removeItem("username");
+    navigate(0);
     dispatch(logOut());
   };
 
@@ -52,48 +60,48 @@ const Profile = () => {
         navigate("/profile");
       },
     },
-    {
-      label: "Chat",
-      icon: "heroicons-outline:chat",
-      action: () => {
-        navigate("/chat");
-      },
-    },
-    {
-      label: "Email",
-      icon: "heroicons-outline:mail",
-      action: () => {
-        navigate("/email");
-      },
-    },
-    {
-      label: "Todo",
-      icon: "heroicons-outline:clipboard-check",
-      action: () => {
-        navigate("/todo");
-      },
-    },
-    {
-      label: "Settings",
-      icon: "heroicons-outline:cog",
-      action: () => {
-        navigate("/settings");
-      },
-    },
-    {
-      label: "Price",
-      icon: "heroicons-outline:credit-card",
-      action: () => {
-        navigate("/pricing");
-      },
-    },
-    {
-      label: "Faq",
-      icon: "heroicons-outline:information-circle",
-      action: () => {
-        navigate("/faq");
-      },
-    },
+    // {
+    //   label: "Chat",
+    //   icon: "heroicons-outline:chat",
+    //   action: () => {
+    //     navigate("/chat");
+    //   },
+    // },
+    // {
+    //   label: "Email",
+    //   icon: "heroicons-outline:mail",
+    //   action: () => {
+    //     navigate("/email");
+    //   },
+    // },
+    // {
+    //   label: "Todo",
+    //   icon: "heroicons-outline:clipboard-check",
+    //   action: () => {
+    //     navigate("/todo");
+    //   },
+    // },
+    // {
+    //   label: "Settings",
+    //   icon: "heroicons-outline:cog",
+    //   action: () => {
+    //     navigate("/settings");
+    //   },
+    // },
+    // {
+    //   label: "Price",
+    //   icon: "heroicons-outline:credit-card",
+    //   action: () => {
+    //     navigate("/pricing");
+    //   },
+    // },
+    // {
+    //   label: "Faq",
+    //   icon: "heroicons-outline:information-circle",
+    //   action: () => {
+    //     navigate("/faq");
+    //   },
+    // },
     {
       label: "Logout",
       icon: "heroicons-outline:login",

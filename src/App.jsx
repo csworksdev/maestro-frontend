@@ -233,7 +233,7 @@ const App = () => {
                   </AuthenticatedRoute>
                 }
               >
-                <Route path="dashboard" element={<CoachPresence />} />
+                <Route path="dashboard" element={<CoachDashboard />} />
                 <Route path="coach">
                   <Route index element={<CoachDashboard />} />
                   <Route path="earning" element={<CoachEarning />} />
