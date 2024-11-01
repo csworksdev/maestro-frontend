@@ -19,7 +19,7 @@ jobs:
         #   projectId: maestro-front
       - env:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MAESTRO_FRONTEND }}  # Use the Firebase token from GitHub Secrets
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}  # Use the Firebase token from GitHub Secrets
           channelId: live
           projectId: maestro-front
         run: npx firebase-tools@latest deploy --only hosting --project maestro-front
