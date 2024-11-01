@@ -50,7 +50,7 @@ const LoginForm = () => {
 
       // Navigate to dashboard upon successful login
       navigate("/app/dashboard");
-      toast.success("Login Successful");
+      navigate(0);
     } catch (error) {
       toast.error("Login failed. Please check your credentials.");
     }
