@@ -651,7 +651,7 @@ const Add = () => {
   return (
     <div className="flex flex-col gap-5">
       <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
-        <form onSubmit={handleSubmit(onSubmitBulk)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {loadingError && (
             <p className="error-message">{loadingError.message}</p>
           )}
