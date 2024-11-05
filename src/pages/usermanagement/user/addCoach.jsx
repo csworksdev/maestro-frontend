@@ -89,14 +89,14 @@ const AddCoach = ({ handleSelectTrainer }) => {
     register(updatedData)
       .then((res) => {
         if (res) {
-          Swal.fire("Edited!", "User has been edited.", "success").then(() =>
-            closeModal()
-          );
+          Swal.fire("Edited!", "User has been edited.", "success");
+          fetchDataNewTrainer(pageIndex, pageSize, searchQuery);
         }
       })
       .catch((error) => {
         Swal.fire("Error!", "There was an error editing the user.", "error");
-      });
+      })
+      .finally(closeModal());
   };
 
   const handlePilih = (e) => {
@@ -104,7 +104,7 @@ const AddCoach = ({ handleSelectTrainer }) => {
       user_id: e.trainer_id,
       username: e.nickname,
       email: e.email,
-      password_hash: "maestrobisa",
+      password: "maestrobisa",
     };
     handleUpdate(updatedData);
   };

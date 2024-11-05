@@ -332,24 +332,24 @@ const Add = () => {
 
       const updatedData = {
         // order_id: newData.order_id,
-        order_date: item.tgl_transaksi,
+        order_date: DateTime.fromISO(item.tgl_transaksi).toFormat("yyyy-MM-dd"),
         product: item.product_id,
-        promo: item.promo,
+        // promo: item.promo,
         expire_date: item.tgl_habis,
         is_finish: true,
         price: item.price,
         is_paid: true,
         students: studentslist,
-        start_date: item.tgl_transaksi,
+        start_date: DateTime.fromISO(item.tgl_transaksi).toFormat("yyyy-MM-dd"),
         trainer: item.trainer_id,
         pool: item.pool_id,
         package: item.package_id,
-        trainer_percentage: item.presentase * 100,
-        company_percentage: 100 - item.pk * 100,
+        trainer_percentage: item.presentase,
+        company_percentage: 100 - item.presentase,
         branch: item.branch_id,
         notes: "-",
-        day: item.day,
-        time: item.jam,
+        // day: item.day,
+        // time: item.jam,
         // grand_total: item.students.length * product.price, //for group
         grand_total: item.price,
 
@@ -651,7 +651,7 @@ const Add = () => {
   return (
     <div className="flex flex-col gap-5">
       <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmitBulk)} className="space-y-4">
           {loadingError && (
             <p className="error-message">{loadingError.message}</p>
           )}

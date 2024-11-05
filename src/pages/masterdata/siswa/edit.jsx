@@ -25,7 +25,7 @@ const Edit = () => {
     .object({
       fullname: yup.string().required("Nama Lengkap is required"),
       gender: yup.string().required("Jenis Kelamin is required"),
-      phone: yup.string().required("Telephone is required").max(13),
+      // phone: yup.string().required("Telephone is required").max(13),
       address: yup.string().required("Alamat is required"),
       pob: yup.string().required("Tempat Lahir is required"),
       dob: yup.date().required("Tanggal Lahir is required"),
@@ -46,7 +46,7 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    if (!branchOption) {
+    if (branchOption == null) {
       const params = {
         page: 1,
         page_size: 50,
