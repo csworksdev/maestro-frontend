@@ -19,7 +19,7 @@ const login = () => {
             <Link to="/">
               <img src={isDark ? LogoWhite : Logo} alt="" className="mb-10" />
             </Link>
-            <h4>Maestro Bisa Information System</h4>
+            <h4>Maestro Management System</h4>
           </div>
           <div className="absolute left-0 2xl:bottom-[-160px] bottom-[-130px] h-full w-full z-[-1]">
             <img

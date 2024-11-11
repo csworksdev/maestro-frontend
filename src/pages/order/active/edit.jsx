@@ -556,6 +556,7 @@ const Edit = () => {
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
+                disableMobile: "true",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("order_date", date[0])}
@@ -574,6 +575,7 @@ const Edit = () => {
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",
+                disableMobile: "true",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("start_date", date[0])}

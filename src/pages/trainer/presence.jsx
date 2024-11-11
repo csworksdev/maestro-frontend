@@ -245,7 +245,7 @@ const Presence = () => {
                       .map((item, k) => (
                         <Card
                           key={`${item.order}-${k}`}
-                          title={`Pertemuan ke ${item.meet}`}
+                          title={`Pertemuan ke ${item.meet + 1}`}
                           subtitle={`${item.day} - ${item.time}`}
                         >
                           <div>
@@ -266,6 +266,7 @@ const Presence = () => {
                                 dateFormat: "Y-m-d",
                                 maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
                                 minDate: periode.start_date,
+                                disableMobile: "true",
                               }}
                               className="form-control py-2"
                               onChange={(date) =>

@@ -75,6 +75,7 @@ const OrderDetail = ({ params }) => {
                     name="day"
                     options={{
                       dateFormat: "Y-m-d",
+                      disableMobile: "true",
                     }}
                     className="form-control py-2"
                     disabled={item.is_presence}

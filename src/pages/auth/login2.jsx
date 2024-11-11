@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import LoginForm from "./common/login-form";
+import LoginForm from "./common/login-coach";
 import Social from "./common/social";
 import { ToastContainer } from "react-toastify";
 import useDarkMode from "@/hooks/useDarkMode";
@@ -23,9 +23,9 @@ const login2 = () => {
                 </Link>
               </div>
               <div className="text-center 2xl:mb-10 mb-4">
-                <h4 className="font-medium">Sign in Coach</h4>
+                <h4 className="font-medium">Login to Maestro Hub</h4>
                 <div className="text-slate-500 dark:text-slate-400 text-base">
-                  Sign in to your account to start using Dashcode
+                  Sign in to your account
                 </div>
               </div>
               <LoginForm />
@@ -66,7 +66,7 @@ const login2 = () => {
             </div>
             <div>
               <div className="black-500-title max-w-[525px] mx-auto pb-20 text-center">
-                Maestro Swim Coach
+                Maestro Swim Coach Hub
               </div>
             </div>
           </div>

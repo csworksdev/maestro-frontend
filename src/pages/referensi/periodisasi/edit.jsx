@@ -126,6 +126,7 @@ const Edit = () => {
                 options={{
                   dateFormat: "Y-m-d",
                   minDate: data.end_date - 30,
+                  disableMobile: "true",
                 }}
                 className="py-2"
                 onChange={(date) => setValue("start_date", date[0])}
@@ -144,6 +145,7 @@ const Edit = () => {
                 options={{
                   dateFormat: "Y-m-d",
                   minDate: data.start_date,
+                  disableMobile: "true",
                 }}
                 className="py-2"
                 onChange={(date) => setValue("end_date", date[0])}

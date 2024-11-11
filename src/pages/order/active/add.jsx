@@ -252,71 +252,51 @@ const Add = () => {
       });
   };
 
-  // bulk insert
   const handleAddBulk = (data) => {
     AddOrder(data)
       .then((res) => {
         if (res.data.status === "success") {
           const result = res.data.message;
 
-          let temp1 = [];
-          let baseOrderDetail = {
-            day: filterTrainerByDay,
-            time: filterTrainerByTime,
-            is_presence: false,
-            is_paid: true,
-          };
+          result.students.forEach((student) => {
+            const orderDetails = [];
+            const baseOrderDetail = {
+              day: filterTrainerByDay,
+              time: filterTrainerByTime,
+              is_presence: false,
+              is_paid: true,
+            };
 
-          for (let index = 1; index <= data.meet; index++) {
-            temp1.push({
-              ...baseOrderDetail,
-              meet: index,
-            });
-          }
-          // setOrderDetail(temp1);
+            for (let index = 1; index <= data.meet; index++) {
+              const detail = {
+                ...baseOrderDetail,
+                meet: index,
+                order: res.data.message.order_id,
+                price_per_meet: data.price_per_meet,
+                student: student.student_id,
+                schedule_date: DateTime.fromISO(data.order_date)
+                  .plus({ days: 7 * index })
+                  .toFormat("yyyy-MM-dd"),
+                day: DateTime.fromISO(data.order_date)
+                  .setLocale("id")
+                  .toLocaleString({ weekday: "long" }),
+                time: "-",
+              };
 
-          result.students.map((student) => {
-            const temp = temp1.map((item, index) => {
-              const i = index + 1;
-              item.order = res.data.message.order_id;
-              item.price_per_meet = data.price_per_meet;
-
-              // Calculate the schedule date
-              item.schedule_date = DateTime.fromISO(data.order_date)
-                .plus({ days: 7 * (index + 1) })
-                .toFormat("yyyy-MM-dd");
-
-              item.student = student.student_id;
-              item.meet = index;
-
-              // Calculate the day of the week based on the order_date
-              item.day = DateTime.fromISO(data.order_date)
-                .setLocale("id")
-                .toLocaleString({ weekday: "long" });
-
-              item.time = "-"; // Default time is set to "-"
-
-              const pertemuan = `p${i}`;
+              const pertemuan = `p${index}`;
               const pertemuancek = `${pertemuan}_c`;
+              detail.presence_day = data[pertemuan]
+                ? DateTime.fromISO(data[pertemuan]).toFormat("yyyy-MM-dd")
+                : null;
+              detail.is_presence =
+                data[pertemuancek] === "0" ? "False" : "True";
 
-              // Check if the pertemuan (p1, p2, etc.) is valid and not empty, then set the presence_day
-              if (data[pertemuan] && data[pertemuan].trim() !== "") {
-                item.presence_day = DateTime.fromISO(data[pertemuan]).toFormat(
-                  "yyyy-MM-dd"
-                );
-              } else {
-                item.presence_day = null; // Set to null if undefined or empty
-              }
-
-              // Set is_presence based on the pertemuancek (0 = False, others = True)
-              item.is_presence = data[pertemuancek] === "0" ? "False" : "True";
-
-              return item;
-            });
-
-            for (let index = 0; index < temp.length; index++) {
-              AddOrderDetail(temp[index], data).then((addres) => {});
+              orderDetails.push(detail);
             }
+
+            orderDetails.forEach((detail) => {
+              AddOrderDetail(detail, data).then((addres) => {});
+            });
           });
         }
       })
@@ -325,21 +305,21 @@ const Add = () => {
       });
   };
 
-  // bulk insert
   const onSubmitBulk = (newData) => {
-    sourceData.map((item) => {
-      let studentslist = [{ student_id: item.student_id }];
+    sourceData.forEach((item) => {
+      const students = item.student_id
+        .split(",")
+        .map((id) => ({ student_id: id.trim() }));
 
+      // students.forEach((student) => {
       const updatedData = {
-        // order_id: newData.order_id,
         order_date: DateTime.fromISO(item.tgl_transaksi).toFormat("yyyy-MM-dd"),
         product: item.product_id,
-        // promo: item.promo,
-        expire_date: item.tgl_habis,
+        expire_date: DateTime.fromISO(item.tgl_habis).toFormat("yyyy-MM-dd"),
         is_finish: true,
         price: item.price,
         is_paid: true,
-        students: studentslist,
+        students: students,
         start_date: DateTime.fromISO(item.tgl_transaksi).toFormat("yyyy-MM-dd"),
         trainer: item.trainer_id,
         pool: item.pool_id,
@@ -348,12 +328,7 @@ const Add = () => {
         company_percentage: 100 - item.presentase,
         branch: item.branch_id,
         notes: "-",
-        // day: item.day,
-        // time: item.jam,
-        // grand_total: item.students.length * product.price, //for group
         grand_total: item.price,
-
-        // detail
         meet: item.meet,
         price_per_meet: item.price_per_meet,
         p1: item.p1,
@@ -373,7 +348,9 @@ const Add = () => {
         p7_c: item.p7_c,
         p8_c: item.p8_c,
       };
+
       handleAddBulk(updatedData);
+      // });
     });
   };
 
@@ -651,7 +628,7 @@ const Add = () => {
   return (
     <div className="flex flex-col gap-5">
       <Card title={`${isUpdate ? "Update" : "Add"} Order`}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmitBulk)} className="space-y-4">
           {loadingError && (
             <p className="error-message">{loadingError.message}</p>
           )}
@@ -755,6 +732,7 @@ const Add = () => {
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
+                disableMobile: "true",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("order_date", date[0])}
@@ -778,6 +756,7 @@ const Add = () => {
               options={{
                 dateFormat: "Y-m-d",
                 minDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                disableMobile: "true",
               }}
               className="form-control py-2 bg-black-50 from-black-900"
               onChange={(date) => setValue("start_date", date[0])}

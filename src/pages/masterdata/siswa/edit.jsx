@@ -198,6 +198,7 @@ const Edit = () => {
               name="dob"
               options={{
                 dateFormat: "Y-m-d",
+                disableMobile: "true",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("dob", date[0])}
