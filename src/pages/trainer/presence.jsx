@@ -60,7 +60,7 @@ const Presence = () => {
       const res = await UpdatePresenceById(order_id, updatedData);
       if (res) {
         Swal.fire({
-          title: `Siswa "${updatedData.student_names}"`,
+          title: `Siswa "${updatedData.students_info[0].fullname}"`,
           text: `Hari: ${updatedData.real_date}, Jam: ${updatedData.real_time}`,
           icon: "success",
           confirmButtonText: "OK",
@@ -79,6 +79,7 @@ const Presence = () => {
         return {
           ...item,
           is_presence: true,
+          periode: periode.name,
           real_date:
             item.real_date ||
             DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
@@ -252,11 +253,6 @@ const Presence = () => {
                             <label className="form-label" htmlFor="real_date">
                               Tanggal Kehadiran
                             </label>
-                            {console.log(
-                              DateTime.fromISO(item.schedule_date).toFormat(
-                                "yyyy-MM-dd"
-                              )
-                            )}
                             <Flatpickr
                               defaultValue={DateTime.fromISO(
                                 item.schedule_date
