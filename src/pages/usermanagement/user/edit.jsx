@@ -139,6 +139,16 @@ const Edit = () => {
             error={errors.email}
             defaultValue={isUpdate ? data.email : ""}
           />
+          <Textinput
+            name="password"
+            label="Password"
+            id="password"
+            type="password"
+            placeholder="Enter Password"
+            register={register}
+            error={errors.password}
+            defaultValue={""}
+          />
           <Select
             name="role"
             label="Role"
