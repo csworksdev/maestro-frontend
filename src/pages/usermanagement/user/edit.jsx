@@ -102,7 +102,8 @@ const Edit = () => {
       ...data,
       username: newdata.username,
       email: newdata.email,
-      password: isUpdate ? newdata.password : "maestrobisa",
+      password: newdata.password,
+      role: newdata.role,
     };
     if (isUpdate) {
       handleUpdate(updatedData);

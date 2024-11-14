@@ -33,7 +33,11 @@ const LoginForm = () => {
 
   const onSubmit = async (NewData) => {
     try {
-      const response = await login(NewData);
+      const params = {
+        username: NewData.username,
+        password: NewData.password,
+      };
+      const response = await login(params);
       const { refresh, access, data: data } = response.data;
 
       // // Dispatch to Redux store without storing in localStorage
