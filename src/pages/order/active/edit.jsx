@@ -20,7 +20,11 @@ import {
   searchSiswa,
 } from "@/axios/masterdata/siswa";
 import { getKolamByBranch } from "@/axios/referensi/kolam";
-import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
+import {
+  AddOrderDetail,
+  EditOrderDetail,
+  EditOrderDetailByOrderId,
+} from "@/axios/masterdata/orderDetail";
 import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
@@ -156,30 +160,18 @@ const Edit = () => {
   };
 
   const handleUpdate = (updatedData) => {
-    EditOrder(data.order_id, updatedData)
+    EditOrderDetailByOrderId(data.order_id, updatedData)
       .then((res) => {
         if (res.status) {
-          Swal.fire("Updated!", "Your order has been updated.", "success").then(
-            () => {
+          EditOrder(data.order_id, updatedData).then((res) => {
+            Swal.fire(
+              "Updated!",
+              "Your order has been updated.",
+              "success"
+            ).then(() => {
               navigate(-1);
-              for (let index = 0; index < orderDetail.length; index++) {
-                const element = orderDetail[index];
-                AddOrderDetail(element)
-                  .then((res) => {
-                    if (res.status) {
-                      console.log(res.status);
-                    }
-                  })
-                  .catch((error) => {
-                    Swal.fire(
-                      "Error",
-                      "Failed to update order details.",
-                      "error"
-                    );
-                  });
-              }
-            }
-          );
+            });
+          });
         }
       })
       .catch((error) => {
@@ -195,32 +187,32 @@ const Edit = () => {
     const updatedData = {
       ...data,
       order_id: newData.order_id,
-      order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
-      product: product.product_id,
-      promo: newData.promo,
-      expire_date:
-        DateTime.fromJSDate(newData.start_date)
-          .plus({ days: 60 })
-          .toFormat("yyyy-MM-dd") ?? data.expire_date,
-      is_finish: newData.is_finish,
-      price: product.price,
-      is_paid: newData.is_paid,
-      students: selectedStudents.map((student) => ({
-        student_id: student.value,
-      })),
-      start_date:
-        DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
-        data.start_date,
-      trainer: newData.trainer,
-      pool: newData.pool,
-      package: product.package,
-      trainer_percentage: parseInt(trainer.precentage_fee),
-      company_percentage: 100 - trainer.precentage_fee,
-      branch: newData.branch ?? data.branch,
-      notes: newData.notes ?? data.notes,
-      day: newData.day,
+      // order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
+      // product: product.product_id,
+      // promo: newData.promo,
+      // expire_date:
+      //   DateTime.fromJSDate(newData.start_date)
+      //     .plus({ days: 60 })
+      //     .toFormat("yyyy-MM-dd") ?? data.expire_date,
+      // is_finish: newData.is_finish,
+      // price: product.price,
+      // is_paid: newData.is_paid,
+      // students: selectedStudents.map((student) => ({
+      //   student_id: student.value,
+      // })),
+      // start_date:
+      //   DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
+      //   data.start_date,
+      // trainer: newData.trainer,
+      // pool: newData.pool,
+      // package: product.package,
+      // trainer_percentage: parseInt(trainer.precentage_fee),
+      // company_percentage: 100 - trainer.precentage_fee,
+      // branch: newData.branch ?? data.branch,
+      // notes: newData.notes ?? data.notes,
+      // day: newData.day,
       time: newData.jam,
-      grand_total: selectedStudents.length * product.price,
+      // grand_total: selectedStudents.length * product.price,
     };
 
     handleUpdate(updatedData);

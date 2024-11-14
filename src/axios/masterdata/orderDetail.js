@@ -45,3 +45,15 @@ export const DeleteOrderDetail = async (id) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const EditOrderDetailByOrderId = async (id, data) => {
+  try {
+    let response = await axiosConfig.put(
+      "/api/orderdetailbyorderid/" + id + "/",
+      data
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

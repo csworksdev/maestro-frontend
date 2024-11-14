@@ -11,7 +11,8 @@ import Footer from "@/components/partials/footer";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import MobileMenu from "@/components/partials/sidebar/MobileMenu";
 import useMobileMenu from "@/hooks/useMobileMenu";
-import MobileFooter from "@/components/partials/footer/MobileFooter";
+import MobileFooterCoach from "@/components/partials/footer/MobileFooterCoach";
+import MobileFooterAdmin from "@/components/partials/footer/MobileFooterAdmin";
 import { ToastContainer } from "react-toastify";
 import { useSelector } from "react-redux";
 import Loading from "@/components/Loading";
@@ -22,6 +23,7 @@ const Layout = () => {
   const [collapsed] = useSidebar();
   const { isAuth, user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const roles = localStorage.getItem("roles");
 
   const [contentWidth] = useContentWidth();
   const [menuType] = useMenulayout();
@@ -108,7 +110,11 @@ const Layout = () => {
       </div>
 
       {width < breakpoints.md ? (
-        <MobileFooter />
+        roles == "Coach" ? (
+          <MobileFooterCoach />
+        ) : (
+          <MobileFooterAdmin />
+        )
       ) : (
         <Footer className={width > breakpoints.xl ? switchHeaderClass() : ""} />
       )}
