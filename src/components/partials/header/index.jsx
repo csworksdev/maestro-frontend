@@ -22,9 +22,9 @@ const Header = ({ className = "custom-class" }) => {
   const [isRtl] = useRtl();
   const [mobileMenu, setMobileMenu] = useMobileMenu();
 
-  const handleOpenMobileMenu = () => {
-    setMobileMenu(!mobileMenu);
-  };
+  // const handleOpenMobileMenu = () => {
+  //   setMobileMenu(!mobileMenu);
+  // };
 
   const handleCollapse = () => {
     if (width >= breakpoints.xl) {
@@ -88,7 +88,7 @@ const Header = ({ className = "custom-class" }) => {
               {width < breakpoints.xl && width >= breakpoints.md && (
                 <div
                   className="cursor-pointer text-slate-900 dark:text-white text-2xl"
-                  onClick={handleOpenMobileMenu}
+                  onClick={() => setMobileMenu(!mobileMenu)}
                 >
                   <Icon icon="heroicons-outline:menu-alt-3" />
                 </div>
@@ -105,7 +105,7 @@ const Header = ({ className = "custom-class" }) => {
               {width <= breakpoints.xl && (
                 <div
                   className="cursor-pointer text-slate-900 dark:text-white text-2xl"
-                  onClick={handleOpenMobileMenu}
+                  onClick={() => setMobileMenu(!mobileMenu)}
                 >
                   <Icon icon="heroicons-outline:menu-alt-3" />
                 </div>
@@ -125,7 +125,7 @@ const Header = ({ className = "custom-class" }) => {
             {width <= breakpoints.md && (
               <div
                 className="cursor-pointer text-slate-900 dark:text-white text-2xl"
-                onClick={handleOpenMobileMenu}
+                onClick={() => setMobileMenu(!mobileMenu)}
               >
                 <Icon icon="heroicons-outline:menu-alt-3" />
               </div>

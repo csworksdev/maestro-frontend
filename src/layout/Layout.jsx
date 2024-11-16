@@ -47,7 +47,7 @@ const Layout = () => {
       : "ltr:ml-[248px] rtl:mr-[248px]";
   };
 
-  const handleMobileMenuClose = () => setMobileMenu(false);
+  // const handleMobileMenuClose = () => setMobileMenu(false);
 
   return (
     <>
@@ -70,7 +70,7 @@ const Layout = () => {
       {width < breakpoints.xl && mobileMenu && (
         <div
           className="overlay bg-slate-900/50 backdrop-filter backdrop-blur-sm opacity-100 fixed inset-0 z-[999]"
-          onClick={handleMobileMenuClose}
+          onClick={() => setMobileMenu(!mobileMenu)}
         ></div>
       )}
 

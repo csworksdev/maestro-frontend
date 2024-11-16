@@ -16,9 +16,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [filterMap, setFilterMap] = useState("global");
-  const authState = useSelector((state) => state.auth);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     async function getPeriod() {

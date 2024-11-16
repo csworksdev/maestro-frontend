@@ -3,7 +3,7 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // Default is localStorage
 import { combineReducers } from "redux";
 import authReducer from "@/redux/slicers/authSlice";
-import layoutReducer from "./layoutSlice";
+import layoutReducer from "@/redux/slicers/layoutSlice";
 
 const authPersistConfig = {
   key: "auth",

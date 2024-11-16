@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { handleMobileMenu } from "@/store/layout";
+// import { handleMobileMenu } from "@/store/layout";
+import { handleSetting } from "@/redux/slicers/layoutSlice";
 import { useLocation } from "react-router-dom";
 
 const useMobileMenu = () => {
@@ -9,7 +10,9 @@ const useMobileMenu = () => {
   const location = useLocation();
 
   // ** Toggles Mobile Menu
-  const setMobileMenu = (val) => dispatch(handleMobileMenu(val));
+  const setMobileMenu = (val) => {
+    dispatch(handleSetting({ key: "mobileMenu", value: val }));
+  };
 
   return [mobileMenu, setMobileMenu];
 };
