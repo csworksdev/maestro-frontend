@@ -16,6 +16,7 @@ import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
 import svgRabitImage from "@/assets/images/svg/rabit.svg";
 import { useDispatch } from "react-redux";
 import { logOut } from "@/redux/slicers/authSlice";
+import { useSelector } from "react-redux";
 
 const MobileMenu = ({ className = "custom-class" }) => {
   const scrollableNodeRef = useRef();
@@ -40,6 +41,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
   const [skin] = useSkin();
   const [isDark] = useDarkMode();
   const [mobileMenu, setMobileMenu] = useMobileMenu();
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   return (
     <div
       className={`${className} fixed  top-0 bg-white dark:bg-slate-800 shadow-lg  h-full   w-[248px]`}
@@ -47,7 +49,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
       <div className="logo-segment flex justify-between items-center bg-white dark:bg-slate-800 z-[9] h-[85px]  px-4 ">
         <Link to="/">
           <div className="flex items-center space-x-4">
-            <div className="logo-icon">
+            <div className="logo-icon h-16 w-16">
               {!isDark && !isSemiDark ? (
                 <img src={MobileLogo} alt="" />
               ) : (
@@ -56,7 +58,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
             </div>
             <div>
               <span className="text-l font-semibold text-slate-900 dark:text-slate-100">
-                Maestro Swim Management System
+                hi, {user_name}
               </span>
             </div>
           </div>

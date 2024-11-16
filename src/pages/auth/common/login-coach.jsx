@@ -40,22 +40,13 @@ const LoginForm = () => {
         password: NewData.password,
       };
       const response = await login(params);
+      const { refresh, access, data } = response.data; // Ensure these fields exist
 
-      // Extract data from response
-      const { refresh, access, data } = response.data;
-
-      // Dispatch to Redux store to set user state
-      dispatch(setUser({ refresh, access, data }));
-
-      // Update the menu based on user roles
+      dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
       Menu(data.roles);
-
-      // Navigate to dashboard
       navigate("/app/dashboard");
-      navigate(0); // Refresh the page after navigating
     } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
-      console.error(error); // Log the error for debugging
+      console.error("Error:", error.response?.data || error.message);
     }
   };
 

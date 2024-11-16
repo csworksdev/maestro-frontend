@@ -31,7 +31,7 @@ const MobileFooter = () => {
           </div>
         )}
       </NavLink>
-      <NavLink to="/app/coach/schedule">
+      {/* <NavLink to="/app/coach/schedule">
         {({ isActive }) => (
           <div>
             <span
@@ -40,9 +40,6 @@ const MobileFooter = () => {
           `}
             >
               <Icon icon="heroicons-outline:calendar-days" />
-              {/* <span className="absolute right-[5px] lg:top-0 -top-2 h-4 w-4 bg-red-500 text-[8px] font-semibold flex flex-col items-center justify-center rounded-full text-white z-[99]">
-                10
-              </span> */}
             </span>
             <span
               className={` block text-[11px]
@@ -55,7 +52,7 @@ const MobileFooter = () => {
             </span>
           </div>
         )}
-      </NavLink>
+      </NavLink> */}
       <NavLink
         to="/app/profile"
         className="relative bg-white bg-no-repeat backdrop-filter backdrop-blur-[40px] rounded-full footer-bg dark:bg-slate-700 h-[65px] w-[65px] z-[-1] -mt-[40px] flex justify-center items-center"

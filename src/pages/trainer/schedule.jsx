@@ -7,14 +7,14 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
+import { useSelector } from "react-redux";
 
 const Schedule = () => {
   const [events, setEvents] = useState([]);
   const calendarComponentRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const roles = localStorage.getItem("roles");
-  const userid = localStorage.getItem("userid");
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
 
   const transformDataForCalendar = (events) => {
     return events.map((event) => ({
@@ -30,7 +30,7 @@ const Schedule = () => {
     try {
       setIsLoading(true);
       let res = [];
-      if (roles === "Trainer") res = await getPresenceById(userid);
+      if (roles === "Trainer") res = await getPresenceById(user_id);
       else res = await getPresenceAll();
       const transformedData = transformDataForCalendar(res.data.data);
       setEvents(transformedData);

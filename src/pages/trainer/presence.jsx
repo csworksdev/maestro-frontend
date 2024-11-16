@@ -11,12 +11,12 @@ import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
 import { meets } from "@/constant/data";
 import button from "../components/button";
 import Icons from "@/components/ui/Icon";
+import { useSelector } from "react-redux";
 
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
-  const roles = localStorage.getItem("roles");
-  const userid = localStorage.getItem("userid");
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
 
   const time = [
@@ -41,7 +41,7 @@ const Presence = () => {
     try {
       setIsLoading(true);
       let res = [];
-      if (roles === "Trainer") res = await getPresenceById(userid);
+      if (roles === "Trainer") res = await getPresenceById(user_id);
       else res = await getPresenceAll();
       // res = await getPresenceAll();
       setListData(res.data.data);
@@ -249,60 +249,77 @@ const Presence = () => {
                           title={`Pertemuan ke ${item.meet + 1}`}
                           subtitle={`${item.day} - ${item.time}`}
                         >
-                          <div>
-                            <label className="form-label" htmlFor="real_date">
-                              Tanggal Kehadiran
-                            </label>
-                            <Flatpickr
-                              defaultValue={DateTime.fromISO(
-                                item.schedule_date
-                              ).toFormat("yyyy-MM-dd")}
-                              name="real_date"
-                              options={{
-                                dateFormat: "Y-m-d",
-                                maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
-                                minDate: periode.start_date,
-                                disableMobile: "true",
-                              }}
-                              className="form-control py-2"
-                              onChange={(date) =>
-                                handleChangeDay(item.order_detail_id, date)
-                              }
-                              style={{
-                                background: "#ffffff",
-                                color: "inherit",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label className="form-label" htmlFor="real_time">
-                              Jam kehadiran
-                            </label>
-                            <select
-                              name="real_time"
-                              defaultValue={item.time}
-                              onChange={(e) =>
-                                handleChangeTime(
-                                  item.order_detail_id,
-                                  e.target.value
-                                )
-                              }
-                              className="form-select"
-                            >
-                              {time.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="mt-4 space-x-4 rtl:space-x-reverse">
-                            <Button
-                              onClick={() => handleHadir(item.order_detail_id)}
-                              className="btn inline-flex justify-center btn-primary btn-sm"
-                            >
-                              Hadir
-                            </Button>
+                          <div className="flex items-stretch justify-between">
+                            <div>
+                              <div>
+                                <label
+                                  className="form-label"
+                                  htmlFor="real_date"
+                                >
+                                  Tanggal Kehadiran
+                                </label>
+                                <Flatpickr
+                                  defaultValue={DateTime.fromISO(
+                                    item.schedule_date
+                                  ).toFormat("yyyy-MM-dd")}
+                                  name="real_date"
+                                  options={{
+                                    dateFormat: "Y-m-d",
+                                    maxDate:
+                                      DateTime.now().toFormat("yyyy-MM-dd"),
+                                    minDate: periode.start_date,
+                                    disableMobile: "true",
+                                  }}
+                                  className="form-control py-2 w-auto"
+                                  onChange={(date) =>
+                                    handleChangeDay(item.order_detail_id, date)
+                                  }
+                                  style={{
+                                    background: "#ffffff",
+                                    color: "inherit",
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  className="form-label"
+                                  htmlFor="real_time"
+                                >
+                                  Jam kehadiran
+                                </label>
+                                <select
+                                  name="real_time"
+                                  defaultValue={item.time}
+                                  onChange={(e) =>
+                                    handleChangeTime(
+                                      item.order_detail_id,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="form-select w-auto"
+                                >
+                                  {time.map((option) => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center">
+                              <Button
+                                onClick={() =>
+                                  handleHadir(item.order_detail_id)
+                                }
+                                className="btn inline-flex justify-center btn-primary btn-l"
+                              >
+                                Hadir
+                              </Button>
+                            </div>
                           </div>
                         </Card>
                       ))}

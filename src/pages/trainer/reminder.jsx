@@ -12,6 +12,7 @@ import Swal from "sweetalert2";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import { getReminderById } from "@/axios/course/reminder";
+import { useSelector } from "react-redux";
 
 const actions = [
   // {
@@ -37,7 +38,7 @@ const Reminder = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const userid = localStorage.getItem("userid");
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
 
   const fetchData = async (page, size, query) => {
     try {
@@ -47,7 +48,7 @@ const Reminder = () => {
         page_size: size,
         search: query,
       };
-      getReminderById(userid, params)
+      getReminderById(user_id, params)
         .then((res) => {
           setListData(res.data);
         })

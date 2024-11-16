@@ -8,13 +8,13 @@ import {
 import Loading from "@/components/Loading";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
+import { useSelector } from "react-redux";
 
 const Earning = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
   const [listDataDashboard, setListDataDashboard] = useState([]);
-  const roles = localStorage.getItem("roles");
-  const userid = localStorage.getItem("userid");
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
 
   const time = [
     { value: "06.00", label: "06.00" },
@@ -39,8 +39,8 @@ const Earning = () => {
       setIsLoading(true);
       let res = [];
       if (roles === "Trainer") {
-        res = await getEarningListById(userid);
-        let resList = await getEarningById(userid);
+        res = await getEarningListById(user_id);
+        let resList = await getEarningById(user_id);
         if (resList) {
           setListDataDashboard(resList.data);
         }
