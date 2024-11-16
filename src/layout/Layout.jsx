@@ -21,9 +21,10 @@ import { motion } from "framer-motion";
 const Layout = () => {
   const { width, breakpoints } = useWidth();
   const [collapsed] = useSidebar();
-  const { isAuth, user } = useSelector((state) => state.auth);
+  const { isAuth } = useSelector((state) => state.auth);
+  const { user_id, roles } = useSelector((state) => state.auth.data);
   const navigate = useNavigate();
-  const roles = localStorage.getItem("roles");
+  // const roles = localStorage.getItem("roles");
 
   const [contentWidth] = useContentWidth();
   const [menuType] = useMenulayout();
@@ -32,10 +33,10 @@ const Layout = () => {
   const nodeRef = useRef(null);
 
   useEffect(() => {
-    if (!isAuth || !user) {
+    if (!isAuth || !user_id) {
       navigate("/");
     }
-  }, [isAuth, user, navigate]);
+  }, [isAuth, user_id, navigate]);
 
   const switchHeaderClass = () => {
     if (menuType === "horizontal" || menuHidden) {

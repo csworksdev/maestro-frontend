@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -9,8 +9,10 @@ import * as yup from "yup";
 
 import Textinput from "@/components/ui/Textinput";
 import Button from "@/components/ui/Button";
-import { setUser } from "@/store/api/auth/authSlice";
+// import { setUser } from "@/store/api/auth/authSlice";
+import { setUser } from "@/redux/slicers/authSlice";
 import { login } from "@/axios/auth/auth";
+
 import Menu from "@/constant/menu";
 
 const schema = yup.object({
@@ -38,25 +40,13 @@ const LoginForm = () => {
         password: NewData.password,
       };
       const response = await login(params);
-      const { refresh, access, data: data } = response.data;
+      const { refresh, access, data } = response.data; // Ensure these fields exist
 
-      // // Dispatch to Redux store without storing in localStorage
-      // dispatch(setUser({ refresh, access, data: userData }));
-      localStorage.setItem("refresh", refresh);
-      localStorage.setItem("access", access);
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("userid", data.user_id);
-      localStorage.setItem("username", data.user_name);
-      localStorage.setItem("roles", data.roles);
-
-      // Update the menu based on user roles
+      dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
       Menu(data.roles);
-
-      // Navigate to dashboard upon successful login
       navigate("/app/dashboard");
-      navigate(0);
     } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
+      console.error("Error:", error.response?.data || error.message);
     }
   };
 

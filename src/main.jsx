@@ -7,17 +7,18 @@ import "../src/assets/scss/app.scss";
 import { BrowserRouter } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { Provider } from "react-redux";
-// import store from "@/redux/store";
-import store from "./store";
+import store, { persistor } from "@/redux/store";
+// import store from "./store";
 import "react-toastify/dist/ReactToastify.css";
 // import "./server";
+import { PersistGate } from "redux-persist/integration/react";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <>
-    <BrowserRouter>
-      <Provider store={store}>
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
         <App />
-      </Provider>
-    </BrowserRouter>
-  </>
+      </BrowserRouter>
+    </PersistGate>
+  </Provider>
 );

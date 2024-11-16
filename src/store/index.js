@@ -9,7 +9,7 @@ const store = configureStore({
   },
   //devTools: false,
   middleware: (getDefaultMiddleware) => {
-    const middleware = [...getDefaultMiddleware(), apiSlice.middleware];
+    const middleware = [...getDefaultMiddleware()];
     return middleware;
   },
 });

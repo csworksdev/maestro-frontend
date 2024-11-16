@@ -9,8 +9,10 @@ import * as yup from "yup";
 
 import Textinput from "@/components/ui/Textinput";
 import Button from "@/components/ui/Button";
-import { setUser } from "@/store/api/auth/authSlice";
+// import { setUser } from "@/store/api/auth/authSlice";
+import { setUser } from "@/redux/slicers/authSlice";
 import { login } from "@/axios/auth/auth";
+
 import Menu from "@/constant/menu";
 
 const schema = yup.object({
@@ -33,26 +35,27 @@ const LoginForm = () => {
 
   const onSubmit = async (NewData) => {
     try {
-      const response = await login(NewData);
-      const { refresh, access, data: data } = response.data;
+      const params = {
+        username: NewData.username,
+        password: NewData.password,
+      };
+      const response = await login(params);
 
-      // // Dispatch to Redux store without storing in localStorage
-      // dispatch(setUser({ refresh, access, data: userData }));
-      localStorage.setItem("refresh", refresh);
-      localStorage.setItem("access", access);
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("userid", data.user_id);
-      localStorage.setItem("username", data.user_name);
-      localStorage.setItem("roles", "Trainer");
+      // Extract data from response
+      const { refresh, access, data } = response.data;
+
+      // Dispatch to Redux store to set user state
+      dispatch(setUser({ refresh, access, data }));
 
       // Update the menu based on user roles
       Menu(data.roles);
 
-      // Navigate to dashboard upon successful login
+      // Navigate to dashboard
       navigate("/app/dashboard");
-      navigate(0);
+      navigate(0); // Refresh the page after navigating
     } catch (error) {
       toast.error("Login failed. Please check your credentials.");
+      console.error(error); // Log the error for debugging
     }
   };
 

@@ -1,12 +1,13 @@
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 
-const isAuthenticated = () => !!localStorage.getItem("user");
+// const isAuthenticated = () => !!localStorage.getItem("user");
 const AuthenticatedRoute = ({ children }) => {
-  // const user = useSelector((state) => state.auth.user);
+  // const navigate = useNavigate();
+  const authState = useSelector((state) => state.auth);
 
-  if (!isAuthenticated()) {
-    return <Navigate to="/auth/login" />;
+  if (!authState.isAuth) {
+    return <Navigate to="/auth/login" replace />;
   }
 
   return children;

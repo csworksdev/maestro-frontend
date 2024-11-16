@@ -1,5 +1,5 @@
 import layout from "./layoutSlice";
-import auth from "./slices/authSlice";
+import auth from "./slicers/authSlice";
 
 const rootReducer = {
   layout,

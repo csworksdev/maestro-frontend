@@ -5,6 +5,7 @@ import AuthLayout from "./layout/AuthLayout";
 import Loading from "@/components/Loading";
 import AuthenticatedRoute from "./layout/AuthenticatedRoute";
 import PublicRoute from "./layout/PublicRoute";
+import { useSelector } from "react-redux";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -70,6 +71,7 @@ const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
 const App = () => {
   const hostname = window.location.hostname;
   const subdomain = hostname.split(".")[0];
+  const isAuth = useSelector((state) => state.auth.isAuth);
 
   return (
     <main className="App relative">
@@ -248,7 +250,17 @@ const App = () => {
           )}
 
           {/* Fallback for unknown routes */}
-          <Route path="*" element={<Navigate to="/auth/login" replace />} />
+          {/* <Route path="*" element={<Navigate to="/auth/login" replace />} /> */}
+          <Route
+            path="*"
+            element={
+              isAuth ? (
+                <Navigate to="/app/dashboard" replace />
+              ) : (
+                <Navigate to="/auth/login" replace />
+              )
+            }
+          />
         </Routes>
       </Suspense>
     </main>

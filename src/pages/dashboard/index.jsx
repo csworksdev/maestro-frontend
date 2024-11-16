@@ -11,15 +11,19 @@ import MostSales from "../../components/partials/widget/most-sales";
 import RadarChart from "../../components/partials/widget/chart/radar-chart";
 import HomeBredCurbs from "./HomeBredCurbs";
 import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
+import { useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [filterMap, setFilterMap] = useState("global");
+  const authState = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     async function getPeriod() {
       const periodisasi = await getPeriodisasiToday();
     }
-
     getPeriod();
   }, []);
 
