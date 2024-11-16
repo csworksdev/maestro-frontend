@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Collapse } from "react-collapse";
 import Icon from "@/components/ui/Icon";
 import { toggleActiveChat } from "@/pages/app/chat/store";

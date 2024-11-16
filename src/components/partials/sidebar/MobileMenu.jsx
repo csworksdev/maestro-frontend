@@ -14,10 +14,13 @@ import Icon from "@/components/ui/Icon";
 import MobileLogo from "@/assets/images/logo/logo.png";
 import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
 import svgRabitImage from "@/assets/images/svg/rabit.svg";
+import { useDispatch } from "react-redux";
+import { logOut } from "@/redux/slicers/authSlice";
 
 const MobileMenu = ({ className = "custom-class" }) => {
   const scrollableNodeRef = useRef();
   const [scroll, setScroll] = useState(false);
+  const dispatch = useDispatch();
 
   let menuItems = JSON.parse(localStorage.getItem("menuItems"));
 
@@ -52,9 +55,9 @@ const MobileMenu = ({ className = "custom-class" }) => {
               )}
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                Maestro Swim System
-              </h1>
+              <span className="text-l font-semibold text-slate-900 dark:text-slate-100">
+                Maestro Swim Management System
+              </span>
             </div>
           </div>
         </Link>
@@ -77,24 +80,11 @@ const MobileMenu = ({ className = "custom-class" }) => {
         scrollableNodeProps={{ ref: scrollableNodeRef }}
       >
         <Navmenu menus={menuItems} />
-        {/* <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
-          <img
-            src={svgRabitImage}
-            alt=""
-            className="mx-auto relative -mt-[73px]"
-          />
-          <div className="max-w-[160px] mx-auto mt-6">
-            <div className="widget-title">Unlimited Access</div>
-            <div className="text-xs font-light">
-              Upgrade your system to business plan
-            </div>
-          </div>
-          <div className="mt-6">
-            <button className="btn bg-white hover:bg-opacity-80 text-slate-900 btn-sm w-full block">
-              Upgrade
-            </button>
-          </div>
-        </div> */}
+        <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
+          <button onClick={() => dispatch(logOut())}>
+            <span>Logout</span>
+          </button>
+        </div>
       </SimpleBar>
     </div>
   );

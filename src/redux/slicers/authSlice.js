@@ -44,6 +44,13 @@ const authSlice = createSlice({
         roles: "",
       };
       state.isAuth = false;
+      localStorage.removeItem("darkMode");
+      localStorage.removeItem("menuItems");
+      localStorage.removeItem("mobileMenu");
+      localStorage.removeItem("persist:auth");
+      localStorage.removeItem("persist:layout");
+      localStorage.removeItem("persist:root");
+      localStorage.removeItem("sidebarCollapsed");
     },
   },
 });

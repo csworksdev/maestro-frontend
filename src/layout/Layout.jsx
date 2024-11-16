@@ -60,7 +60,7 @@ const Layout = () => {
       )}
 
       <MobileMenu
-        className={`transition-all duration-150 ${
+        className={`transition-all duration-150 py-4 ${
           width < breakpoints.xl && mobileMenu
             ? "left-0 visible opacity-100 z-[9999]"
             : "left-[-300px] invisible opacity-0 z-[-999]"

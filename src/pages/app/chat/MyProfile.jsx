@@ -116,7 +116,7 @@ const MyProfile = () => {
                   Jane Cooper
                 </span>
                 <span className="block text-slate-500 dark:text-slate-300 text-xs">
-                  Maestro Swim System
+                  Maestro Swim Management System
                 </span>
               </header>
               <div className="my-8">
