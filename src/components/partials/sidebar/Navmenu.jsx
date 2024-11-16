@@ -61,9 +61,9 @@ const Navmenu = ({ menus }) => {
     setActiveSubmenu(submenuIndex);
     setMultiMenu(multiMenuIndex);
     dispatch(toggleActiveChat(false));
-    if (mobileMenu) {
-      setMobileMenu(false);
-    }
+    // if (mobileMenu) {
+    //   setMobileMenu(false);
+    // }
   }, [location, menus, dispatch, mobileMenu, setMobileMenu]);
 
   return (
