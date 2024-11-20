@@ -246,7 +246,7 @@ const Presence = () => {
                       .map((item, k) => (
                         <Card
                           key={`${item.order}-${k}`}
-                          title={`Pertemuan ke ${item.meet + 1}`}
+                          title={`Pertemuan ke ${item.meet}`}
                           subtitle={`${item.day} - ${item.time}`}
                         >
                           <div className="flex items-stretch justify-between">
