@@ -265,9 +265,10 @@ const Presence = () => {
                                   name="real_date"
                                   options={{
                                     dateFormat: "Y-m-d",
-                                    maxDate:
-                                      DateTime.now().toFormat("yyyy-MM-dd"),
-                                    minDate: periode.start_date,
+                                    maxDate: "2024-11-20",
+                                    // DateTime.now().toFormat("yyyy-MM-dd"),
+                                    // minDate: periode.start_date,
+                                    minDate: "2024-10-21",
                                     disableMobile: "true",
                                   }}
                                   className="form-control py-2 w-auto"
