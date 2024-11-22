@@ -21,10 +21,10 @@ const actions = [
     name: "edit",
     icon: "heroicons:pencil-square",
   },
-  // {
-  //   name: "delete",
-  //   icon: "heroicons-outline:trash",
-  // },
+  {
+    name: "delete",
+    icon: "heroicons-outline:trash",
+  },
 ];
 
 const OrderActive = ({ is_finished }) => {
@@ -201,12 +201,10 @@ const OrderActive = ({ is_finished }) => {
                     }
                      w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
                      first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                  onClick={
-                    (e) =>
-                      // item.name === "edit"
-                      // ?
-                      handleEdit(row.row.original)
-                    // : handleDelete(row.row.original)
+                  onClick={(e) =>
+                    item.name === "edit"
+                      ? handleEdit(row.row.original)
+                      : handleDelete(row.row.original)
                   }
                   key={i}
                 >
