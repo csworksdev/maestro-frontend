@@ -46,7 +46,7 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    if (branchOption == null) {
+    if (branchOption.length == 0) {
       const params = {
         page: 1,
         page_size: 50,
