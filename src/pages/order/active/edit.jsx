@@ -127,6 +127,7 @@ const Edit = () => {
           value: student.student_id,
           label: student.student_fullname,
         }));
+        setMaxStudents(transformedStudents.length);
 
         setValue("order_date", data.order_date);
         setValue("start_date", data.start_date);
@@ -187,32 +188,32 @@ const Edit = () => {
     const updatedData = {
       ...data,
       order_id: newData.order_id,
-      // order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
-      // product: product.product_id,
-      // promo: newData.promo,
-      // expire_date:
-      //   DateTime.fromJSDate(newData.start_date)
-      //     .plus({ days: 60 })
-      //     .toFormat("yyyy-MM-dd") ?? data.expire_date,
-      // is_finish: newData.is_finish,
-      // price: product.price,
-      // is_paid: newData.is_paid,
-      // students: selectedStudents.map((student) => ({
-      //   student_id: student.value,
-      // })),
-      // start_date:
-      //   DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
-      //   data.start_date,
-      // trainer: newData.trainer,
-      // pool: newData.pool,
-      // package: product.package,
-      // trainer_percentage: parseInt(trainer.precentage_fee),
-      // company_percentage: 100 - trainer.precentage_fee,
-      // branch: newData.branch ?? data.branch,
-      // notes: newData.notes ?? data.notes,
-      // day: newData.day,
+      order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
+      product: product.product_id,
+      promo: newData.promo,
+      expire_date:
+        DateTime.fromJSDate(newData.start_date)
+          .plus({ days: 60 })
+          .toFormat("yyyy-MM-dd") ?? data.expire_date,
+      is_finish: newData.is_finish,
+      price: product.price,
+      is_paid: newData.is_paid,
+      students: selectedStudents.map((student) => ({
+        student_id: student.value,
+      })),
+      start_date:
+        DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
+        data.start_date,
+      trainer: newData.trainer,
+      pool: newData.pool,
+      package: product.package,
+      trainer_percentage: parseInt(trainer.precentage_fee),
+      company_percentage: 100 - trainer.precentage_fee,
+      branch: newData.branch ?? data.branch,
+      notes: newData.notes ?? data.notes,
+      day: newData.day,
       time: newData.jam,
-      // grand_total: selectedStudents.length * product.price,
+      grand_total: selectedStudents.length * product.price,
     };
 
     handleUpdate(updatedData);
@@ -274,7 +275,7 @@ const Edit = () => {
     const findData = productData.find(
       (item) => item.product_id === e.target.value
     );
-    // setMaxStudents(findData.max_student);
+    setMaxStudents(findData.max_student);
     createDetail(findData);
   };
 
@@ -425,6 +426,7 @@ const Edit = () => {
         value: student.student_id,
         label: student.fullname,
       }));
+
       setDefaultStudentOptions(students);
     } catch (error) {
       setStudentLoadingError(error);
