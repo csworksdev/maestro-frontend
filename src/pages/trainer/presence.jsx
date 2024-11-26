@@ -265,9 +265,9 @@ const Presence = () => {
                                   name="real_date"
                                   options={{
                                     dateFormat: "Y-m-d",
-                                    maxDate: "2024-11-20",
-                                    // DateTime.now().toFormat("yyyy-MM-dd"),
-                                    // minDate: periode.start_date,
+                                    maxDate:
+                                      DateTime.now().toFormat("yyyy-MM-dd"),
+                                    minDate: periode.start_date,
                                     minDate: "2024-10-21",
                                     disableMobile: "true",
                                   }}
@@ -312,14 +312,14 @@ const Presence = () => {
                             </div>
 
                             <div className="flex items-center">
-                              <Button
+                              {/* <Button
                                 onClick={() =>
                                   handleHadir(item.order_detail_id)
                                 }
                                 className="btn inline-flex justify-center btn-primary btn-l"
                               >
                                 Hadir
-                              </Button>
+                              </Button> */}
                             </div>
                           </div>
                         </Card>
