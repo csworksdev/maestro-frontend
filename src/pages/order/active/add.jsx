@@ -755,7 +755,7 @@ const Add = () => {
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",
-                minDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                // minDate: DateTime.now().toFormat("yyyy-MM-dd"),
                 disableMobile: "true",
               }}
               className="form-control py-2 bg-black-50 from-black-900"
