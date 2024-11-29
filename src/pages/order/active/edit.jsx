@@ -188,7 +188,9 @@ const Edit = () => {
     const updatedData = {
       ...data,
       order_id: newData.order_id,
-      order_date: DateTime.now().toFormat("yyyy-MM-dd") ?? data.order_date,
+      order_date: DateTime.fromJSDate(newData.order_date).toFormat(
+        "yyyy-MM-dd"
+      ),
       product: product.product_id,
       promo: newData.promo,
       expire_date:
@@ -201,16 +203,21 @@ const Edit = () => {
       students: selectedStudents.map((student) => ({
         student_id: student.value,
       })),
-      start_date:
-        DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd") ??
-        data.start_date,
+      start_date: DateTime.fromJSDate(newData.order_date).toFormat(
+        "yyyy-MM-dd"
+      ),
       trainer: newData.trainer,
       pool: newData.pool,
       package: product.package,
-      trainer_percentage: parseInt(trainer.precentage_fee),
-      company_percentage: 100 - trainer.precentage_fee,
-      branch: newData.branch ?? data.branch,
-      notes: newData.notes ?? data.notes,
+      ...(trainer &&
+      trainer.precentage_fee !== undefined &&
+      trainer.precentage_fee !== null
+        ? {
+            trainer_percentage: parseInt(trainer.precentage_fee),
+            company_percentage: 100 - parseInt(trainer.precentage_fee),
+          }
+        : {}),
+      branch: newData.branch ?? newData.branch,
       day: newData.day,
       time: newData.jam,
       grand_total: selectedStudents.length * product.price,
