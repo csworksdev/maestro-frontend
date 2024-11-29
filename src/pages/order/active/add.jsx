@@ -719,7 +719,7 @@ const Add = () => {
               ))}
             </div>
           </div>
-          <div className="hidden">
+          <div>
             <label className="form-label" htmlFor="order_date">
               Tanggal Order
             </label>
@@ -734,9 +734,8 @@ const Add = () => {
                 dateFormat: "Y-m-d",
                 disableMobile: "true",
               }}
-              className="form-control py-2"
+              className="form-control py-2 bg-white"
               onChange={(date) => setValue("order_date", date[0])}
-              disabled={true}
             />
             {errors.order_date && (
               <p className="error-message">{errors.order_date.message}</p>
@@ -758,7 +757,7 @@ const Add = () => {
                 // minDate: DateTime.now().toFormat("yyyy-MM-dd"),
                 disableMobile: "true",
               }}
-              className="form-control py-2 bg-black-50 from-black-900"
+              className="form-control py-2 bg-white"
               onChange={(date) => setValue("start_date", date[0])}
             />
             {errors.start_date && (
@@ -772,7 +771,7 @@ const Add = () => {
             placeholder="Masukan promo"
             register={register}
             error={errors.promo?.message}
-            defaultValue={isUpdate ? data.promo : ""}
+            defaultValue={isUpdate ? data.promo : "-"}
           />
           <div>
             <label className="form-label" htmlFor="students">
