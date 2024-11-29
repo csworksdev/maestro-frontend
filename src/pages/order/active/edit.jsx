@@ -543,10 +543,7 @@ const Edit = () => {
               Tanggal Order
             </label>
             <Flatpickr
-              defaultValue={
-                DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd") ??
-                data.order_date
-              }
+              value={data.order_date}
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
@@ -554,7 +551,6 @@ const Edit = () => {
               }}
               className="form-control py-2"
               onChange={(date) => setValue("order_date", date[0])}
-              disabled={true}
             />
             {errors.order_date && (
               <p className="error-message">{errors.order_date.message}</p>
@@ -562,10 +558,10 @@ const Edit = () => {
           </div>
           <div>
             <label className="form-label" htmlFor="start_date">
-              Tanggal Order
+              Tanggal Mulai
             </label>
             <Flatpickr
-              defaultValue={data.start_date}
+              value={data.start_date}
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",

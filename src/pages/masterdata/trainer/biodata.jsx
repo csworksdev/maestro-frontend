@@ -138,6 +138,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
+      mobile: mobileOption,
       is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,
@@ -266,7 +267,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
               label={option.label}
               name="mobile"
               value={option.value}
-              checked={mobileOption !== option.value}
+              checked={mobileOption === option.value}
               onChange={handleMobileOption}
               disabled={loading}
             />

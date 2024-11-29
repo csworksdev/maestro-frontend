@@ -724,11 +724,11 @@ const Add = () => {
               Tanggal Order
             </label>
             <Flatpickr
-              defaultValue={
-                isUpdate
-                  ? data.order_date
-                  : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
-              }
+              // defaultValue={
+              //   isUpdate
+              //     ? data.order_date
+              //     : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
+              // }
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
@@ -746,11 +746,11 @@ const Add = () => {
               Tanggal Mulai
             </label>
             <Flatpickr
-              defaultValue={
-                isUpdate
-                  ? data.start_date
-                  : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
-              }
+              // defaultValue={
+              //   isUpdate
+              //     ? data.start_date
+              //     : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
+              // }
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",
