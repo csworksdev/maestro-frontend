@@ -71,6 +71,7 @@ const Edit = () => {
       day: yup.string().required("Day is required"),
       jam: yup.string().required("Time is required"),
       start_date: yup.date().required("Start date is required"),
+      order_date: yup.date().required("Order date is required"),
       students: yup.array().min(1, "At least one student is required"),
       trainer: yup.string().required("Trainer is required"),
       product: yup.string().required("Product is required"),
