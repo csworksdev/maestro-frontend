@@ -194,17 +194,17 @@ const Edit = () => {
       ),
       product: product.product_id,
       promo: newData.promo,
-      expire_date:
-        DateTime.fromJSDate(newData.start_date)
-          .plus({ days: 60 })
-          .toFormat("yyyy-MM-dd") ?? data.expire_date,
+      // expire_date:
+      //   DateTime.fromJSDate(newData.start_date)
+      //     .plus({ days: 60 })
+      //     .toFormat("yyyy-MM-dd") ?? data.expire_date,
       is_finish: newData.is_finish,
       price: product.price,
       is_paid: newData.is_paid,
       students: selectedStudents.map((student) => ({
         student_id: student.value,
       })),
-      start_date: DateTime.fromJSDate(newData.order_date).toFormat(
+      start_date: DateTime.fromJSDate(newData.start_date).toFormat(
         "yyyy-MM-dd"
       ),
       trainer: newData.trainer,

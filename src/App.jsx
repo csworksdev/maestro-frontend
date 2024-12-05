@@ -50,6 +50,7 @@ const OrderExpired = lazy(() => import("./pages/order/expired"));
 const Waitinglist = lazy(() => import("./pages/order/waitinglist"));
 const EditOrder = lazy(() => import("./pages/order/active/edit"));
 const AddOrder = lazy(() => import("./pages/order/active/add"));
+const DetailOrder = lazy(() => import("./pages/order/active/detail"));
 const CoachEarning = lazy(() => import("./pages/trainer/earning"));
 const CoachPerformance = lazy(() => import("./pages/trainer/performance"));
 const CoachSchedule = lazy(() => import("./pages/trainer/schedule"));
@@ -160,6 +161,7 @@ const App = () => {
                   <Route index element={<Order />} />
                   <Route path="add" element={<AddOrder />} />
                   <Route path="edit" element={<EditOrder />} />
+                  <Route path="detail" element={<DetailOrder />} />
                   <Route
                     path="finished"
                     element={<OrderFinished is_finished={true} />}

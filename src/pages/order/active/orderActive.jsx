@@ -117,7 +117,11 @@ const OrderActive = ({ is_finished }) => {
   };
 
   const handleDetail = (e) => {
-    // Mo
+    navigate("detail", {
+      state: {
+        data: e,
+      },
+    });
   };
 
   const handleEdit = (e) => {
