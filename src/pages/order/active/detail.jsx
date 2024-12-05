@@ -17,6 +17,7 @@ import Textinput from "@/components/ui/Textinput";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { hari, jam } from "@/constant/jadwal-default";
+import Checkbox from "@/components/ui/Checkbox";
 
 const DetailOrder = () => {
   const navigate = useNavigate();
@@ -81,7 +82,6 @@ const DetailOrder = () => {
   const MeetCard = ({ params }) => {
     const schema = yup.object().shape({}).required();
 
-    // Initialize independent form state for each MeetCard
     const {
       register,
       handleSubmit,
@@ -94,25 +94,42 @@ const DetailOrder = () => {
     });
 
     useEffect(() => {
-      // Set default value for schedule_date in Luxon format
       if (params.schedule_date) {
         setValue(
           "schedule_date",
           DateTime.fromISO(params.schedule_date).toISODate()
         );
       }
-    }, [params.schedule_date, setValue]);
+      if (params.real_date) {
+        setValue("real_date", DateTime.fromISO(params.real_date).toISODate());
+      }
+      setValue("is_presence", params.is_presence); // Initialize checkbox state
+    }, [params, setValue]);
 
     const onSubmit = (formData) => {
-      const updatedData = {
+      let updatedData = {
         order_detail_id: params.order_detail_id,
         schedule_date: DateTime.fromISO(formData.schedule_date).toFormat(
           "yyyy-MM-dd"
         ),
         jam: formData.jam,
+        is_presence: formData.is_presence, // Checkbox state
       };
 
-      updateOrderDetail(updatedData);
+      if (formData.is_presence) {
+        updatedData = {
+          ...updatedData,
+          real_date: DateTime.fromISO(formData.real_date).toFormat(
+            "yyyy-MM-dd"
+          ),
+          presence_day: DateTime.fromISO(formData.real_date).toFormat(
+            "yyyy-MM-dd"
+          ),
+        };
+      }
+
+      console.log(updatedData);
+      // updateOrderDetail(updatedData);
     };
 
     return (
@@ -139,6 +156,27 @@ const DetailOrder = () => {
               <p className="error-message">{errors.schedule_date.message}</p>
             )}
           </div>
+          <div>
+            <label className="form-label" htmlFor="real_date">
+              Tanggal Absensi Pelatih
+            </label>
+            <Flatpickr
+              defaultValue={DateTime.fromISO(params.real_date).toJSDate()}
+              options={{ dateFormat: "Y-m-d", disableMobile: true }}
+              className="form-control py-2"
+              onChange={(dates) => {
+                if (dates && dates[0]) {
+                  setValue(
+                    "real_date",
+                    DateTime.fromJSDate(dates[0]).toISODate()
+                  );
+                }
+              }}
+            />
+            {errors.real_date && (
+              <p className="error-message">{errors.real_date.message}</p>
+            )}
+          </div>
           <Select
             name="jam"
             label="Jam"
@@ -149,6 +187,17 @@ const DetailOrder = () => {
             defaultValue={params.time}
             onChange={(e) => setValue("jam", e.target.value)}
           />
+          <div>
+            <label className="form-label" htmlFor="is_presence">
+              Kehadiran
+            </label>
+            <Checkbox
+              name="is_presence"
+              label={"Hadir"}
+              value={watch("is_presence")}
+              onChange={(e) => setValue("is_presence", e.target.checked)}
+            />
+          </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
             {params.is_paid ? (
               <span>Pertemuan sudah dibayar</span>
