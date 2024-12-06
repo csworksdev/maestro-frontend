@@ -60,26 +60,24 @@ const Earning = () => {
   }, []);
 
   const groupedData = listData.reduce((acc, item) => {
-    if (!acc[item.trainer_fullname]) {
-      acc[item.trainer_fullname] = {};
+    // Group by order_id
+    if (!acc[item.order]) {
+      acc[item.order] = {};
     }
 
-    // Extract student names from the student_names array and join them into a single string
+    // Group by trainer_fullname within order_id
+    if (!acc[item.order][item.trainer_fullname]) {
+      acc[item.order][item.trainer_fullname] = {};
+    }
+
+    // Group by student_names within trainer_fullname
     const studentNames = item.student_names.join(", ");
-
-    if (!acc[item.trainer_fullname][studentNames]) {
-      acc[item.trainer_fullname][studentNames] = [];
+    if (!acc[item.order][item.trainer_fullname][studentNames]) {
+      acc[item.order][item.trainer_fullname][studentNames] = [];
     }
 
-    // Check if the meet has already been added
-    const existingMeet = acc[item.trainer_fullname][studentNames].find(
-      (meetItem) => meetItem.meet === item.meet
-    );
-
-    // Only add the meet if it hasn't been added before
-    if (!existingMeet) {
-      acc[item.trainer_fullname][studentNames].push(item);
-    }
+    // Add item to the group
+    acc[item.order][item.trainer_fullname][studentNames].push(item);
 
     return acc;
   }, {});
@@ -172,30 +170,31 @@ const Earning = () => {
         </div>
       </Card>
       <div className="grid grid-cols-1 gap-5">
-        {Object.keys(groupedData).map((trainer_name, i) => (
-          <Card title={"Coach " + trainer_name} key={i}>
-            {Object.keys(groupedData[trainer_name]).map((student_name, j) => (
-              <Card title={student_name.replace(",", ", ")} key={j}>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {groupedData[trainer_name][student_name]
-                    .sort((a, b) => a.meet - b.meet)
-                    .map((item, k) => (
-                      <Card
-                        key={`${item.order_detail_id}-${k}`}
-                        title={`Pertemuan ke ${item.meet}`}
-                        // subtitle={`${item.day} - ${item.time}`}
-                        noborder
-                      >
-                        <div>Tanggal : {item.real_date}</div>
-                        <div>Jam : {item.real_time}</div>
-                        <div>Kolam : {item.pool_name}</div>
-                      </Card>
-                    ))}
-                </div>
-              </Card>
-            ))}
-          </Card>
-        ))}
+        {Object.keys(groupedData).map((order_id, i) =>
+          Object.keys(groupedData[order_id]).map((trainer_name, j) =>
+            Object.keys(groupedData[order_id][trainer_name]).map(
+              (student_name, k) => (
+                <Card title={student_name.replace(",", ", ")} key={k}>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {groupedData[order_id][trainer_name][student_name]
+                      .sort((a, b) => a.meet - b.meet)
+                      .map((item, l) => (
+                        <Card
+                          key={`${item.order_detail_id}-${l}`}
+                          title={`Pertemuan ke ${item.meet}`}
+                          noborder
+                        >
+                          <div>Tanggal: {item.real_date}</div>
+                          <div>Jam: {item.real_time}</div>
+                          <div>Kolam: {item.pool_name}</div>
+                        </Card>
+                      ))}
+                  </div>
+                </Card>
+              )
+            )
+          )
+        )}
       </div>
     </div>
   );

@@ -5,10 +5,38 @@ import {
   usePagination,
   useSortBy,
   useGlobalFilter,
+  useFilters, // Import useFilters
 } from "react-table";
 
-const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
-  const columns = useMemo(() => listColumn, [listColumn]);
+const Table = ({ listData, listColumn, handleSearch }) => {
+  const columns = useMemo(
+    () =>
+      listColumn.map((col) => ({
+        ...col,
+        Filter:
+          col.id !== "action" // Exclude the "action" column from filters
+            ? ({ column }) => (
+                <input
+                  type="text"
+                  value={column.filterValue || ""} // Ensure the input is controlled
+                  onChange={(e) => {
+                    column.setFilter(e.target.value); // Update filter value
+                  }}
+                  onKeyDown={(e) => {
+                    e.stopPropagation(); // Prevent propagation to sort
+                    if (e.key === "Enter") {
+                      handleSearch({ [column.id]: column.filterValue }); // Trigger search on Enter
+                    }
+                  }}
+                  placeholder={`Filter ${col.Header}`}
+                  className="filter-input" // Add your styling
+                />
+              )
+            : null,
+      })),
+    [listColumn, handleSearch]
+  );
+
   const data = useMemo(() => listData.results, [listData.results]);
 
   const tableInstance = useTable(
@@ -16,8 +44,10 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
       columns,
       data,
       manualPagination: true,
+      manualFilters: true, // Enable manual filtering
       pageCount: Math.ceil(listData.count / data.length),
     },
+    useFilters, // Add useFilters hook
     useGlobalFilter,
     useSortBy,
     usePagination
@@ -30,10 +60,7 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
     page,
     prepareRow,
     state,
-    setGlobalFilter,
   } = tableInstance;
-
-  const { globalFilter } = state;
 
   // Inline styles for sticky column
   const stickyRightStyle = {
@@ -70,14 +97,21 @@ const Table = ({ listData, listColumn, searchValue, handleSearch }) => {
                               : {}),
                           }} // Apply stickyRightStyle to the last header
                         >
-                          {column.render("Header")}
-                          <span>
-                            {column.isSorted
-                              ? column.isSortedDesc
-                                ? " 🔽"
-                                : " 🔼"
-                              : ""}
-                          </span>
+                          <div>
+                            {column.render("Header")}
+                            <span>
+                              {column.isSorted
+                                ? column.isSortedDesc
+                                  ? " 🔽"
+                                  : " 🔼"
+                                : ""}
+                            </span>
+                          </div>
+                          <div>
+                            {column.canFilter && column.Filter
+                              ? column.render("Filter")
+                              : null}
+                          </div>
                         </th>
                       ))}
                     </tr>
