@@ -104,6 +104,7 @@ const DetailOrder = () => {
         setValue("real_date", DateTime.fromISO(params.real_date).toISODate());
       }
       setValue("is_presence", params.is_presence); // Initialize checkbox state
+      setValue("is_paid", params.is_paid); // Initialize checkbox state
     }, [params, setValue]);
 
     const onSubmit = (formData) => {
@@ -114,6 +115,7 @@ const DetailOrder = () => {
         ),
         jam: formData.jam,
         is_presence: formData.is_presence, // Checkbox state
+        is_paid: formData.is_paid, // Checkbox state
         real_date: null,
         presence_day: null,
       };
@@ -198,6 +200,17 @@ const DetailOrder = () => {
               label={"Hadir"}
               value={watch("is_presence")}
               onChange={(e) => setValue("is_presence", e.target.checked)}
+            />
+          </div>
+          <div>
+            <label className="form-label" htmlFor="is_presence">
+              Pembayaran
+            </label>
+            <Checkbox
+              name="is_paid"
+              label={"Sudah dibayar"}
+              value={watch("is_paid")}
+              onChange={(e) => setValue("is_paid", e.target.checked)}
             />
           </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
