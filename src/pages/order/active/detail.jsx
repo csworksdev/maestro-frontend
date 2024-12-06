@@ -114,6 +114,8 @@ const DetailOrder = () => {
         ),
         jam: formData.jam,
         is_presence: formData.is_presence, // Checkbox state
+        real_date: null,
+        presence_day: null,
       };
 
       if (formData.is_presence) {
@@ -128,8 +130,8 @@ const DetailOrder = () => {
         };
       }
 
-      console.log(updatedData);
-      // updateOrderDetail(updatedData);
+      // console.log(updatedData);
+      updateOrderDetail(updatedData);
     };
 
     return (
