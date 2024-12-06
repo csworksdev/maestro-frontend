@@ -162,18 +162,17 @@ const Edit = () => {
   };
 
   const handleUpdate = (updatedData) => {
-    EditOrderDetailByOrderId(data.order_id, updatedData)
+    EditOrder(data.order_id, updatedData)
       .then((res) => {
         if (res.status) {
-          EditOrder(data.order_id, updatedData).then((res) => {
-            Swal.fire(
-              "Updated!",
-              "Your order has been updated.",
-              "success"
-            ).then(() => {
+          Swal.fire("Updated!", "Your order has been updated.", "success").then(
+            () => {
               navigate(-1);
-            });
-          });
+            }
+          );
+          // EditOrder(data.order_id, updatedData).then((res) => {
+
+          // });
         }
       })
       .catch((error) => {
