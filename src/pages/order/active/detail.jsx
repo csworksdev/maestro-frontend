@@ -165,7 +165,7 @@ const DetailOrder = () => {
               Tanggal Absensi Pelatih
             </label>
             <Flatpickr
-              defaultValue={DateTime.fromISO(params.real_date).toJSDate()}
+              defaultValue={params.real_date}
               options={{ dateFormat: "Y-m-d", disableMobile: true }}
               className="form-control py-2"
               onChange={(dates) => {
