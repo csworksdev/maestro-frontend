@@ -164,11 +164,12 @@ const Earning = () => {
 
   return (
     <div className="grid grid-cols-1 gap-5 mb-5">
-      <Card bodyClass="p-4">
+      {/* di hide dulu */}
+      {/* <Card bodyClass="p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {earningBlock()}
         </div>
-      </Card>
+      </Card> */}
       <div className="grid grid-cols-1 gap-5">
         {Object.keys(groupedData).map((order_id, i) =>
           Object.keys(groupedData[order_id]).map((trainer_name, j) =>

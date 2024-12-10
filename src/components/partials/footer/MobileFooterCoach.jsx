@@ -26,7 +26,7 @@ const MobileFooter = () => {
           }
           `}
             >
-              Earning
+              Pendapatan
             </span>
           </div>
         )}
