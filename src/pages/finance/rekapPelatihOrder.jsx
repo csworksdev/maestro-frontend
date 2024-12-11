@@ -10,6 +10,7 @@ import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import { getOrderByTrainer } from "@/axios/rekap/pelatih";
 import Button from "@/components/ui/Button";
+import { Outlet } from "react-router-dom";
 
 const RekapOrderTrainer = () => {
   const navigate = useNavigate();
@@ -46,7 +47,6 @@ const RekapOrderTrainer = () => {
 
   const fetchData = async (page, size, query) => {
     try {
-      const filter = "";
       setIsLoading(true);
       setListData();
       const params = {
@@ -55,7 +55,7 @@ const RekapOrderTrainer = () => {
         is_finish: false,
         search: query,
       };
-      getOrderByTrainer(params, data.trainer_id)
+      getOrderByTrainer(data.trainer_id, params)
         .then((res) => {
           const updateData = res.data.results.map((item) => ({
             ...item,
@@ -98,7 +98,7 @@ const RekapOrderTrainer = () => {
   };
 
   const handleDetail = (e) => {
-    navigate("detail", {
+    navigate("/app/order/detail", {
       state: {
         data: e,
       },
@@ -106,7 +106,7 @@ const RekapOrderTrainer = () => {
   };
 
   const handleEdit = (e) => {
-    navigate("edit", {
+    navigate("/app/order/edit", {
       state: {
         isupdate: "true",
         data: e,
@@ -248,6 +248,7 @@ const RekapOrderTrainer = () => {
           </>
         )}
       </Card>
+      <Outlet />
     </div>
   );
 };

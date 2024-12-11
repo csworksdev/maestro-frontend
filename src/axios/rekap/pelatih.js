@@ -1,11 +1,10 @@
 import { axiosConfig } from "../config";
 
-export const getOrderByTrainer = async (params, trainer_id) => {
+export const getOrderByTrainer = async (id, data) => {
   try {
-    let response = await axiosConfig.get(
-      "/api/orderbytrainer/" + trainer_id + "/",
-      params
-    );
+    let response = await axiosConfig.get("/api/orderbytrainer/" + id + "/", {
+      params: data,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
