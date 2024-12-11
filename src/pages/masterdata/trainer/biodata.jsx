@@ -144,6 +144,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       bank_account: newData.bank_account,
       reg_date: DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
       branch: newData.branch,
+      nik: "-",
     };
 
     if (isUpdate) {
