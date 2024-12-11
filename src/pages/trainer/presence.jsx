@@ -223,16 +223,22 @@ const Presence = () => {
     <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
       {Object.keys(groupedData).map((order_id, i) => (
         <div key={i}>
-          <h2 className="text-lg font-bold">Order ID: {order_id}</h2>
           {Object.keys(groupedData[order_id]).map((student_name, j) => {
             // Assuming that groupedData contains the pool_name in the first item for each student
             const poolName =
               groupedData[order_id][student_name]?.[0]?.pool_name ||
               "Pool not specified";
+            const order_date =
+              groupedData[order_id][student_name]?.[0]?.order_date || "";
 
             return (
               <Card
-                subtitle={`${student_name.replace(",", ", ")} - ${poolName}`}
+                subtitle={
+                  <>
+                    {student_name.replace(",", ", ")} - {poolName} <br />{" "}
+                    Tanggal Order : {order_date}
+                  </>
+                }
                 key={j}
               >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
