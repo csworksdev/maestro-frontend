@@ -60,6 +60,10 @@ export const menuChief = [
         childtitle: "Siswa",
         childlink: "student",
       },
+      {
+        childtitle: "Rekap Pelatih",
+        childlink: "rekap-pelatih",
+      },
     ],
   },
   {

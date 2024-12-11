@@ -68,6 +68,10 @@ const UMPermissionsEdit = lazy(() =>
 const TrainerCourseReminder = lazy(() => import("./pages/trainer/reminder"));
 const CourseReminder = lazy(() => import("./pages/pelatihan/reminder"));
 const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
+const RekapTrainer = lazy(() => import("./pages/finance/rekapPelatih"));
+const RekapOrderTrainer = lazy(() =>
+  import("./pages/finance/rekapPelatihOrder")
+);
 
 const App = () => {
   const hostname = window.location.hostname;
@@ -206,6 +210,13 @@ const App = () => {
                   <Route path="edit" element={<UMPermissionsEdit />} />
                 </Route>
                 //#endregion
+                <Route path="rekap-pelatih">
+                  <Route index element={<RekapTrainer />} />
+                  <Route
+                    path="detailorderpelatih"
+                    element={<RekapOrderTrainer />}
+                  />
+                </Route>
                 <Route path="*" element={<ErrorPage />} />
               </Route>
             </>
