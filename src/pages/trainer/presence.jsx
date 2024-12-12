@@ -12,12 +12,39 @@ import { meets } from "@/constant/data";
 import button from "../components/button";
 import Icons from "@/components/ui/Icon";
 import { useSelector } from "react-redux";
+import Slider from "react-slick";
+import useWidth from "@/hooks/useWidth";
+
+const sliderSettings = {
+  dots: true,
+  infinite: false,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  responsive: [
+    {
+      breakpoint: 1024, // Tablet and smaller
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+      },
+    },
+    {
+      breakpoint: 768, // Mobile
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+      },
+    },
+  ],
+};
 
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
+  const { width, breakpoints } = useWidth();
 
   const time = [
     { value: "06.00", label: "06.00" },
@@ -145,31 +172,10 @@ const Presence = () => {
   }
 
   const groupedData = listData.reduce((acc, item) => {
-    // Group by order_id
-    if (!acc[item.order]) {
-      acc[item.order] = {};
-    }
-
-    // Extract student names from the students_info array
-    const studentNames = item.students_info
-      .map((student) => convertToTitleCase(student.fullname))
-      .join(", ");
-
-    // Group by student names within each order_id
-    if (!acc[item.order][studentNames]) {
-      acc[item.order][studentNames] = [];
-    }
-
-    // Check if the meet has already been added (based on `meet` and `order_id`)
-    const existingMeet = acc[item.order][studentNames].find(
-      (meetItem) => meetItem.meet === item.meet
-    );
-
-    // Only add the meet if it hasn't been added before
-    if (!existingMeet) {
-      acc[item.order][studentNames].push(item);
-    }
-
+    const studentNames = item.students_info.map((s) => s.fullname).join(", ");
+    if (!acc[item.order]) acc[item.order] = {};
+    if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
+    acc[item.order][studentNames].push(item);
     return acc;
   }, {});
 
@@ -219,6 +225,78 @@ const Presence = () => {
     return <Loading />;
   }
 
+  const PresenceView = ({ item, k }) => {
+    return (
+      <>
+        {/* {groupedData[order_id][student_name]
+          .sort((a, b) => a.meet - b.meet)
+          .map((item, k) => ( */}
+        <Card
+          key={`${item.order}-${k}`}
+          title={`Pertemuan ke ${item.meet}`}
+          subtitle={`${item.day} - ${item.time}`}
+        >
+          <div className="flex flex-col sm:flex-row items-stretch justify-between">
+            <div className="w-full">
+              <div>
+                <label className="form-label" htmlFor="real_date">
+                  Tanggal Kehadiran
+                </label>
+                <Flatpickr
+                  defaultValue={DateTime.fromISO(item.schedule_date).toFormat(
+                    "yyyy-MM-dd"
+                  )}
+                  name="real_date"
+                  options={{
+                    dateFormat: "Y-m-d",
+                    maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                    minDate: periode.start_date,
+                    disableMobile: "true",
+                  }}
+                  className="form-control py-2 w-full"
+                  onChange={(date) =>
+                    handleChangeDay(item.order_detail_id, date)
+                  }
+                />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="real_time">
+                  Jam kehadiran
+                </label>
+                <select
+                  name="real_time"
+                  defaultValue={item.time}
+                  onChange={(e) =>
+                    handleChangeTime(item.order_detail_id, e.target.value)
+                  }
+                  className="form-select w-full"
+                >
+                  {time.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  className="btn-success w-full mt-2"
+                  onClick={() =>
+                    handleUpdate(item.order_detail_id, {
+                      ...item,
+                      is_presence: true,
+                    })
+                  }
+                >
+                  Hadir
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+        {/* ))} */}
+      </>
+    );
+  };
+
   return (
     <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
       {Object.keys(groupedData).map((order_id, i) => (
@@ -235,8 +313,8 @@ const Presence = () => {
               <Card
                 subtitle={
                   <>
-                    {student_name.replace(",", ", ")} - {poolName} <br />{" "}
-                    Tanggal Order : {order_date}
+                    {student_name.replace(",", ", ")} <br />
+                    Kolam : {poolName} <br /> Tanggal Order : {order_date}
                   </>
                 }
                 key={j}
@@ -248,74 +326,19 @@ const Presence = () => {
                       []
                     }
                   />
-                  {groupedData[order_id][student_name]
-                    .sort((a, b) => a.meet - b.meet)
-                    .map((item, k) => (
-                      <Card
-                        key={`${item.order}-${k}`}
-                        title={`Pertemuan ke ${item.meet}`}
-                        subtitle={`${item.day} - ${item.time}`}
-                      >
-                        <div className="flex items-stretch justify-between">
-                          <div>
-                            <div>
-                              <label className="form-label" htmlFor="real_date">
-                                Tanggal Kehadiran
-                              </label>
-                              <Flatpickr
-                                defaultValue={DateTime.fromISO(
-                                  item.schedule_date
-                                ).toFormat("yyyy-MM-dd")}
-                                name="real_date"
-                                options={{
-                                  dateFormat: "Y-m-d",
-                                  maxDate:
-                                    DateTime.now().toFormat("yyyy-MM-dd"),
-                                  minDate: periode.start_date,
-                                  disableMobile: "true",
-                                }}
-                                className="form-control py-2 w-auto"
-                                onChange={(date) =>
-                                  handleChangeDay(item.order_detail_id, date)
-                                }
-                                style={{
-                                  background: "#ffffff",
-                                  color: "inherit",
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <label className="form-label" htmlFor="real_time">
-                                Jam kehadiran
-                              </label>
-                              <select
-                                name="real_time"
-                                defaultValue={item.time}
-                                onChange={(e) =>
-                                  handleChangeTime(
-                                    item.order_detail_id,
-                                    e.target.value
-                                  )
-                                }
-                                className="form-select w-auto"
-                              >
-                                {time.map((option) => (
-                                  <option
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            {/* Add your button or actions here */}
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                  {width >= breakpoints.md &&
+                    groupedData[order_id][student_name]
+                      .sort((a, b) => a.meet - b.meet)
+                      .map((item, k) => <PresenceView item={item} k={k} />)}
+                  {width <= breakpoints.md && (
+                    <Slider {...sliderSettings} key={j}>
+                      {groupedData[order_id][student_name]
+                        .sort((a, b) => a.meet - b.meet)
+                        .map((item, k) => (
+                          <PresenceView item={item} k={k} />
+                        ))}
+                    </Slider>
+                  )}
                 </div>
               </Card>
             );
