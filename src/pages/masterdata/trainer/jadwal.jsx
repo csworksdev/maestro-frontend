@@ -14,6 +14,7 @@ import {
 } from "@/axios/masterdata/trainerSchedule";
 import { mockdata } from "@/constant/jadwal-default";
 import Swal from "sweetalert2";
+import Loader from "@/components/globals/loader/loader";
 
 // Validation schema
 const FormValidationSchema = yup.object({}).required();
@@ -247,6 +248,7 @@ const Jadwal = ({ data }) => {
       }
     } catch (error) {
       console.error(error);
+    } finally {
     }
   };
 
@@ -255,7 +257,7 @@ const Jadwal = ({ data }) => {
   };
 
   if (loading) {
-    return <Loading />;
+    return <Loader />;
   }
 
   return (

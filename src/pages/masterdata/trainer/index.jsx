@@ -12,6 +12,7 @@ import { DeleteTrainer, getTrainerAll } from "@/axios/masterdata/trainer";
 import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
+import SkeletionTable from "@/components/skeleton/Table";
 
 const actions = [
   // {
@@ -212,7 +213,7 @@ const Trainer = () => {
           </Link>
         </Button>
         {isLoading ? (
-          <Loading />
+          <SkeletionTable />
         ) : (
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />

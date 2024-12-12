@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { DeleteProduk, getProdukAll } from "@/axios/masterdata/produk";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
+import SkeletionTable from "@/components/skeleton/Table";
 
 const actions = [
   // {
@@ -185,7 +186,7 @@ const Produk = () => {
           </Link>
         </Button>
         {isLoading ? (
-          <Loading />
+          <SkeletionTable />
         ) : (
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />

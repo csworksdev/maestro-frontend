@@ -12,6 +12,7 @@ import Swal from "sweetalert2";
 import { DeleteSiswa, getSiswaAll } from "@/axios/masterdata/siswa";
 import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
+import SkeletionTable from "@/components/skeleton/Table";
 
 const actions = [
   // {
@@ -206,7 +207,7 @@ const Siswa = () => {
           </Link>
         </Button>
         {isLoading ? (
-          <Loading />
+          <SkeletionTable />
         ) : (
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />

@@ -214,12 +214,12 @@ const DetailOrder = () => {
             />
           </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
-            {/* {params.is_paid ? (
+            {params.is_paid ? (
               <span>Pertemuan sudah dibayar</span>
             ) : (
               <Button type="submit">Update</Button>
-            )} */}
-            <Button type="submit">Update</Button>
+            )}
+            {/* <Button type="submit">Update</Button> */}
           </div>
         </form>
       </Card>
