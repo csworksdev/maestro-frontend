@@ -245,9 +245,9 @@ const Presence = () => {
                   Tanggal Kehadiran
                 </label>
                 <Flatpickr
-                  value={DateTime.fromISO(
-                    item.real_date || item.schedule_date
-                  ).toFormat("yyyy-MM-dd")}
+                  value={DateTime.fromISO(item.schedule_date).toFormat(
+                    "yyyy-MM-dd"
+                  )}
                   name="real_date"
                   options={{
                     dateFormat: "Y-m-d",
