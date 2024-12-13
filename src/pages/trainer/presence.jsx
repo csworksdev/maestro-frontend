@@ -127,6 +127,7 @@ const Presence = () => {
   };
 
   const handleChangeDay = (id, date) => {
+    if (!date || date.length === 0) return; // Ensure date is valid
     setListData((prevListData) =>
       prevListData.map((item) =>
         item.order_detail_id === id
@@ -141,6 +142,7 @@ const Presence = () => {
   };
 
   const handleChangeTime = (id, time) => {
+    if (!time) return; // Ensure time is valid
     setListData((prevListData) =>
       prevListData.map((item) =>
         item.order_detail_id === id
@@ -243,9 +245,9 @@ const Presence = () => {
                   Tanggal Kehadiran
                 </label>
                 <Flatpickr
-                  defaultValue={DateTime.fromISO(item.schedule_date).toFormat(
-                    "yyyy-MM-dd"
-                  )}
+                  value={DateTime.fromISO(
+                    item.real_date || item.schedule_date
+                  ).toFormat("yyyy-MM-dd")}
                   name="real_date"
                   options={{
                     dateFormat: "Y-m-d",
@@ -265,7 +267,7 @@ const Presence = () => {
                 </label>
                 <select
                   name="real_time"
-                  defaultValue={item.time}
+                  value={item.real_time || item.time} // Ensure correct mapping
                   onChange={(e) =>
                     handleChangeTime(item.order_detail_id, e.target.value)
                   }
@@ -279,11 +281,12 @@ const Presence = () => {
                 </select>
                 <Button
                   className="btn-success w-full mt-2"
-                  onClick={() =>
-                    handleUpdate(item.order_detail_id, {
-                      ...item,
-                      is_presence: true,
-                    })
+                  onClick={
+                    () => handleHadir(item.order_detail_id)
+                    // handleUpdate(item.order_detail_id, {
+                    //   ...item,
+                    //   is_presence: true,
+                    // })
                   }
                 >
                   Hadir
