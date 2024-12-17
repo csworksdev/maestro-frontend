@@ -14,6 +14,7 @@ import Icons from "@/components/ui/Icon";
 import { useSelector } from "react-redux";
 import Slider from "react-slick";
 import useWidth from "@/hooks/useWidth";
+import { useForm } from "react-hook-form";
 
 const sliderSettings = {
   dots: true,
@@ -45,6 +46,7 @@ const Presence = () => {
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
+  const { setValue, register } = useForm();
 
   const time = [
     { value: "06.00", label: "06.00" },
@@ -122,23 +124,27 @@ const Presence = () => {
     );
 
     setListData(updatedData);
-    handleUpdate(order_detail_id, updatedItem);
+    console.log(order_detail_id, updatedItem);
+    // handleUpdate(order_detail_id, updatedItem);
     // handleUpdate(updatedItem.order, updatedItem);
   };
 
   const handleChangeDay = (id, date) => {
+    const formatedDate = DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd");
     if (!date || date.length === 0) return; // Ensure date is valid
     setListData((prevListData) =>
       prevListData.map((item) =>
         item.order_detail_id === id
           ? {
               ...item,
-              real_date: DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd"),
-              presence_day: DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd"),
+              real_date: formatedDate,
+              presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
             }
           : item
       )
     );
+    setValue("real_date", formatedDate);
+    console.log(formatedDate);
   };
 
   const handleChangeTime = (id, time) => {
@@ -153,6 +159,8 @@ const Presence = () => {
           : item
       )
     );
+    console.log(time);
+    setValue("real_time", time);
   };
 
   useEffect(() => {
@@ -230,9 +238,6 @@ const Presence = () => {
   const PresenceView = ({ item, k }) => {
     return (
       <>
-        {/* {groupedData[order_id][student_name]
-          .sort((a, b) => a.meet - b.meet)
-          .map((item, k) => ( */}
         <Card
           key={`${item.order}-${k}`}
           title={`Pertemuan ke ${item.meet}`}
@@ -245,15 +250,15 @@ const Presence = () => {
                   Tanggal Kehadiran
                 </label>
                 <Flatpickr
-                  value={DateTime.fromISO(item.schedule_date).toFormat(
-                    "yyyy-MM-dd"
-                  )}
-                  name="real_date"
+                  value={
+                    item.real_date ||
+                    DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd")
+                  }
                   options={{
                     dateFormat: "Y-m-d",
                     maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
                     minDate: periode.start_date,
-                    disableMobile: "true",
+                    disableMobile: true,
                   }}
                   className="form-control py-2 w-full"
                   onChange={(date) =>
@@ -279,23 +284,17 @@ const Presence = () => {
                     </option>
                   ))}
                 </select>
-                <Button
-                  className="btn-success w-full mt-2"
-                  onClick={
-                    () => handleHadir(item.order_detail_id)
-                    // handleUpdate(item.order_detail_id, {
-                    //   ...item,
-                    //   is_presence: true,
-                    // })
-                  }
-                >
-                  Hadir
-                </Button>
               </div>
+
+              <Button
+                className="btn-success w-full mt-2"
+                onClick={() => handleHadir(item.order_detail_id)}
+              >
+                Hadir
+              </Button>
             </div>
           </div>
         </Card>
-        {/* ))} */}
       </>
     );
   };
