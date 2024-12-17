@@ -124,8 +124,7 @@ const Presence = () => {
     );
 
     setListData(updatedData);
-    console.log(order_detail_id, updatedItem);
-    // handleUpdate(order_detail_id, updatedItem);
+    handleUpdate(order_detail_id, updatedItem);
     // handleUpdate(updatedItem.order, updatedItem);
   };
 
