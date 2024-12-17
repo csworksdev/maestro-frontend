@@ -122,10 +122,12 @@ const Add = () => {
       };
       const branchResponse = await getCabangAll(params);
 
-      const branchOption = branchResponse.data.results.map((item) => ({
-        value: item.branch_id,
-        label: item.name,
-      }));
+      const branchOption = branchResponse.data.results
+        .filter((item) => item.name !== null)
+        .map((item) => ({
+          value: item.branch_id,
+          label: item.name,
+        }));
 
       setBranchOption(branchOption);
 
