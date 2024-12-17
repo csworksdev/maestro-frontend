@@ -163,42 +163,59 @@ const Earning = () => {
   };
 
   return (
-    <div></div>
-    // <div className="grid grid-cols-1 gap-5 mb-5">
-    // {/* di hide dulu */}
-    // {/* <Card bodyClass="p-4">
-    //   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    //     {earningBlock()}
-    //   </div>
-    // </Card> */}
-    //   <div className="grid grid-cols-1 gap-5">
-    //     {Object.keys(groupedData).map((order_id, i) =>
-    //       Object.keys(groupedData[order_id]).map((trainer_name, j) =>
-    //         Object.keys(groupedData[order_id][trainer_name]).map(
-    //           (student_name, k) => (
-    //             <Card title={student_name.replace(",", ", ")} key={k}>
-    //               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    //                 {groupedData[order_id][trainer_name][student_name]
-    //                   .sort((a, b) => a.meet - b.meet)
-    //                   .map((item, l) => (
-    //                     <Card
-    //                       key={`${item.order_detail_id}-${l}`}
-    //                       title={`Pertemuan ke ${item.meet}`}
-    //                       noborder
-    //                     >
-    //                       <div>Tanggal: {item.real_date}</div>
-    //                       <div>Jam: {item.real_time}</div>
-    //                       <div>Kolam: {item.pool_name}</div>
-    //                     </Card>
-    //                   ))}
-    //               </div>
-    //             </Card>
-    //           )
-    //         )
-    //       )
-    //     )}
-    //   </div>
-    // </div>
+    <div className="grid grid-cols-1 gap-5 mb-5">
+      {/* di hide dulu */}
+      {/* <Card bodyClass="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {earningBlock()}
+      </div>
+    </Card> */}
+      <div className="grid grid-cols-1 gap-5">
+        {Object.keys(groupedData).map((order_id, i) =>
+          Object.keys(groupedData[order_id]).map((trainer_name, j) =>
+            Object.keys(groupedData[order_id][trainer_name]).map(
+              (student_name, k) => {
+                const order_date =
+                  groupedData[order_id][trainer_name][student_name]?.[0]
+                    ?.order_date || "";
+
+                return (
+                  <Card
+                    subtitle={
+                      <>
+                        {student_name.replace(",", ", ")} <br />
+                        Kolam:{" "}
+                        {groupedData[order_id][trainer_name][student_name]?.[0]
+                          ?.pool_name || "Pool not specified"}{" "}
+                        <br />
+                        Tanggal Order: {order_date}
+                      </>
+                    }
+                    key={k}
+                  >
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      {groupedData[order_id][trainer_name][student_name]
+                        .sort((a, b) => a.meet - b.meet)
+                        .map((item, l) => (
+                          <Card
+                            key={`${item.order_detail_id}-${l}`}
+                            title={`Pertemuan ke ${item.meet}`}
+                            noborder
+                          >
+                            <div>Tanggal: {item.real_date || "N/A"}</div>
+                            <div>Jam: {item.real_time || "N/A"}</div>
+                            <div>Kolam: {item.pool_name || "N/A"}</div>
+                          </Card>
+                        ))}
+                    </div>
+                  </Card>
+                );
+              }
+            )
+          )
+        )}
+      </div>
+    </div>
   );
 };
 
