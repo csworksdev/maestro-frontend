@@ -16,6 +16,7 @@ import Slider from "react-slick";
 import useWidth from "@/hooks/useWidth";
 import { useForm } from "react-hook-form";
 import { jam } from "@/constant/jadwal-default";
+import { EditOrder } from "@/axios/masterdata/order";
 
 const sliderSettings = {
   dots: true,
@@ -48,15 +49,13 @@ const Presence = () => {
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
-  const { setValue, register } = useForm();
+  const { setValue } = useForm();
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      let res = [];
-      if (roles === "Trainer") res = await getPresenceById(user_id);
-      else res = await getPresenceAll();
-      // res = await getPresenceAll();
+      let res = await getPresenceById(user_id);
+
       setListData(res.data.data);
 
       const periodeResults = await getPeriodisasiToday();
@@ -67,22 +66,115 @@ const Presence = () => {
       setIsLoading(false);
     }
   };
+  const checkProduct = (updatedData) => {
+    const { product, meet, order_id, order_date } = updatedData;
+    let expire_day = 0;
+    let isFinish = false;
+
+    if (product.includes("trial")) {
+      expire_day = 1;
+      isFinish = true;
+    } else if (
+      product.includes("4") ||
+      product.includes("grup") ||
+      product.includes("terapi") ||
+      product.includes("baby")
+    ) {
+      expire_day = 60;
+      isFinish = meet === 4;
+    } else if (product.includes("8")) {
+      expire_day = 90;
+      isFinish = meet === 8;
+    }
+
+    const updatedOrder = {
+      order_id,
+      is_finish: isFinish,
+      ...(isFinish && {
+        expire_date:
+          meet === 1
+            ? DateTime.fromISO(order_date)
+                .plus({ days: expire_day })
+                .toFormat("yyyy-MM-dd")
+            : undefined,
+      }),
+    };
+
+    return isFinish ? updatedOrder : null;
+  };
+
+  const checkMeetThreshold = (updatedData) => {
+    const { order_id, meet: threshold } = updatedData;
+
+    // Check if any meeting for the order has a meet value less than the threshold
+    const hasLessThanThreshold = listData.some(
+      (item) => item.order_id === order_id && item.meet < threshold
+    );
+
+    // Return true if no such meeting exists, otherwise false
+    return !hasLessThanThreshold;
+  };
 
   const handleUpdate = async (order_id, updatedData) => {
     try {
-      const res = await UpdatePresenceById(order_id, updatedData);
-      if (res) {
-        Swal.fire({
-          title: `Siswa "${updatedData.students_info[0].fullname}"`,
-          text: `Hari: ${updatedData.real_date}, Jam: ${updatedData.real_time}`,
-          icon: "success",
+      const confirmation = await Swal.fire({
+        title: "Apakah anda yakin ingin absen siswa berikut?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#22c55e",
+        cancelButtonColor: "#ef4444",
+        confirmButtonText: "Hadir",
+        html: `
+          <div>
+            <strong>Nama Siswa:</strong><br />
+            ${updatedData.students_info
+              .map((item) => item.fullname)
+              .join("<br />")}<br />
+            <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
+            <strong>Tanggal:</strong> ${updatedData.real_date}<br />
+            <strong>Jam:</strong> ${updatedData.real_time}
+          </div>
+        `,
+      });
+
+      if (!confirmation.isConfirmed) return;
+
+      if (!checkMeetThreshold(updatedData)) {
+        await Swal.fire({
+          title: "Oops!",
+          text: "Silahkan isi pertemuan sebelumnya.",
+          icon: "error",
           confirmButtonText: "OK",
-        }).then(() => {
-          fetchData();
         });
+        return;
       }
+
+      const updateRes = await UpdatePresenceById(order_id, updatedData);
+      if (!updateRes) throw new Error("Failed to update presence");
+
+      const updateOrder = checkProduct(updatedData);
+      if (updateOrder && updateOrder.is_finish) {
+        const editRes = await EditOrder(updateOrder.order_id, updateOrder);
+        if (!editRes?.status) throw new Error("Failed to edit order");
+      }
+
+      await Swal.fire({
+        title: `Siswa "${updatedData.students_info[0].fullname}"`,
+        text: `Hari: ${updatedData.real_date}, Jam: ${updatedData.real_time}`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      fetchData();
     } catch (error) {
       console.error("Error updating data", error);
+
+      await Swal.fire({
+        title: "Error",
+        text: "Terjadi kesalahan saat memproses data. Silakan coba lagi.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 
@@ -93,9 +185,7 @@ const Presence = () => {
           ...item,
           is_presence: true,
           periode: periode.name,
-          real_date:
-            item.real_date ||
-            DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
+          real_date: item.real_date || item.schedule_date,
           presence_day: DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
           real_time: item.real_time || item.time,
         };
@@ -106,7 +196,6 @@ const Presence = () => {
     const updatedItem = updatedData.find(
       (item) => item.order_detail_id === order_detail_id
     );
-
     setListData(updatedData);
     handleUpdate(order_detail_id, updatedItem);
   };
@@ -232,10 +321,11 @@ const Presence = () => {
                   Tanggal Kehadiran
                 </label>
                 <Flatpickr
-                  value={
-                    item.real_date ||
-                    DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd")
-                  }
+                  // value={
+                  //   item.real_date ||
+                  //   DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd")
+                  // }
+                  defaultValue={item.schedule_date}
                   options={{
                     dateFormat: "Y-m-d",
                     maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -294,7 +384,6 @@ const Presence = () => {
               groupedData[order_id][student_name]?.[0]?.order_date || "";
             const expire_date =
               groupedData[order_id][student_name]?.[0]?.expire_date || "";
-
             return (
               <Card
                 subtitle={
@@ -304,7 +393,7 @@ const Presence = () => {
                     <br /> Tanggal Kadaluarsa : {expire_date}
                   </>
                 }
-                key={j}
+                key={i + j}
               >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <StudentCard
@@ -312,17 +401,20 @@ const Presence = () => {
                       groupedData[order_id][student_name]?.[0]?.students_info ||
                       []
                     }
+                    key={i + j}
                   />
                   {width >= breakpoints.md &&
                     groupedData[order_id][student_name]
                       .sort((a, b) => a.meet - b.meet)
-                      .map((item, k) => <PresenceView item={item} k={k} />)}
+                      .map((item, k) => (
+                        <PresenceView item={item} k={i + j + k} />
+                      ))}
                   {width <= breakpoints.md && (
                     <Slider {...sliderSettings} key={j}>
                       {groupedData[order_id][student_name]
                         .sort((a, b) => a.meet - b.meet)
                         .map((item, k) => (
-                          <PresenceView item={item} k={k} />
+                          <PresenceView item={item} k={i + j + k} />
                         ))}
                     </Slider>
                   )}

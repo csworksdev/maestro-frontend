@@ -1,11 +1,8 @@
-import React, { Fragment, useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
-import Icon from "@/components/ui/Icon";
-import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
 import Table from "@/components/globals/table/table";
 import Loading from "@/components/Loading";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { useLocation, useNavigate } from "react-router-dom";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import { getOrderByTrainer } from "@/axios/rekap/pelatih";

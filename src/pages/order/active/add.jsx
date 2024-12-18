@@ -369,11 +369,11 @@ const Add = () => {
         : DateTime.now().toFormat("yyyy-MM-dd"),
       product: product.product_id,
       promo: newData.promo,
-      expire_date: isUpdate
-        ? data.expire_date
-        : DateTime.fromJSDate(newData.start_date)
-            .plus({ days: 60 })
-            .toFormat("yyyy-MM-dd"),
+      // expire_date: isUpdate
+      //   ? data.expire_date
+      //   : DateTime.fromJSDate(newData.start_date)
+      //       .plus({ days: 60 })
+      //       .toFormat("yyyy-MM-dd"),
       is_finish: false,
       price: product.price,
       is_paid: newData.is_paid,
