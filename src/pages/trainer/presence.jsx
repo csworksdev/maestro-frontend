@@ -44,6 +44,7 @@ const sliderSettings = {
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
+  const [isOrderFinish, setIsOrderFinish] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
@@ -106,9 +107,10 @@ const Presence = () => {
       (item) => item.order_detail_id === order_detail_id
     );
 
+    console.log(updatedItem);
+
     setListData(updatedData);
-    handleUpdate(order_detail_id, updatedItem);
-    // handleUpdate(updatedItem.order, updatedItem);
+    // handleUpdate(order_detail_id, updatedItem);
   };
 
   const handleChangeDay = (id, date) => {

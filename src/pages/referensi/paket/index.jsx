@@ -11,21 +11,7 @@ import Swal from "sweetalert2";
 import { DeletePaket, getPaketAll } from "@/axios/referensi/paket";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
-
-const actions = [
-  // {
-  //   name: "view",
-  //   icon: "heroicons-outline:eye",
-  // },
-  {
-    name: "edit",
-    icon: "heroicons:pencil-square",
-  },
-  {
-    name: "delete",
-    icon: "heroicons-outline:trash",
-  },
-];
+import TableAction from "@/components/globals/table/tableAction";
 
 const Paket = () => {
   const navigate = useNavigate();
@@ -36,6 +22,21 @@ const Paket = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const actions = [
+    {
+      name: "edit",
+      icon: "heroicons:pencil-square",
+      onClick: (row) => handleEdit(row.row.original),
+    },
+    {
+      name: "delete",
+      icon: "heroicons-outline:trash",
+      onClick: (row) => handleDelete(row.row.original),
+      className:
+        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    },
+  ];
 
   const fetchData = async (page, size, query) => {
     try {
@@ -152,29 +153,8 @@ const Paket = () => {
         return (
           <div className="flex space-x-2 items-center">
             <div className="flex space-x-2">
-              {actions.map((item, i) => (
-                <div
-                  className={`
-                  
-                    ${
-                      item.name === "delete"
-                        ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
-                        : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
-                    }
-                     w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
-                     first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                  onClick={(e) =>
-                    item.name === "edit"
-                      ? handleEdit(row.row.original)
-                      : handleDelete(row.row.original)
-                  }
-                  key={i}
-                >
-                  <span className="text-base">
-                    <Icon icon={item.icon} />
-                  </span>
-                  <span>{item.name}</span>
-                </div>
+              {actions.map((action, index) => (
+                <TableAction action={action} index={index} row={row} />
               ))}
             </div>
           </div>
