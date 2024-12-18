@@ -6,8 +6,6 @@ import {
   getEarningListById,
 } from "@/axios/trainer/earning";
 import Loading from "@/components/Loading";
-import Flatpickr from "react-flatpickr";
-import { DateTime } from "luxon";
 import { useSelector } from "react-redux";
 
 const Earning = () => {
@@ -15,24 +13,6 @@ const Earning = () => {
   const [listData, setListData] = useState([]);
   const [listDataDashboard, setListDataDashboard] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
-
-  const time = [
-    { value: "06.00", label: "06.00" },
-    { value: "07.00", label: "07.00" },
-    { value: "08.00", label: "08.00" },
-    { value: "09.00", label: "09.00" },
-    { value: "10.00", label: "10.00" },
-    { value: "11.00", label: "11.00" },
-    { value: "12.00", label: "12.00" },
-    { value: "13.00", label: "13.00" },
-    { value: "14.00", label: "14.00" },
-    { value: "15.00", label: "15.00" },
-    { value: "16.00", label: "16.00" },
-    { value: "17.00", label: "17.00" },
-    { value: "18.00", label: "18.00" },
-    { value: "19.00", label: "19.00" },
-    { value: "20.00", label: "20.00" },
-  ];
 
   const fetchData = async () => {
     try {
@@ -178,6 +158,9 @@ const Earning = () => {
                 const order_date =
                   groupedData[order_id][trainer_name][student_name]?.[0]
                     ?.order_date || "";
+                const expire_date =
+                  groupedData[order_id][trainer_name][student_name]?.[0]
+                    ?.expire_date || "";
 
                 return (
                   <Card
@@ -189,6 +172,8 @@ const Earning = () => {
                           ?.pool_name || "Pool not specified"}{" "}
                         <br />
                         Tanggal Order: {order_date}
+                        <br />
+                        Tanggal Kadaluarsa: {expire_date}
                       </>
                     }
                     key={k}
