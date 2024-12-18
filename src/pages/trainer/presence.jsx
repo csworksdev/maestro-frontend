@@ -107,10 +107,8 @@ const Presence = () => {
       (item) => item.order_detail_id === order_detail_id
     );
 
-    console.log(updatedItem);
-
     setListData(updatedData);
-    // handleUpdate(order_detail_id, updatedItem);
+    handleUpdate(order_detail_id, updatedItem);
   };
 
   const handleChangeDay = (id, date) => {
