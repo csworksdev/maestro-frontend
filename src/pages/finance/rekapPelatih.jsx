@@ -99,7 +99,7 @@ const RekapTrainer = () => {
         return (
           <div className="flex space-x-2 items-center">
             <div className="flex space-x-2">
-              {actions.map((action, index, row) => (
+              {actions.map((action, index) => (
                 <TableAction action={action} index={index} row={row} />
               ))}
             </div>
