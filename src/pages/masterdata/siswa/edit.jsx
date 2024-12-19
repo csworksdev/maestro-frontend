@@ -29,6 +29,7 @@ const Edit = () => {
       address: yup.string().required("Alamat is required"),
       pob: yup.string().required("Tempat Lahir is required"),
       dob: yup.date().required("Tanggal Lahir is required"),
+      branch: yup.string().required("cabang belum dipilih"),
     })
     .required();
 
@@ -53,10 +54,14 @@ const Edit = () => {
       };
       getCabangAll(params).then((res) => {
         const fetchedBranch = res.data.results;
-        const mappedOption = fetchedBranch.map((item) => ({
-          value: item.branch_id,
-          label: item.name,
-        }));
+        const mappedOption = fetchedBranch
+          .filter((x) => {
+            x.name !== "";
+          })
+          .map((item) => ({
+            value: item.branch_id,
+            label: item.name,
+          }));
         setBranchOption(mappedOption);
       });
     }
@@ -137,7 +142,7 @@ const Edit = () => {
             placeholder="Masukan Panggilan"
             register={register}
             error={errors.nickname?.message}
-            defaultValue={isUpdate ? data.nickname : ""}
+            defaultValue={isUpdate ? data.nickname : "-"}
           />
           <Select
             name="gender"
@@ -155,7 +160,7 @@ const Edit = () => {
             placeholder="Masukan Nama orang tua"
             register={register}
             error={errors.parent?.message}
-            defaultValue={isUpdate ? data.parent : ""}
+            defaultValue={isUpdate ? data.parent : "-"}
           />
           <Textinput
             name="phone"
