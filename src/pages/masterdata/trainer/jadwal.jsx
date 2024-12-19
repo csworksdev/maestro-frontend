@@ -152,6 +152,7 @@ const Jadwal = ({ data }) => {
   const [kolamOption, setKolamOption] = useState([]);
   const [loading, setLoading] = useState(true);
   const [defaultPool, setDefaultPool] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission status
   const navigate = useNavigate();
 
   const {
@@ -203,7 +204,8 @@ const Jadwal = ({ data }) => {
     }
   };
 
-  const onSubmit = (newData) => {
+  const onSubmit = async (newData) => {
+    setIsSubmitting(true); // Start submission
     const uniqueSelected = [...new Set(selected)]; // Removes duplicate entries in selected
     const tempData = uniqueSelected.map((item) => {
       const [day, time, pool] = item.split("#");
@@ -215,7 +217,8 @@ const Jadwal = ({ data }) => {
         is_free: true,
       };
     });
-    handleAdd(tempData);
+    await handleAdd(tempData);
+    setIsSubmitting(false); // End submission
   };
 
   const handleAdd = async (tempData) => {
@@ -247,7 +250,6 @@ const Jadwal = ({ data }) => {
       }
     } catch (error) {
       console.error(error);
-    } finally {
     }
   };
 
@@ -261,6 +263,11 @@ const Jadwal = ({ data }) => {
 
   return (
     <Card title="Jadwal Pelatih">
+      {isSubmitting && (
+        <div className="loading-overlay">
+          <Loading /> {/* Show loading indicator during submission */}
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Select
           name="defaultPool"
@@ -288,8 +295,12 @@ const Jadwal = ({ data }) => {
             <button type="button" className="btn" onClick={handleCancel}>
               Batal
             </button>
-            <button type="submit" className="btn btn-dark">
-              Save Jadwal
+            <button
+              type="submit"
+              className="btn btn-dark"
+              disabled={isSubmitting} // Disable button during submission
+            >
+              {isSubmitting ? "Saving..." : "Save Jadwal"}
             </button>
           </div>
         </div>

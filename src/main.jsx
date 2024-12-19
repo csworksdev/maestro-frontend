@@ -4,6 +4,7 @@ import App from "./App";
 import "simplebar-react/dist/simplebar.min.css";
 import "flatpickr/dist/themes/light.css";
 import "../src/assets/scss/app.scss";
+import "../src/assets/scss/app.css";
 import { BrowserRouter } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { Provider } from "react-redux";
