@@ -74,7 +74,7 @@ const Layout = () => {
           onClick={() => setMobileMenu(!mobileMenu)}
         ></div>
       )}
-      <Info />
+      {roles === "Trainer" && <Info />}
       <div
         className={`content-wrapper transition-all duration-150 ${
           width > 1280 ? switchHeaderClass() : ""
