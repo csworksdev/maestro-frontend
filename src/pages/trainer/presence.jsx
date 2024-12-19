@@ -230,7 +230,6 @@ const Presence = () => {
           : item
       )
     );
-    console.log(time);
     setValue("real_time", time);
   };
 
@@ -325,7 +324,7 @@ const Presence = () => {
                   //   item.real_date ||
                   //   DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd")
                   // }
-                  defaultValue={item.schedule_date}
+                  defaultValue={item.real_date || item.schedule_date}
                   options={{
                     dateFormat: "Y-m-d",
                     maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
