@@ -7,12 +7,15 @@ import {
 } from "@/axios/trainer/earning";
 import Loading from "@/components/Loading";
 import { useSelector } from "react-redux";
+import Search from "@/components/globals/table/search";
 
 const Earning = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
   const [listDataDashboard, setListDataDashboard] = useState([]);
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const [groupedData, setGroupedData] = useState({});
+  const { user_id, roles } = useSelector((state) => state.auth.data);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchData = async () => {
     try {
@@ -28,6 +31,10 @@ const Earning = () => {
         res = await getEarningAll();
       }
       setListData(res.data.data);
+
+      // Group data initially
+      const initialGroupedData = groupData(res.data.data);
+      setGroupedData(initialGroupedData);
     } catch (error) {
       console.error("Error fetching data", error);
     } finally {
@@ -35,32 +42,52 @@ const Earning = () => {
     }
   };
 
+  const groupData = (data) => {
+    return data.reduce((acc, item) => {
+      if (!acc[item.order]) {
+        acc[item.order] = {};
+      }
+
+      if (!acc[item.order][item.trainer_fullname]) {
+        acc[item.order][item.trainer_fullname] = {};
+      }
+
+      const studentNames = item.student_names.join(", ");
+      if (!acc[item.order][item.trainer_fullname][studentNames]) {
+        acc[item.order][item.trainer_fullname][studentNames] = [];
+      }
+
+      acc[item.order][item.trainer_fullname][studentNames].push(item);
+
+      return acc;
+    }, {});
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query.toLowerCase());
+
+    if (!query) {
+      // If search query is empty, reset to all data
+      const initialGroupedData = groupData(listData);
+      setGroupedData(initialGroupedData);
+      return;
+    }
+
+    // Filter the listData based on the query
+    const filteredListData = listData.filter((item) =>
+      item.student_names.some((name) =>
+        name.toLowerCase().includes(query.toLowerCase())
+      )
+    );
+
+    // Regroup the filtered data
+    const filteredGroupedData = groupData(filteredListData);
+    setGroupedData(filteredGroupedData);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
-
-  const groupedData = listData.reduce((acc, item) => {
-    // Group by order_id
-    if (!acc[item.order]) {
-      acc[item.order] = {};
-    }
-
-    // Group by trainer_fullname within order_id
-    if (!acc[item.order][item.trainer_fullname]) {
-      acc[item.order][item.trainer_fullname] = {};
-    }
-
-    // Group by student_names within trainer_fullname
-    const studentNames = item.student_names.join(", ");
-    if (!acc[item.order][item.trainer_fullname][studentNames]) {
-      acc[item.order][item.trainer_fullname][studentNames] = [];
-    }
-
-    // Add item to the group
-    acc[item.order][item.trainer_fullname][studentNames].push(item);
-
-    return acc;
-  }, {});
 
   const statistics = [
     {
@@ -150,6 +177,11 @@ const Earning = () => {
         {earningBlock()}
       </div>
     </Card> */}
+      <Search
+        handleSearch={(query) => handleSearch(query)}
+        searchValue={searchQuery}
+        placeholder="Cari Siswa"
+      />
       <div className="grid grid-cols-1 gap-5">
         {Object.keys(groupedData).map((order_id, i) =>
           Object.keys(groupedData[order_id]).map((trainer_name, j) =>

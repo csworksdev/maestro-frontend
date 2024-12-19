@@ -2,7 +2,12 @@ import Button from "@/components/ui/Button";
 import Textinput from "@/components/ui/Textinput";
 import React, { useState, useEffect } from "react";
 
-const Search = ({ searchValue, handleSearch, theme = "light" }) => {
+const Search = ({
+  searchValue,
+  handleSearch,
+  theme = "light",
+  placeholder = "Pencarian",
+}) => {
   const [value, setValue] = useState(searchValue);
 
   useEffect(() => {
@@ -27,7 +32,7 @@ const Search = ({ searchValue, handleSearch, theme = "light" }) => {
           // value={value || ""}
           defaultValue={searchValue}
           onChange={onChange}
-          placeholder="Pencarian"
+          placeholder={placeholder}
           className={`w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 ${
             theme === "dark"
               ? "border-gray-600 bg-gray-700 text-white"

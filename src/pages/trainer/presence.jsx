@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
-import { getPresenceAll, getPresenceById } from "@/axios/trainer/presence";
+import { getPresenceById } from "@/axios/trainer/presence";
 import Loading from "@/components/Loading";
 import Button from "@/components/ui/Button";
 import Swal from "sweetalert2";
@@ -8,15 +8,13 @@ import { UpdatePresenceById } from "@/axios/trainer/presence";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
-import { meets } from "@/constant/data";
-import button from "../components/button";
-import Icons from "@/components/ui/Icon";
 import { useSelector } from "react-redux";
 import Slider from "react-slick";
 import useWidth from "@/hooks/useWidth";
 import { useForm } from "react-hook-form";
 import { jam } from "@/constant/jadwal-default";
 import { EditOrder } from "@/axios/masterdata/order";
+import Search from "@/components/globals/table/search";
 
 const sliderSettings = {
   dots: true,
@@ -45,11 +43,11 @@ const sliderSettings = {
 const Presence = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [listData, setListData] = useState([]);
-  const [isOrderFinish, setIsOrderFinish] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
   const { setValue } = useForm();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchData = async () => {
     try {
@@ -66,6 +64,34 @@ const Presence = () => {
       setIsLoading(false);
     }
   };
+
+  const groupedData = listData.reduce((acc, item) => {
+    const studentNames = item.students_info.map((s) => s.fullname).join(", ");
+    if (!acc[item.order]) acc[item.order] = {};
+    if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
+    acc[item.order][studentNames].push(item);
+    return acc;
+  }, {});
+
+  const handleSearch = (query) => {
+    setSearchQuery(query.toLowerCase());
+
+    if (!query) {
+      // If the search query is empty, reset to show all data
+      fetchData();
+      return;
+    }
+
+    const filteredData = listData.filter((item) =>
+      item.students_info.some((student) =>
+        student.fullname.toLowerCase().includes(query.toLowerCase())
+      )
+    );
+
+    // If no results found, show all data
+    setListData(filteredData.length > 0 ? filteredData : listData);
+  };
+
   const checkProduct = (updatedData) => {
     const { product, meet, order_id, order_date } = updatedData;
     let expire_day = 0;
@@ -251,14 +277,6 @@ const Presence = () => {
       .join(" ");
   }
 
-  const groupedData = listData.reduce((acc, item) => {
-    const studentNames = item.students_info.map((s) => s.fullname).join(", ");
-    if (!acc[item.order]) acc[item.order] = {};
-    if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
-    acc[item.order][studentNames].push(item);
-    return acc;
-  }, {});
-
   // WhatsApp link generator function
   const getWhatsAppLink = (phone, name) => {
     const countryCode = "+62"; // Indonesia country code, modify as per your requirement
@@ -371,59 +389,66 @@ const Presence = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
-      {Object.keys(groupedData).map((order_id, i) => (
-        <div key={i}>
-          {Object.keys(groupedData[order_id]).map((student_name, j) => {
-            // Assuming that groupedData contains the pool_name in the first item for each student
-            const poolName =
-              groupedData[order_id][student_name]?.[0]?.pool_name ||
-              "Pool not specified";
-            const order_date =
-              groupedData[order_id][student_name]?.[0]?.order_date || "";
-            const expire_date =
-              groupedData[order_id][student_name]?.[0]?.expire_date || "";
-            return (
-              <Card
-                subtitle={
-                  <>
-                    {student_name.replace(",", ", ")} <br />
-                    Kolam : {poolName} <br /> Tanggal Order : {order_date}
-                    <br /> Tanggal Kadaluarsa : {expire_date}
-                  </>
-                }
-                key={i + j}
-              >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <StudentCard
-                    studentsInfo={
-                      groupedData[order_id][student_name]?.[0]?.students_info ||
-                      []
-                    }
-                    key={i + j}
-                  />
-                  {width >= breakpoints.md &&
-                    groupedData[order_id][student_name]
-                      .sort((a, b) => a.meet - b.meet)
-                      .map((item, k) => (
-                        <PresenceView item={item} k={i + j + k} />
-                      ))}
-                  {width <= breakpoints.md && (
-                    <Slider {...sliderSettings} key={j}>
-                      {groupedData[order_id][student_name]
+    <>
+      <Search
+        handleSearch={(query) => handleSearch(query)}
+        searchValue={searchQuery}
+        placeholder="Cari Siswa"
+      />
+      <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
+        {Object.keys(groupedData).map((order_id, i) => (
+          <div key={i}>
+            {Object.keys(groupedData[order_id]).map((student_name, j) => {
+              // Assuming that groupedData contains the pool_name in the first item for each student
+              const poolName =
+                groupedData[order_id][student_name]?.[0]?.pool_name ||
+                "Pool not specified";
+              const order_date =
+                groupedData[order_id][student_name]?.[0]?.order_date || "";
+              const expire_date =
+                groupedData[order_id][student_name]?.[0]?.expire_date || "";
+              return (
+                <Card
+                  subtitle={
+                    <>
+                      {student_name.replace(",", ", ")} <br />
+                      Kolam : {poolName} <br /> Tanggal Order : {order_date}
+                      <br /> Tanggal Kadaluarsa : {expire_date}
+                    </>
+                  }
+                  key={i + j}
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <StudentCard
+                      studentsInfo={
+                        groupedData[order_id][student_name]?.[0]
+                          ?.students_info || []
+                      }
+                      key={i + j}
+                    />
+                    {width >= breakpoints.md &&
+                      groupedData[order_id][student_name]
                         .sort((a, b) => a.meet - b.meet)
                         .map((item, k) => (
                           <PresenceView item={item} k={i + j + k} />
                         ))}
-                    </Slider>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      ))}
-    </div>
+                    {width <= breakpoints.md && (
+                      <Slider {...sliderSettings} key={j}>
+                        {groupedData[order_id][student_name]
+                          .sort((a, b) => a.meet - b.meet)
+                          .map((item, k) => (
+                            <PresenceView item={item} k={i + j + k} />
+                          ))}
+                      </Slider>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </>
   );
 };
 
