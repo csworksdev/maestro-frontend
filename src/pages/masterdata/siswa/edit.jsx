@@ -47,22 +47,22 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    // if (branchOption.length == 0) {
-    const params = {
-      page: 1,
-      page_size: 50,
-    };
-    getCabangAll(params).then((res) => {
-      const fetchedBranch = res.data.results;
-      const mappedOption = fetchedBranch
-        .filter((x) => x.name !== "")
-        .map((item) => ({
-          value: item.branch_id,
-          label: item.name,
-        }));
-      setBranchOption(mappedOption);
-    });
-    // }
+    if (branchOption.length == 0) {
+      const params = {
+        page: 1,
+        page_size: 50,
+      };
+      getCabangAll(params).then((res) => {
+        const fetchedBranch = res.data.results;
+        const mappedOption = fetchedBranch
+          .filter((x) => x.name !== "")
+          .map((item) => ({
+            value: item.branch_id,
+            label: item.name,
+          }));
+        setBranchOption(mappedOption);
+      });
+    }
     if (isUpdate && data.dob) {
       setValue("dob", data.dob);
     }
