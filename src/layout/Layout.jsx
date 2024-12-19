@@ -17,6 +17,7 @@ import { ToastContainer } from "react-toastify";
 import { useSelector } from "react-redux";
 import Loading from "@/components/Loading";
 import { motion } from "framer-motion";
+import Info from "@/components/partials/info";
 
 const Layout = () => {
   const { width, breakpoints } = useWidth();
@@ -73,7 +74,7 @@ const Layout = () => {
           onClick={() => setMobileMenu(!mobileMenu)}
         ></div>
       )}
-
+      <Info />
       <div
         className={`content-wrapper transition-all duration-150 ${
           width > 1280 ? switchHeaderClass() : ""
