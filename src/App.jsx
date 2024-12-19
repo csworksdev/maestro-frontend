@@ -172,6 +172,7 @@ const App = () => {
                 </Route>
                 <Route path="finishedOrder">
                   <Route index element={<OrderFinished />} />
+                  <Route path="edit" element={<EditOrder />} />
                   <Route path="detail" element={<DetailOrder />} />
                 </Route>
                 //#endregion
