@@ -166,12 +166,13 @@ const App = () => {
                   <Route path="add" element={<AddOrder />} />
                   <Route path="edit" element={<EditOrder />} />
                   <Route path="detail" element={<DetailOrder />} />
-                  <Route
-                    path="finished"
-                    element={<OrderFinished is_finished={true} />}
-                  />
+
                   <Route path="expired" element={<OrderExpired />} />
                   <Route path="waitinglist" element={<Waitinglist />} />
+                </Route>
+                <Route path="finishedOrder">
+                  <Route index element={<OrderFinished />} />
+                  <Route path="detail" element={<DetailOrder />} />
                 </Route>
                 //#endregion
                 {/*  */}
