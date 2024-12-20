@@ -210,18 +210,31 @@ const Earning = () => {
                     }
                     key={k}
                   >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                       {groupedData[order_id][trainer_name][student_name]
                         .sort((a, b) => a.meet - b.meet)
                         .map((item, l) => (
                           <Card
                             key={`${item.order_detail_id}-${l}`}
-                            title={`Pertemuan ke ${item.meet}`}
-                            noborder
+                            bodyClass="p-3"
+                            tit
+                            className="bg-gradient-to-br from-sky-400 via-sky-400 to-violet-400 p-3 rounded-2xl w-full text-white flex items-center justify-between max-w-2xl mx-auto"
                           >
-                            <div>Tanggal: {item.real_date || "N/A"}</div>
-                            <div>Jam: {item.real_time || "N/A"}</div>
-                            <div>Kolam: {item.pool_name || "N/A"}</div>
+                            <span className="text-sm font-semibold">
+                              Pertemuan ke : {item.meet || "N/A"}
+                            </span>
+                            <br />
+                            <span className="text-sm">
+                              Tanggal: {item.real_date || "N/A"}
+                            </span>
+                            <br />
+                            <span className="text-sm">
+                              Jam: {item.real_time || "N/A"}
+                            </span>
+                            {/* <br /> */}
+                            {/* <span className="text-sm">
+                              Kolam: {item.pool_name || "N/A"}
+                            </span> */}
                           </Card>
                         ))}
                     </div>
