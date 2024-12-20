@@ -48,7 +48,7 @@ const RekapBulanan = () => {
       onClick: (row) =>
         navigate("detailorderpelatih", { state: { data: row.row.original } }),
       className:
-        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:",
     },
   ];
 
@@ -148,16 +148,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p1 && p1_paid === true) {
-          bgColor = ""; // Red if p1 has value and p1_paid is true
-        } else if (p1 && p1_paid === false) {
+        if (p1 && p1_paid === false) {
           bgColor = "bg-red-500"; // Blue if p1 has value and p1_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p1 || ""}
           </span>
         );
@@ -172,16 +168,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p2 && p2_paid === true) {
-          bgColor = ""; // Red if p2 has value and p2_paid is true
-        } else if (p2 && p2_paid === false) {
+        if (p2 && p2_paid === false) {
           bgColor = "bg-red-500"; // Blue if p2 has value and p2_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p2 || ""}
           </span>
         );
@@ -196,16 +188,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p3 && p3_paid === true) {
-          bgColor = ""; // Red if p3 has value and p3_paid is true
-        } else if (p3 && p3_paid === false) {
+        if (p3 && p3_paid === false) {
           bgColor = "bg-red-500"; // Blue if p3 has value and p3_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p3 || ""}
           </span>
         );
@@ -220,16 +208,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p4 && p4_paid === true) {
-          bgColor = ""; // Red if p4 has value and p4_paid is true
-        } else if (p4 && p4_paid === false) {
+        if (p4 && p4_paid === false) {
           bgColor = "bg-red-500"; // Blue if p4 has value and p4_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p4 || ""}
           </span>
         );
@@ -244,16 +228,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p5 && p5_paid === true) {
-          bgColor = ""; // Red if p5 has value and p5_paid is true
-        } else if (p5 && p5_paid === false) {
+        if (p5 && p5_paid === false) {
           bgColor = "bg-red-500"; // Blue if p5 has value and p5_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p5 || ""}
           </span>
         );
@@ -268,16 +248,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p6 && p6_paid === true) {
-          bgColor = ""; // Red if p6 has value and p6_paid is true
-        } else if (p6 && p6_paid === false) {
+        if (p6 && p6_paid === false) {
           bgColor = "bg-red-500"; // Blue if p6 has value and p6_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p6 || ""}
           </span>
         );
@@ -292,16 +268,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p7 && p7_paid === true) {
-          bgColor = ""; // Red if p7 has value and p7_paid is true
-        } else if (p7 && p7_paid === false) {
+        if (p7 && p7_paid === false) {
           bgColor = "bg-red-500"; // Blue if p7 has value and p7_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p7 || ""}
           </span>
         );
@@ -316,16 +288,12 @@ const RekapBulanan = () => {
 
         // Determine background color based on conditions
         let bgColor = "";
-        if (p8 && p8_paid === true) {
-          bgColor = ""; // Red if p8 has value and p8_paid is true
-        } else if (p8 && p8_paid === false) {
+        if (p8 && p8_paid === false) {
           bgColor = "bg-red-500"; // Blue if p8 has value and p8_paid is false
         }
 
         return (
-          <span
-            className={`px-2 py-1 rounded text-white ${bgColor} text-black-500`}
-          >
+          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
             {p8 || ""}
           </span>
         );
