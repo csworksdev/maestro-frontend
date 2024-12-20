@@ -64,6 +64,10 @@ export const menuChief = [
         childtitle: "Rekap Pelatih",
         childlink: "rekap-pelatih",
       },
+      {
+        childtitle: "Rekap Bulanan",
+        childlink: "rekap-bulanan",
+      },
     ],
   },
   {

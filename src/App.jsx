@@ -6,6 +6,7 @@ import Loading from "@/components/Loading";
 import AuthenticatedRoute from "./layout/AuthenticatedRoute";
 import PublicRoute from "./layout/PublicRoute";
 import { useSelector } from "react-redux";
+import RekapBulanan from "./pages/finance/rekapBulanan/rekapBulanan";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -68,9 +69,11 @@ const UMPermissionsEdit = lazy(() =>
 const TrainerCourseReminder = lazy(() => import("./pages/trainer/reminder"));
 const CourseReminder = lazy(() => import("./pages/pelatihan/reminder"));
 const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
-const RekapTrainer = lazy(() => import("./pages/finance/rekapPelatih"));
+const RekapTrainer = lazy(() =>
+  import("./pages/finance/rekapPelatih/rekapPelatih")
+);
 const RekapOrderTrainer = lazy(() =>
-  import("./pages/finance/rekapPelatihOrder")
+  import("./pages/finance/rekapPelatih/rekapPelatihOrder")
 );
 
 const App = () => {
@@ -218,6 +221,10 @@ const App = () => {
                     path="detailorderpelatih"
                     element={<RekapOrderTrainer />}
                   />
+                </Route>
+                <Route path="rekap-bulanan">
+                  <Route index element={<RekapBulanan />} />
+                  <Route path="detailorderpelatih" element={<DetailOrder />} />
                 </Route>
                 <Route path="*" element={<ErrorPage />} />
               </Route>
