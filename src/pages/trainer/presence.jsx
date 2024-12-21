@@ -345,8 +345,11 @@ const Presence = () => {
                   defaultValue={item.real_date || item.schedule_date}
                   options={{
                     dateFormat: "Y-m-d",
-                    maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
-                    minDate: periode.start_date,
+                    maxDate:
+                      DateTime.fromSQL("2024-12-23").toFormat("yyyy-MM-dd"),
+                    minDate:
+                      DateTime.fromSQL("2024-11-21").toFormat("yyyy-MM-dd"),
+                    // minDate: periode.start_date,
                     disableMobile: true,
                   }}
                   className="form-control py-2 w-full"
