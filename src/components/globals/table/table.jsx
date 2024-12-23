@@ -13,26 +13,26 @@ const Table = ({ listData, listColumn, handleSearch }) => {
     () =>
       listColumn.map((col) => ({
         ...col,
-        Filter:
-          col.id !== "action" // Exclude the "action" column from filters
-            ? ({ column }) => (
-                <input
-                  type="text"
-                  value={column.filterValue || ""} // Ensure the input is controlled
-                  onChange={(e) => {
-                    column.setFilter(e.target.value); // Update filter value
-                  }}
-                  onKeyDown={(e) => {
-                    e.stopPropagation(); // Prevent propagation to sort
-                    if (e.key === "Enter") {
-                      handleSearch({ [column.id]: column.filterValue }); // Trigger search on Enter
-                    }
-                  }}
-                  placeholder={`Filter ${col.Header}`}
-                  className="filter-input" // Add your styling
-                />
-              )
-            : null,
+        // Filter:
+        //   col.id !== "action" // Exclude the "action" column from filters
+        //     ? ({ column }) => (
+        //         <input
+        //           type="text"
+        //           value={column.filterValue || ""} // Ensure the input is controlled
+        //           onChange={(e) => {
+        //             column.setFilter(e.target.value); // Update filter value
+        //           }}
+        //           onKeyDown={(e) => {
+        //             e.stopPropagation(); // Prevent propagation to sort
+        //             if (e.key === "Enter") {
+        //               handleSearch({ [column.id]: column.filterValue }); // Trigger search on Enter
+        //             }
+        //           }}
+        //           placeholder={`Filter ${col.Header}`}
+        //           className="filter-input" // Add your styling
+        //         />
+        //       )
+        //     : null,
       })),
     [listColumn, handleSearch]
   );

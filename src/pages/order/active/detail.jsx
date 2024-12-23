@@ -257,7 +257,11 @@ const DetailOrder = () => {
     <>
       <Button
         text="Kembali"
-        onClick={() => navigate(-1)}
+        onClick={(e) => {
+          e.preventDefault();
+          navigate(-1);
+        }}
+        type="button"
         className="bg-primary-500 text-white mb-4"
         icon="heroicons-outline:arrow-uturn-left"
       />

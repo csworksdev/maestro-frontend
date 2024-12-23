@@ -63,14 +63,16 @@ const RekapBulanan = () => {
           value: item.trainer_id,
           label: item.fullname,
         }))
-        .sort((a, b) => a.value.localeCompare(b.value));
+        .sort((a, b) => a.label.localeCompare(b.label));
       setListTrainer(trainerOptions);
 
       const periodeResponse = await getPeriodisasiAll(trainerParams);
-      const periodeOptions = periodeResponse.data.results.map((item) => ({
-        value: item.name,
-        label: item.name,
-      }));
+      const periodeOptions = periodeResponse.data.results
+        .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+        .map((item) => ({
+          value: item.name,
+          label: item.name,
+        }));
       setListPeriode(periodeOptions);
     } catch (error) {
       console.error("Error fetching data", error);
@@ -83,9 +85,8 @@ const RekapBulanan = () => {
     try {
       setIsLoading(true);
 
-      const response = await getRekapByTrainer(periode, trainer).then((res) => {
-        setListData(res.data);
-      });
+      const response = await getRekapByTrainer(periode, trainer);
+      setListData(response.data);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     } finally {
@@ -96,16 +97,6 @@ const RekapBulanan = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const handlePageChange = (page) => setPageIndex(page);
-
-  const handlePageSizeChange = (size) => setPageSize(size);
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    setPageIndex(0);
-    fetchData();
-  };
 
   const onSubmit = (formData) => {
     setSelectedTrainer(formData.trainer);

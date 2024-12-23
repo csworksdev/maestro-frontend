@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { jam } from "@/constant/jadwal-default";
 import { EditOrder } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
-
+import { startCase, toLower } from "lodash";
 const sliderSettings = {
   dots: true,
   infinite: false,
@@ -66,7 +66,9 @@ const Presence = () => {
   };
 
   const groupedData = listData.reduce((acc, item) => {
-    const studentNames = item.students_info.map((s) => s.fullname).join(", ");
+    const studentNames = item.students_info
+      .map((s) => convertToTitleCase(s.fullname))
+      .join(", ");
     if (!acc[item.order]) acc[item.order] = {};
     if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
     acc[item.order][studentNames].push(item);
@@ -264,17 +266,7 @@ const Presence = () => {
   }, []);
 
   function convertToTitleCase(str) {
-    if (!str) {
-      return "";
-    }
-
-    return str
-      .toLowerCase()
-      .split(" ")
-      .map(function (word) {
-        return word.charAt(0).toUpperCase().concat(word.substr(1));
-      })
-      .join(" ");
+    return startCase(toLower(str));
   }
 
   // WhatsApp link generator function
@@ -404,12 +396,14 @@ const Presence = () => {
             {Object.keys(groupedData[order_id]).map((student_name, j) => {
               // Assuming that groupedData contains the pool_name in the first item for each student
               const poolName =
-                groupedData[order_id][student_name]?.[0]?.pool_name ||
+                groupedData[order_id][student_name]?.[j]?.pool_name ||
                 "Pool not specified";
               const order_date =
-                groupedData[order_id][student_name]?.[0]?.order_date || "";
+                groupedData[order_id][student_name]?.[j]?.order_date || "";
               const expire_date =
-                groupedData[order_id][student_name]?.[0]?.expire_date || "";
+                groupedData[order_id][student_name]?.[j]?.expire_date ||
+                "Belum mulai latihan.";
+              const hari = groupedData[order_id][student_name]?.[j]?.day || "";
               return (
                 <Card
                   subtitle={
@@ -417,6 +411,7 @@ const Presence = () => {
                       {student_name.replace(",", ", ")} <br />
                       Kolam : {poolName} <br /> Tanggal Order : {order_date}
                       <br /> Tanggal Kadaluarsa : {expire_date}
+                      <br /> Hari : {hari}
                     </>
                   }
                   key={i + j}

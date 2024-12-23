@@ -193,6 +193,9 @@ const Earning = () => {
                 const expire_date =
                   groupedData[order_id][trainer_name][student_name]?.[0]
                     ?.expire_date || "";
+                const day =
+                  groupedData[order_id][trainer_name][student_name]?.[0]?.day ||
+                  "";
 
                 return (
                   <Card
@@ -206,6 +209,8 @@ const Earning = () => {
                         Tanggal Order: {order_date}
                         <br />
                         Tanggal Kadaluarsa: {expire_date}
+                        <br />
+                        Hari: {day}
                       </>
                     }
                     key={k}
@@ -226,6 +231,10 @@ const Earning = () => {
                             <br />
                             <span className="text-sm">
                               Tanggal: {item.real_date || "N/A"}
+                            </span>
+                            <br />
+                            <span className="text-sm">
+                              Hari: {item.day || "N/A"}
                             </span>
                             <br />
                             <span className="text-sm">
