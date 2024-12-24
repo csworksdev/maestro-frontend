@@ -36,7 +36,7 @@ const Info = () => {
               className="btn-success btn-sm"
               link={getWhatsAppLink()}
             >
-              cek khodam
+              Chat disini
             </Button>
             <br />
             Terima kasih
