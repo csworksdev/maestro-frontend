@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { getPeriodisasiAll } from "@/axios/referensi/periodisasi";
 import Select from "@/components/ui/Select";
 import { getRekapByTrainer } from "@/axios/rekap/bulanan";
+import Swal from "sweetalert2";
 
 const RekapBulanan = () => {
   const navigate = useNavigate();
@@ -49,6 +50,13 @@ const RekapBulanan = () => {
         navigate("detailorderpelatih", { state: { data: row.row.original } }),
       className:
         "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:",
+    },
+    {
+      name: "delete",
+      icon: "heroicons-outline:trash",
+      onClick: (row) => handleDelete(row.row.original),
+      className:
+        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
     },
   ];
 
@@ -92,6 +100,27 @@ const RekapBulanan = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDelete = (e) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        DeleteOrder(e.order_id).then((res) => {
+          if (res.status) {
+            Swal.fire("Deleted!", "Your file has been deleted.", "success");
+            fetchData(pageIndex, pageSize, searchQuery);
+          }
+        });
+      }
+    });
   };
 
   useEffect(() => {
