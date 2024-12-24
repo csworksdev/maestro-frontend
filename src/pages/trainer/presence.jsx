@@ -338,10 +338,10 @@ const Presence = () => {
                   options={{
                     dateFormat: "Y-m-d",
                     maxDate:
-                      DateTime.fromSQL("2024-12-22").toFormat("yyyy-MM-dd"),
+                      DateTime.fromSQL("2024-12-20").toFormat("yyyy-MM-dd"),
                     minDate:
                       DateTime.fromSQL("2024-11-21").toFormat("yyyy-MM-dd"),
-                    // minDate: periode.start_date,
+                    minDate: periode.start_date,
                     disableMobile: true,
                   }}
                   className="form-control py-2 w-full"

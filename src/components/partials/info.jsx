@@ -38,6 +38,7 @@ const Info = () => {
             >
               cek khodam
             </Button>
+            <br />
             Terima kasih
           </p>
         </div>
