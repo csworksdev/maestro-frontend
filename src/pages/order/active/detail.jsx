@@ -145,7 +145,11 @@ const DetailOrder = ({ state }) => {
             </label>
             <Flatpickr
               defaultValue={params.schedule_date} // Display parsed date
-              options={{ dateFormat: "Y-m-d", disableMobile: true }}
+              options={{
+                dateFormat: "Y-m-d",
+                disableMobile: true,
+                maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+              }}
               className="form-control py-2"
               onChange={(dates) => {
                 if (dates && dates[0]) {
@@ -166,7 +170,11 @@ const DetailOrder = ({ state }) => {
             </label>
             <Flatpickr
               defaultValue={params.real_date}
-              options={{ dateFormat: "Y-m-d", disableMobile: true }}
+              options={{
+                dateFormat: "Y-m-d",
+                disableMobile: true,
+                maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+              }}
               className="form-control py-2"
               onChange={(dates) => {
                 if (dates && dates[0]) {
