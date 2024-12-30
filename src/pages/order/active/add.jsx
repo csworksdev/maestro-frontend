@@ -29,7 +29,6 @@ import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
-// import sourceData from "./source.json";
 
 const Add = () => {
   const navigate = useNavigate();

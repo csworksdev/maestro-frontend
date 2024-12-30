@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
-import Loading from "@/components/Loading";
 import { useNavigate } from "react-router-dom";
 import { getTrainerAll } from "@/axios/masterdata/trainer";
-import Search from "@/components/globals/table/search";
-import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";

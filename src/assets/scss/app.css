@@ -65,10 +65,10 @@
 }
 @layer components {
   .table-th {
-    @apply text-slate-600 dark:text-slate-300 text-xs  font-semibold  uppercase py-5 px-6 ltr:text-left rtl:text-right;
+    @apply text-slate-600 dark:text-slate-300 text-xs  font-semibold  uppercase py-5 px-6 ltr:text-left rtl:text-right w-auto;
   }
   .table-td {
-    @apply text-slate-600 dark:text-slate-300 text-sm font-normal capitalize px-6 py-5   border-slate-100 dark:border-slate-700;
+    @apply text-slate-600 dark:text-slate-300 text-sm font-normal capitalize px-6 py-5   border-slate-100 dark:border-slate-700  w-auto;
   }
   .table-checkbox {
     @apply relative before:flex before:flex-col before:items-center before:justify-center   
@@ -1935,24 +1935,3 @@
 }
 @layer utilities {
 } /*# sourceMappingURL=app.css.map */
-
-.sticky-right {
-  position: -webkit-sticky; /* For Safari */
-  position: sticky;
-  right: 0;
-  background-color: #fff; /* Ensure it's not transparent when fixed */
-  z-index: 1; /* Ensure it stays on top of other elements */
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}

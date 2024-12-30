@@ -1,9 +1,6 @@
-import React, { Fragment, useRef, useEffect, useState } from "react";
-import Card from "@/components/ui/Card";
-import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
+import React, { useEffect, useState } from "react";
 import Table from "@/components/globals/table/table";
 import Loading from "@/components/Loading";
-import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -11,6 +8,11 @@ import { DeleteOrder, getOrderAll } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
+import Modal from "@/components/ui/Modal";
+import DetailOrder from "./detail";
+import Edit from "./edit";
+import { Icon } from "@iconify/react";
+import Tooltip from "@/components/ui/Tooltip";
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -20,6 +22,9 @@ const OrderActive = ({ is_finished }) => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [modalData, setModalData] = useState(null);
 
   const actions = [
     {
@@ -117,34 +122,34 @@ const OrderActive = ({ is_finished }) => {
   };
 
   const handleDetail = (e) => {
-    navigate("detail", {
-      state: {
-        data: e,
-      },
-    });
+    setDetailModalVisible(true); // Open the modal
+    setModalData(e); // Pass data to the modal
   };
 
   const handleEdit = (e) => {
-    navigate("edit", {
-      state: {
-        isupdate: "true",
-        data: e,
-      },
-    });
+    // navigate("edit", {
+    //   state: {
+    //     isupdate: "true",
+    //     data: e,
+    //   },
+    // });
+    setEditModalVisible(true); // Open the modal
+    setModalData(e); // Pass data to the modal
   };
 
   const COLUMNS = [
     {
-      Header: "Siswa",
-      accessor: "listname",
+      Header: "Pelatih",
+      accessor: "trainer_name",
+      id: "trainer_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
     },
-
     {
-      Header: "Kolam",
-      accessor: "pool_name",
+      Header: "Siswa",
+      accessor: "listname",
+      id: "listname",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
@@ -152,41 +157,7 @@ const OrderActive = ({ is_finished }) => {
     {
       Header: "Produk",
       accessor: "product_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Tanggal Order",
-      accessor: "order_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Tanggal Kadaluwarsa",
-      accessor: "expire_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Hari (Jadwal)",
-      accessor: "day",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Jam (Jadwal)",
-      accessor: "time",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Promo",
-      accessor: "promo",
+      id: "product_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
@@ -194,20 +165,123 @@ const OrderActive = ({ is_finished }) => {
     {
       Header: "Harga",
       accessor: "grand_total",
+      id: "grand_total",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
     },
     {
-      Header: "Pelatih",
-      accessor: "trainer_name",
+      Header: "Tanggal Order",
+      accessor: "order_date",
+      id: "order_date",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Tanggal Kadaluwarsa",
+      accessor: "expire_date",
+      id: "expire_date",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Hari (Jadwal)",
+      accessor: "day",
+      id: "day",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Jam (Jadwal)",
+      accessor: "time",
+      id: "time",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Pertemuan",
+      accessor: "detail",
+      id: "detail",
+      width: 200,
+      Cell: (row) => {
+        return (
+          <div className="flex flex-col">
+            {row?.cell?.value
+              .sort((a, b) => a.meet - b.meet)
+              .map((item, index) => (
+                <div
+                  className="flex flex-row text-center justify-center text-nowrap align-middle gap-1"
+                  key={index}
+                >
+                  {item.real_date !== null ? (
+                    <>
+                      <span>{item.real_date}</span>
+                      <span>
+                        {item.is_presence ? (
+                          <Tooltip
+                            placement="top"
+                            arrow
+                            content={"Sudah Absen"}
+                          >
+                            <div
+                              className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
+                      first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
+                    `}
+                              key={index}
+                            >
+                              <span className="text-base">
+                                <Icon
+                                  icon="heroicons-outline:check"
+                                  color="green"
+                                  style={{ height: "20px", width: "20px" }}
+                                />
+                              </span>
+                            </div>
+                          </Tooltip>
+                        ) : null}
+                      </span>
+                      <span>
+                        {item.is_paid ? (
+                          <Tooltip
+                            placement="top"
+                            arrow
+                            content={"Sudah dibayar"}
+                          >
+                            <div
+                              className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
+                        first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
+                      `}
+                              key={index}
+                            >
+                              <span className="text-base">
+                                <Icon
+                                  icon="heroicons-outline:currency-dollar"
+                                  color="green"
+                                  style={{ height: "20px", width: "20px" }}
+                                />
+                              </span>
+                            </div>
+                          </Tooltip>
+                        ) : null}
+                      </span>
+                    </>
+                  ) : (
+                    "[...]"
+                  )}
+                </div>
+              ))}
+          </div>
+        );
       },
     },
     {
       Header: "action",
       accessor: "action",
+      id: "action",
       Cell: (row) => {
         return (
           <div className="flex flex-row space-x-2 items-center">
@@ -253,6 +327,26 @@ const OrderActive = ({ is_finished }) => {
             nextPage={() => handlePageChange(pageIndex + 1)}
             setPageSize={handlePageSizeChange}
           />
+          {detailModalVisible && (
+            <Modal
+              title="Detail Order"
+              activeModal={detailModalVisible} // Tie to modalVisible state
+              onClose={() => setDetailModalVisible(false)} // Close modal when needed
+              className="max-w-5xl"
+            >
+              <DetailOrder state={{ data: modalData }} />
+            </Modal>
+          )}
+          {editModalVisible && (
+            <Modal
+              title="Edit Order"
+              activeModal={editModalVisible} // Tie to modalVisible state
+              onClose={() => setEditModalVisible(false)} // Close modal when needed
+              className="max-w-5xl"
+            >
+              <Edit state={{ data: modalData }} />
+            </Modal>
+          )}
         </>
       )}
     </>

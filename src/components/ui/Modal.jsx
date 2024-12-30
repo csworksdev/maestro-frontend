@@ -60,7 +60,7 @@ const Modal = ({
             )}
             {label}
           </button>
-          <Transition appear show={showModal} as={Fragment}>
+          <Transition appear show={activeModal || showModal} as={Fragment}>
             <Dialog
               as="div"
               className="relative z-[99999]"

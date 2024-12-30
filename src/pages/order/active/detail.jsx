@@ -19,10 +19,10 @@ import Select from "@/components/ui/Select";
 import { hari, jam } from "@/constant/jadwal-default";
 import Checkbox from "@/components/ui/Checkbox";
 
-const DetailOrder = () => {
+const DetailOrder = ({ state }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data = {} } = location.state ?? {};
+  const data = location.state ?? state.data;
 
   const [detailList, setDetailList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -255,7 +255,7 @@ const DetailOrder = () => {
 
   return (
     <>
-      <Button
+      {/* <Button
         text="Kembali"
         onClick={(e) => {
           e.preventDefault();
@@ -264,7 +264,7 @@ const DetailOrder = () => {
         type="button"
         className="bg-primary-500 text-white mb-4"
         icon="heroicons-outline:arrow-uturn-left"
-      />
+      /> */}
       <div className="grid grid-cols-1 gap-4">
         <OrderMaster params={data} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr">

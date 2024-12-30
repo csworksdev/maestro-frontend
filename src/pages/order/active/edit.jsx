@@ -30,10 +30,10 @@ import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
 
-const Edit = () => {
+const Edit = ({ state }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data = {} } = location.state ?? {};
+  const data = location.state ?? state.data;
   const [productData, setProductData] = useState([]);
   const [kolamOption, setKolamOption] = useState([]);
   const [productOption, setProductOption] = useState([]);
@@ -139,12 +139,6 @@ const Edit = () => {
         // setvalue product
         setValue("product", data.product);
         handleProductChange({ target: { value: data.product } });
-
-        // const studentOptions = data.students.map((item) => ({
-        //   value: item.student_id,
-        //   label: item.student_fullname,
-        // }));
-        // setStudentOption(studentOptions);
       } catch (error) {
         setLoadingError(error);
         // Swal.fire("Error", "Failed to load reference data.", "error");
@@ -170,9 +164,6 @@ const Edit = () => {
               navigate(-1);
             }
           );
-          // EditOrder(data.order_id, updatedData).then((res) => {
-
-          // });
         }
       })
       .catch((error) => {
@@ -193,10 +184,6 @@ const Edit = () => {
       ),
       product: product.product_id,
       promo: newData.promo,
-      // expire_date:
-      //   DateTime.fromJSDate(newData.start_date)
-      //     .plus({ days: 60 })
-      //     .toFormat("yyyy-MM-dd") ?? data.expire_date,
       is_finish: newData.is_finish,
       price: product.price,
       is_paid: newData.is_paid,
@@ -451,7 +438,7 @@ const Edit = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      <Card title={"Update Order"}>
+      <Card>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* {loadingError && (
             <p className="error-message">{loadingError.message}</p>
