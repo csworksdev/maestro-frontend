@@ -127,12 +127,6 @@ const OrderActive = ({ is_finished }) => {
   };
 
   const handleEdit = (e) => {
-    // navigate("edit", {
-    //   state: {
-    //     isupdate: "true",
-    //     data: e,
-    //   },
-    // });
     setEditModalVisible(true); // Open the modal
     setModalData(e); // Pass data to the modal
   };
@@ -214,7 +208,7 @@ const OrderActive = ({ is_finished }) => {
               .sort((a, b) => a.meet - b.meet)
               .map((item, index) => (
                 <div
-                  className="flex flex-row text-center justify-center text-nowrap align-middle gap-1"
+                  className="flex flex-row text-center justify-center text-nowrap items-center gap-1"
                   key={index}
                 >
                   {item.real_date !== null ? (
@@ -286,9 +280,11 @@ const OrderActive = ({ is_finished }) => {
         return (
           <div className="flex flex-row space-x-2 items-center">
             <div className="flex space-x-2">
-              {actions.map((action, index) => (
-                <TableAction action={action} index={index} row={row} />
-              ))}
+              {is_finished === false
+                ? actions.map((action, index) => (
+                    <TableAction action={action} index={index} row={row} />
+                  ))
+                : null}
             </div>
           </div>
         );
