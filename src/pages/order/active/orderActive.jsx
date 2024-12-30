@@ -280,17 +280,21 @@ const OrderActive = ({ is_finished }) => {
         return (
           <div className="flex flex-row space-x-2 items-center">
             <div className="flex space-x-2">
-              {is_finished === false
-                ? actions.map((action, index) => (
-                    <TableAction action={action} index={index} row={row} />
-                  ))
-                : null}
+              {actions.map((action, index) => (
+                <TableAction action={action} index={index} row={row} />
+              ))}
             </div>
           </div>
         );
       },
     },
   ];
+
+  const fixColumn = () => {
+    let newData = [...COLUMNS];
+    if (is_finished) newData.splice(-1);
+    return newData;
+  };
 
   return (
     <>
@@ -308,7 +312,7 @@ const OrderActive = ({ is_finished }) => {
           <Search searchValue={searchQuery} handleSearch={handleSearch} />
           <Table
             listData={listData}
-            listColumn={COLUMNS}
+            listColumn={fixColumn()}
             searchValue={searchQuery}
             handleSearch={handleSearch}
           />
