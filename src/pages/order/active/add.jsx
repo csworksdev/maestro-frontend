@@ -218,7 +218,7 @@ const Add = () => {
         }
       })
       .catch((error) => {
-        Swal.fire("Error", "Failed to add order.", "error");
+        Swal.fire("Error", "Failed to add order.", error);
       });
   };
 
@@ -254,108 +254,6 @@ const Add = () => {
       });
   };
 
-  // const handleAddBulk = (data) => {
-  //   AddOrder(data)
-  //     .then((res) => {
-  //       if (res.data.status === "success") {
-  //         const result = res.data.message;
-
-  //         result.students.forEach((student) => {
-  //           const orderDetails = [];
-  //           const baseOrderDetail = {
-  //             day: filterTrainerByDay,
-  //             time: filterTrainerByTime,
-  //             is_presence: false,
-  //             is_paid: true,
-  //           };
-
-  //           for (let index = 1; index <= data.meet; index++) {
-  //             const detail = {
-  //               ...baseOrderDetail,
-  //               meet: index,
-  //               order: res.data.message.order_id,
-  //               price_per_meet: data.price_per_meet,
-  //               student: student.student_id,
-  //               schedule_date: DateTime.fromISO(data.order_date)
-  //                 .plus({ days: 7 * index })
-  //                 .toFormat("yyyy-MM-dd"),
-  //               day: DateTime.fromISO(data.order_date)
-  //                 .setLocale("id")
-  //                 .toLocaleString({ weekday: "long" }),
-  //               time: "-",
-  //             };
-
-  //             const pertemuan = `p${index}`;
-  //             const pertemuancek = `${pertemuan}_c`;
-  //             detail.presence_day = data[pertemuan]
-  //               ? DateTime.fromISO(data[pertemuan]).toFormat("yyyy-MM-dd")
-  //               : null;
-  //             detail.is_presence =
-  //               data[pertemuancek] === "0" ? "False" : "True";
-
-  //             orderDetails.push(detail);
-  //           }
-
-  //           orderDetails.forEach((detail) => {
-  //             AddOrderDetail(detail, data).then((addres) => {});
-  //           });
-  //         });
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       Swal.fire("Error", "Failed to add order.", "error");
-  //     });
-  // };
-
-  // const onSubmitBulk = (newData) => {
-  //   sourceData.forEach((item) => {
-  //     const students = item.student_id
-  //       .split(",")
-  //       .map((id) => ({ student_id: id.trim() }));
-
-  //     // students.forEach((student) => {
-  //     const updatedData = {
-  //       order_date: DateTime.fromISO(item.tgl_transaksi).toFormat("yyyy-MM-dd"),
-  //       product: item.product_id,
-  //       expire_date: DateTime.fromISO(item.tgl_habis).toFormat("yyyy-MM-dd"),
-  //       is_finish: true,
-  //       price: item.price,
-  //       is_paid: true,
-  //       students: students,
-  //       start_date: DateTime.fromISO(item.tgl_transaksi).toFormat("yyyy-MM-dd"),
-  //       trainer: item.trainer_id,
-  //       pool: item.pool_id,
-  //       package: item.package_id,
-  //       trainer_percentage: item.presentase,
-  //       company_percentage: 100 - item.presentase,
-  //       branch: item.branch_id,
-  //       notes: "-",
-  //       grand_total: item.price,
-  //       meet: item.meet,
-  //       price_per_meet: item.price_per_meet,
-  //       p1: item.p1,
-  //       p2: item.p2,
-  //       p3: item.p3,
-  //       p4: item.p4,
-  //       p5: item.p5,
-  //       p6: item.p6,
-  //       p7: item.p7,
-  //       p8: item.p8,
-  //       p1_c: item.p1_c,
-  //       p2_c: item.p2_c,
-  //       p3_c: item.p3_c,
-  //       p4_c: item.p4_c,
-  //       p5_c: item.p5_c,
-  //       p6_c: item.p6_c,
-  //       p7_c: item.p7_c,
-  //       p8_c: item.p8_c,
-  //     };
-
-  //     handleAddBulk(updatedData);
-  //     // });
-  //   });
-  // };
-
   const onSubmit = (newData) => {
     const product = productData.find(
       (item) => item.product_id === selectProductOption
@@ -369,11 +267,6 @@ const Add = () => {
         : DateTime.now().toFormat("yyyy-MM-dd"),
       product: product.product_id,
       promo: newData.promo,
-      // expire_date: isUpdate
-      //   ? data.expire_date
-      //   : DateTime.fromJSDate(newData.start_date)
-      //       .plus({ days: 60 })
-      //       .toFormat("yyyy-MM-dd"),
       is_finish: false,
       price: product.price,
       is_paid: newData.is_paid,

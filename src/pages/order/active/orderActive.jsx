@@ -34,13 +34,13 @@ const OrderActive = ({ is_finished }) => {
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
-    {
-      name: "delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
+    // {
+    //   name: "delete",
+    //   icon: "heroicons-outline:trash",
+    //   onClick: (row) => handleDelete(row.row.original),
+    //   className:
+    //     "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    // },
   ];
 
   const fetchData = async (page, size, query) => {

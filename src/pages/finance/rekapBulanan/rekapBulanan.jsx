@@ -52,13 +52,13 @@ const RekapBulanan = () => {
       className:
         "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:",
     },
-    {
-      name: "delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
+    // {
+    //   name: "delete",
+    //   icon: "heroicons-outline:trash",
+    //   onClick: (row) => handleDelete(row.row.original),
+    //   className:
+    //     "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    // },
   ];
 
   const fetchData = async () => {
