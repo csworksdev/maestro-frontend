@@ -202,9 +202,14 @@ const OrderActive = ({ is_finished }) => {
       id: "detail",
       width: 200,
       Cell: (row) => {
+        let data = row?.cell?.value;
+        const unique = [
+          ...data.reduce((a, c) => a.set(c.meet, c), new Map()).values(),
+        ];
+
         return (
           <div className="flex flex-col">
-            {row?.cell?.value
+            {unique
               .sort((a, b) => a.meet - b.meet)
               .map((item, index) => (
                 <div
@@ -213,7 +218,9 @@ const OrderActive = ({ is_finished }) => {
                 >
                   {item.real_date !== null ? (
                     <>
-                      <span>{item.real_date}</span>
+                      <span>
+                        {item.meet}. {item.real_date}
+                      </span>
                       <span>
                         {item.is_presence ? (
                           <Tooltip
