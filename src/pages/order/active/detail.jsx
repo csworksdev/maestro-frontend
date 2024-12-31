@@ -231,7 +231,7 @@ const DetailOrder = ({ state, updateParentData }) => {
             onChange={(e) => setValue("jam", e.target.value)}
           />
           {/* di hide dulu bisi ada yang ngedit sembarangan*/}
-          <div>
+          {/* <div>
             <label className="form-label" htmlFor="is_presence">
               Kehadiran
             </label>
@@ -252,7 +252,7 @@ const DetailOrder = ({ state, updateParentData }) => {
               value={watch("is_paid")}
               onChange={(e) => setValue("is_paid", e.target.checked)}
             />
-          </div>
+          </div> */}
           <div className="ltr:text-right rtl:text-left space-x-3">
             {params.is_paid ? (
               <span>Pertemuan sudah dibayar</span>
