@@ -132,3 +132,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .firebase/hosting*
+.vscode/launch.json
+src/axios/config/index.js
