@@ -19,7 +19,7 @@ import Select from "@/components/ui/Select";
 import { hari, jam } from "@/constant/jadwal-default";
 import Checkbox from "@/components/ui/Checkbox";
 
-const DetailOrder = ({ state }) => {
+const DetailOrder = ({ state, updateParentData }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state ?? state.data;
@@ -67,15 +67,45 @@ const DetailOrder = ({ state }) => {
         updatedData
       );
       if (response.status) {
-        Swal.fire(
-          "Edited!",
-          `${updatedData.order_detail_id} - ${updatedData.schedule_date}`,
-          "success"
-        );
+        updateParentData(updatedData);
+        updateListData(updatedData);
+        // Swal.fire({
+        //   title: "Edited!",
+        //   text: `${updatedData.order_detail_id} - ${updatedData.schedule_date}`,
+        //   icon: "success",
+        //   timer: 100,
+        //   position: "top-end",
+        // });
       }
     } catch (error) {
       Swal.fire("Error", "Failed to update order detail.", "error");
     }
+  };
+
+  const updateListData = (newData) => {
+    const data = [...detailList];
+
+    let temp = data.map((item) => ({
+      ...item,
+      is_paid:
+        item.order_detail_id === newData.order_detail_id
+          ? newData.is_paid
+          : item.is_paid,
+      is_presence:
+        item.order_detail_id === newData.order_detail_id
+          ? newData.is_presence
+          : item.is_presence,
+      jam:
+        item.order_detail_id === newData.order_detail_id
+          ? newData.real_time
+          : item.jam,
+      real_date:
+        item.order_detail_id === newData.order_detail_id
+          ? newData.real_date
+          : item.real_date,
+    }));
+
+    setDetailList(temp);
   };
 
   // MeetCard Component
@@ -144,11 +174,11 @@ const DetailOrder = ({ state }) => {
               Tanggal Latihan
             </label>
             <Flatpickr
-              defaultValue={params.schedule_date} // Display parsed date
+              value={params.schedule_date} // Display parsed date
               options={{
                 dateFormat: "Y-m-d",
                 disableMobile: true,
-                maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                // maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
               }}
               className="form-control py-2"
               onChange={(dates) => {
@@ -159,6 +189,7 @@ const DetailOrder = ({ state }) => {
                   );
                 }
               }}
+              disabled={false}
             />
             {errors.schedule_date && (
               <p className="error-message">{errors.schedule_date.message}</p>
@@ -200,7 +231,7 @@ const DetailOrder = ({ state }) => {
             onChange={(e) => setValue("jam", e.target.value)}
           />
           {/* di hide dulu bisi ada yang ngedit sembarangan*/}
-          {/* <div>
+          <div>
             <label className="form-label" htmlFor="is_presence">
               Kehadiran
             </label>
@@ -221,7 +252,7 @@ const DetailOrder = ({ state }) => {
               value={watch("is_paid")}
               onChange={(e) => setValue("is_paid", e.target.checked)}
             />
-          </div> */}
+          </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
             {params.is_paid ? (
               <span>Pertemuan sudah dibayar</span>

@@ -303,6 +303,29 @@ const OrderActive = ({ is_finished }) => {
     return newData;
   };
 
+  const updatedListData = (newData) => {
+    let data = [...listData.results];
+
+    let temp = {
+      ...listData,
+      results: data.map((item) => ({
+        ...item,
+        detail: item.detail.map((itemdetail) => ({
+          ...itemdetail,
+          is_presence:
+            itemdetail.order_detail_id === newData.order_detail_id
+              ? newData.is_presence
+              : itemdetail.is_presence,
+          is_paid:
+            itemdetail.order_detail_id === newData.order_detail_id
+              ? newData.is_paid
+              : itemdetail.is_paid,
+        })),
+      })),
+    };
+    setListData(temp);
+  };
+
   return (
     <>
       {is_finished === false ? (
@@ -341,7 +364,10 @@ const OrderActive = ({ is_finished }) => {
               onClose={() => setDetailModalVisible(false)} // Close modal when needed
               className="max-w-5xl"
             >
-              <DetailOrder state={{ data: modalData }} />
+              <DetailOrder
+                state={{ data: modalData }}
+                updateParentData={updatedListData}
+              />
             </Modal>
           )}
           {editModalVisible && (
