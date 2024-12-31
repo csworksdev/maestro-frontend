@@ -18,6 +18,7 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { hari, jam } from "@/constant/jadwal-default";
 import Checkbox from "@/components/ui/Checkbox";
+import Textarea from "@/components/ui/Textarea";
 
 const DetailOrder = ({ state, updateParentData }) => {
   const navigate = useNavigate();
@@ -272,7 +273,14 @@ const DetailOrder = ({ state, updateParentData }) => {
       <div className="grid grid-cols-2 gap-4">
         <OrderField label="Order ID" value={params.order_id} />
         <OrderField label="Nama Pelatih" value={params.trainer_name} />
-        <OrderField label="Siswa" value={params.listname} />
+        {/* <OrderField label="Siswa" value={params.listname} /> */}
+        <Textarea
+          name={"siswa"}
+          label={"Siswa"}
+          register={register}
+          defaultValue={params.listname.replace(", ", `\n`)}
+          disabled={true}
+        />
         <OrderField label="Produk" value={params.product_name} />
         <OrderField label="Kolam" value={params.pool_name} />
         <OrderField label="Hari" value={params.day} />
