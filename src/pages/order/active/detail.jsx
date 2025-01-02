@@ -94,6 +94,7 @@ const DetailOrder = ({
 
   // Update order detail
   const updateOrderDetail = async (updatedData) => {
+    // updateParentData(updatedData);
     try {
       const response = await EditOrderDetail(
         updatedData.order_detail_id,
@@ -181,6 +182,7 @@ const DetailOrder = ({
         is_paid: formData.is_paid, // Checkbox state
         real_date: null,
         presence_day: null,
+        meet: formData.meet,
       };
 
       if (formData.is_presence) {
@@ -248,6 +250,7 @@ const DetailOrder = ({
                   );
                 }
               }}
+              disabled
             />
             {errors.real_date && (
               <p className="error-message">{errors.real_date.message}</p>
@@ -286,9 +289,24 @@ const DetailOrder = ({
               onChange={(e) => setValue("is_paid", e.target.checked)}
             />
           </div> */}
+          <div className="hidden">
+            <label className="form-label" htmlFor="meet">
+              Pertemuan
+            </label>
+            <Textinput
+              name="meet"
+              label={"Sudah dibayar"}
+              value={watch("meet")}
+              defaultValue={params.meet}
+              register={register}
+              error={errors.promo?.message}
+            />
+          </div>
           <div className="ltr:text-right rtl:text-left space-x-3">
             {params.is_paid ? (
               <span>Pertemuan sudah dibayar</span>
+            ) : params.is_presence ? (
+              <span>Pelatih sudah absen</span>
             ) : (
               <Button type="submit">Update</Button>
             )}

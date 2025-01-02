@@ -125,27 +125,27 @@ const RekapBulanan = () => {
   };
 
   const updatedListData = (newData) => {
-    let data = [...listData.results];
-    // console.log(newData);
+    setListData((prevListData) => {
+      if (!Array.isArray(prevListData.results)) {
+        console.error("results is not an array");
+        return prevListData;
+      }
 
-    // let temp = {
-    //   ...listData,
-    //   results: data.map((item) => ({
-    //     ...item,
-    //     detail: item.detail.map((itemdetail) => ({
-    //       ...itemdetail,
-    //       is_presence:
-    //         itemdetail.order_detail_id === newData.order_detail_id
-    //           ? newData.is_presence
-    //           : itemdetail.is_presence,
-    //       is_paid:
-    //         itemdetail.order_detail_id === newData.order_detail_id
-    //           ? newData.is_paid
-    //           : itemdetail.is_paid,
-    //     })),
-    //   })),
-    // };
-    // setListData(temp);
+      const updatedResults = prevListData.results.map((order) => {
+        const updatedOrder = { ...order };
+        for (let i = 1; i <= 8; i++) {
+          const detailKey = `p${i}_order_detail_id`;
+          const paidKey = `p${i}_paid`;
+          if (order[detailKey] === newData.order_detail_id) {
+            updatedOrder[paidKey] = true;
+            break; // Exit loop once a match is found
+          }
+        }
+        return updatedOrder;
+      });
+
+      return { ...prevListData, results: updatedResults };
+    });
   };
 
   const COLUMNS = [
