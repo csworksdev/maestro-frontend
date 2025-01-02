@@ -16,6 +16,8 @@ import SkeletionTable from "@/components/skeleton/Table";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import DetailOrder from "@/pages/order/active/detail";
 
 const RekapBulanan = () => {
   const navigate = useNavigate();
@@ -30,6 +32,7 @@ const RekapBulanan = () => {
   const [selectedPeriode, setSelectedPeriode] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [modalData, setModalData] = useState(null);
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -431,6 +434,7 @@ const RekapBulanan = () => {
               <DetailOrder
                 state={{ data: modalData }}
                 updateParentData={updatedListData}
+                fromRekap={true}
               />
             </Modal>
           )}

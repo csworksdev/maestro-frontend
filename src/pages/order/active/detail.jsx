@@ -11,6 +11,7 @@ import {
   EditOrderDetail,
   GetOrderDetailByOrderId,
 } from "@/axios/masterdata/orderDetail";
+import { getOrderById } from "@/axios/masterdata/order";
 import Loading from "@/components/Loading";
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
@@ -20,10 +21,14 @@ import { hari, jam } from "@/constant/jadwal-default";
 import Checkbox from "@/components/ui/Checkbox";
 import Textarea from "@/components/ui/Textarea";
 
-const DetailOrder = ({ state = null, updateParentData = null }) => {
+const DetailOrder = ({
+  state = null,
+  updateParentData = null,
+  fromRekap = false,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const data = location.state ?? state.data;
+  const [data, setData] = useState(location.state ?? state.data);
 
   const [detailList, setDetailList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +47,33 @@ const DetailOrder = ({ state = null, updateParentData = null }) => {
 
   // Load order details
   useEffect(() => {
+    const loadOrderParent = async () => {
+      try {
+        const response = await getOrderById(data.order_id);
+        if (response.status) {
+          const updateData = response.data.results.map((item) => ({
+            ...item,
+            listname: item.students.map((i) => i.student_fullname).join(", "),
+          }));
+
+          // response = {
+          //   ...response,
+          //   data: {
+          //     ...response.data,
+          //     results: updateData,
+          //   },
+          // };
+          response.data = { ...response.data, results: updateData };
+          setData(response.data.results[0]);
+          loadOrderDetails();
+        }
+      } catch (error) {
+        Swal.fire("Error", "Failed to load reference data.", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const loadOrderDetails = async () => {
       try {
         const response = await GetOrderDetailByOrderId(data.order_id);
@@ -54,8 +86,8 @@ const DetailOrder = ({ state = null, updateParentData = null }) => {
         setLoading(false);
       }
     };
-
-    loadOrderDetails();
+    if (fromRekap) loadOrderParent();
+    else loadOrderDetails();
   }, [data.order_id]);
 
   if (loading) return <Loading />;
