@@ -20,7 +20,7 @@ import { hari, jam } from "@/constant/jadwal-default";
 import Checkbox from "@/components/ui/Checkbox";
 import Textarea from "@/components/ui/Textarea";
 
-const DetailOrder = ({ state, updateParentData }) => {
+const DetailOrder = ({ state = null, updateParentData = null }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state ?? state.data;

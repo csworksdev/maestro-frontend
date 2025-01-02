@@ -12,6 +12,10 @@ import Select from "@/components/ui/Select";
 import { getRekapByTrainer } from "@/axios/rekap/bulanan";
 import Swal from "sweetalert2";
 import { DeleteOrder } from "@/axios/masterdata/order";
+import SkeletionTable from "@/components/skeleton/Table";
+import { Icon } from "@iconify/react";
+import Tooltip from "@/components/ui/Tooltip";
+import Button from "@/components/ui/Button";
 
 const RekapBulanan = () => {
   const navigate = useNavigate();
@@ -24,6 +28,8 @@ const RekapBulanan = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrainer, setSelectedTrainer] = useState("");
   const [selectedPeriode, setSelectedPeriode] = useState("");
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -42,10 +48,10 @@ const RekapBulanan = () => {
 
   const actions = [
     {
-      name: "Rekap",
+      name: "Detail",
       icon: "heroicons-outline:eye",
-      onClick: (row) =>
-        navigate("detailorderpelatih", { state: { data: row.row.original } }),
+      onClick: (row) => handleDetail(row.row.original),
+      // navigate("detailorderpelatih", { state: { data: row.row.original } }),
       className:
         "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:",
     },
@@ -100,27 +106,6 @@ const RekapBulanan = () => {
     }
   };
 
-  const handleDelete = (e) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#22c55e",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        DeleteOrder(e.order_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
-        });
-      }
-    });
-  };
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -129,6 +114,35 @@ const RekapBulanan = () => {
     setSelectedTrainer(formData.trainer);
     setSelectedPeriode(formData.periode);
     fetchRekapData(formData.trainer, formData.periode);
+  };
+
+  const handleDetail = (e) => {
+    setDetailModalVisible(true); // Open the modal
+    setModalData(e); // Pass data to the modal
+  };
+
+  const updatedListData = (newData) => {
+    let data = [...listData.results];
+    // console.log(newData);
+
+    // let temp = {
+    //   ...listData,
+    //   results: data.map((item) => ({
+    //     ...item,
+    //     detail: item.detail.map((itemdetail) => ({
+    //       ...itemdetail,
+    //       is_presence:
+    //         itemdetail.order_detail_id === newData.order_detail_id
+    //           ? newData.is_presence
+    //           : itemdetail.is_presence,
+    //       is_paid:
+    //         itemdetail.order_detail_id === newData.order_detail_id
+    //           ? newData.is_paid
+    //           : itemdetail.is_paid,
+    //     })),
+    //   })),
+    // };
+    // setListData(temp);
   };
 
   const COLUMNS = [
@@ -161,19 +175,16 @@ const RekapBulanan = () => {
       Header: "p1",
       accessor: "p1_paid",
       Cell: ({ row }) => {
-        const p1 = row.original.p1;
-        const p1_paid = row.original.p1_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p1 && p1_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p1 has value and p1_paid is false
-        }
+        const p = row.original.p1;
+        const paid = row.original.p1_paid;
+        const order_detail_id = row.original.p1_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p1 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -181,19 +192,16 @@ const RekapBulanan = () => {
       Header: "p2",
       accessor: "p2",
       Cell: ({ row }) => {
-        const p2 = row.original.p2;
-        const p2_paid = row.original.p2_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p2 && p2_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p2 has value and p2_paid is false
-        }
+        const p = row.original.p2;
+        const paid = row.original.p2_paid;
+        const order_detail_id = row.original.p2_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p2 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -201,19 +209,16 @@ const RekapBulanan = () => {
       Header: "p3",
       accessor: "p3",
       Cell: ({ row }) => {
-        const p3 = row.original.p3;
-        const p3_paid = row.original.p3_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p3 && p3_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p3 has value and p3_paid is false
-        }
+        const p = row.original.p3;
+        const paid = row.original.p3_paid;
+        const order_detail_id = row.original.p3_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p3 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -221,19 +226,16 @@ const RekapBulanan = () => {
       Header: "p4",
       accessor: "p4",
       Cell: ({ row }) => {
-        const p4 = row.original.p4;
-        const p4_paid = row.original.p4_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p4 && p4_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p4 has value and p4_paid is false
-        }
+        const p = row.original.p4;
+        const paid = row.original.p4_paid;
+        const order_detail_id = row.original.p4_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p4 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -241,19 +243,16 @@ const RekapBulanan = () => {
       Header: "p5",
       accessor: "p5",
       Cell: ({ row }) => {
-        const p5 = row.original.p5;
-        const p5_paid = row.original.p5_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p5 && p5_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p5 has value and p5_paid is false
-        }
+        const p = row.original.p5;
+        const paid = row.original.p5_paid;
+        const order_detail_id = row.original.p5_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p5 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -261,19 +260,16 @@ const RekapBulanan = () => {
       Header: "p6",
       accessor: "p6",
       Cell: ({ row }) => {
-        const p6 = row.original.p6;
-        const p6_paid = row.original.p6_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p6 && p6_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p6 has value and p6_paid is false
-        }
+        const p = row.original.p6;
+        const paid = row.original.p6_paid;
+        const order_detail_id = row.original.p6_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p6 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -281,19 +277,16 @@ const RekapBulanan = () => {
       Header: "p7",
       accessor: "p7",
       Cell: ({ row }) => {
-        const p7 = row.original.p7;
-        const p7_paid = row.original.p7_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p7 && p7_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p7 has value and p7_paid is false
-        }
+        const p = row.original.p7;
+        const paid = row.original.p7_paid;
+        const order_detail_id = row.original.p7_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p7 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -301,19 +294,16 @@ const RekapBulanan = () => {
       Header: "p8",
       accessor: "p8",
       Cell: ({ row }) => {
-        const p8 = row.original.p8;
-        const p8_paid = row.original.p8_paid;
-
-        // Determine background color based on conditions
-        let bgColor = "";
-        if (p8 && p8_paid === false) {
-          bgColor = "bg-red-500"; // Blue if p8 has value and p8_paid is false
-        }
+        const p = row.original.p8;
+        const paid = row.original.p8_paid;
+        const order_detail_id = row.original.p8_order_detail_id;
 
         return (
-          <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-            {p8 || ""}
-          </span>
+          <CellDetail
+            tanggal={p}
+            status={paid}
+            order_detail_id={order_detail_id}
+          />
         );
       },
     },
@@ -330,41 +320,123 @@ const RekapBulanan = () => {
     },
   ];
 
+  const CellDetail = ({ tanggal, status, order_detail_id }) => {
+    let bgColor = "";
+    if (tanggal && status === false) {
+      bgColor = "bg-red-500"; // Blue if p1 has value and p1_paid is false
+    }
+
+    return (
+      <div className="flex flex-col items-center">
+        <span>
+          {tanggal ? (
+            status === true ? (
+              <PaidSign />
+            ) : (
+              <WillPaid order_detail_id={order_detail_id} />
+            )
+          ) : null}
+        </span>
+        <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
+          {tanggal || ""}
+        </span>
+      </div>
+    );
+  };
+
+  const WillPaid = ({ order_detail_id }) => {
+    return (
+      <Tooltip placement="top" arrow content={"Akan dibayar"}>
+        <div
+          className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
+            first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
+          `}
+          // key={p1_order_detail_id}
+        >
+          <Icon
+            icon="heroicons-outline:banknotes"
+            color="green"
+            className={`h-6 w-6`}
+            onClick={() => alert()}
+          />
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const PaidSign = () => {
+    return (
+      <Tooltip placement="top" arrow content={"Sudah dibayar"}>
+        <div
+          className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
+            first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
+          `}
+          // key={p1_order_detail_id}
+        >
+          <span className="text-base">
+            <Icon
+              icon="heroicons-outline:check-badge"
+              color="blue"
+              className={`h-6 w-6`}
+            />
+          </span>
+        </div>
+      </Tooltip>
+    );
+  };
+
   return (
-    <div className="grid grid-cols-1 justify-end">
-      <Card title="Rekap Bulanan">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mb-5">
-          <Select
-            name="trainer"
-            label="Coach"
-            placeholder="Pilih Coach"
-            register={register}
-            error={errors.trainer?.message}
-            options={listTrainer}
-            defaultValue={listTrainer[0]?.value || ""}
-          />
-          <Select
-            name="periode"
-            label="Periode"
-            placeholder="Pilih Periode"
-            register={register}
-            error={errors.periode?.message}
-            options={listPeriode}
-            defaultValue={listPeriode[0]?.value || ""}
-          />
-          <div className="ltr:text-right rtl:text-left space-x-3">
-            <button type="submit" className="btn btn-dark text-center">
-              Filter
-            </button>
-          </div>
-        </form>
-        {listData.results.length > 0 ? (
-          <Table listData={listData} listColumn={COLUMNS} />
-        ) : (
-          <p>No data available</p>
-        )}
-      </Card>
-    </div>
+    <>
+      <div className="grid grid-cols-1 justify-end">
+        <Card title="Rekap Bulanan">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mb-5">
+            <Select
+              name="trainer"
+              label="Coach"
+              placeholder="Pilih Coach"
+              register={register}
+              error={errors.trainer?.message}
+              options={listTrainer}
+              defaultValue={listTrainer[0]?.value || ""}
+            />
+            <Select
+              name="periode"
+              label="Periode"
+              placeholder="Pilih Periode"
+              register={register}
+              error={errors.periode?.message}
+              options={listPeriode}
+              defaultValue={listPeriode[0]?.value || ""}
+            />
+            <div className="ltr:text-right rtl:text-left space-x-3">
+              <button type="submit" className="btn btn-dark text-center">
+                Filter
+              </button>
+            </div>
+          </form>
+          {isLoading ? (
+            <SkeletionTable />
+          ) : listData.results.length > 0 ? (
+            <Table listData={listData} listColumn={COLUMNS} />
+          ) : (
+            <p>No data available</p>
+          )}
+          {detailModalVisible && (
+            <Modal
+              title="Detail Order"
+              activeModal={detailModalVisible} // Tie to modalVisible state
+              onClose={() => setDetailModalVisible(false)} // Close modal when needed
+              className="max-w-5xl"
+            >
+              <DetailOrder
+                state={{ data: modalData }}
+                updateParentData={updatedListData}
+              />
+            </Modal>
+          )}
+        </Card>
+      </div>
+    </>
   );
 };
 
