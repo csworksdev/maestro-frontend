@@ -30,7 +30,7 @@ import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
 
-const Edit = ({ state }) => {
+const Edit = ({ state, onclose = null }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state ?? state.data;
@@ -112,6 +112,7 @@ const Edit = ({ state }) => {
         setValue("jam", data.time);
         handleJamOption({ target: { value: data.time } });
 
+        setSelectGenderOption(data.trainer_gender);
         if (data.pool) {
           const productResponse = await getProdukPool(data.pool);
           const productOptions = productResponse.data.results.map((item) => ({
@@ -152,7 +153,7 @@ const Edit = ({ state }) => {
   }, []); // <-- This effect should only run once when the component mounts
 
   const handleCancel = () => {
-    navigate(-1);
+    onclose();
   };
 
   const handleUpdate = (updatedData) => {

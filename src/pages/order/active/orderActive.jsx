@@ -377,7 +377,10 @@ const OrderActive = ({ is_finished }) => {
               onClose={() => setEditModalVisible(false)} // Close modal when needed
               className="max-w-5xl"
             >
-              <Edit state={{ data: modalData }} />
+              <Edit
+                state={{ data: modalData }}
+                onClose={() => setEditModalVisible(false)}
+              />
             </Modal>
           )}
         </>
