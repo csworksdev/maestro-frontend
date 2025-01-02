@@ -261,9 +261,9 @@ const Add = () => {
     const updatedData = {
       ...data,
       order_id: newData.order_id,
-      order_date: isUpdate
-        ? data.order_date
-        : DateTime.now().toFormat("yyyy-MM-dd"),
+      order_date: DateTime.fromJSDate(newData.order_date).toFormat(
+        "yyyy-MM-dd"
+      ),
       product: product.product_id,
       promo: newData.promo,
       is_finish: false,
@@ -272,9 +272,9 @@ const Add = () => {
       students: selectedStudents.map((student) => ({
         student_id: student.value,
       })),
-      start_date: isUpdate
-        ? data.start_date
-        : DateTime.fromJSDate(newData.start_date).toFormat("yyyy-MM-dd"),
+      start_date: DateTime.fromJSDate(newData.order_date).toFormat(
+        "yyyy-MM-dd"
+      ),
       trainer: newData.trainer,
       pool: newData.pool,
       package: product.package,
@@ -618,11 +618,9 @@ const Add = () => {
               Tanggal Order
             </label>
             <Flatpickr
-              // defaultValue={
-              //   isUpdate
-              //     ? data.order_date
-              //     : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
-              // }
+              defaultValue={DateTime.fromJSDate(DateTime.now()).toFormat(
+                "yyyy-MM-dd"
+              )}
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
@@ -635,16 +633,14 @@ const Add = () => {
               <p className="error-message">{errors.order_date.message}</p>
             )}
           </div>
-          <div>
+          <div className="hidden">
             <label className="form-label" htmlFor="start_date">
               Tanggal Mulai
             </label>
             <Flatpickr
-              // defaultValue={
-              //   isUpdate
-              //     ? data.start_date
-              //     : DateTime.fromJSDate(DateTime.now()).toFormat("yyyy-MM-dd")
-              // }
+              defaultValue={DateTime.fromJSDate(DateTime.now()).toFormat(
+                "yyyy-MM-dd"
+              )}
               name="start_date"
               options={{
                 dateFormat: "Y-m-d",

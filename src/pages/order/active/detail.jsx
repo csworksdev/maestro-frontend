@@ -204,7 +204,7 @@ const DetailOrder = ({
     return (
       <Card title={`Pertemuan Ke: ${params.meet}`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
+          <div className="hidden">
             <label className="form-label" htmlFor="schedule_date">
               Tanggal Latihan
             </label>

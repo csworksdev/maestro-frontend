@@ -30,7 +30,7 @@ import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
 
-const Edit = ({ state, onclose = null }) => {
+const Edit = ({ state, onClose = null }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state ?? state.data;
@@ -153,18 +153,21 @@ const Edit = ({ state, onclose = null }) => {
   }, []); // <-- This effect should only run once when the component mounts
 
   const handleCancel = () => {
-    onclose();
+    onClose();
   };
 
   const handleUpdate = (updatedData) => {
     EditOrder(data.order_id, updatedData)
       .then((res) => {
         if (res.status) {
-          Swal.fire("Updated!", "Your order has been updated.", "success").then(
-            () => {
-              navigate(-1);
-            }
-          );
+          onClose();
+          Swal.fire({
+            title: "Edited!",
+            text: "Your order has been updated.",
+            icon: "success",
+            timer: 1000,
+            position: "top-end",
+          });
         }
       })
       .catch((error) => {
@@ -178,7 +181,7 @@ const Edit = ({ state, onclose = null }) => {
     );
     const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
     const updatedData = {
-      ...data,
+      // ...data,
       order_id: newData.order_id,
       order_date: DateTime.fromJSDate(newData.order_date).toFormat(
         "yyyy-MM-dd"
@@ -538,7 +541,7 @@ const Edit = ({ state, onclose = null }) => {
               Tanggal Order
             </label>
             <Flatpickr
-              value={data.order_date}
+              defaultValue={data.order_date}
               name="order_date"
               options={{
                 dateFormat: "Y-m-d",
@@ -551,7 +554,7 @@ const Edit = ({ state, onclose = null }) => {
               <p className="error-message">{errors.order_date.message}</p>
             )}
           </div>
-          <div>
+          <div className="hidden">
             <label className="form-label" htmlFor="start_date">
               Tanggal Mulai
             </label>
