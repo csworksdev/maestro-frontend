@@ -18,6 +18,7 @@ import Tooltip from "@/components/ui/Tooltip";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import DetailOrder from "@/pages/order/active/detail";
+import { DateTime } from "luxon";
 
 const RekapBulanan = () => {
   const navigate = useNavigate();
@@ -167,12 +168,18 @@ const RekapBulanan = () => {
     {
       Header: "Tanggal Order",
       accessor: "tgl_transaksi",
-      Cell: ({ cell }) => <span>{cell?.value}</span>,
+      // Cell: ({ cell }) => <span>{cell?.value}</span>,
+      Cell: ({ cell }) => (
+        <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
+      ),
     },
     {
       Header: "Tanggal Kadaluwarsa",
       accessor: "tgl_habis",
-      Cell: ({ cell }) => <span>{cell?.value}</span>,
+      // Cell: ({ cell }) => <span>{cell?.value}</span>,
+      Cell: ({ cell }) => (
+        <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
+      ),
     },
     {
       Header: "p1",
@@ -392,7 +399,10 @@ const RekapBulanan = () => {
     <>
       <div className="grid grid-cols-1 justify-end">
         <Card title="Rekap Bulanan">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mb-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="md:grid grid-cols-3 gap-4"
+          >
             <Select
               name="trainer"
               label="Coach"
@@ -411,10 +421,19 @@ const RekapBulanan = () => {
               options={listPeriode}
               defaultValue={listPeriode[0]?.value || ""}
             />
-            <div className="ltr:text-right rtl:text-left space-x-3">
-              <button type="submit" className="btn btn-dark text-center">
-                Filter
-              </button>
+            <div className="content-end pt-3">
+              <div className="flex flex-row justify-between">
+                <button
+                  type="submit"
+                  className="btn btn-dark text-center h-9 py-1"
+                >
+                  <span>Filter</span>
+                </button>
+
+                <button type="button" className="btn text-center h-9 py-1">
+                  <span>Bayar semua</span>
+                </button>
+              </div>
             </div>
           </form>
           {isLoading ? (

@@ -13,6 +13,7 @@ import DetailOrder from "./detail";
 import Edit from "./edit";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
+import { DateTime } from "luxon";
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -169,7 +170,11 @@ const OrderActive = ({ is_finished }) => {
       accessor: "order_date",
       id: "order_date",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        return (
+          <span>
+            {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
+          </span>
+        );
       },
     },
     {
@@ -177,7 +182,9 @@ const OrderActive = ({ is_finished }) => {
       accessor: "expire_date",
       id: "expire_date",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        <span>
+          {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
+        </span>;
       },
     },
     {
