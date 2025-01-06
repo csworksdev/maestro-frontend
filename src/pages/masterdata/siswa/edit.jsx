@@ -13,6 +13,7 @@ import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { brands } from "@/constant/data";
+import Radio from "@/components/ui/Radio";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -20,16 +21,20 @@ const Edit = () => {
   const { isupdate = "false", data = {} } = location.state ?? {};
   const isUpdate = isupdate === "true";
   const [branchOption, setBranchOption] = useState([]);
+  const [isGender, setIsGender] = useState("L");
+  const handleChange = (e) => {
+    setIsGender(e.target.value);
+  };
 
   const FormValidationSchema = yup
     .object({
       fullname: yup.string().required("Nama Lengkap is required"),
-      gender: yup.string().required("Jenis Kelamin is required"),
+      // gender: yup.string().required("Jenis Kelamin is required"),
       // phone: yup.string().required("Telephone is required").max(13),
-      address: yup.string().required("Alamat is required"),
-      pob: yup.string().required("Tempat Lahir is required"),
-      dob: yup.date().required("Tanggal Lahir is required"),
-      branch: yup.string().required("cabang belum dipilih"),
+      // address: yup.string().required("Alamat is required"),
+      // pob: yup.string().required("Tempat Lahir is required"),
+      // dob: yup.date().required("Tanggal Lahir is required"),
+      // branch: yup.string().required("cabang belum dipilih"),
     })
     .required();
 
@@ -102,7 +107,7 @@ const Edit = () => {
       ...data,
       fullname: newData.fullname,
       nickname: newData.nickname,
-      gender: newData.gender,
+      gender: newData.gender ?? isGender,
       parent: newData.parent,
       phone: newData.phone,
       address: newData.address,
@@ -142,7 +147,32 @@ const Edit = () => {
             error={errors.nickname?.message}
             defaultValue={isUpdate ? data.nickname : "-"}
           />
-          <Select
+          <div>
+            <label className="form-label" htmlFor="gender">
+              Jenis Kelamin
+            </label>
+            <div className="flex flex-row gap-3">
+              <span>
+                <Radio
+                  name="gender"
+                  value="L"
+                  checked={isUpdate ? data.gender === "L" : isGender === "L"}
+                  onChange={handleChange}
+                  label={"Laki-laki"}
+                />
+              </span>
+              <span>
+                <Radio
+                  name="gender"
+                  value="P"
+                  checked={isUpdate ? data.gender === "P" : isGender === "P"}
+                  onChange={handleChange}
+                  label={"Perempuan"}
+                />
+              </span>
+            </div>
+          </div>
+          {/* <Select
             name="gender"
             label="Jenis Kelamin"
             placeholder="Pilih gender"
@@ -150,7 +180,7 @@ const Edit = () => {
             error={errors.gender?.message}
             defaultValue={isUpdate ? data.gender : ""}
             options={gender}
-          />
+          /> */}
           <Textinput
             name="parent"
             label="Nama orang tua"
@@ -181,7 +211,7 @@ const Edit = () => {
             placeholder="Masukan Alamat"
             register={register}
             error={errors.address?.message}
-            defaultValue={isUpdate ? data.address : ""}
+            defaultValue={isUpdate ? data.address : "-"}
           />
           <Textinput
             name="pob"
@@ -190,7 +220,7 @@ const Edit = () => {
             placeholder="Masukan Tempat Lahir"
             register={register}
             error={errors.pob?.message}
-            defaultValue={isUpdate ? data.pob : ""}
+            defaultValue={isUpdate ? data.pob : "-"}
           />
           <div>
             <label className="form-label" htmlFor="dob">

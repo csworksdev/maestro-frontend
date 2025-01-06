@@ -356,7 +356,7 @@ const RekapBulanan = () => {
 
   const WillPaid = ({ order_detail_id }) => {
     return (
-      <Tooltip placement="top" arrow content={"Akan dibayar"}>
+      <Tooltip placement="top" arrow content={"Belum dibayar"}>
         <div
           className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
             first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
@@ -395,13 +395,17 @@ const RekapBulanan = () => {
     );
   };
 
+  const handlePayAll = () => {
+    alert("pilih pelatih");
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 justify-end">
         <Card title="Rekap Bulanan">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="md:grid grid-cols-3 gap-4"
+            className="md:grid grid-cols-4 gap-4 items-end auto-cols-min"
           >
             <Select
               name="trainer"
@@ -421,19 +425,30 @@ const RekapBulanan = () => {
               options={listPeriode}
               defaultValue={listPeriode[0]?.value || ""}
             />
-            <div className="content-end pt-3">
-              <div className="flex flex-row justify-between">
-                <button
-                  type="submit"
-                  className="btn btn-dark text-center h-9 py-1"
-                >
-                  <span>Filter</span>
-                </button>
-
-                <button type="button" className="btn text-center h-9 py-1">
-                  <span>Bayar semua</span>
-                </button>
-              </div>
+            <button
+              type="submit"
+              className="btn btn-dark text-center h-9 py-1 w-max"
+            >
+              <span>Filter</span>
+            </button>
+            <div className="flex flex-row-reverse content-end pt-3 flex-1">
+              <button
+                type="button"
+                className="btn text-center p-0"
+                onClick={() => handlePayAll()}
+              >
+                <div className="flex flex-row gap-3 items-center">
+                  <Icon
+                    icon="heroicons-outline:banknotes"
+                    color="green"
+                    className={`h-6 w-6`}
+                  />
+                  <div className="flex flex-col">
+                    <span>Bayar semua</span>
+                    <span>Rp. 0</span>
+                  </div>
+                </div>
+              </button>
             </div>
           </form>
           {isLoading ? (
