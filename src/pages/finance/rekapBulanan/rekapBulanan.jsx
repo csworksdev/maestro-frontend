@@ -22,7 +22,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import DetailOrder from "@/pages/order/active/detail";
 import { DateTime } from "luxon";
-import { toInteger } from "lodash";
+import { toInteger, toString } from "lodash";
 
 const RekapBulanan = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -85,12 +85,12 @@ const RekapBulanan = () => {
       setListTrainer(trainerOptions);
 
       const periodeResponse = await getPeriodisasiAll(trainerParams);
-      const periodeOptions = periodeResponse.data.results
-        .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
-        .map((item) => ({
-          value: item.name,
-          label: item.name,
-        }));
+      const periodeOptions = periodeResponse.data.results;
+      // .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+      // .map((item) => ({
+      //   value: item.name,
+      //   label: item.name,
+      // }));
       setListPeriode(periodeOptions);
     } catch (error) {
       console.error("Error fetching data", error);
@@ -102,18 +102,30 @@ const RekapBulanan = () => {
   const fetchRekapData = async (trainer, periode) => {
     try {
       setIsLoading(true);
+      let x = listPeriode.filter((a) => a.name === selectedPeriode);
+
       var totalHonor = 0;
-      const response = await getRekapByTrainer(periode, trainer);
       let unpaidOrderId = [];
+      const response = await getRekapByTrainer(periode, trainer);
       response.data.results.map((item) => {
         totalHonor += toInteger(item.total_honor_perpertemuan);
         for (let index = 1; index <= 8; index++) {
+          var objDate = "p" + index;
           var objNamePaid = "p" + index + "_paid";
           var objNameOrderID = "p" + index + "_order_detail_id";
-          if (!item[objNamePaid] && item[objNameOrderID] !== "")
+
+          if (
+            !item[objNamePaid] &&
+            item[objNameOrderID] !== "" &&
+            item[objDate] !== "" &&
+            DateTime.fromFormat(item[objDate], "yyyy/mm/dd") <
+              DateTime.fromFormat(x[0].end_date, "yyyy-mm-dd")
+          ) {
             unpaidOrderId.push(item[objNameOrderID]);
+          }
         }
       });
+
       console.log(unpaidOrderId);
       setUnpaidList(unpaidOrderId);
       setTotalHonorAll(totalHonor);
@@ -128,6 +140,10 @@ const RekapBulanan = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const getPeriode = (e) => {
+    console.log(e.target.value);
+  };
 
   const onSubmit = (formData) => {
     setSelectedTrainer(formData.trainer);
@@ -445,7 +461,12 @@ const RekapBulanan = () => {
               placeholder="Pilih Periode"
               register={register}
               error={errors.periode?.message}
-              options={listPeriode}
+              options={listPeriode
+                .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+                .map((item) => ({
+                  value: item.name,
+                  label: item.name,
+                }))}
               defaultValue={listPeriode[0]?.value || ""}
             />
             <button
