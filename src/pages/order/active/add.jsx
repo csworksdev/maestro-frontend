@@ -29,6 +29,9 @@ import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, genderOption } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
+import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import Edit from "@/pages/masterdata/siswa/edit";
 
 const Add = () => {
   const navigate = useNavigate();
@@ -64,6 +67,9 @@ const Add = () => {
   const [studentLoadingError, setStudentLoadingError] = useState(null);
   const [trainerLoadingError, setTrainerLoadingError] = useState(null);
   const [poolNotes, setPoolNotes] = useState(null);
+
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [modalData, setModalData] = useState(null);
 
   const FormValidationSchema = yup
     .object({
@@ -515,6 +521,11 @@ const Add = () => {
     StudentDefaultOptions();
   }, []);
 
+  const handleDetail = (e) => {
+    setDetailModalVisible(true); // Open the modal
+    setModalData(e); // Pass data to the modal
+  };
+
   if (loading && isUpdate) {
     return <Loading />;
   }
@@ -667,17 +678,28 @@ const Add = () => {
             <label className="form-label" htmlFor="students">
               Siswa
             </label>
-            <AsyncSelect
-              name="students"
-              label="Siswa"
-              placeholder="Pilih Siswa"
-              isMulti
-              defaultOptions={defaultStudentOptions}
-              loadOptions={loadOptions}
-              value={selectedStudents}
-              onChange={handleStudentChange}
-              isOptionDisabled={() => selectedStudents.length >= maxStudents}
-            />
+            <div className="flex gap-3">
+              <AsyncSelect
+                name="students"
+                label="Siswa"
+                placeholder="Pilih Siswa"
+                isMulti
+                defaultOptions={defaultStudentOptions}
+                loadOptions={loadOptions}
+                value={selectedStudents}
+                onChange={handleStudentChange}
+                isOptionDisabled={() => selectedStudents.length >= maxStudents}
+                className="grow"
+              />
+              {/* <Button
+                className="btn btn-primary text-center p-2 "
+                icon="heroicons-outline:user-plus"
+                aria-label="Tambah Siswa"
+                onClick={() => handleDetail()}
+              >
+                Tambah Siswa
+              </Button> */}
+            </div>
             {studentLoadingError && (
               <p className="error-message">{studentLoadingError.message}</p>
             )}
@@ -712,6 +734,24 @@ const Add = () => {
             </div>
           </div>
         </form>
+        {detailModalVisible && (
+          <Modal
+            title="Tambah Siswa"
+            activeModal={detailModalVisible} // Tie to modalVisible state
+            onClose={() => setDetailModalVisible(false)} // Close modal when needed
+            className="max-w-5xl"
+          >
+            <Edit
+              state={{ isupdate: false, data: {}, isModal: true }}
+              closeModal={() => setDetailModalVisible(false)}
+            />
+            {/* <DetailOrder
+                state={{ data: modalData }}
+                updateParentData={updatedListData}
+                fromRekap={true}
+              /> */}
+          </Modal>
+        )}
       </Card>
     </div>
   );

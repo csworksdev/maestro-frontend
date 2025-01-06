@@ -9,7 +9,10 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { getPeriodisasiAll } from "@/axios/referensi/periodisasi";
 import Select from "@/components/ui/Select";
-import { getRekapByTrainer } from "@/axios/rekap/bulanan";
+import {
+  BayarPelatihByTrainer,
+  getRekapByTrainer,
+} from "@/axios/rekap/bulanan";
 import Swal from "sweetalert2";
 import { DeleteOrder } from "@/axios/masterdata/order";
 import SkeletionTable from "@/components/skeleton/Table";
@@ -19,21 +22,20 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import DetailOrder from "@/pages/order/active/detail";
 import { DateTime } from "luxon";
+import { toInteger } from "lodash";
 
 const RekapBulanan = () => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [listTrainer, setListTrainer] = useState([]);
   const [listPeriode, setListPeriode] = useState([]);
   const [listData, setListData] = useState({ results: [] });
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [modalData, setModalData] = useState(null);
+  const [totalHonorAll, setTotalHonorAll] = useState(0);
+  const [unpaidList, setUnpaidList] = useState({});
   const [selectedTrainer, setSelectedTrainer] = useState("");
   const [selectedPeriode, setSelectedPeriode] = useState("");
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [modalData, setModalData] = useState(null);
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -100,8 +102,20 @@ const RekapBulanan = () => {
   const fetchRekapData = async (trainer, periode) => {
     try {
       setIsLoading(true);
-
+      var totalHonor = 0;
       const response = await getRekapByTrainer(periode, trainer);
+      let unpaidOrderId = [];
+      response.data.results.map((item, index) => {
+        totalHonor += toInteger(item.total_honor_perpertemuan);
+        for (let index = 1; index < 8; index++) {
+          var objNamePaid = "p" + (index + 1) + "_paid";
+          var objNameOrderID = "p" + (index + 1) + "_order_detail_id";
+          if (!item[objNamePaid]) unpaidOrderId.push(item[objNameOrderID]);
+        }
+      });
+
+      setUnpaidList(unpaidOrderId);
+      setTotalHonorAll(totalHonor);
       setListData(response.data);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
@@ -395,8 +409,13 @@ const RekapBulanan = () => {
     );
   };
 
-  const handlePayAll = () => {
-    alert("pilih pelatih");
+  const handlePayAll = async () => {
+    if (unpaidList.length > 0) {
+      const response = await BayarPelatihByTrainer(unpaidList);
+      if (response.status) {
+        fetchRekapData(selectedTrainer, selectedPeriode);
+      }
+    }
   };
 
   return (
@@ -445,7 +464,11 @@ const RekapBulanan = () => {
                   />
                   <div className="flex flex-col">
                     <span>Bayar semua</span>
-                    <span>Rp. 0</span>
+                    <span>
+                      {unpaidList.length > 1
+                        ? "Rp. " + totalHonorAll.toLocaleString()
+                        : "Sudah Dibayar"}
+                    </span>
                   </div>
                 </div>
               </button>

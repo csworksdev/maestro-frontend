@@ -14,11 +14,18 @@ import { DateTime } from "luxon";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { brands } from "@/constant/data";
 import Radio from "@/components/ui/Radio";
+import { lowerCase, toString } from "lodash";
+import Button from "@/components/ui/Button";
+import Tooltip from "@/components/ui/Tooltip";
 
-const Edit = () => {
+const Edit = (closeModal = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isupdate = "false", data = {} } = location.state ?? {};
+  const {
+    isupdate = "false",
+    data = {},
+    isModal = false,
+  } = location.state ?? state.data;
   const isUpdate = isupdate === "true";
   const [branchOption, setBranchOption] = useState([]);
   const [isGender, setIsGender] = useState("L");
@@ -73,21 +80,79 @@ const Edit = () => {
     }
   }, [isUpdate, data, setValue]);
 
-  const gender = [
-    { value: "L", label: "Laki-laki" },
-    { value: "P", label: "Perempuan" },
-  ];
+  const [formData, setFormData] = useState({
+    fullname: "",
+    nickname: "",
+    gender: "",
+    parent: "",
+    phone: "",
+    address: "",
+    dob: "",
+    pob: "",
+    branch: "",
+  });
+
+  const handlePaste = async () => {
+    const pastedData = await navigator.clipboard.readText();
+    const values = pastedData.split("\t"); // Assuming tab-separated values
+    // Map pasted data to form fields (adjust indexes as needed)
+
+    console.log(values);
+
+    setFormData({
+      fullname: "",
+      nickname: "",
+      gender: "",
+      parent: "",
+      phone: "",
+      address: "",
+      pob: "",
+      dob: "",
+    });
+    setValue("fullname", formData.fullname);
+    setValue("nickname", formData.nickname);
+    setValue("gender", formData.gender);
+    setValue("parent", formData.parent);
+    setValue("phone", formData.phone);
+    setValue("address", formData.address);
+    setValue("dob", formData.dob);
+    setValue("pob", formData.pob);
+
+    setFormData({
+      fullname: values[2],
+      nickname: values[3],
+      gender: toString(values[5]) === "Laki-laki" ? "L" : "P",
+      parent: values[4],
+      phone: values[11],
+      address: values[10],
+      pob: values[6],
+      dob: DateTime.fromFormat(values[7], "M/d/yyyy").toFormat("yyyy-MM-dd"),
+    });
+    setIsGender(formData.gender);
+
+    setValue("fullname", formData.fullname);
+    setValue("nickname", formData.nickname);
+    setValue("gender", formData.gender);
+    setValue("parent", formData.parent);
+    setValue("phone", formData.phone);
+    setValue("address", formData.address);
+    setValue("dob", formData.dob);
+    setValue("pob", formData.pob);
+  };
 
   const handleCancel = () => {
-    navigate(-1);
+    isModal ? closeModal : navigate(-1);
   };
 
   const handleAdd = (data) => {
     AddSiswa(data).then((res) => {
       if (res.status) {
-        Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-          navigate(-1)
-        );
+        if (isModal) closeModal();
+        else {
+          // Swal.fire("Added!", "Your file has been added.", "success").then(() =>
+          //   navigate(-1)
+          // );
+        }
       }
     });
   };
@@ -127,7 +192,21 @@ const Edit = () => {
 
   return (
     <div>
-      <Card title={`${isUpdate ? "Update" : "Add"} Siswa`}>
+      <Card
+        title={
+          <div className="flex flex-row gap-5 items-center">
+            {isUpdate ? "Update Siswa" : "Tambah Siswa"}
+            <Button
+              className="btn btn-primary text-center p-2 "
+              icon="heroicons-outline:user-plus"
+              aria-label="Tambah Siswa"
+              onClick={(e) => handlePaste(e)}
+            >
+              Paste excel
+            </Button>
+          </div>
+        }
+      >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Textinput
             name="fullname"
@@ -172,15 +251,6 @@ const Edit = () => {
               </span>
             </div>
           </div>
-          {/* <Select
-            name="gender"
-            label="Jenis Kelamin"
-            placeholder="Pilih gender"
-            register={register}
-            error={errors.gender?.message}
-            defaultValue={isUpdate ? data.gender : ""}
-            options={gender}
-          /> */}
           <Textinput
             name="parent"
             label="Nama orang tua"
@@ -193,12 +263,13 @@ const Edit = () => {
           <Textinput
             name="phone"
             label="Telephone"
-            type="tel"
+            type="text"
             placeholder="Masukan Telephone"
             register={register}
             error={errors.phone?.message}
             defaultValue={isUpdate ? data.phone : ""}
-            isMask={true}
+            value={formData.phone}
+            // isMask={true}
             options={{
               blocks: [4, 4, 5],
               delimiter: " ",
@@ -228,6 +299,7 @@ const Edit = () => {
             </label>
             <Flatpickr
               defaultValue={isUpdate ? data.dob : ""}
+              value={formData.dob}
               name="dob"
               options={{
                 dateFormat: "Y-m-d",
