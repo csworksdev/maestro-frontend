@@ -105,15 +105,16 @@ const RekapBulanan = () => {
       var totalHonor = 0;
       const response = await getRekapByTrainer(periode, trainer);
       let unpaidOrderId = [];
-      response.data.results.map((item, index) => {
+      response.data.results.map((item) => {
         totalHonor += toInteger(item.total_honor_perpertemuan);
-        for (let index = 1; index < 8; index++) {
-          var objNamePaid = "p" + (index + 1) + "_paid";
-          var objNameOrderID = "p" + (index + 1) + "_order_detail_id";
-          if (!item[objNamePaid]) unpaidOrderId.push(item[objNameOrderID]);
+        for (let index = 1; index <= 8; index++) {
+          var objNamePaid = "p" + index + "_paid";
+          var objNameOrderID = "p" + index + "_order_detail_id";
+          if (!item[objNamePaid] && item[objNameOrderID] !== "")
+            unpaidOrderId.push(item[objNameOrderID]);
         }
       });
-
+      console.log(unpaidOrderId);
       setUnpaidList(unpaidOrderId);
       setTotalHonorAll(totalHonor);
       setListData(response.data);
@@ -412,8 +413,11 @@ const RekapBulanan = () => {
   const handlePayAll = async () => {
     if (unpaidList.length > 0) {
       const response = await BayarPelatihByTrainer(unpaidList);
-      if (response.status) {
-        fetchRekapData(selectedTrainer, selectedPeriode);
+      if (response.status === 200) {
+        Swal.fire("Success!", "Pelatih Sudah dibayar.", "success").then(
+          () => fetchRekapData(selectedTrainer, selectedPeriode)
+          // setListData(response.data.results)
+        );
       }
     }
   };
@@ -450,29 +454,31 @@ const RekapBulanan = () => {
             >
               <span>Filter</span>
             </button>
-            <div className="flex flex-row-reverse content-end pt-3 flex-1">
-              <button
-                type="button"
-                className="btn text-center p-0"
-                onClick={() => handlePayAll()}
-              >
-                <div className="flex flex-row gap-3 items-center">
-                  <Icon
-                    icon="heroicons-outline:banknotes"
-                    color="green"
-                    className={`h-6 w-6`}
-                  />
-                  <div className="flex flex-col">
-                    <span>Bayar semua</span>
-                    <span>
-                      {unpaidList.length > 1
-                        ? "Rp. " + totalHonorAll.toLocaleString()
-                        : "Sudah Dibayar"}
-                    </span>
+            {listData.results.length > 0 ? (
+              <div className="flex flex-row-reverse content-end pt-3 flex-1">
+                <button
+                  type="button"
+                  className="btn text-center p-0"
+                  onClick={() => handlePayAll()}
+                >
+                  <div className="flex flex-row gap-3 items-center">
+                    <Icon
+                      icon="heroicons-outline:banknotes"
+                      color="green"
+                      className={`h-6 w-6`}
+                    />
+                    <div className="flex flex-col">
+                      <span>Bayar semua</span>
+                      <span>
+                        {unpaidList.length > 1
+                          ? "Rp. " + totalHonorAll.toLocaleString()
+                          : "Sudah Dibayar"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </button>
-            </div>
+                </button>
+              </div>
+            ) : null}
           </form>
           {isLoading ? (
             <SkeletionTable />
