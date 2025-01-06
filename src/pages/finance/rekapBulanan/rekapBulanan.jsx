@@ -379,7 +379,9 @@ const RekapBulanan = () => {
           ) : null}
         </span>
         <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
-          {tanggal || ""}
+          {tanggal
+            ? DateTime.fromFormat(tanggal, "yyyy/M/dd").toFormat("dd/M")
+            : ""}
         </span>
       </div>
     );
