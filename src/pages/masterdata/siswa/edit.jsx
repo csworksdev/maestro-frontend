@@ -25,7 +25,7 @@ const Edit = (closeModal = {}) => {
     isupdate = "false",
     data = {},
     isModal = false,
-  } = location.state ?? state.data;
+  } = location.state ?? "";
   const isUpdate = isupdate === "true";
   const [branchOption, setBranchOption] = useState([]);
   const [isGender, setIsGender] = useState("L");
@@ -149,9 +149,9 @@ const Edit = (closeModal = {}) => {
       if (res.status) {
         if (isModal) closeModal();
         else {
-          // Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-          //   navigate(-1)
-          // );
+          Swal.fire("Added!", "Your file has been added.", "success").then(() =>
+            navigate(-1)
+          );
         }
       }
     });
