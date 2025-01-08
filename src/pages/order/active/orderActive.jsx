@@ -28,25 +28,25 @@ const OrderActive = ({ is_finished }) => {
   const [modalData, setModalData] = useState(null);
 
   const actions = [
-    {
-      name: "detail",
-      icon: "heroicons-outline:eye",
-      onClick: (row) => handleDetail(row.row.original),
-      className:
-        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
+    // {
+    //   name: "detail",
+    //   icon: "heroicons-outline:eye",
+    //   onClick: (row) => handleDetail(row.row.original),
+    //   className:
+    //     "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    // },
     {
       name: "edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
-    {
-      name: "delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
+    // {
+    //   name: "delete",
+    //   icon: "heroicons-outline:trash",
+    //   onClick: (row) => handleDelete(row.row.original),
+    //   className:
+    //     "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    // },
   ];
 
   const fetchData = async (page, size, query) => {
