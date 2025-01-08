@@ -92,18 +92,10 @@ const RekapBulanan = () => {
 
       const trainerResponse = await getTrainerAll(trainerParams);
       let trainerOptions = trainerResponse.data.results;
-      // trainerOptions.unshift({
-      //   value: "x",
-      //   label: "Pilih Coach",
-      // });
       setListTrainer(trainerOptions);
 
       const periodeResponse = await getPeriodisasiAll(trainerParams);
       let periodeOptions = periodeResponse.data.results;
-      // periodeOptions.unshift({
-      //   value: "x",
-      //   label: "Pilih Periode",
-      // });
       setListPeriode(periodeOptions);
     } catch (error) {
       console.error("Error fetching data", error);
@@ -124,28 +116,112 @@ const RekapBulanan = () => {
         nextPrice: 0,
       });
 
-      var totalHonor = 0;
-      let unpaidOrderId = [];
+      // var totalHonor = 0;
+      // let unpaidOrderId = [];
       const response = await getRekapByTrainer(
         selectedPeriode[0].name,
         selectedTrainer[0].trainer_id
       );
-      response.data.results.map((item) => {
+      // response.data.results.map((item) => {
+      //   // totalHonor += toInteger(item.total_honor_perpertemuan);
+      //   for (let index = 1; index <= 8; index++) {
+      //     var objDate = "p" + index;
+      //     var objNamePaid = "p" + index + "_paid";
+      //     var objNameOrderID = "p" + index + "_order_detail_id";
+
+      //     // if (
+      //     //   !item[objNamePaid] &&
+      //     //   item[objNameOrderID] !== "" &&
+      //     //   item[objDate] !== "" &&
+      //     //   DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
+      //     //     DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
+      //     // ) {
+      //     //   unpaidOrderId.push(item[objNameOrderID]);
+      //     // }
+
+      //     if (item[objDate] !== "") {
+      //       if (
+      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <
+      //           DateTime.fromFormat(
+      //             selectedPeriode[0].start_date,
+      //             "yyyy-MM-dd"
+      //           ) &&
+      //         item[objNamePaid] &&
+      //         item[objNameOrderID] !== ""
+      //       ) {
+      //         setSummary((prev) => ({
+      //           ...prev,
+      //           prevCount: prev.prevCount + 1,
+      //           prevPrice: prev.prevPrice + item.honor_perpertemuan,
+      //         }));
+      //       } else if (
+      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >=
+      //           DateTime.fromFormat(
+      //             selectedPeriode[0].start_date,
+      //             "yyyy-MM-dd"
+      //           ) &&
+      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
+      //           DateTime.fromFormat(
+      //             selectedPeriode[0].end_date,
+      //             "yyyy-MM-dd"
+      //           ) &&
+      //         !item[objNamePaid] &&
+      //         item[objNameOrderID] !== ""
+      //       ) {
+      //         unpaidOrderId.push(item[objNameOrderID]);
+      //         setSummary((prev) => ({
+      //           ...prev,
+      //           currCount: prev.currCount + 1,
+      //           currPrice: prev.currPrice + item.honor_perpertemuan,
+      //         }));
+      //       } else if (
+      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >
+      //           DateTime.fromFormat(
+      //             selectedPeriode[0].end_date,
+      //             "yyyy-MM-dd"
+      //           ) &&
+      //         !item[objNamePaid] &&
+      //         item[objNameOrderID] !== ""
+      //       ) {
+      //         setSummary((prev) => ({
+      //           ...prev,
+      //           nextCount: prev.nextCount + 1,
+      //           nextPrice: prev.nextPrice + item.honor_perpertemuan,
+      //         }));
+      //       }
+      //     }
+      //   }
+      // });
+
+      // setUnpaidList(unpaidOrderId);
+      // // setTotalHonorAll(totalHonor);
+      setListData(response.data);
+      reSummarize();
+    } catch (error) {
+      console.error("Error fetching rekap data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const reSummarize = async () => {
+    try {
+      setSummary({
+        prevCount: 0,
+        prevPrice: 0,
+        currCount: 0,
+        currPrice: 0,
+        nextCount: 0,
+        nextPrice: 0,
+      });
+      let unpaidOrderId = [];
+
+      listData.results.map((item) => {
         // totalHonor += toInteger(item.total_honor_perpertemuan);
         for (let index = 1; index <= 8; index++) {
           var objDate = "p" + index;
           var objNamePaid = "p" + index + "_paid";
           var objNameOrderID = "p" + index + "_order_detail_id";
-
-          // if (
-          //   !item[objNamePaid] &&
-          //   item[objNameOrderID] !== "" &&
-          //   item[objDate] !== "" &&
-          //   DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
-          //     DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
-          // ) {
-          //   unpaidOrderId.push(item[objNameOrderID]);
-          // }
 
           if (item[objDate] !== "") {
             if (
@@ -202,14 +278,17 @@ const RekapBulanan = () => {
       });
 
       setUnpaidList(unpaidOrderId);
-      // setTotalHonorAll(totalHonor);
-      setListData(response.data);
+      console.log(summary);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    reSummarize();
+  }, [listData]);
 
   useEffect(() => {
     fetchData();
