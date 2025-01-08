@@ -60,10 +60,10 @@ export const menuChief = [
         childtitle: "Siswa",
         childlink: "student",
       },
-      {
-        childtitle: "Rekap Pelatih",
-        childlink: "rekap-pelatih",
-      },
+      // {
+      //   childtitle: "Rekap Pelatih",
+      //   childlink: "rekap-pelatih",
+      // },
       {
         childtitle: "Rekap Bulanan",
         childlink: "rekap-bulanan",
@@ -126,6 +126,33 @@ export const menuTrainer = [
       {
         childtitle: "Presence",
         childlink: "coach/presence",
+      },
+    ],
+  },
+];
+
+export const menuAdminNew = [
+  {
+    isHeadr: true,
+    title: "Admin",
+  },
+  {
+    title: "Master Data",
+    icon: "heroicons-outline:server",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Siswa",
+        childlink: "siswa",
+      },
+      {
+        childtitle: "Order",
+        childlink: "order",
+      },
+      {
+        childtitle: "Finished",
+        childlink: "finishedOrder",
       },
     ],
   },

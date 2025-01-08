@@ -1,6 +1,7 @@
 import React from "react";
 import {
   menuAdmin,
+  menuAdminNew,
   menuFinance,
   //   menuItems,
   menuChief,
@@ -12,7 +13,7 @@ const Menu = (role = "") => {
   let menuItems = [];
   switch (role) {
     case "Admin":
-      menuItems = [...menuAdmin];
+      menuItems = [...menuAdminNew];
       break;
     case "Finance":
       menuItems = [...menuFinance];

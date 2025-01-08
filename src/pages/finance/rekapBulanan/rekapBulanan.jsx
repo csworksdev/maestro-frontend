@@ -22,7 +22,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import DetailOrder from "@/pages/order/active/detail";
 import { DateTime } from "luxon";
-import { toInteger, toString } from "lodash";
+import { forEach, toInteger, toString } from "lodash";
 
 const RekapBulanan = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +36,14 @@ const RekapBulanan = () => {
   const [unpaidList, setUnpaidList] = useState({});
   const [selectedTrainer, setSelectedTrainer] = useState("");
   const [selectedPeriode, setSelectedPeriode] = useState("");
+  const [summary, setSummary] = useState({
+    prevCount: 0,
+    prevPrice: 0,
+    currCount: 0,
+    currPrice: 0,
+    nextCount: 0,
+    nextPrice: 0,
+  });
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -54,12 +62,19 @@ const RekapBulanan = () => {
 
   const actions = [
     {
+      name: "Bayar",
+      icon: "heroicons-outline:banknotes",
+      onClick: (row) => handleBayarPerOrder(row.row.original),
+      className:
+        "bg-warning-500 text-warning-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    },
+    {
       name: "Detail",
       icon: "heroicons-outline:eye",
       onClick: (row) => handleDetail(row.row.original),
       // navigate("detailorderpelatih", { state: { data: row.row.original } }),
       className:
-        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:",
+        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
     },
     // {
     //   name: "delete",
@@ -76,21 +91,19 @@ const RekapBulanan = () => {
       const trainerParams = { page: 1, page_size: 100, search: searchQuery };
 
       const trainerResponse = await getTrainerAll(trainerParams);
-      const trainerOptions = trainerResponse.data.results
-        .map((item) => ({
-          value: item.trainer_id,
-          label: item.fullname,
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label));
+      let trainerOptions = trainerResponse.data.results;
+      // trainerOptions.unshift({
+      //   value: "x",
+      //   label: "Pilih Coach",
+      // });
       setListTrainer(trainerOptions);
 
       const periodeResponse = await getPeriodisasiAll(trainerParams);
-      const periodeOptions = periodeResponse.data.results;
-      // .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
-      // .map((item) => ({
-      //   value: item.name,
-      //   label: item.name,
-      // }));
+      let periodeOptions = periodeResponse.data.results;
+      // periodeOptions.unshift({
+      //   value: "x",
+      //   label: "Pilih Periode",
+      // });
       setListPeriode(periodeOptions);
     } catch (error) {
       console.error("Error fetching data", error);
@@ -99,36 +112,97 @@ const RekapBulanan = () => {
     }
   };
 
-  const fetchRekapData = async (trainer, periode) => {
+  const fetchRekapData = async () => {
     try {
       setIsLoading(true);
-      let x = listPeriode.filter((a) => a.name === selectedPeriode);
+      setSummary({
+        prevCount: 0,
+        prevPrice: 0,
+        currCount: 0,
+        currPrice: 0,
+        nextCount: 0,
+        nextPrice: 0,
+      });
 
       var totalHonor = 0;
       let unpaidOrderId = [];
-      const response = await getRekapByTrainer(periode, trainer);
+      const response = await getRekapByTrainer(
+        selectedPeriode[0].name,
+        selectedTrainer[0].trainer_id
+      );
       response.data.results.map((item) => {
-        totalHonor += toInteger(item.total_honor_perpertemuan);
+        // totalHonor += toInteger(item.total_honor_perpertemuan);
         for (let index = 1; index <= 8; index++) {
           var objDate = "p" + index;
           var objNamePaid = "p" + index + "_paid";
           var objNameOrderID = "p" + index + "_order_detail_id";
 
-          if (
-            !item[objNamePaid] &&
-            item[objNameOrderID] !== "" &&
-            item[objDate] !== "" &&
-            DateTime.fromFormat(item[objDate], "yyyy/mm/dd") <
-              DateTime.fromFormat(x[0].end_date, "yyyy-mm-dd")
-          ) {
-            unpaidOrderId.push(item[objNameOrderID]);
+          // if (
+          //   !item[objNamePaid] &&
+          //   item[objNameOrderID] !== "" &&
+          //   item[objDate] !== "" &&
+          //   DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
+          //     DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
+          // ) {
+          //   unpaidOrderId.push(item[objNameOrderID]);
+          // }
+
+          if (item[objDate] !== "") {
+            if (
+              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <
+                DateTime.fromFormat(
+                  selectedPeriode[0].start_date,
+                  "yyyy-MM-dd"
+                ) &&
+              item[objNamePaid] &&
+              item[objNameOrderID] !== ""
+            ) {
+              setSummary((prev) => ({
+                ...prev,
+                prevCount: prev.prevCount + 1,
+                prevPrice: prev.prevPrice + item.honor_perpertemuan,
+              }));
+            } else if (
+              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >=
+                DateTime.fromFormat(
+                  selectedPeriode[0].start_date,
+                  "yyyy-MM-dd"
+                ) &&
+              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
+                DateTime.fromFormat(
+                  selectedPeriode[0].end_date,
+                  "yyyy-MM-dd"
+                ) &&
+              !item[objNamePaid] &&
+              item[objNameOrderID] !== ""
+            ) {
+              unpaidOrderId.push(item[objNameOrderID]);
+              setSummary((prev) => ({
+                ...prev,
+                currCount: prev.currCount + 1,
+                currPrice: prev.currPrice + item.honor_perpertemuan,
+              }));
+            } else if (
+              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >
+                DateTime.fromFormat(
+                  selectedPeriode[0].end_date,
+                  "yyyy-MM-dd"
+                ) &&
+              !item[objNamePaid] &&
+              item[objNameOrderID] !== ""
+            ) {
+              setSummary((prev) => ({
+                ...prev,
+                nextCount: prev.nextCount + 1,
+                nextPrice: prev.nextPrice + item.honor_perpertemuan,
+              }));
+            }
           }
         }
       });
 
-      console.log(unpaidOrderId);
       setUnpaidList(unpaidOrderId);
-      setTotalHonorAll(totalHonor);
+      // setTotalHonorAll(totalHonor);
       setListData(response.data);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
@@ -141,14 +215,8 @@ const RekapBulanan = () => {
     fetchData();
   }, []);
 
-  const getPeriode = (e) => {
-    console.log(e.target.value);
-  };
-
   const onSubmit = (formData) => {
-    setSelectedTrainer(formData.trainer);
-    setSelectedPeriode(formData.periode);
-    fetchRekapData(formData.trainer, formData.periode);
+    fetchRekapData();
   };
 
   const handleDetail = (e) => {
@@ -363,8 +431,15 @@ const RekapBulanan = () => {
 
   const CellDetail = ({ tanggal, status, order_detail_id }) => {
     let bgColor = "";
+
+    let currentPeriode =
+      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
+        ? true
+        : false;
+
     if (tanggal && status === false) {
-      bgColor = "bg-red-500"; // Blue if p1 has value and p1_paid is false
+      bgColor = currentPeriode ? "bg-red-500" : "bg-yellow-400"; // Blue if p1 has value and p1_paid is false
     }
 
     return (
@@ -373,8 +448,10 @@ const RekapBulanan = () => {
           {tanggal ? (
             status === true ? (
               <PaidSign />
-            ) : (
+            ) : currentPeriode ? (
               <WillPaid order_detail_id={order_detail_id} />
+            ) : (
+              <NextMonth />
             )
           ) : null}
         </span>
@@ -400,7 +477,7 @@ const RekapBulanan = () => {
             icon="heroicons-outline:banknotes"
             color="green"
             className={`h-6 w-6`}
-            onClick={() => alert()}
+            onClick={() => handleBayarPerPertemuan(order_detail_id)}
           />
         </div>
       </Tooltip>
@@ -428,15 +505,143 @@ const RekapBulanan = () => {
     );
   };
 
-  const handlePayAll = async () => {
-    if (unpaidList.length > 0) {
-      const response = await BayarPelatihByTrainer(unpaidList);
+  const NextMonth = () => {
+    return (
+      <Tooltip placement="top" arrow content={"Rekapan Bulan Depan"}>
+        <div
+          className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
+            first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
+          `}
+          // key={p1_order_detail_id}
+        >
+          <span className="text-base">
+            <Icon
+              icon="heroicons-outline:exclamation-circle"
+              color="black"
+              className={`h-6 w-6 `}
+            />
+          </span>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const PeriodSummary = () => {
+    return (
+      <div className="flex flex-row gap-4 my-10">
+        <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-white">
+          <p className="flex justify-center gap-3">
+            <span className="text-base">
+              <Icon
+                icon="heroicons-outline:check-badge"
+                color="blue"
+                className={`h-6 w-6`}
+              />
+            </span>
+            <span className="font-bold">Periode Sebelumnya</span>
+          </p>
+          <p>
+            <span>Pertemuan : {summary.prevCount}</span>
+            <br />
+            <span>Honor : Rp. {summary.prevPrice.toLocaleString()}</span>
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-red-300">
+          <p className="flex justify-center gap-3">
+            <span className="text-base">
+              <Icon
+                icon="heroicons-outline:banknotes"
+                color="Green"
+                className={`h-6 w-6`}
+              />
+            </span>
+            <span className="font-bold">Periode Sekarang</span>
+          </p>
+          <p>
+            <span>Pertemuan : {summary.currCount}</span>
+            <br />
+            <span>Honor : Rp. {summary.currPrice.toLocaleString()}</span>
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-yellow-300">
+          <p className="flex justify-center gap-3">
+            <span className="text-base">
+              <Icon
+                icon="heroicons-outline:exclamation-circle"
+                color="black"
+                className={`h-6 w-6`}
+              />
+            </span>
+            <span className="font-bold">Periode Selanjutnya</span>
+          </p>
+          <p>
+            <span>Pertemuan : {summary.nextCount}</span>
+            <br />
+            <span>Honor : Rp. {summary.nextPrice.toLocaleString()}</span>
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  const handlePayAll = async (params) => {
+    if (params.length > 0) {
+      const response = await BayarPelatihByTrainer(params);
       if (response.status === 200) {
-        Swal.fire("Success!", "Pelatih Sudah dibayar.", "success").then(
-          () => fetchRekapData(selectedTrainer, selectedPeriode)
-          // setListData(response.data.results)
-        );
+        Swal.fire("Success!", "Pelatih Sudah dibayar.", "success").then(() => {
+          setListData((prev) => ({
+            ...prev,
+            results: prev.results.map((item) => {
+              const updatedItem = { ...item };
+              Object.keys(updatedItem).forEach((key) => {
+                if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
+                  const paidKey = key.replace("_order_detail_id", "_paid");
+                  if (params.includes(updatedItem[key])) {
+                    updatedItem[paidKey] = true;
+                  }
+                }
+              });
+              return updatedItem;
+            }),
+          }));
+        });
       }
+    }
+  };
+
+  const handleBayarPerPertemuan = (order_detail_id) => {
+    handlePayAll([order_detail_id]);
+  };
+
+  const handleBayarPerOrder = (e) => {
+    try {
+      // setUnpaidList([]);
+      // let x = listPeriode.filter((a) => a.name === selectedPeriode);
+      let data = e;
+
+      let unpaidOrderId = [];
+      for (let index = 1; index <= 8; index++) {
+        var objDate = "p" + index;
+        var objNamePaid = "p" + index + "_paid";
+        var objNameOrderID = "p" + index + "_order_detail_id";
+
+        if (
+          !data[objNamePaid] &&
+          data[objNameOrderID] !== "" &&
+          data[objDate] !== "" &&
+          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") <=
+            DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") >=
+            DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+        ) {
+          unpaidOrderId.push(data[objNameOrderID]);
+        }
+      }
+      // setUnpaidList(unpaidOrderId);
+      handlePayAll(unpaidOrderId);
+      // alert(JSON.stringify(unpaidOrderId));
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -454,8 +659,18 @@ const RekapBulanan = () => {
               placeholder="Pilih Coach"
               register={register}
               error={errors.trainer?.message}
-              options={listTrainer}
-              defaultValue={listTrainer[0]?.value || ""}
+              options={listTrainer
+                .map((item) => ({
+                  value: item.trainer_id,
+                  label: item.fullname,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label))}
+              // defaultValue={listTrainer[0]?.value || ""}
+              onChange={(e) =>
+                setSelectedTrainer(
+                  listTrainer.filter((a) => a.trainer_id === e.target.value)
+                )
+              }
             />
             <Select
               name="periode"
@@ -469,7 +684,12 @@ const RekapBulanan = () => {
                   value: item.name,
                   label: item.name,
                 }))}
-              defaultValue={listPeriode[0]?.value || ""}
+              // defaultValue={listPeriode[0]?.value || ""}
+              onChange={(e) =>
+                setSelectedPeriode(
+                  listPeriode.filter((a) => a.name === e.target.value)
+                )
+              }
             />
             <button
               type="submit"
@@ -494,7 +714,7 @@ const RekapBulanan = () => {
                       <span>Bayar semua</span>
                       <span>
                         {unpaidList.length > 1
-                          ? "Rp. " + totalHonorAll.toLocaleString()
+                          ? "Rp. " + summary.currPrice.toLocaleString()
                           : "Sudah Dibayar"}
                       </span>
                     </div>
@@ -506,7 +726,10 @@ const RekapBulanan = () => {
           {isLoading ? (
             <SkeletionTable />
           ) : listData.results.length > 0 ? (
-            <Table listData={listData} listColumn={COLUMNS} />
+            <>
+              <PeriodSummary />
+              <Table listData={listData} listColumn={COLUMNS} />
+            </>
           ) : (
             <p>No data available</p>
           )}
