@@ -14,6 +14,7 @@ import Edit from "./edit";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
 import { DateTime } from "luxon";
+import { useSelector } from "react-redux";
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -27,26 +28,36 @@ const OrderActive = ({ is_finished }) => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  const actions = [
-    // {
-    //   name: "detail",
-    //   icon: "heroicons-outline:eye",
-    //   onClick: (row) => handleDetail(row.row.original),
-    //   className:
-    //     "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    // },
+  const { roles } = useSelector((state) => state.auth.data);
+
+  const actionsAdmin = [
     {
       name: "edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
-    // {
-    //   name: "delete",
-    //   icon: "heroicons-outline:trash",
-    //   onClick: (row) => handleDelete(row.row.original),
-    //   className:
-    //     "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    // },
+  ];
+
+  const actions = [
+    {
+      name: "detail",
+      icon: "heroicons-outline:eye",
+      onClick: (row) => handleDetail(row.row.original),
+      className:
+        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    },
+    {
+      name: "edit",
+      icon: "heroicons:pencil-square",
+      onClick: (row) => handleEdit(row.row.original),
+    },
+    {
+      name: "delete",
+      icon: "heroicons-outline:trash",
+      onClick: (row) => handleDelete(row.row.original),
+      className:
+        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    },
   ];
 
   const fetchData = async (page, size, query) => {
@@ -294,9 +305,11 @@ const OrderActive = ({ is_finished }) => {
         return (
           <div className="flex flex-row space-x-2 items-center">
             <div className="flex space-x-2">
-              {actions.map((action, index) => (
-                <TableAction action={action} index={index} row={row} />
-              ))}
+              {(roles === "Admin" ? actionsAdmin : actions).map(
+                (action, index) => (
+                  <TableAction action={action} index={index} row={row} />
+                )
+              )}
             </div>
           </div>
         );

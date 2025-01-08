@@ -278,7 +278,6 @@ const RekapBulanan = () => {
       });
 
       setUnpaidList(unpaidOrderId);
-      console.log(summary);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     } finally {

@@ -137,7 +137,7 @@ export const menuAdminNew = [
     title: "Admin",
   },
   {
-    title: "Master Data",
+    title: "Admin",
     icon: "heroicons-outline:server",
     isOpen: true,
     isHide: true,

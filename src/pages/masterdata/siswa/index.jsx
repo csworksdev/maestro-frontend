@@ -14,6 +14,7 @@ import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
+import { useSelector } from "react-redux";
 
 const Siswa = () => {
   const navigate = useNavigate();
@@ -25,6 +26,14 @@ const Siswa = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { roles } = useSelector((state) => state.auth.data);
+  const actionsAdmin = [
+    {
+      name: "edit",
+      icon: "heroicons:pencil-square",
+      onClick: (row) => handleEdit(row.row.original),
+    },
+  ];
   const actions = [
     {
       name: "edit",
@@ -168,9 +177,11 @@ const Siswa = () => {
         return (
           <div className="flex space-x-2 items-center">
             <div className="flex space-x-2">
-              {actions.map((action, index) => (
-                <TableAction action={action} index={index} row={row} />
-              ))}
+              {(roles === "Admin" ? actionsAdmin : actions).map(
+                (action, index) => (
+                  <TableAction action={action} index={index} row={row} />
+                )
+              )}
             </div>
           </div>
         );
