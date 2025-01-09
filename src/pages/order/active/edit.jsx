@@ -544,11 +544,13 @@ const Edit = ({ state, onClose = null }) => {
               defaultValue={data.order_date}
               name="order_date"
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 disableMobile: "true",
+                allowInput: true,
               }}
               className="form-control py-2"
               onChange={(date) => setValue("order_date", date[0])}
+              readOnly={false}
             />
             {errors.order_date && (
               <p className="error-message">{errors.order_date.message}</p>
@@ -562,8 +564,9 @@ const Edit = ({ state, onClose = null }) => {
               value={data.start_date}
               name="start_date"
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 disableMobile: "true",
+                allowInput: true,
               }}
               className="form-control py-2"
               onChange={(date) => setValue("start_date", date[0])}

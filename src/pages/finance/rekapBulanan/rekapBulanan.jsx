@@ -740,7 +740,7 @@ const RekapBulanan = () => {
               <div className="flex flex-row-reverse content-end pt-3 flex-1">
                 <button
                   type="button"
-                  className="btn text-center p-0"
+                  className="btn text-center border border-black-500 rounded p-4"
                   onClick={() => handlePayAll()}
                 >
                   <div className="flex flex-row gap-3 items-center">

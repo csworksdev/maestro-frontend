@@ -211,9 +211,10 @@ const DetailOrder = ({
             <Flatpickr
               value={params.schedule_date} // Display parsed date
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 disableMobile: true,
                 // maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                allowInput: true,
               }}
               className="form-control py-2"
               onChange={(dates) => {
@@ -224,7 +225,6 @@ const DetailOrder = ({
                   );
                 }
               }}
-              disabled={false}
             />
             {errors.schedule_date && (
               <p className="error-message">{errors.schedule_date.message}</p>
@@ -237,9 +237,10 @@ const DetailOrder = ({
             <Flatpickr
               defaultValue={params.real_date}
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 disableMobile: true,
                 maxDate: DateTime.now().toFormat("yyyy-MM-dd"),
+                allowInput: true,
               }}
               className="form-control py-2"
               onChange={(dates) => {

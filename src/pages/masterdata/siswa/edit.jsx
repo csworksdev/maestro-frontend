@@ -302,8 +302,9 @@ const Edit = (closeModal = {}) => {
               value={formData.dob}
               name="dob"
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 disableMobile: "true",
+                allowInput: true,
               }}
               className="form-control py-2"
               onChange={(date) => setValue("dob", date[0])}

@@ -634,8 +634,9 @@ const Add = () => {
               )}
               name="order_date"
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 disableMobile: "true",
+                allowInput: true,
               }}
               className="form-control py-2 bg-white"
               onChange={(date) => setValue("order_date", date[0])}
@@ -654,9 +655,10 @@ const Add = () => {
               )}
               name="start_date"
               options={{
-                dateFormat: "Y-m-d",
+                dateFormat: "d F Y",
                 // minDate: DateTime.now().toFormat("yyyy-MM-dd"),
                 disableMobile: "true",
+                allowInput: true,
               }}
               className="form-control py-2 bg-white"
               onChange={(date) => setValue("start_date", date[0])}

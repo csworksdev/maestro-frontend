@@ -205,12 +205,14 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             }
             name="dob"
             options={{
-              dateFormat: "Y-m-d",
+              dateFormat: "d F Y",
               disableMobile: "true",
+              allowInput: true,
             }}
             className="form-control py-2"
             onChange={(date) => setValue("dob", date[0])}
-            disabled={loading}
+            // disabled={loading}
+            readOnly={false}
           />
           {errors.dob && <p className="error-message">{errors.dob.message}</p>}
         </div>
@@ -226,12 +228,13 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             }
             name="reg_date"
             options={{
-              dateFormat: "Y-m-d",
+              dateFormat: "d F Y",
               disableMobile: "true",
+              allowInput: true,
             }}
             className="form-control py-2"
             onChange={(date) => setValue("reg_date", date[0])}
-            disabled={loading}
+            // disabled={loading}
           />
           {errors.reg_date && (
             <p className="error-message">{errors.reg_date.message}</p>

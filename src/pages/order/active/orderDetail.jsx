@@ -74,12 +74,14 @@ const OrderDetail = ({ params }) => {
                     defaultValue={item.day}
                     name="day"
                     options={{
-                      dateFormat: "Y-m-d",
+                      dateFormat: "d F Y",
                       disableMobile: "true",
+                      allowInput: true,
                     }}
                     className="form-control py-2"
                     disabled={item.is_presence}
                     onChange={(date) => setValue("day", date[0])}
+                    readOnly={false}
                   />
                   {errors.order_date && (
                     <p className="error-message">{errors.order_date.message}</p>

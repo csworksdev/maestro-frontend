@@ -336,18 +336,20 @@ const Presence = () => {
                   // }
                   defaultValue={item.real_date || item.schedule_date}
                   options={{
-                    dateFormat: "Y-m-d",
+                    dateFormat: "d F Y",
                     maxDate: periode.end_date,
                     // DateTime.fromSQL("2024-12-20").toFormat("yyyy-MM-dd"),
                     // minDate:
                     // DateTime.fromSQL("2024-11-21").toFormat("yyyy-MM-dd"),
                     minDate: periode.start_date,
                     disableMobile: true,
+                    allowInput: true,
                   }}
                   className="form-control py-2 w-full"
                   onChange={(date) =>
                     handleChangeDay(item.order_detail_id, date)
                   }
+                  readOnly={false}
                 />
               </div>
               <div>
