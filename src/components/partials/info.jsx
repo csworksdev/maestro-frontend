@@ -14,18 +14,19 @@ const Info = () => {
 
   return (
     <div
-      className="bg-no-repeat bg-cover bg-center p-5 rounded-[6px] relative flex items-center"
+      className="bg-no-repeat bg-cover bg-center p-5 rounded-[6px] relative flex items-center mb-5"
       style={{
         backgroundImage: `url(${wbg6})`,
       }}
     >
       <div className="flex-1">
-        <div className="max-w-[180px]">
-          <div className="text-xl font-medium text-white dark:text-slate-800 mb-2">
-            <span className="block font-normal">Halo kak,</span>
-            <span className="block">{user_name}</span>
-          </div>
-          <p className="text-sm text-wgite text-white dark:text-slate-800 font-semibold">
+        <div className="text-xl font-medium text-white dark:text-slate-800 mb-2 ">
+          <span className="block font-normal">
+            Halo kak {user_name.replace(/^./, user_name[0].toUpperCase())},
+          </span>
+        </div>
+        <div className="text-sm text-wgite text-white dark:text-slate-800 font-semibold flex flex-row gap-3 items-center">
+          <span>
             Untuk siswa yang Tanggal Ordernya sebelum tanggal 21 Oktober 2024,
             silahkan mengisi absen di Heroku, jika bingung silahkan
             <Button
@@ -38,9 +39,7 @@ const Info = () => {
             >
               Chat disini
             </Button>
-            <br />
-            Terima kasih
-          </p>
+          </span>
         </div>
       </div>
       <div className="flex-none">

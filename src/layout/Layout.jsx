@@ -74,7 +74,7 @@ const Layout = () => {
           onClick={() => setMobileMenu(!mobileMenu)}
         ></div>
       )}
-      {roles === "Trainer" && <Info />}
+
       <div
         className={`content-wrapper transition-all duration-150 ${
           width > 1280 ? switchHeaderClass() : ""
@@ -86,6 +86,7 @@ const Layout = () => {
               contentWidth === "boxed" ? "container mx-auto" : "container-fluid"
             }
           >
+            {roles === "Trainer" && <Info />}
             <Suspense fallback={<Loading />}>
               <motion.div
                 key={location.pathname}
