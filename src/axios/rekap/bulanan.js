@@ -21,7 +21,7 @@ export const ExportRekapBulanan = async (periode) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "rekapbulanan.xlsx"); // File name
+        link.setAttribute("download", "Rekap Order " + periode + ".xlsx"); // File name
         document.body.appendChild(link);
         link.click();
       });
