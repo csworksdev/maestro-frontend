@@ -11,6 +11,7 @@ import { getPeriodisasiAll } from "@/axios/referensi/periodisasi";
 import Select from "@/components/ui/Select";
 import {
   BayarPelatihByTrainer,
+  ExportRekapBulanan,
   getRekapByTrainer,
 } from "@/axios/rekap/bulanan";
 import Swal from "sweetalert2";
@@ -32,7 +33,7 @@ const RekapBulanan = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [modalData, setModalData] = useState(null);
-  const [totalHonorAll, setTotalHonorAll] = useState(0);
+  const [isDownload, setIsDownload] = useState(false);
   const [unpaidList, setUnpaidList] = useState({});
   const [selectedTrainer, setSelectedTrainer] = useState("");
   const [selectedPeriode, setSelectedPeriode] = useState("");
@@ -684,6 +685,43 @@ const RekapBulanan = () => {
     }
   };
 
+  const downloadExcelFile = async () => {
+    try {
+      setIsDownload(true);
+      let response = await ExportRekapBulanan(selectedPeriode[0].name);
+      // Create a Blob from the response
+      const blob = new Blob([response], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      // Use file-saver to save the file locally
+      // saveAs(blob, `Rekap Bulan ${selectedPeriode[0].name}.xlsx`);
+      // var filename = "Rekap Bulan " + selectedPeriode[0].name + ".xlsx";
+      var filename = "rekap bulanan.xlsx";
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [
+          {
+            description: "Excel File",
+            accept: {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                [".xlsx"],
+            },
+          },
+        ],
+      });
+
+      // Write the file to the selected location
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } catch (error) {
+      console.error("Error downloading the file:", error);
+    } finally {
+      setIsDownload(false);
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 justify-end">
@@ -730,12 +768,36 @@ const RekapBulanan = () => {
                 )
               }
             />
-            <button
-              type="submit"
-              className="btn btn-dark text-center h-9 py-1 w-max"
-            >
-              <span>Filter</span>
-            </button>
+            <div className="flex gap-2 mb:py-5 pl-4 gap-3 items-center">
+              <button
+                type="submit"
+                className="btn btn-dark text-center h-9 py-1 w-max"
+              >
+                <span>Filter</span>
+              </button>
+              {isDownload ? (
+                <div className="flex flex-row justify-center gap-2">
+                  <span>Downloading</span>
+                  <div className="w-5 h-5 border-4 border-t-blue-500 border-gray-300 rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-success text-center h-9 py-1 px-5 w-max "
+                  onClick={() => downloadExcelFile()}
+                  disabled={isDownload}
+                >
+                  <div className="flex flex-row align-center gap-1">
+                    <Icon
+                      icon="heroicons-outline:arrow-down-on-square-stack"
+                      color="Green"
+                      className={`h-6 w-6`}
+                    />
+                    <span>Export Periode</span>
+                  </div>
+                </button>
+              )}
+            </div>
             {listData.results.length > 0 ? (
               <div className="flex flex-row-reverse content-end pt-3 flex-1">
                 <button

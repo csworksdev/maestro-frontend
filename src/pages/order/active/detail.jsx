@@ -6,7 +6,6 @@ import Swal from "sweetalert2";
 import * as yup from "yup";
 import { DateTime } from "luxon";
 import Flatpickr from "react-flatpickr";
-
 import {
   EditOrderDetail,
   GetOrderDetailByOrderId,
@@ -251,7 +250,6 @@ const DetailOrder = ({
                   );
                 }
               }}
-              disabled
             />
             {errors.real_date && (
               <p className="error-message">{errors.real_date.message}</p>
