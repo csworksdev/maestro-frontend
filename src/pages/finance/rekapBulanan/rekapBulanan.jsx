@@ -752,9 +752,11 @@ const RekapBulanan = () => {
                     <div className="flex flex-col">
                       <span>Bayar semua</span>
                       <span>
-                        {unpaidList.length > 1
-                          ? `Rp. ${summary.currPriceUnpaid.toLocaleString()}`
-                          : "Sudah Dibayar"}
+                        {unpaidList.length > 1 ? (
+                          <span>Rp. {summary.currPriceUnpaid}</span>
+                        ) : (
+                          "Sudah Dibayar"
+                        )}
                       </span>
                     </div>
                   </div>
