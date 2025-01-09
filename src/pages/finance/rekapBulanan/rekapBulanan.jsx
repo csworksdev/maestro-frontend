@@ -39,8 +39,10 @@ const RekapBulanan = () => {
   const [summary, setSummary] = useState({
     prevCount: 0,
     prevPrice: 0,
-    currCount: 0,
-    currPrice: 0,
+    currCountPaid: 0,
+    currPricePaid: 0,
+    currCountUnpaid: 0,
+    currPriceUnpaid: 0,
     nextCount: 0,
     nextPrice: 0,
   });
@@ -116,85 +118,10 @@ const RekapBulanan = () => {
         nextPrice: 0,
       });
 
-      // var totalHonor = 0;
-      // let unpaidOrderId = [];
       const response = await getRekapByTrainer(
         selectedPeriode[0].name,
         selectedTrainer[0].trainer_id
       );
-      // response.data.results.map((item) => {
-      //   // totalHonor += toInteger(item.total_honor_perpertemuan);
-      //   for (let index = 1; index <= 8; index++) {
-      //     var objDate = "p" + index;
-      //     var objNamePaid = "p" + index + "_paid";
-      //     var objNameOrderID = "p" + index + "_order_detail_id";
-
-      //     // if (
-      //     //   !item[objNamePaid] &&
-      //     //   item[objNameOrderID] !== "" &&
-      //     //   item[objDate] !== "" &&
-      //     //   DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
-      //     //     DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
-      //     // ) {
-      //     //   unpaidOrderId.push(item[objNameOrderID]);
-      //     // }
-
-      //     if (item[objDate] !== "") {
-      //       if (
-      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <
-      //           DateTime.fromFormat(
-      //             selectedPeriode[0].start_date,
-      //             "yyyy-MM-dd"
-      //           ) &&
-      //         item[objNamePaid] &&
-      //         item[objNameOrderID] !== ""
-      //       ) {
-      //         setSummary((prev) => ({
-      //           ...prev,
-      //           prevCount: prev.prevCount + 1,
-      //           prevPrice: prev.prevPrice + item.honor_perpertemuan,
-      //         }));
-      //       } else if (
-      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >=
-      //           DateTime.fromFormat(
-      //             selectedPeriode[0].start_date,
-      //             "yyyy-MM-dd"
-      //           ) &&
-      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
-      //           DateTime.fromFormat(
-      //             selectedPeriode[0].end_date,
-      //             "yyyy-MM-dd"
-      //           ) &&
-      //         !item[objNamePaid] &&
-      //         item[objNameOrderID] !== ""
-      //       ) {
-      //         unpaidOrderId.push(item[objNameOrderID]);
-      //         setSummary((prev) => ({
-      //           ...prev,
-      //           currCount: prev.currCount + 1,
-      //           currPrice: prev.currPrice + item.honor_perpertemuan,
-      //         }));
-      //       } else if (
-      //         DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >
-      //           DateTime.fromFormat(
-      //             selectedPeriode[0].end_date,
-      //             "yyyy-MM-dd"
-      //           ) &&
-      //         !item[objNamePaid] &&
-      //         item[objNameOrderID] !== ""
-      //       ) {
-      //         setSummary((prev) => ({
-      //           ...prev,
-      //           nextCount: prev.nextCount + 1,
-      //           nextPrice: prev.nextPrice + item.honor_perpertemuan,
-      //         }));
-      //       }
-      //     }
-      //   }
-      // });
-
-      // setUnpaidList(unpaidOrderId);
-      // // setTotalHonorAll(totalHonor);
       setListData(response.data);
       reSummarize();
     } catch (error) {
@@ -209,15 +136,16 @@ const RekapBulanan = () => {
       setSummary({
         prevCount: 0,
         prevPrice: 0,
-        currCount: 0,
-        currPrice: 0,
+        currCountPaid: 0,
+        currPricePaid: 0,
+        currCountUnpaid: 0,
+        currPriceUnpaid: 0,
         nextCount: 0,
         nextPrice: 0,
       });
       let unpaidOrderId = [];
 
       listData.results.map((item) => {
-        // totalHonor += toInteger(item.total_honor_perpertemuan);
         for (let index = 1; index <= 8; index++) {
           var objDate = "p" + index;
           var objNamePaid = "p" + index + "_paid";
@@ -249,15 +177,23 @@ const RekapBulanan = () => {
                   selectedPeriode[0].end_date,
                   "yyyy-MM-dd"
                 ) &&
-              !item[objNamePaid] &&
               item[objNameOrderID] !== ""
             ) {
-              unpaidOrderId.push(item[objNameOrderID]);
-              setSummary((prev) => ({
-                ...prev,
-                currCount: prev.currCount + 1,
-                currPrice: prev.currPrice + item.honor_perpertemuan,
-              }));
+              if (item[objNamePaid]) {
+                setSummary((prev) => ({
+                  ...prev,
+                  currCountPaid: prev.currCountPaid + 1,
+                  currPricePaid: prev.currPricePaid + item.honor_perpertemuan,
+                }));
+              } else {
+                unpaidOrderId.push(item[objNameOrderID]);
+                setSummary((prev) => ({
+                  ...prev,
+                  currCountUnpaid: prev.currCountUnpaid + 1,
+                  currPriceUnpaid:
+                    prev.currPriceUnpaid + item.honor_perpertemuan,
+                }));
+              }
             } else if (
               DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >
                 DateTime.fromFormat(
@@ -607,6 +543,7 @@ const RekapBulanan = () => {
   const PeriodSummary = () => {
     return (
       <div className="flex flex-row gap-4 my-10">
+        {/* Previous */}
         <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-white">
           <p className="flex justify-center gap-3">
             <span className="text-base">
@@ -624,6 +561,27 @@ const RekapBulanan = () => {
             <span>Honor : Rp. {summary.prevPrice.toLocaleString()}</span>
           </p>
         </div>
+        {/* Current Paid */}
+        <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-green-300">
+          <p className="flex justify-center gap-3">
+            <span className="text-base">
+              <Icon
+                icon="heroicons-outline:banknotes"
+                color="Green"
+                className={`h-6 w-6`}
+              />
+            </span>
+            <span className="font-bold">
+              Periode Sekarang <b>(Paid)</b>
+            </span>
+          </p>
+          <p>
+            <span>Pertemuan : {summary.currCountPaid}</span>
+            <br />
+            <span>Honor : Rp. {summary.currPricePaid.toLocaleString()}</span>
+          </p>
+        </div>
+        {/* Current Unpaid */}
         <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-red-300">
           <p className="flex justify-center gap-3">
             <span className="text-base">
@@ -633,14 +591,17 @@ const RekapBulanan = () => {
                 className={`h-6 w-6`}
               />
             </span>
-            <span className="font-bold">Periode Sekarang</span>
+            <span className="font-bold">
+              Periode Sekarang <b>(Unpaid)</b>
+            </span>
           </p>
           <p>
-            <span>Pertemuan : {summary.currCount}</span>
+            <span>Pertemuan : {summary.currCountUnpaid}</span>
             <br />
-            <span>Honor : Rp. {summary.currPrice.toLocaleString()}</span>
+            <span>Honor : Rp. {summary.currPriceUnpaid.toLocaleString()}</span>
           </p>
         </div>
+        {/* Next */}
         <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-yellow-300">
           <p className="flex justify-center gap-3">
             <span className="text-base">
@@ -792,7 +753,7 @@ const RekapBulanan = () => {
                       <span>Bayar semua</span>
                       <span>
                         {unpaidList.length > 1
-                          ? "Rp. " + summary.currPrice.toLocaleString()
+                          ? `Rp. ${summary.currPriceUnpaid.toLocaleString()}`
                           : "Sudah Dibayar"}
                       </span>
                     </div>
