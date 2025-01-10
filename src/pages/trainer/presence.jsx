@@ -336,12 +336,13 @@ const Presence = () => {
                   // }
                   defaultValue={item.real_date || item.schedule_date}
                   options={{
-                    dateFormat: "d F Y",
-                    maxDate: periode.end_date,
-                    // DateTime.fromSQL("2024-12-20").toFormat("yyyy-MM-dd"),
-                    // minDate:
-                    // DateTime.fromSQL("2024-11-21").toFormat("yyyy-MM-dd"),
-                    minDate: periode.start_date,
+                    // dateFormat: "d F Y",
+                    minDate: DateTime.fromSQL(periode.start_date).toFormat(
+                      "yyyy-MM-dd"
+                    ),
+                    maxDate: DateTime.fromSQL(periode.end_date).toFormat(
+                      "yyyy-MM-dd"
+                    ),
                     disableMobile: true,
                     allowInput: true,
                   }}
