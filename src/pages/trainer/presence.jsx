@@ -12,10 +12,14 @@ import { useSelector } from "react-redux";
 import Slider from "react-slick";
 import useWidth from "@/hooks/useWidth";
 import { useForm } from "react-hook-form";
-import { jam } from "@/constant/jadwal-default";
+import { hari, jam } from "@/constant/jadwal-default";
 import { EditOrder } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import { startCase, toLower } from "lodash";
+import { Tab } from "@headlessui/react";
+import Notfound from "@/assets/images/svg/notfound.svg";
+import { Info } from "luxon";
+
 const sliderSettings = {
   dots: true,
   infinite: false,
@@ -48,6 +52,21 @@ const Presence = () => {
   const { width, breakpoints } = useWidth();
   const { setValue } = useForm();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isOld, setIsOld] = useState(false);
+
+  const daysOfWeek = [
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat",
+    "Sabtu",
+    "Minggu",
+  ];
+
+  const [tabHari, setTabHari] = useState(
+    daysOfWeek.map((hari) => ({ hari, data: [] }))
+  );
 
   const fetchData = async () => {
     try {
@@ -55,6 +74,7 @@ const Presence = () => {
       let res = await getPresenceById(user_id);
 
       setListData(res.data.data);
+      splitPerDay(res.data.data);
 
       const periodeResults = await getPeriodisasiToday();
       setPeriode(periodeResults.data.results[0]);
@@ -75,16 +95,24 @@ const Presence = () => {
     return acc;
   }, {});
 
-  const handleSearch = (query) => {
+  const splitPerDay = (data) => {
+    const updatedTabHari = tabHari.map((element) => ({
+      ...element,
+      data: data.filter((item) => item.day === element.hari),
+    }));
+    setTabHari(updatedTabHari);
+  };
+
+  const handleSearch = (data = [], query) => {
     setSearchQuery(query.toLowerCase());
 
-    if (!query) {
-      // If the search query is empty, reset to show all data
-      fetchData();
-      return;
-    }
+    // if (!query) {
+    //   // If the search query is empty, reset to show all data
+    //   fetchData();
+    //   return;
+    // }
 
-    const filteredData = listData.filter((item) =>
+    const filteredData = data.filter((item) =>
       item.students_info.some((student) =>
         student.fullname.toLowerCase().includes(query.toLowerCase())
       )
@@ -388,69 +416,200 @@ const Presence = () => {
     );
   };
 
-  return (
-    <>
-      <Search
-        handleSearch={(query) => handleSearch(query)}
-        searchValue={searchQuery}
-        placeholder="Cari Siswa"
-      />
-      <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
-        {Object.keys(groupedData).map((order_id, i) => (
-          <div key={i}>
-            {Object.keys(groupedData[order_id]).map((student_name, j) => {
-              // Assuming that groupedData contains the pool_name in the first item for each student
-              const poolName =
-                groupedData[order_id][student_name]?.[j]?.pool_name ||
-                "Pool not specified";
-              const order_date =
-                groupedData[order_id][student_name]?.[j]?.order_date || "";
-              const expire_date =
-                groupedData[order_id][student_name]?.[j]?.expire_date ||
-                "Belum mulai latihan.";
-              const hari = groupedData[order_id][student_name]?.[j]?.day || "";
-              return (
-                <Card
-                  subtitle={
-                    <>
-                      {student_name.replace(",", ", ")} <br />
-                      Kolam : {poolName} <br /> Tanggal Order : {order_date}
-                      <br /> Tanggal Kadaluarsa : {expire_date}
-                      <br /> Hari : {hari}
-                    </>
-                  }
-                  key={i + j}
-                >
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <StudentCard
-                      studentsInfo={
-                        groupedData[order_id][student_name]?.[0]
-                          ?.students_info || []
-                      }
-                      key={i + j}
-                    />
-                    {width >= breakpoints.md &&
-                      groupedData[order_id][student_name]
-                        .sort((a, b) => a.meet - b.meet)
-                        .map((item, k) => (
-                          <PresenceView item={item} k={i + j + k} />
-                        ))}
-                    {width <= breakpoints.md && (
-                      <Slider {...sliderSettings} key={j}>
-                        {groupedData[order_id][student_name]
+  const DisplayData = (data) => {
+    const groupedData = data.reduce((acc, item) => {
+      const studentNames = item.students_info
+        .map((s) => convertToTitleCase(s.fullname))
+        .join(", ");
+      if (!acc[item.order]) acc[item.order] = {};
+      if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
+      acc[item.order][studentNames].push(item);
+      return acc;
+    }, {});
+    return (
+      <>
+        <Search
+          handleSearch={(query) => handleSearch(groupedData, query)}
+          searchValue={searchQuery}
+          placeholder="Cari siswa hari"
+        />
+        <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
+          {Object.keys(groupedData).map((order_id, i) => (
+            <div key={i}>
+              {Object.keys(groupedData[order_id]).map((student_name, j) => {
+                // Assuming that groupedData contains the pool_name in the first item for each student
+                const poolName =
+                  groupedData[order_id][student_name]?.[j]?.pool_name ||
+                  "Pool not specified";
+                const order_date =
+                  groupedData[order_id][student_name]?.[j]?.order_date || "";
+                const expire_date =
+                  groupedData[order_id][student_name]?.[j]?.expire_date ||
+                  "Belum mulai latihan.";
+                const hari =
+                  groupedData[order_id][student_name]?.[j]?.day || "";
+                return (
+                  <Card
+                    subtitle={
+                      <>
+                        {student_name.replace(",", ", ")} <br />
+                        Kolam : {poolName} <br /> Tanggal Order : {order_date}
+                        <br /> Tanggal Kadaluarsa : {expire_date}
+                        <br /> Hari : {hari}
+                      </>
+                    }
+                    key={i + j}
+                  >
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <StudentCard
+                        studentsInfo={
+                          groupedData[order_id][student_name]?.[0]
+                            ?.students_info || []
+                        }
+                        key={i + j}
+                      />
+                      {width >= breakpoints.md &&
+                        groupedData[order_id][student_name]
                           .sort((a, b) => a.meet - b.meet)
                           .map((item, k) => (
                             <PresenceView item={item} k={i + j + k} />
                           ))}
-                      </Slider>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        ))}
+                      {width <= breakpoints.md && (
+                        <Slider {...sliderSettings} key={j}>
+                          {groupedData[order_id][student_name]
+                            .sort((a, b) => a.meet - b.meet)
+                            .map((item, k) => (
+                              <PresenceView item={item} k={i + j + k} />
+                            ))}
+                        </Slider>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  const DataNotFound = () => {
+    return (
+      <div className="flex flex-col items-center">
+        <img src={Notfound} alt="" className="object-contain max-h-32 " />
+        <span className="text-lg">Tidak ada jadwal dihari ini</span>
       </div>
+    );
+  };
+
+  const TabbedVersion = () => {
+    return (
+      <Tab.Group defaultIndex={DateTime.now().toFormat("c") - 1}>
+        {/* Tab List */}
+        <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-4 pb-1">
+          {tabHari.map((item, i) => (
+            <Tab key={i}>
+              {({ selected }) => (
+                <button
+                  className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
+          ${
+            selected
+              ? "text-white bg-primary-500"
+              : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
+          }`}
+                >
+                  {`${item.hari}`}
+                </button>
+              )}
+            </Tab>
+          ))}
+        </Tab.List>
+
+        {/* Tab Panels */}
+        <Tab.Panels>
+          {tabHari.map((item, i) => (
+            <Tab.Panel key={i} className={"h-auto"}>
+              <div className="text-slate-600 dark:text-slate-400 text-sm font-normal">
+                {item.data.length ? DisplayData(item.data) : DataNotFound()}
+              </div>
+            </Tab.Panel>
+          ))}
+        </Tab.Panels>
+      </Tab.Group>
+    );
+  };
+
+  return (
+    <>
+      {isOld ? (
+        <>
+          <Search
+            handleSearch={(query) => handleSearch(query)}
+            searchValue={searchQuery}
+            placeholder="Cari siswa hari"
+          />
+          <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
+            {Object.keys(groupedData).map((order_id, i) => (
+              <div key={i}>
+                {Object.keys(groupedData[order_id]).map((student_name, j) => {
+                  // Assuming that groupedData contains the pool_name in the first item for each student
+                  const poolName =
+                    groupedData[order_id][student_name]?.[j]?.pool_name ||
+                    "Pool not specified";
+                  const order_date =
+                    groupedData[order_id][student_name]?.[j]?.order_date || "";
+                  const expire_date =
+                    groupedData[order_id][student_name]?.[j]?.expire_date ||
+                    "Belum mulai latihan.";
+                  const hari =
+                    groupedData[order_id][student_name]?.[j]?.day || "";
+                  return (
+                    <Card
+                      subtitle={
+                        <>
+                          {student_name.replace(",", ", ")} <br />
+                          Kolam : {poolName} <br /> Tanggal Order : {order_date}
+                          <br /> Tanggal Kadaluarsa : {expire_date}
+                          <br /> Hari : {hari}
+                        </>
+                      }
+                      key={i + j}
+                    >
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <StudentCard
+                          studentsInfo={
+                            groupedData[order_id][student_name]?.[0]
+                              ?.students_info || []
+                          }
+                          key={i + j}
+                        />
+                        {width >= breakpoints.md &&
+                          groupedData[order_id][student_name]
+                            .sort((a, b) => a.meet - b.meet)
+                            .map((item, k) => (
+                              <PresenceView item={item} k={i + j + k} />
+                            ))}
+                        {width <= breakpoints.md && (
+                          <Slider {...sliderSettings} key={j}>
+                            {groupedData[order_id][student_name]
+                              .sort((a, b) => a.meet - b.meet)
+                              .map((item, k) => (
+                                <PresenceView item={item} k={i + j + k} />
+                              ))}
+                          </Slider>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <TabbedVersion />
+      )}
     </>
   );
 };
