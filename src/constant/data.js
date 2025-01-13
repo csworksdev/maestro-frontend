@@ -147,6 +147,10 @@ export const menuAdminNew = [
         childlink: "siswa",
       },
       {
+        childtitle: "Pelatih",
+        childlink: "trainer",
+      },
+      {
         childtitle: "Order",
         childlink: "order",
       },
