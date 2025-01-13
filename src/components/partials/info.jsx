@@ -9,7 +9,7 @@ const Info = () => {
 
   const getWhatsAppLink = () => {
     const countryCode = "+6281220450240"; // Indonesia country code, modify as per your requirement
-    return `https://wa.me/${countryCode}/?text=Assalamualaikum aa, mau nanya`;
+    return `https://wa.me/${countryCode}/`;
   };
 
   return (

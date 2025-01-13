@@ -205,9 +205,10 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             }
             name="dob"
             options={{
-              dateFormat: "d F Y",
-              disableMobile: "true",
+              disableMobile: true,
               allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
             }}
             className="form-control py-2"
             onChange={(date) => setValue("dob", date[0])}
@@ -228,9 +229,10 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
             }
             name="reg_date"
             options={{
-              dateFormat: "d F Y",
-              disableMobile: "true",
+              disableMobile: true,
               allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
             }}
             className="form-control py-2"
             onChange={(date) => setValue("reg_date", date[0])}

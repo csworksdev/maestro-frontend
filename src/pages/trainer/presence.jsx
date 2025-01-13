@@ -345,6 +345,8 @@ const Presence = () => {
                     ),
                     disableMobile: true,
                     allowInput: true,
+                    altInput: true,
+                    altFormat: "d F Y",
                   }}
                   className="form-control py-2 w-full"
                   onChange={(date) =>

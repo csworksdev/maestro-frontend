@@ -133,7 +133,8 @@ const Produk = () => {
       Header: "Harga",
       accessor: "price",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        let number = parseFloat(row?.cell?.value);
+        return <span>{number.toLocaleString("IDR")}</span>;
       },
     },
     {

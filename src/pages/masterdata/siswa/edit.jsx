@@ -41,7 +41,7 @@ const Edit = (closeModal = {}) => {
       // address: yup.string().required("Alamat is required"),
       // pob: yup.string().required("Tempat Lahir is required"),
       // dob: yup.date().required("Tanggal Lahir is required"),
-      // branch: yup.string().required("cabang belum dipilih"),
+      branch: yup.string().required("cabang belum dipilih"),
     })
     .required();
 
@@ -96,8 +96,6 @@ const Edit = (closeModal = {}) => {
     const pastedData = await navigator.clipboard.readText();
     const values = pastedData.split("\t"); // Assuming tab-separated values
     // Map pasted data to form fields (adjust indexes as needed)
-
-    console.log(values);
 
     setFormData({
       fullname: "",
@@ -196,14 +194,16 @@ const Edit = (closeModal = {}) => {
         title={
           <div className="flex flex-row gap-5 items-center">
             {isUpdate ? "Update Siswa" : "Tambah Siswa"}
-            <Button
-              className="btn btn-primary text-center p-2 "
-              icon="heroicons-outline:user-plus"
-              aria-label="Tambah Siswa"
-              onClick={(e) => handlePaste(e)}
-            >
-              Paste excel
-            </Button>
+            {!isUpdate ? (
+              <Button
+                className="btn btn-primary text-center p-2 "
+                icon="heroicons-outline:user-plus"
+                aria-label="Tambah Siswa"
+                onClick={(e) => handlePaste(e)}
+              >
+                Paste excel
+              </Button>
+            ) : null}
           </div>
         }
       >
@@ -302,9 +302,10 @@ const Edit = (closeModal = {}) => {
               value={formData.dob}
               name="dob"
               options={{
-                dateFormat: "d F Y",
-                disableMobile: "true",
+                disableMobile: true,
                 allowInput: true,
+                altInput: true,
+                altFormat: "d F Y",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("dob", date[0])}

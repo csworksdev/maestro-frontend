@@ -544,9 +544,10 @@ const Edit = ({ state, onClose = null }) => {
               defaultValue={data.order_date}
               name="order_date"
               options={{
-                dateFormat: "d F Y",
-                disableMobile: "true",
+                disableMobile: true,
                 allowInput: true,
+                altInput: true,
+                altFormat: "d F Y",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("order_date", date[0])}

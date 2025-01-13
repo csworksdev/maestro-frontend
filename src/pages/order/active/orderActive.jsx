@@ -173,7 +173,8 @@ const OrderActive = ({ is_finished }) => {
       accessor: "grand_total",
       id: "grand_total",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        let number = parseFloat(row?.cell?.value);
+        return <span>{number.toLocaleString("IDR")}</span>;
       },
     },
     {

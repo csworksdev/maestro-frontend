@@ -124,10 +124,11 @@ const Edit = () => {
                 defaultValue={isUpdate ? data.start_date : ""}
                 name="start_date"
                 options={{
-                  dateFormat: "d F Y",
                   minDate: data.end_date - 30,
-                  disableMobile: "true",
+                  disableMobile: true,
                   allowInput: true,
+                  altInput: true,
+                  altFormat: "d F Y",
                 }}
                 className="py-2"
                 onChange={(date) => setValue("start_date", date[0])}
@@ -144,10 +145,11 @@ const Edit = () => {
                 defaultValue={isUpdate ? data.end_date : ""}
                 name="end_date"
                 options={{
-                  dateFormat: "d F Y",
                   minDate: data.start_date,
-                  disableMobile: "true",
+                  disableMobile: true,
                   allowInput: true,
+                  altInput: true,
+                  altFormat: "d F Y",
                 }}
                 className="py-2"
                 onChange={(date) => setValue("end_date", date[0])}

@@ -74,9 +74,10 @@ const OrderDetail = ({ params }) => {
                     defaultValue={item.day}
                     name="day"
                     options={{
-                      dateFormat: "d F Y",
-                      disableMobile: "true",
+                      disableMobile: true,
                       allowInput: true,
+                      altInput: true,
+                      altFormat: "d F Y",
                     }}
                     className="form-control py-2"
                     disabled={item.is_presence}
