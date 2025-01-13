@@ -52,7 +52,7 @@ const Presence = () => {
   const { width, breakpoints } = useWidth();
   const { setValue } = useForm();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isOld, setIsOld] = useState(false);
+  const [isOld, setIsOld] = useState(true);
 
   const daysOfWeek = [
     "Senin",
