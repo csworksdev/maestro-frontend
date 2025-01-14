@@ -18,7 +18,6 @@ import Search from "@/components/globals/table/search";
 import { startCase, toLower } from "lodash";
 import { Tab } from "@headlessui/react";
 import Notfound from "@/assets/images/svg/notfound.svg";
-import { Info } from "luxon";
 
 const sliderSettings = {
   dots: true,
@@ -53,6 +52,9 @@ const Presence = () => {
   const { setValue } = useForm();
   const [searchQuery, setSearchQuery] = useState("");
   const [isOld, setIsOld] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(
+    localStorage.getItem("presenceSelected") || 0
+  );
 
   const daysOfWeek = [
     "Senin",
@@ -85,15 +87,15 @@ const Presence = () => {
     }
   };
 
-  const groupedData = listData.reduce((acc, item) => {
-    const studentNames = item.students_info
-      .map((s) => convertToTitleCase(s.fullname))
-      .join(", ");
-    if (!acc[item.order]) acc[item.order] = {};
-    if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
-    acc[item.order][studentNames].push(item);
-    return acc;
-  }, {});
+  // const groupedData = listData.reduce((acc, item) => {
+  //   const studentNames = item.students_info
+  //     .map((s) => convertToTitleCase(s.fullname))
+  //     .join(", ");
+  //   if (!acc[item.order]) acc[item.order] = {};
+  //   if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
+  //   acc[item.order][studentNames].push(item);
+  //   return acc;
+  // }, {});
 
   const splitPerDay = (data) => {
     const updatedTabHari = tabHari.map((element) => ({
@@ -105,12 +107,13 @@ const Presence = () => {
 
   const handleSearch = (data = [], query) => {
     setSearchQuery(query.toLowerCase());
+    setListData(data);
 
-    // if (!query) {
-    //   // If the search query is empty, reset to show all data
-    //   fetchData();
-    //   return;
-    // }
+    if (!query) {
+      // If the search query is empty, reset to show all data
+      fetchData();
+      return;
+    }
 
     const filteredData = data.filter((item) =>
       item.students_info.some((student) =>
@@ -119,7 +122,7 @@ const Presence = () => {
     );
 
     // If no results found, show all data
-    setListData(filteredData.length > 0 ? filteredData : listData);
+    setListData(filteredData.length > 0 ? filteredData : data);
   };
 
   const checkProduct = (updatedData) => {
@@ -426,6 +429,8 @@ const Presence = () => {
       acc[item.order][studentNames].push(item);
       return acc;
     }, {});
+
+    // setListData(groupedData);
     return (
       <>
         {/* <Search
@@ -505,7 +510,7 @@ const Presence = () => {
 
   const TabbedVersion = () => {
     return (
-      <Tab.Group defaultIndex={DateTime.now().toFormat("c") - 1}>
+      <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
         {/* Tab List */}
         <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-4 pb-1">
           {tabHari.map((item, i) => (
