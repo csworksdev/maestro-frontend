@@ -542,13 +542,13 @@ const Presence = () => {
 
   return (
     <>
-      {isOld ? (
-        <>
-          {/* <Search
+      {/* <Search
             handleSearch={(query) => handleSearch(query)}
             searchValue={searchQuery}
             placeholder="Cari siswa hari"
           /> */}
+      {isOld ? (
+        <>
           <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
             {Object.keys(groupedData).map((order_id, i) => (
               <div key={i}>
