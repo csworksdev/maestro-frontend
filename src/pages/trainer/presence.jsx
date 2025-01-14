@@ -16,8 +16,10 @@ import { hari, jam } from "@/constant/jadwal-default";
 import { EditOrder } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import { startCase, toLower } from "lodash";
-import { Tab } from "@headlessui/react";
+
 import Notfound from "@/assets/images/svg/notfound.svg";
+import { Disclosure, Tab } from "@headlessui/react";
+import Icon from "@/components/ui/Icon";
 
 const sliderSettings = {
   dots: true,
@@ -55,6 +57,10 @@ const Presence = () => {
   const [selectedIndex, setSelectedIndex] = useState(
     localStorage.getItem("presenceSelected") || 0
   );
+
+  useEffect(() => {
+    localStorage.setItem("presenceSelected", selectedIndex);
+  }, [selectedIndex]);
 
   const daysOfWeek = [
     "Senin",
@@ -308,37 +314,49 @@ const Presence = () => {
 
   const StudentCard = ({ studentsInfo }) => {
     return (
-      <Card title={"Kontak Siswa"}>
-        {studentsInfo.map((student, index) => (
-          <div
-            key={index}
-            className="grid grid-cols-2 gap-2 items-center border-b-2 py-2"
-          >
-            <div>{convertToTitleCase(student.fullname)}</div>
-            <div className="flex h-min justify-center align-middle">
-              {student.phone ? (
-                <Button
-                  variant="contained"
-                  // href={getWhatsAppLink(student.phone)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-success btn-sm"
-                  link={getWhatsAppLink(student.phone, student.fullname)}
-                >
-                  chat wa
-                </Button>
-              ) : (
-                <Button
-                  className="opacity-40 cursor-not-allowed
+      <Disclosure as="div">
+        <Disclosure.Button className="group flex w-full items-center justify-between">
+          <button className="text-sm/6 font-medium group-data-[hover]:text-black-50/80">
+            Kontak Siswa
+          </button>
+          <Icon
+            icon="heroicons-outline:chevron-top"
+            color={"#"}
+            className="size-5 fill-white/60 group-data-[hover]:fill-white/50 group-data-[open]:rotate-180"
+          />
+        </Disclosure.Button>
+        <Disclosure.Panel className="text-gray-500">
+          {studentsInfo.map((student, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-2 gap-2 items-center border-b-2 py-2"
+            >
+              <div>{convertToTitleCase(student.fullname)}</div>
+              <div className="flex h-min justify-center align-middle">
+                {student.phone ? (
+                  <Button
+                    variant="contained"
+                    // href={getWhatsAppLink(student.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-success btn-sm"
+                    link={getWhatsAppLink(student.phone, student.fullname)}
+                  >
+                    chat wa
+                  </Button>
+                ) : (
+                  <Button
+                    className="opacity-40 cursor-not-allowed
          btn-secondary btn-sm"
-                >
-                  X
-                </Button>
-              )}
+                  >
+                    X
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </Card>
+          ))}
+        </Disclosure.Panel>
+      </Disclosure>
     );
   };
 
@@ -461,18 +479,19 @@ const Presence = () => {
                         Kolam : {poolName} <br /> Tanggal Order : {order_date}
                         <br /> Tanggal Kadaluarsa : {expire_date}
                         <br /> Hari : {hari}
+                        <br />
+                        <StudentCard
+                          studentsInfo={
+                            groupedData[order_id][student_name]?.[0]
+                              ?.students_info || []
+                          }
+                          key={i + j}
+                        />
                       </>
                     }
                     key={i + j}
                   >
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <StudentCard
-                        studentsInfo={
-                          groupedData[order_id][student_name]?.[0]
-                            ?.students_info || []
-                        }
-                        key={i + j}
-                      />
                       {width >= breakpoints.md &&
                         groupedData[order_id][student_name]
                           .sort((a, b) => a.meet - b.meet)

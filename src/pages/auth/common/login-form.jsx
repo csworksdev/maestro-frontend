@@ -14,6 +14,8 @@ import { setUser } from "@/redux/slicers/authSlice";
 import { login } from "@/axios/auth/auth";
 
 import Menu from "@/constant/menu";
+import { DateTime } from "luxon";
+import Swal from "sweetalert2";
 
 const schema = yup.object({
   username: yup.string().required("Username is required"),
@@ -42,9 +44,19 @@ const LoginForm = () => {
       const response = await login(params);
       const { refresh, access, data } = response.data; // Ensure these fields exist
 
-      dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-      Menu(data.roles);
-      navigate("/app/dashboard");
+      if (response.status) {
+        dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
+        Menu(data.roles);
+        localStorage.setItem(
+          "presenceSelected",
+          DateTime.now().toFormat("c") - 1
+        );
+        navigate("/app/dashboard");
+      } else {
+        Swal.fire({
+          title: "username or password invalid",
+        });
+      }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
     }
