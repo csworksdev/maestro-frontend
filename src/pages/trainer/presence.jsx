@@ -52,7 +52,7 @@ const Presence = () => {
   const { width, breakpoints } = useWidth();
   const { setValue } = useForm();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isOld, setIsOld] = useState(true);
+  const [isOld, setIsOld] = useState(false);
 
   const daysOfWeek = [
     "Senin",
@@ -544,11 +544,11 @@ const Presence = () => {
     <>
       {isOld ? (
         <>
-          <Search
+          {/* <Search
             handleSearch={(query) => handleSearch(query)}
             searchValue={searchQuery}
             placeholder="Cari siswa hari"
-          />
+          /> */}
           <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
             {Object.keys(groupedData).map((order_id, i) => (
               <div key={i}>
