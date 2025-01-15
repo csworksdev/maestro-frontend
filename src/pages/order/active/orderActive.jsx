@@ -157,7 +157,20 @@ const OrderActive = ({ is_finished }) => {
       accessor: "listname",
       id: "listname",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        return (
+          <div>
+            {row?.cell?.value.split(",").map((substring, idx) => {
+              return (
+                <div key={idx}>
+                  <span>
+                    {idx + 1}. {substring.trim()}
+                  </span>
+                  <br />
+                </div>
+              );
+            })}
+          </div>
+        );
       },
     },
     {
@@ -302,6 +315,7 @@ const OrderActive = ({ is_finished }) => {
       Header: "action",
       accessor: "action",
       id: "action",
+      sticky: "right",
       Cell: (row) => {
         return (
           <div className="flex flex-row space-x-2 items-center">

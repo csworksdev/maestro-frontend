@@ -180,6 +180,8 @@ const RekapOrderTrainer = () => {
     {
       Header: "action",
       accessor: "action",
+      id: "action",
+      sticky: "right",
       Cell: (row) => {
         return (
           <div className="flex space-x-2 items-center">

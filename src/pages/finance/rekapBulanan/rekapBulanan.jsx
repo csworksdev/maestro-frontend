@@ -264,14 +264,15 @@ const RekapBulanan = () => {
   };
 
   const COLUMNS = [
-    {
-      Header: "Order ID",
-      accessor: "order_id",
-      Cell: ({ cell }) => <span>{cell?.value}</span>,
-    },
+    // {
+    //   Header: "Order ID",
+    //   accessor: "order_id",
+    //   Cell: ({ cell }) => <span>{cell?.value}</span>,
+    // },
     {
       Header: "Siswa",
       accessor: "student_fullname",
+      sticky: "left",
       Cell: ({ cell }) => <span>{cell?.value}</span>,
     },
     {
@@ -434,6 +435,8 @@ const RekapBulanan = () => {
     {
       Header: "Action",
       accessor: "action",
+      id: "action",
+      sticky: "right",
       Cell: (row) => (
         <div className="flex space-x-2 items-center">
           {actions.map((action, index) => (
