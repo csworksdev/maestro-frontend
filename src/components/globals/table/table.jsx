@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { memo, useMemo, useRef, useEffect } from "react";
 import Card from "@/components/ui/Card";
 import {
   useTable,
@@ -8,151 +8,179 @@ import {
   useFilters,
 } from "react-table";
 
-const Table = ({ listData, listColumn, handleSearch }) => {
-  const columns = useMemo(
-    () =>
-      listColumn.map((col) => ({
-        ...col,
-      })),
-    [listColumn, handleSearch]
-  );
+const Table = memo(
+  ({ listData, listColumn, handleSearch }) => {
+    const columns = useMemo(
+      () =>
+        listColumn.map((col) => ({
+          ...col,
+        })),
+      [listColumn]
+    );
 
-  const data = useMemo(() => listData.results, [listData.results]);
+    const data = useMemo(() => listData.results, [listData.results]);
 
-  const tableInstance = useTable(
-    {
-      columns,
-      data,
-      manualPagination: true,
-      manualFilters: true,
-      pageCount: Math.ceil(listData.count / data.length),
-    },
-    useFilters,
-    useGlobalFilter,
-    useSortBy,
-    usePagination
-  );
+    const tableInstance = useTable(
+      {
+        columns,
+        data,
+        manualPagination: true,
+        manualFilters: true,
+        pageCount: Math.ceil(listData.count / data.length),
+      },
+      useFilters,
+      useGlobalFilter,
+      useSortBy,
+      usePagination
+    );
 
-  const { getTableProps, getTableBodyProps, headerGroups, page, prepareRow } =
-    tableInstance;
+    const { getTableProps, getTableBodyProps, headerGroups, page, prepareRow } =
+      tableInstance;
 
-  const scrollableRowsRef = useRef([]);
-  const fixedRowsRef = useRef([]);
+    const scrollableRowsRef = useRef([]);
+    const fixedRowsRef = useRef([]);
 
-  useEffect(() => {
-    if (scrollableRowsRef.current.length && fixedRowsRef.current.length) {
-      scrollableRowsRef.current.forEach((scrollableRow, index) => {
-        const scrollableHeight = scrollableRow?.offsetHeight || 0;
-        const fixedRow = fixedRowsRef.current[index];
-        if (fixedRow) {
-          fixedRow.style.height = `${scrollableHeight}px`;
-        }
-      });
-    }
-  }, [page]);
+    const synchronizeHeights = () => {
+      if (scrollableRowsRef.current.length && fixedRowsRef.current.length) {
+        scrollableRowsRef.current.forEach((scrollableRow, index) => {
+          const scrollableHeight = scrollableRow?.offsetHeight || 0;
+          const fixedRow = fixedRowsRef.current[index];
+          if (fixedRow) {
+            fixedRow.style.height = `${scrollableHeight}px`;
+          }
+        });
+      }
+    };
 
-  return (
-    <>
-      <Card noborder>
-        <div className="flex">
-          {/* Main Scrollable Table */}
-          <div className="overflow-x-auto flex-grow -mx-1">
-            <table
-              {...getTableProps()}
-              className="table min-w-full divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
-            >
-              <thead className="border-t border-slate-100 dark:border-slate-800">
-                {headerGroups.map((headerGroup) => (
-                  <tr {...headerGroup.getHeaderGroupProps?.()}>
-                    {headerGroup.headers
-                      .slice(0, -1) // Exclude the last column
-                      .map((column) => (
-                        <th
-                          {...column.getHeaderProps?.(
-                            column.getSortByToggleProps?.()
-                          )}
-                          className="table-th text-center text-nowrap"
-                        >
-                          {column.render("Header")}
-                          <span>
-                            {column.isSorted
-                              ? column.isSortedDesc
-                                ? " 🔽"
-                                : " 🔼"
-                              : ""}
-                          </span>
-                        </th>
-                      ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody
-                {...getTableBodyProps()}
-                className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
+    useEffect(() => {
+      synchronizeHeights();
+
+      // Watch for changes in table body sizes
+      const resizeObserver = new ResizeObserver(() => synchronizeHeights());
+      const scrollableTable = document.querySelector(".scrollable-body");
+      const fixedTable = document.querySelector(".fixed-body");
+
+      if (scrollableTable && fixedTable) {
+        resizeObserver.observe(scrollableTable);
+        resizeObserver.observe(fixedTable);
+      }
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }, [page, listData]);
+
+    return (
+      <>
+        <Card noborder>
+          <div className="flex">
+            {/* Main Scrollable Table */}
+            <div className="overflow-x-auto flex-grow -mx-1 scrollable-body">
+              <table
+                {...getTableProps()}
+                className="table min-w-full divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
               >
-                {page.map((row, index) => {
-                  prepareRow(row);
-                  return (
-                    <tr
-                      {...row.getRowProps?.()}
-                      ref={(el) => (scrollableRowsRef.current[index] = el)}
-                    >
-                      {row.cells
+                <thead className="border-t border-slate-100 dark:border-slate-800">
+                  {headerGroups.map((headerGroup) => (
+                    <tr {...headerGroup.getHeaderGroupProps?.()}>
+                      {headerGroup.headers
                         .slice(0, -1) // Exclude the last column
-                        .map((cell) => (
-                          <td
-                            {...cell.getCellProps?.()}
-                            className="table-td text-nowrap"
+                        .map((column) => (
+                          <th
+                            {...column.getHeaderProps?.(
+                              column.getSortByToggleProps?.()
+                            )}
+                            className="table-th text-center text-nowrap"
                           >
-                            {cell.render("Cell")}
-                          </td>
+                            {column.render("Header")}
+                            <span>
+                              {column.isSorted
+                                ? column.isSortedDesc
+                                  ? " 🔽"
+                                  : " 🔼"
+                                : ""}
+                            </span>
+                          </th>
                         ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </thead>
+                <tbody
+                  {...getTableBodyProps()}
+                  className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
+                >
+                  {page.map((row, index) => {
+                    prepareRow(row);
+                    return (
+                      <tr
+                        {...row.getRowProps?.()}
+                        ref={(el) => (scrollableRowsRef.current[index] = el)}
+                      >
+                        {row.cells
+                          .slice(0, -1) // Exclude the last column
+                          .map((cell) => (
+                            <td
+                              {...cell.getCellProps?.()}
+                              className="table-td text-nowrap"
+                            >
+                              {cell.render("Cell")}
+                            </td>
+                          ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Fixed Last Column */}
-          <div className="min-w-[200px] bg-white border-t border-slate-100 dark:border-slate-800">
-            <table className="table min-w-full table-fixed">
-              <thead>
-                {headerGroups.map((headerGroup) => (
-                  <tr {...headerGroup.getHeaderGroupProps?.()}>
-                    <th className="table-th text-center text-nowrap">
-                      {
-                        headerGroup.headers[
-                          headerGroup.headers.length - 1
-                        ].render("Header") // Render only the last column
-                      }
-                    </th>
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {page.map((row, index) => {
-                  prepareRow(row);
-                  return (
-                    <tr
-                      {...row.getRowProps?.()}
-                      ref={(el) => (fixedRowsRef.current[index] = el)}
-                    >
-                      <td className="table-td text-nowrap py-0">
+            {/* Fixed Last Column */}
+            <div className="min-w-[150px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
+              <table className="table min-w-full table-fixed">
+                <thead className="border-t border-slate-100 dark:border-slate-800">
+                  {headerGroups.map((headerGroup) => (
+                    <tr {...headerGroup.getHeaderGroupProps?.()}>
+                      <th className="table-th text-center text-nowrap">
                         {
-                          row.cells[row.cells.length - 1].render("Cell") // Render only the last cell
+                          headerGroup.headers[
+                            headerGroup.headers.length - 1
+                          ].render("Header") // Render only the last column
                         }
-                      </td>
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </thead>
+                <tbody
+                  {...getTableBodyProps()}
+                  className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
+                >
+                  {page.map((row, index) => {
+                    prepareRow(row);
+                    return (
+                      <tr
+                        {...row.getRowProps?.()}
+                        ref={(el) => (fixedRowsRef.current[index] = el)}
+                      >
+                        <td className="table-td text-nowrap py-0">
+                          {
+                            row.cells[row.cells.length - 1].render("Cell") // Render only the last cell
+                          }
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      </Card>
-    </>
-  );
-};
+        </Card>
+      </>
+    );
+  },
+  (prevProps, nextProps) =>
+    JSON.stringify(prevProps.listData) === JSON.stringify(nextProps.listData) &&
+    JSON.stringify(prevProps.listColumn) ===
+      JSON.stringify(nextProps.listColumn) &&
+    prevProps.handleSearch === nextProps.handleSearch
+);
 
 export default Table;
