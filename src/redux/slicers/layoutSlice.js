@@ -6,25 +6,26 @@ const getItem = (key, fallback) => {
   return item ? JSON.parse(item) : fallback;
 };
 
-const initialState = {
-  isRTL: getItem("direction", themeConfig.layout.isRTL),
-  darkMode: getItem("darkMode", themeConfig.layout.darkMode),
-  isCollapsed: getItem("sidebarCollapsed", themeConfig.layout.menu.isCollapsed),
-  customizer: themeConfig.layout.customizer,
-  semiDarkMode: getItem("semiDarkMode", themeConfig.layout.semiDarkMode),
-  skin: getItem("skin", themeConfig.layout.skin),
-  contentWidth: themeConfig.layout.contentWidth,
-  type: getItem("type", themeConfig.layout.type),
-  menuHidden: themeConfig.layout.menu.isHidden,
-  navBarType: themeConfig.layout.navBarType,
-  footerType: themeConfig.layout.footerType,
-  mobileMenu: themeConfig.layout.mobileMenu,
-  isMonochrome: getItem("monochrome", themeConfig.layout.isMonochrome),
-};
-
 const layoutSlice = createSlice({
   name: "layout",
-  initialState,
+  initialState: {
+    isRTL: getItem("direction", themeConfig.layout.isRTL),
+    darkMode: getItem("darkMode", themeConfig.layout.darkMode),
+    isCollapsed: getItem(
+      "sidebarCollapsed",
+      themeConfig.layout.menu.isCollapsed
+    ),
+    customizer: themeConfig.layout.customizer,
+    semiDarkMode: getItem("semiDarkMode", themeConfig.layout.semiDarkMode),
+    skin: getItem("skin", themeConfig.layout.skin),
+    contentWidth: themeConfig.layout.contentWidth,
+    type: getItem("type", themeConfig.layout.type),
+    menuHidden: themeConfig.layout.menu.isHidden,
+    navBarType: themeConfig.layout.navBarType,
+    footerType: themeConfig.layout.footerType,
+    mobileMenu: themeConfig.layout.mobileMenu,
+    isMonochrome: getItem("monochrome", themeConfig.layout.isMonochrome),
+  },
   reducers: {
     handleSetting: (state, action) => {
       const { key, value } = action.payload;
