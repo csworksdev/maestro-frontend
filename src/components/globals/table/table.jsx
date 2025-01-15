@@ -14,6 +14,7 @@ const Table = memo(
       () =>
         listColumn.map((col) => ({
           ...col,
+          width: col.width || 150,
         })),
       [listColumn]
     );
@@ -78,7 +79,7 @@ const Table = memo(
             <div className="overflow-x-auto flex-grow -mx-1 scrollable-body">
               <table
                 {...getTableProps()}
-                className="table min-w-full divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
+                className="table  divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
               >
                 <thead className="border-t border-slate-100 dark:border-slate-800">
                   {headerGroups.map((headerGroup) => (
@@ -90,7 +91,7 @@ const Table = memo(
                             {...column.getHeaderProps?.(
                               column.getSortByToggleProps?.()
                             )}
-                            className="table-th text-center text-nowrap"
+                            className="table-th text-center text-wrap"
                           >
                             {column.render("Header")}
                             <span>
@@ -121,7 +122,7 @@ const Table = memo(
                           .map((cell) => (
                             <td
                               {...cell.getCellProps?.()}
-                              className="table-td text-nowrap"
+                              className="table-td text-wrap"
                             >
                               {cell.render("Cell")}
                             </td>
