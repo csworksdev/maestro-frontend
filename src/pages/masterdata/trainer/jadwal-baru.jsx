@@ -14,12 +14,14 @@ import {
 } from "@/axios/masterdata/trainerSchedule";
 import { baseJadwal } from "@/constant/jadwal-default";
 import Swal from "sweetalert2";
+import AsyncSelect from "react-select/async";
+import Badge from "@/components/ui/Badge";
 
 // Validation schema
 const FormValidationSchema = yup.object({}).required();
 
-const Checkbox = ({ name, label, checked, onChange }) => (
-  <div className="flex items-center">
+const Checkbox = ({ name, label, checked, onChange, badge = false }) => (
+  <div className={"flex items-center"}>
     <input
       type="checkbox"
       name={name}
@@ -29,7 +31,20 @@ const Checkbox = ({ name, label, checked, onChange }) => (
       className="form-checkbox"
     />
     <label htmlFor={name} className="ml-2">
-      {label}
+      {label}{" "}
+      {badge ? (
+        !checked ? (
+          <Badge
+            label="Libur"
+            className="bg-danger-500 text-danger-500 bg-opacity-[0.12] pill"
+          />
+        ) : (
+          <Badge
+            label="Masuk"
+            className="bg-success-500 text-success-500 bg-opacity-[0.12] pill"
+          />
+        )
+      ) : null}
     </label>
   </div>
 );
@@ -100,60 +115,61 @@ const CardJadwal = ({
   };
 
   return (
-    <Card title={day} titleClass="align-center">
+    <Card
+      title={day}
+      headerslot={
+        <Checkbox
+          name={`${day}#checkall`}
+          label="Check All"
+          checked={time.every((option) =>
+            selected.some((item) => item.startsWith(`${day}#${option.value}`))
+          )}
+          onChange={() => handleCheckAllChange(day)}
+        />
+      }
+    >
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Checkbox
-            name={`${day}#checkall`}
-            label="Check All"
-            checked={time.every((option) =>
-              selected.some((item) => item.startsWith(`${day}#${option.value}`))
-            )}
-            onChange={() => handleCheckAllChange(day)}
-          />
-        </div>
-        {time.map((option, i) => {
-          const isChecked = selected.some((item) =>
-            item.startsWith(`${day}#${option.value}`)
-          );
-          const selectedPool =
-            selected
-              .find((item) => item.startsWith(`${day}#${option.value}`))
-              ?.split("#")[2] || "";
+        <div className="flex flex-wrap gap-4">
+          {time.map((option, i) => {
+            const isChecked = selected.some((item) =>
+              item.startsWith(`${day}#${option.value}`)
+            );
+            const selectedPool =
+              selected
+                .find((item) => item.startsWith(`${day}#${option.value}`))
+                ?.split("#")[2] || "";
 
-          return (
-            <div className="flex gap-2 justify-between" key={i}>
-              <Checkbox
-                name={`${day}#${option.value}`}
-                label={option.label}
-                checked={isChecked}
-                onChange={() => handleCheckboxChange(day, option.value)}
-              />
-              <Select
-                name="pool"
-                placeholder="Pilih Kolam"
-                options={[{ value: "", label: "Pilih Kolam" }, ...dataKolam]}
-                disabled={!isChecked}
-                value={selectedPool}
-                onChange={(e) =>
-                  handlePoolChange(day, option.value, e.target.value)
-                }
-              />
-            </div>
-          );
-        })}
+            return (
+              <div
+                className={`border-2 p-2 rounded-lg ${
+                  !isChecked ? "border-red-500" : "border-success-500"
+                }`}
+                key={i}
+              >
+                <Checkbox
+                  name={`${day}#${option.value}`}
+                  label={option.label}
+                  checked={isChecked}
+                  onChange={() => handleCheckboxChange(day, option.value)}
+                  badge={true}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </Card>
   );
 };
 
-const Jadwal = ({ data }) => {
+const JadwalBaru = ({ data }) => {
   const [selected, setSelected] = useState([]);
   const [kolamOption, setKolamOption] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [defaultPool, setDefaultPool] = useState("");
+  const [selectedPool, setSelectedPool] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission status
   const navigate = useNavigate();
+  console.log(data);
 
   const {
     register,
@@ -180,10 +196,16 @@ const Jadwal = ({ data }) => {
         data.trainer_id
       );
 
-      const kolamOption = kolamResponse.data.results.map((item) => ({
-        value: item.pool_id,
-        label: item.name,
-      }));
+      const kolamOption = kolamResponse.data.results
+        .sort(
+          (a, b) =>
+            a.branch_name.localeCompare(b.branch_name) ||
+            a.name.localeCompare(b.name)
+        )
+        .map((item) => ({
+          value: item.pool_id,
+          label: item.branch_name + " - " + item.name,
+        }));
       const schOption = trainerScheduleResponse.data.results.map((item) => ({
         trainer_schedule_id: item.trainer_schedule_id,
         day: item.day,
@@ -257,6 +279,11 @@ const Jadwal = ({ data }) => {
     navigate(-1);
   };
 
+  const handlePoolChange = (selectedOptions) => {
+    setSelectedPool(selectedOptions);
+    console.log(selectedOptions);
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -269,14 +296,28 @@ const Jadwal = ({ data }) => {
         </div>
       )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Select
-          name="defaultPool"
-          placeholder="Default Pool"
-          options={[{ value: "", label: "Pilih Kolam" }, ...kolamOption]}
-          value={defaultPool}
-          onChange={(e) => setDefaultPool(e.target.value)}
-        />
-        <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="form-label" htmlFor="kolam">
+            Kolam
+          </label>
+          <div className="flex gap-3">
+            <AsyncSelect
+              name="kolam"
+              label="Kolam"
+              placeholder="Pilih Kolam"
+              isMulti
+              defaultOptions={kolamOption}
+              loadOptions={kolamOption}
+              // value={kolamOption}
+              onChange={handlePoolChange}
+              isOptionDisabled={() =>
+                selectedPool.length >= (data.is_fulltime ? 10 : 1)
+              }
+              className="grow"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
           {baseJadwal.map((item, i) => (
             <CardJadwal
               key={i}
@@ -285,8 +326,8 @@ const Jadwal = ({ data }) => {
               selected={selected}
               setSelected={setSelected}
               dataKolam={kolamOption}
-              defaultPool={defaultPool}
-              setDefaultPool={setDefaultPool}
+              // defaultPool={defaultPool}
+              // setDefaultPool={setDefaultPool}
             />
           ))}
         </div>
@@ -309,4 +350,4 @@ const Jadwal = ({ data }) => {
   );
 };
 
-export default Jadwal;
+export default JadwalBaru;

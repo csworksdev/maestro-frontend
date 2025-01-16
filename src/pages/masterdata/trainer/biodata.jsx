@@ -14,11 +14,11 @@ import { getCabangAll } from "@/axios/referensi/cabang";
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
 
-const Biodata = ({ isupdate = "false", data = {} }) => {
+const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
-  const [selectOption, setSelectOption] = useState("false");
-  const [mobileOption, setMobileOption] = useState("false");
+  const [selectOption, setSelectOption] = useState(false);
+  const [mobileOption, setMobileOption] = useState(false);
   const [branchOption, setBranchOption] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,8 +67,8 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       if (data.dob) setValue("dob", DateTime.fromISO(data.dob).toJSDate());
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
-      setSelectOption(data.is_active.toString());
-      setMobileOption(data.is_fulltime.toString());
+      setSelectOption(data.is_active);
+      setMobileOption(data.is_fulltime);
     }
   }, [isUpdate, data, setValue]);
 
@@ -79,22 +79,22 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
 
   const options = [
     {
-      value: "true",
+      value: true,
       label: "Aktif",
     },
     {
-      value: "false",
+      value: false,
       label: "Tidak Aktif",
     },
   ];
 
   const mobile = [
     {
-      value: "true",
+      value: true,
       label: "Ya",
     },
     {
-      value: "false",
+      value: false,
       label: "Tidak",
     },
   ];
@@ -107,27 +107,29 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
     AddTrainer(data).then((res) => {
       if (res.status) {
         Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-          navigate(-1)
+          // navigate(-1)
+          updatedData(data)
         );
       }
     });
   };
 
-  const handleUpdate = (updatedData) => {
-    EditTrainer(data.trainer_id, updatedData).then((res) => {
+  const handleUpdate = (data) => {
+    EditTrainer(data.trainer_id, data).then((res) => {
       if (res.status) {
         Swal.fire("Edited!", "Your file has been edited.", "success").then(() =>
-          navigate(-1)
+          // navigate(-1)
+          updatedData(data)
         );
       }
     });
   };
 
   const handleOption = (e) => {
-    setSelectOption(e.target.value);
+    setSelectOption(e.target.value == "false" ? false : true);
   };
   const handleMobileOption = (e) => {
-    setMobileOption(e.target.value);
+    setMobileOption(e.target.value == "false" ? false : true);
   };
 
   const onSubmit = (newData) => {
@@ -138,7 +140,7 @@ const Biodata = ({ isupdate = "false", data = {} }) => {
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
-      mobile: mobileOption,
+      is_fulltime: mobileOption,
       is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,

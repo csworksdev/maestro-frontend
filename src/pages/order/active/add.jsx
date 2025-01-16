@@ -27,7 +27,7 @@ import { getKolamByBranch } from "@/axios/referensi/kolam";
 import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
 import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
-import { hari, jam, genderOption } from "@/constant/jadwal-default";
+import { hari, jam, gender } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -592,7 +592,7 @@ const Add = () => {
             <label className="form-label" htmlFor="gender">
               Gender Pelatih
             </label>
-            {genderOption.map((option) => (
+            {gender.map((option) => (
               <Radio
                 key={option.value}
                 label={option.label}

@@ -1,4 +1,4 @@
-export const mockdata = [
+export const baseJadwal = [
   {
     day: "Senin",
     time: [
@@ -15,8 +15,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
   {
@@ -35,8 +33,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
   {
@@ -55,8 +51,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
   {
@@ -75,8 +69,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
   {
@@ -95,8 +87,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
   {
@@ -115,8 +105,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
   {
@@ -135,8 +123,6 @@ export const mockdata = [
       { value: "16.00", label: "16.00" },
       { value: "17.00", label: "17.00" },
       { value: "18.00", label: "18.00" },
-      { value: "19.00", label: "19.00" },
-      { value: "20.00", label: "20.00" },
     ],
   },
 ];
@@ -155,8 +141,6 @@ export const jam = [
   { value: "16.00", label: "16.00" },
   { value: "17.00", label: "17.00" },
   { value: "18.00", label: "18.00" },
-  { value: "19.00", label: "19.00" },
-  { value: "20.00", label: "20.00" },
 ];
 
 export const hari = [
@@ -169,7 +153,7 @@ export const hari = [
   { value: "Minggu", label: "Minggu" },
 ];
 
-export const genderOption = [
+export const gender = [
   { value: "L", label: "Laki-Laki" },
   { value: "P", label: "Perempuan" },
 ];

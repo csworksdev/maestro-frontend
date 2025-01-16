@@ -1,10 +1,11 @@
 import Card from "@/components/ui/Card";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
-import React from "react";
+import React, { useState } from "react";
 import Biodata from "./biodata";
 import { useLocation } from "react-router-dom";
 import Jadwal from "./jadwal";
+import JadwalBaru from "./jadwal-baru";
 
 const Edit = () => {
   const location = useLocation();
@@ -19,23 +20,10 @@ const Edit = () => {
       icon: "heroicons-outline:queue-list",
     },
   ];
-  const items = [
-    {
-      title: "How does Dashcode work?",
-      content:
-        "Jornalists call this critical, introductory section the  and when bridge properly executed, it's the that carries your reader from anheadine try at attention-grabbing to the body of your blog post.",
-    },
-    {
-      title: "Where i can learn more about using Dashcode?",
-      content:
-        "Jornalists call this critical, introductory section the  and when bridge properly executed, it's the that carries your reader from anheadine try at attention-grabbing to the body of your blog post.",
-    },
-    {
-      title: "Why Dashcode is so important?",
-      content:
-        "Jornalists call this critical, introductory section the  and when bridge properly executed, it's the that carries your reader from anheadine try at attention-grabbing to the body of your blog post.",
-    },
-  ];
+  const [selectedData, setSelectedData] = useState(data);
+  const updateData = (params) => {
+    setSelectedData(params);
+  };
   return (
     <div className="grid grid-cols-1 gap-6">
       <Card>
@@ -67,10 +55,15 @@ const Edit = () => {
           </Tab.List>
           <Tab.Panels>
             <Tab.Panel>
-              <Biodata isupdate={isupdate} data={data} />
+              <Biodata
+                isupdate={isupdate}
+                data={selectedData}
+                updatedData={updateData}
+              />
             </Tab.Panel>
             <Tab.Panel>
-              <Jadwal data={data} />
+              {/* <Jadwal data={data} /> */}
+              <JadwalBaru data={selectedData} />
             </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>
