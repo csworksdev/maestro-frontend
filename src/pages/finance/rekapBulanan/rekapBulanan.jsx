@@ -450,11 +450,36 @@ const RekapBulanan = () => {
   const CellDetail = ({ tanggal, status, order_detail_id }) => {
     let bgColor = "";
 
+    let periode = "next";
+    if (
+      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+    )
+      periode = "prev";
+    else if (
+      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+        DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+      DateTime.fromFormat(tanggal, "yyyy/MM/dd") >=
+        DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+    )
+      periode = "curr";
+    else if (
+      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+    )
+      periode = "next";
+
     let currentPeriode =
       DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
       DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
         ? true
         : false;
+
+    // let prevPeriode =
+    //   DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+    //   DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+    //     ? true
+    //     : false;
 
     if (tanggal && status === false) {
       bgColor = currentPeriode ? "bg-red-500" : "bg-yellow-400"; // Blue if p1 has value and p1_paid is false
@@ -463,15 +488,43 @@ const RekapBulanan = () => {
     return (
       <div className="flex flex-col items-center">
         <span>
-          {tanggal ? (
+          {/* {tanggal ? (
             status === true ? (
               <PaidSign />
             ) : currentPeriode ? (
               <WillPaid order_detail_id={order_detail_id} />
+            ) : prevPeriode ? (
+              <PrevPaidSign />
             ) : (
               <NextMonth />
             )
-          ) : null}
+          ) : null} */}
+
+          {tanggal
+            ? status === true
+              ? (() => {
+                  switch (periode) {
+                    case "curr":
+                      return <PaidSign />;
+                    case "prev":
+                      return <PrevPaidSign />;
+                    default:
+                      return null;
+                  }
+                })()
+              : (() => {
+                  switch (periode) {
+                    case "curr":
+                      return <WillPaid order_detail_id={order_detail_id} />;
+                    case "prev":
+                      return <WillPaid order_detail_id={order_detail_id} />;
+                    case "next":
+                      return <NextMonth />;
+                    default:
+                      return null;
+                  }
+                })()
+            : null}
         </span>
         <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
           {tanggal
@@ -504,7 +557,7 @@ const RekapBulanan = () => {
 
   const PaidSign = () => {
     return (
-      <Tooltip placement="top" arrow content={"Sudah dibayar"}>
+      <Tooltip placement="top" arrow content={"Dibayar periode sekarang"}>
         <div
           className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
             first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
@@ -516,6 +569,26 @@ const RekapBulanan = () => {
               icon="heroicons-outline:check-badge"
               color="blue"
               className={`h-6 w-6`}
+            />
+          </span>
+        </div>
+      </Tooltip>
+    );
+  };
+  const PrevPaidSign = () => {
+    return (
+      <Tooltip placement="top" arrow content={"Dibayar periode sebelumnya"}>
+        <div
+          className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
+            first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
+          `}
+          // key={p1_order_detail_id}
+        >
+          <span className="text-base">
+            <Icon
+              icon="heroicons-outline:x-mark"
+              color="red"
+              className={`h-4 w-4`}
             />
           </span>
         </div>

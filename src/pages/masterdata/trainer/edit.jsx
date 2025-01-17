@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import Biodata from "./biodata";
 import { useLocation } from "react-router-dom";
 import Jadwal from "./jadwal";
-import JadwalBaru from "./jadwal-baru";
+// import JadwalBaru from "./jadwal-baru";
 
 const Edit = () => {
   const location = useLocation();
@@ -62,8 +62,8 @@ const Edit = () => {
               />
             </Tab.Panel>
             <Tab.Panel>
-              {/* <Jadwal data={data} /> */}
-              <JadwalBaru data={selectedData} />
+              <Jadwal data={data} />
+              {/* <JadwalBaru data={selectedData} /> */}
             </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>
