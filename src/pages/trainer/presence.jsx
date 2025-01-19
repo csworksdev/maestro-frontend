@@ -60,6 +60,7 @@ const Presence = () => {
 
   useEffect(() => {
     localStorage.setItem("presenceSelected", selectedIndex);
+    setListData(tabHari[selectedIndex].data);
   }, [selectedIndex]);
 
   const daysOfWeek = [
@@ -81,7 +82,7 @@ const Presence = () => {
       setIsLoading(true);
       let res = await getPresenceById(user_id);
 
-      setListData(res.data.data);
+      // setListData(res.data.data);
       splitPerDay(res.data.data);
 
       const periodeResults = await getPeriodisasiToday();
@@ -109,26 +110,29 @@ const Presence = () => {
       data: data.filter((item) => item.day === element.hari),
     }));
     setTabHari(updatedTabHari);
+    setListData(updatedTabHari[selectedIndex].data);
   };
 
-  const handleSearch = (data = [], query) => {
+  const handleSearch = (query) => {
     setSearchQuery(query.toLowerCase());
-    setListData(data);
 
     if (!query) {
       // If the search query is empty, reset to show all data
-      fetchData();
+      // fetchData();
       return;
     }
 
-    const filteredData = data.filter((item) =>
-      item.students_info.some((student) =>
-        student.fullname.toLowerCase().includes(query.toLowerCase())
-      )
+    // Filter tabHari's data based on the search query
+    setTabHari((prevTabHari) =>
+      prevTabHari.map((tab) => ({
+        ...tab,
+        data: tab.data.filter((item) =>
+          item.students_info.some((student) =>
+            student.fullname.toLowerCase().includes(query.toLowerCase())
+          )
+        ),
+      }))
     );
-
-    // If no results found, show all data
-    setListData(filteredData.length > 0 ? filteredData : data);
   };
 
   const checkProduct = (updatedData) => {
@@ -171,10 +175,10 @@ const Presence = () => {
   const checkMeetThreshold = (updatedData) => {
     const { order_id, meet: threshold } = updatedData;
 
-    // Check if any meeting for the order has a meet value less than the threshold
-    const hasLessThanThreshold = listData.some(
-      (item) => item.order_id === order_id && item.meet < threshold
-    );
+    // Flatten all data arrays in tabHari and check if any meeting has a meet value less than the threshold
+    const hasLessThanThreshold = tabHari
+      .flatMap((tab) => tab.data)
+      .some((item) => item.order_id === order_id && item.meet < threshold);
 
     // Return true if no such meeting exists, otherwise false
     return !hasLessThanThreshold;
@@ -214,7 +218,18 @@ const Presence = () => {
         return;
       }
 
-      const updateRes = await UpdatePresenceById(order_id, updatedData);
+      const params = [
+        {
+          order: updatedData.order_id,
+          meet: updatedData.meet,
+          is_presence: true,
+          real_date: updatedData.real_date,
+          real_time: updatedData.real_time,
+          presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+        },
+      ];
+
+      const updateRes = await UpdatePresenceById(order_id, params);
       if (!updateRes) throw new Error("Failed to update presence");
 
       const updateOrder = checkProduct(updatedData);
@@ -232,8 +247,6 @@ const Presence = () => {
 
       fetchData();
     } catch (error) {
-      console.error("Error updating data", error);
-
       await Swal.fire({
         title: "Error",
         text: "Terjadi kesalahan saat memproses data. Silakan coba lagi.",
@@ -243,59 +256,106 @@ const Presence = () => {
     }
   };
 
-  const handleHadir = (order_detail_id) => {
-    const updatedData = listData.map((item) => {
-      if (item.order_detail_id === order_detail_id) {
-        return {
-          ...item,
-          is_presence: true,
-          periode: periode.name,
-          real_date: item.real_date || item.schedule_date,
-          presence_day: DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
-          real_time: item.real_time || item.time,
-        };
-      }
-      return item;
-    });
+  // const handleHadir = (order_detail_id) => {
+  //   const updatedData = listData.map((item) => {
+  //     if (item.order_detail_id === order_detail_id) {
+  //       return {
+  //         ...item,
+  //         is_presence: true,
+  //         periode: periode.name,
+  //         real_date: item.real_date || item.schedule_date,
+  //         presence_day: DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
+  //         real_time: item.real_time || item.time,
+  //       };
+  //     }
+  //     return item;
+  //   });
 
-    const updatedItem = updatedData.find(
-      (item) => item.order_detail_id === order_detail_id
+  //   const updatedItem = updatedData.find(
+  //     (item) => item.order_detail_id === order_detail_id
+  //   );
+  // setListData(updatedData);
+  // handleUpdate(order_detail_id, updatedItem);
+  // };
+
+  const handleHadir = (order_detail_id) => {
+    setTabHari((prevTabHari) =>
+      prevTabHari.map((tab) => ({
+        ...tab,
+        data: tab.data.map((item) => {
+          if (item.order_detail_id === order_detail_id) {
+            return {
+              ...item,
+              is_presence: true,
+              periode: periode.name,
+              real_date: item.real_date || item.schedule_date,
+              presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+              real_time: item.real_time || item.time,
+            };
+          }
+          return item;
+        }),
+      }))
     );
-    setListData(updatedData);
+
+    const updatedItem = tabHari
+      .flatMap((tab) => tab.data)
+      .find((item) => item.order_detail_id === order_detail_id);
+
+    // console.log("Updated item:", updatedItem); // Debugging
     handleUpdate(order_detail_id, updatedItem);
   };
 
   const handleChangeDay = (id, date) => {
-    const formatedDate = DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd");
-    if (!date || date.length === 0) return; // Ensure date is valid
-    setListData((prevListData) =>
-      prevListData.map((item) =>
-        item.order_detail_id === id
-          ? {
-              ...item,
-              real_date: formatedDate,
-              presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-            }
-          : item
-      )
+    if (!date) {
+      console.error("Invalid date:", date);
+      return; // Ensure date is valid
+    }
+
+    const formattedDate = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
+    setValue("real_date", formattedDate);
+
+    // Update tabHari state
+    setTabHari((prevTabHari) =>
+      prevTabHari.map((tab) => ({
+        ...tab,
+        data: tab.data.map((item) =>
+          item.order_detail_id === id
+            ? {
+                ...item,
+                real_date: formattedDate,
+                presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+              }
+            : item
+        ),
+      }))
     );
-    setValue("real_date", formatedDate);
-    console.log(formatedDate);
   };
 
   const handleChangeTime = (id, time) => {
     if (!time) return; // Ensure time is valid
-    setListData((prevListData) =>
-      prevListData.map((item) =>
-        item.order_detail_id === id
-          ? {
-              ...item,
-              real_time: time,
-            }
-          : item
-      )
-    );
+
     setValue("real_time", time);
+
+    // Update tabHari state
+    setTabHari((prevTabHari) =>
+      prevTabHari.map((tab) => ({
+        ...tab,
+        data: tab.data.map((item) =>
+          item.order_detail_id === id
+            ? {
+                ...item,
+                real_time: time,
+              }
+            : item
+        ),
+      }))
+    );
+  };
+
+  const handleChangeTab = (index) => {
+    setSelectedIndex(index);
+    setListData(tabHari[index].data);
   };
 
   useEffect(() => {
@@ -379,29 +439,20 @@ const Presence = () => {
                   Tanggal Kehadiran
                 </label>
                 <Flatpickr
-                  // value={
-                  //   item.real_date ||
-                  //   DateTime.fromISO(item.schedule_date).toFormat("yyyy-MM-dd")
-                  // }
-                  defaultValue={item.real_date || item.schedule_date}
+                  value={item.real_date || item.schedule_date}
                   options={{
-                    // dateFormat: "d F Y",
-                    minDate: DateTime.fromSQL(periode.start_date).toFormat(
-                      "yyyy-MM-dd"
-                    ),
-                    maxDate: DateTime.fromSQL(periode.end_date).toFormat(
-                      "yyyy-MM-dd"
-                    ),
+                    minDate: DateTime.fromISO(periode.start_date).toISODate(),
+                    maxDate: DateTime.fromISO(periode.end_date).toISODate(),
                     disableMobile: true,
                     allowInput: true,
                     altInput: true,
                     altFormat: "d F Y",
                   }}
                   className="form-control py-2 w-full"
-                  onChange={(date) =>
-                    handleChangeDay(item.order_detail_id, date)
+                  onChange={
+                    (selectedDate) =>
+                      handleChangeDay(item.order_detail_id, selectedDate[0]) // Pass the first selected date
                   }
-                  readOnly={false}
                 />
               </div>
               <div>
@@ -529,7 +580,7 @@ const Presence = () => {
 
   const TabbedVersion = () => {
     return (
-      <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
+      <Tab.Group selectedIndex={selectedIndex ?? -1} onChange={handleChangeTab}>
         {/* Tab List */}
         <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-4 pb-1">
           {tabHari.map((item, i) => (
