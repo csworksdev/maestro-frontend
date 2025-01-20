@@ -58,11 +58,6 @@ const Presence = () => {
     localStorage.getItem("presenceSelected") || 0
   );
 
-  useEffect(() => {
-    localStorage.setItem("presenceSelected", selectedIndex);
-    setListData(tabHari[selectedIndex].data);
-  }, [selectedIndex]);
-
   const daysOfWeek = [
     "Senin",
     "Selasa",
@@ -76,6 +71,13 @@ const Presence = () => {
   const [tabHari, setTabHari] = useState(
     daysOfWeek.map((hari) => ({ hari, data: [] }))
   );
+
+  useEffect(() => {
+    if (tabHari.length && tabHari[selectedIndex]?.data) {
+      setListData(tabHari[selectedIndex].data);
+    }
+    localStorage.setItem("presenceSelected", selectedIndex);
+  }, [selectedIndex, tabHari]);
 
   const fetchData = async () => {
     try {
@@ -105,34 +107,34 @@ const Presence = () => {
   // }, {});
 
   const splitPerDay = (data) => {
-    const updatedTabHari = tabHari.map((element) => ({
-      ...element,
-      data: data.filter((item) => item.day === element.hari),
+    const updatedTabHari = daysOfWeek.map((hari) => ({
+      hari,
+      data: data.filter((item) => item.day === hari),
     }));
     setTabHari(updatedTabHari);
-    setListData(updatedTabHari[selectedIndex].data);
   };
 
+  // Updated handleSearch
   const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
-
-    if (!query) {
-      // If the search query is empty, reset to show all data
-      // fetchData();
-      return;
-    }
+    setSearchQuery(query); // Update only the search query state
 
     // Filter tabHari's data based on the search query
-    setTabHari((prevTabHari) =>
-      prevTabHari.map((tab) => ({
-        ...tab,
-        data: tab.data.filter((item) =>
-          item.students_info.some((student) =>
-            student.fullname.toLowerCase().includes(query.toLowerCase())
-          )
-        ),
-      }))
-    );
+    if (query) {
+      const lowerQuery = query.toLowerCase();
+      setTabHari((prevTabHari) =>
+        prevTabHari.map((tab) => ({
+          ...tab,
+          data: tab.data.filter((item) =>
+            item.students_info.some((student) =>
+              student.fullname.toLowerCase().includes(lowerQuery)
+            )
+          ),
+        }))
+      );
+    } else {
+      // If search query is empty, retain the original tabHari data
+      fetchData(); // Or restore the unfiltered state if data is cached
+    }
   };
 
   const checkProduct = (updatedData) => {
@@ -424,69 +426,59 @@ const Presence = () => {
     return <Loading />;
   }
 
-  const PresenceView = ({ item, k }) => {
-    return (
-      <>
-        <Card
-          key={`${item.order}-${k}`}
-          title={`Pertemuan ke ${item.meet}`}
-          subtitle={`${item.day} - ${item.time}`}
-        >
-          <div className="flex flex-col sm:flex-row items-stretch justify-between">
-            <div className="w-full">
-              <div>
-                <label className="form-label" htmlFor="real_date">
-                  Tanggal Kehadiran
-                </label>
-                <Flatpickr
-                  value={item.real_date || item.schedule_date}
-                  options={{
-                    minDate: DateTime.fromISO(periode.start_date).toISODate(),
-                    maxDate: DateTime.fromISO(periode.end_date).toISODate(),
-                    disableMobile: true,
-                    allowInput: true,
-                    altInput: true,
-                    altFormat: "d F Y",
-                  }}
-                  className="form-control py-2 w-full"
-                  onChange={
-                    (selectedDate) =>
-                      handleChangeDay(item.order_detail_id, selectedDate[0]) // Pass the first selected date
-                  }
-                />
-              </div>
-              <div>
-                <label className="form-label" htmlFor="real_time">
-                  Jam kehadiran
-                </label>
-                <select
-                  name="real_time"
-                  value={item.real_time || item.time} // Ensure correct mapping
-                  onChange={(e) =>
-                    handleChangeTime(item.order_detail_id, e.target.value)
-                  }
-                  className="form-select w-full"
-                >
-                  {jam.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                className="btn-success w-full mt-2"
-                onClick={() => handleHadir(item.order_detail_id)}
-              >
-                Hadir
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </>
-    );
-  };
+  const PresenceView = ({ item, k }) => (
+    <Card
+      key={`${item.order}-${k}`}
+      title={`Pertemuan ke ${item.meet}`}
+      subtitle={`${item.day} - ${item.time}`}
+    >
+      <div className="flex flex-col sm:flex-row items-stretch justify-between">
+        <div className="w-full">
+          <label className="form-label" htmlFor="real_date">
+            Tanggal Kehadiran
+          </label>
+          <Flatpickr
+            value={item.real_date || item.schedule_date}
+            options={{
+              minDate: DateTime.fromISO(periode.start_date).toISODate(),
+              maxDate: DateTime.fromISO(periode.end_date).toISODate(),
+              disableMobile: true,
+              allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
+            }}
+            className="form-control py-2 w-full"
+            onChange={(selectedDate) =>
+              handleChangeDay(item.order_detail_id, selectedDate?.[0])
+            }
+          />
+          <label className="form-label mt-2" htmlFor="real_time">
+            Jam kehadiran
+          </label>
+          <select
+            name="real_time"
+            value={item.real_time || item.time}
+            onChange={(e) =>
+              handleChangeTime(item.order_detail_id, e.target.value)
+            }
+            className="form-select w-full"
+          >
+            {jam.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <Button
+            className="btn-success w-full mt-2"
+            onClick={() => handleHadir(item.order_detail_id)}
+          >
+            Hadir
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
 
   const DisplayData = (data) => {
     const groupedData = data.reduce((acc, item) => {
@@ -502,11 +494,12 @@ const Presence = () => {
     // setListData(groupedData);
     return (
       <>
-        {/* <Search
-          handleSearch={(query) => handleSearch(groupedData, query)}
-          searchValue={searchQuery}
-          placeholder="Cari siswa hari"
-        /> */}
+        <Search
+          handleSearch={(query) => handleSearch(query)}
+          searchValue={searchQuery} // Bind searchQuery as the value
+          placeholder={`Cari siswa hari ${hari[selectedIndex].value}`}
+        />
+
         <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
           {Object.keys(groupedData).map((order_id, i) => (
             <div key={i}>
