@@ -26,7 +26,7 @@ const Info = () => {
           </span>
         </div>
         <div className="text-sm text-wgite text-white dark:text-slate-800 font-semibold flex flex-row gap-3 items-center">
-          <span>
+          {/* <span>
             Untuk siswa yang Tanggal Ordernya sebelum tanggal 21 Oktober 2024,
             silahkan mengisi absen di Heroku, jika bingung silahkan
             <Button
@@ -39,6 +39,14 @@ const Info = () => {
             >
               Chat disini
             </Button>
+          </span> */}
+          <span>
+            Jika mengalami kendala tidak bisa absen, bisa mencoba langkah
+            berikut :
+          </span>
+          <span>
+            Coba pilih tanggal sama jamnya, terus klik hadir, terus klik cancel,
+            terus klik hadir lagi
           </span>
         </div>
       </div>

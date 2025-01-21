@@ -280,8 +280,8 @@ const Presence = () => {
   // handleUpdate(order_detail_id, updatedItem);
   // };
 
-  const handleHadir = (order_detail_id) => {
-    setTabHari((prevTabHari) =>
+  const handleHadir = async (order_detail_id) => {
+    await setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
         data: tab.data.map((item) => {
@@ -305,20 +305,20 @@ const Presence = () => {
       .find((item) => item.order_detail_id === order_detail_id);
 
     // console.log("Updated item:", updatedItem); // Debugging
-    handleUpdate(order_detail_id, updatedItem);
+    await handleUpdate(order_detail_id, updatedItem);
   };
 
-  const handleChangeDay = (id, date) => {
+  const handleChangeDay = async (id, date) => {
     if (!date) {
       console.error("Invalid date:", date);
       return; // Ensure date is valid
     }
 
     const formattedDate = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
-    setValue("real_date", formattedDate);
+    await setValue("real_date", formattedDate);
 
     // Update tabHari state
-    setTabHari((prevTabHari) =>
+    await setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
         data: tab.data.map((item) =>
@@ -334,13 +334,13 @@ const Presence = () => {
     );
   };
 
-  const handleChangeTime = (id, time) => {
+  const handleChangeTime = async (id, time) => {
     if (!time) return; // Ensure time is valid
 
-    setValue("real_time", time);
+    await setValue("real_time", time);
 
     // Update tabHari state
-    setTabHari((prevTabHari) =>
+    await setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
         data: tab.data.map((item) =>
