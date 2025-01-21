@@ -143,6 +143,10 @@ export const menuAdminNew = [
     isHide: true,
     child: [
       {
+        childtitle: "Cek Jadwal",
+        childlink: "cek-jadwal",
+      },
+      {
         childtitle: "Siswa",
         childlink: "siswa",
       },
@@ -217,6 +221,10 @@ export const menuAdmin = [
       //   childtitle: "Earning",
       //   childlink: "order/earning",
       // },
+      {
+        childtitle: "Cek Jadwal",
+        childlink: "cek-jadwal",
+      },
       {
         childtitle: "Finished",
         childlink: "finishedOrder",

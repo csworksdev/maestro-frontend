@@ -75,6 +75,7 @@ const RekapTrainer = lazy(() =>
 const RekapOrderTrainer = lazy(() =>
   import("./pages/finance/rekapPelatih/rekapPelatihOrder")
 );
+const CekJadwal = lazy(() => import("./pages/order/cekJadwal/cekJadwal"));
 
 const App = () => {
   const hostname = window.location.hostname;
@@ -172,6 +173,9 @@ const App = () => {
 
                   <Route path="expired" element={<OrderExpired />} />
                   <Route path="waitinglist" element={<Waitinglist />} />
+                </Route>
+                <Route path="cek-jadwal">
+                  <Route index element={<CekJadwal />} />
                 </Route>
                 <Route path="finishedOrder">
                   <Route index element={<OrderFinished />} />

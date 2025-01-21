@@ -440,8 +440,12 @@ const Presence = () => {
           <Flatpickr
             value={item.real_date || item.schedule_date}
             options={{
-              minDate: DateTime.fromISO(periode.start_date).toISODate(),
-              maxDate: DateTime.fromISO(periode.end_date).toISODate(),
+              minDate: DateTime.fromISO(periode.start_date)
+                .minus({ month: 1 })
+                .toISODate(),
+              maxDate: DateTime.fromISO(periode.end_date)
+                .minus({ month: 1 })
+                .toISODate(),
               disableMobile: true,
               allowInput: true,
               altInput: true,
