@@ -257,28 +257,7 @@ const Presence = () => {
       });
     }
   };
-
-  // const handleHadir = (order_detail_id) => {
-  //   const updatedData = listData.map((item) => {
-  //     if (item.order_detail_id === order_detail_id) {
-  //       return {
-  //         ...item,
-  //         is_presence: true,
-  //         periode: periode.name,
-  //         real_date: item.real_date || item.schedule_date,
-  //         presence_day: DateTime.fromISO(DateTime.now()).toFormat("yyyy-MM-dd"),
-  //         real_time: item.real_time || item.time,
-  //       };
-  //     }
-  //     return item;
-  //   });
-
-  //   const updatedItem = updatedData.find(
-  //     (item) => item.order_detail_id === order_detail_id
-  //   );
-  // setListData(updatedData);
-  // handleUpdate(order_detail_id, updatedItem);
-  // };
+  const forceUpdate = () => setSelectedIndex((prev) => prev); // Triggers a re-render
 
   const handleHadir = async (order_detail_id) => {
     await setTabHari((prevTabHari) =>
@@ -300,25 +279,28 @@ const Presence = () => {
       }))
     );
 
+    forceUpdate(); // Ensures the latest state is used
+
     const updatedItem = tabHari
       .flatMap((tab) => tab.data)
       .find((item) => item.order_detail_id === order_detail_id);
 
-    // console.log("Updated item:", updatedItem); // Debugging
-    await handleUpdate(order_detail_id, updatedItem);
+    if (updatedItem) {
+      await handleUpdate(order_detail_id, updatedItem);
+    }
   };
 
   const handleChangeDay = async (id, date) => {
     if (!date) {
       console.error("Invalid date:", date);
-      return; // Ensure date is valid
+      return;
     }
 
     const formattedDate = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
-    await setValue("real_date", formattedDate);
 
-    // Update tabHari state
-    await setTabHari((prevTabHari) =>
+    // Update both the form value and the state synchronously
+    setValue("real_date", formattedDate);
+    setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
         data: tab.data.map((item) =>
@@ -335,12 +317,11 @@ const Presence = () => {
   };
 
   const handleChangeTime = async (id, time) => {
-    if (!time) return; // Ensure time is valid
+    if (!time) return;
 
-    await setValue("real_time", time);
-
-    // Update tabHari state
-    await setTabHari((prevTabHari) =>
+    // Update both the form value and the state synchronously
+    setValue("real_time", time);
+    setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
         data: tab.data.map((item) =>
