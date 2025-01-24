@@ -433,12 +433,12 @@ const Presence = () => {
             ))}
           </select>
 
-          <Button
+          {/* <Button
             className="btn-success w-full mt-2"
             onClick={() => handleHadir(item.order_detail_id)}
           >
             Hadir
-          </Button>
+          </Button> */}
         </div>
       </div>
     </Card>
