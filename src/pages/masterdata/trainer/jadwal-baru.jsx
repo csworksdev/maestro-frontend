@@ -49,23 +49,6 @@ const Checkbox = ({ name, label, checked, onChange, badge = false }) => (
   </div>
 );
 
-const Select = ({ name, placeholder, options, value, disabled, onChange }) => (
-  <select
-    name={name}
-    value={value}
-    disabled={disabled}
-    onChange={onChange}
-    className="form-select"
-  >
-    <option value="">{placeholder}</option>
-    {options.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-);
-
 const CardJadwal = ({
   day,
   time,
@@ -84,16 +67,6 @@ const CardJadwal = ({
     } else {
       setSelected([...selected, key]);
     }
-  };
-
-  const handlePoolChange = (day, timeValue, pool) => {
-    const key = `${day}#${timeValue}#${pool}`;
-    setSelected((prevSelected) => {
-      const updatedSelected = prevSelected.filter(
-        (item) => !item.startsWith(`${day}#${timeValue}`)
-      );
-      return [...updatedSelected, key];
-    });
   };
 
   const handleCheckAllChange = (day) => {
@@ -162,6 +135,85 @@ const CardJadwal = ({
   );
 };
 
+const inisialData = [
+  {
+    trainer_id: null,
+    kolam: [],
+    jadwal: [
+      {
+        hari: "Senin",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+      {
+        hari: "Selasa",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+      {
+        hari: "Rabu",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+      {
+        hari: "Kamis",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+      {
+        hari: "Jumat",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+      {
+        hari: "Sabtu",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+      {
+        hari: "Minggu",
+        data: [
+          {
+            jam: "06.00",
+            is_free: true,
+            order_id: "",
+          },
+        ],
+      },
+    ],
+  },
+];
+
 const JadwalBaru = ({ data }) => {
   const [selected, setSelected] = useState([]);
   const [kolamOption, setKolamOption] = useState([]);
@@ -169,7 +221,7 @@ const JadwalBaru = ({ data }) => {
   const [selectedPool, setSelectedPool] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission status
   const navigate = useNavigate();
-  console.log(data);
+  const [listData, setListData] = useState(inisialData);
 
   const {
     register,
@@ -182,7 +234,25 @@ const JadwalBaru = ({ data }) => {
 
   useEffect(() => {
     loadReference();
-  }, []);
+    setListData((prevListData) =>
+      prevListData.map((item) =>
+        typeof item === "object"
+          ? { ...item, trainer_id: data.trainer_id }
+          : item
+      )
+    );
+  }, [data.trainer_id]);
+
+  useEffect(() => {
+    if (data?.trainer_id) {
+      setListData((prevListData) =>
+        prevListData.map((item) => ({
+          ...item,
+          trainer_id: data.trainer_id, // Set the trainer_id dynamically
+        }))
+      );
+    }
+  }, [data?.trainer_id]);
 
   const loadReference = async () => {
     try {
@@ -280,13 +350,28 @@ const JadwalBaru = ({ data }) => {
   };
 
   const handlePoolChange = (selectedOptions) => {
-    setSelectedPool(selectedOptions);
-    console.log(selectedOptions);
+    setListData((prev) =>
+      prev.map((item) =>
+        item.trainer_id === data.trainer_id
+          ? {
+              ...item,
+              kolam:
+                selectedOptions.length === 0
+                  ? []
+                  : selectedOptions.map((opt) => opt.value),
+            }
+          : item
+      )
+    );
   };
 
   if (loading) {
     return <Loading />;
   }
+
+  const selectedJadwal = (jadwal) => {
+    console.log(jadwal);
+  };
 
   return (
     <Card title="Jadwal Pelatih">
@@ -308,10 +393,10 @@ const JadwalBaru = ({ data }) => {
               isMulti
               defaultOptions={kolamOption}
               loadOptions={kolamOption}
-              // value={kolamOption}
               onChange={handlePoolChange}
               isOptionDisabled={() =>
-                selectedPool.length >= (data.is_fulltime ? 10 : 1)
+                listData.find((item) => item.trainer_id === data.trainer_id)
+                  ?.kolam.length >= (data.is_fulltime ? 10 : 1)
               }
               className="grow"
             />
@@ -324,10 +409,8 @@ const JadwalBaru = ({ data }) => {
               day={item.day}
               time={item.time}
               selected={selected}
-              setSelected={setSelected}
+              setSelected={(e) => selectedJadwal(e)}
               dataKolam={kolamOption}
-              // defaultPool={defaultPool}
-              // setDefaultPool={setDefaultPool}
             />
           ))}
         </div>

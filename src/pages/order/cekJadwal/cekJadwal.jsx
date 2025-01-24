@@ -133,8 +133,8 @@ const CekJadwal = () => {
   const [poolOption, setPoolOption] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState();
-  const [jumlahSiswa, setJumlahSiswa] = useState(0);
-  const [jumlahPelatih, setJumlahPelatih] = useState(0);
+  const [jumlahSiswa, setJumlahSiswa] = useState([]);
+  const [jumlahPelatih, setJumlahPelatih] = useState([]);
 
   useEffect(() => {
     const storedIndex = localStorage.getItem("ScheduleSelected");
@@ -234,8 +234,8 @@ const CekJadwal = () => {
     return (
       <>
         <div className="flex gap-3 py-1">
-          <div className="flex flex-col gap-3">
-            <div className="border-b-4 border-indigo-500 p-2 min-w-52 text-center font-semibold min-h-12">
+          <div className="flex flex-col gap-3 mb-3">
+            <div className="border-b-4 border-blue-500 p-2 min-w-52 text-center font-semibold min-h-12">
               Pelatih
             </div>
             {filteredData.map((de) => (
@@ -250,12 +250,12 @@ const CekJadwal = () => {
             ))}
           </div>
           <div className="flex gap-3 overflow-auto">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 mb-3">
               <div className="flex flex-row gap-3">
                 {columnHeader.slice(1).map((header, i) => (
                   <div
                     key={i}
-                    className="border-b-4 border-indigo-500 pt-3 min-w-52 text-center font-semibold min-h-12 grow"
+                    className="border-b-4 border-blue-500 pt-3 min-w-52 text-center font-semibold min-h-12 grow"
                   >
                     {header}
                   </div>
@@ -331,11 +331,10 @@ const CekJadwal = () => {
             label="Kolam"
             placeholder="Pilih Kolam"
             defaultOptions={memoizedBranchOptions}
-            loadOptions={loadOptions}
+            loadOptions={branchOption}
             onChange={handlePoolChange}
             className="grow"
           />
-          ;
         </div>
       </div>
       <Tab.Group selectedIndex={selectedIndex ?? -1} onChange={handleChangeTab}>

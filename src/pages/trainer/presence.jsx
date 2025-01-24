@@ -257,30 +257,8 @@ const Presence = () => {
       });
     }
   };
-  const forceUpdate = () => setSelectedIndex((prev) => prev); // Triggers a re-render
 
   const handleHadir = async (order_detail_id) => {
-    await setTabHari((prevTabHari) =>
-      prevTabHari.map((tab) => ({
-        ...tab,
-        data: tab.data.map((item) => {
-          if (item.order_detail_id === order_detail_id) {
-            return {
-              ...item,
-              is_presence: true,
-              periode: periode.name,
-              real_date: item.real_date || item.schedule_date,
-              presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-              real_time: item.real_time || item.time,
-            };
-          }
-          return item;
-        }),
-      }))
-    );
-
-    forceUpdate(); // Ensures the latest state is used
-
     const updatedItem = tabHari
       .flatMap((tab) => tab.data)
       .find((item) => item.order_detail_id === order_detail_id);
@@ -454,12 +432,13 @@ const Presence = () => {
               </option>
             ))}
           </select>
-          <Button
+
+          {/* <Button
             className="btn-success w-full mt-2"
             onClick={() => handleHadir(item.order_detail_id)}
           >
             Hadir
-          </Button>
+          </Button> */}
         </div>
       </div>
     </Card>
