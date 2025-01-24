@@ -400,10 +400,10 @@ const Presence = () => {
             value={item.real_date || item.schedule_date}
             options={{
               minDate: DateTime.fromISO(periode.start_date)
-                // .minus({ month: 1 })
+                .minus({ month: 1 })
                 .toISODate(),
               maxDate: DateTime.fromISO(periode.end_date)
-                // .minus({ month: 1 })
+                .minus({ month: 1 })
                 .toISODate(),
               disableMobile: true,
               allowInput: true,
