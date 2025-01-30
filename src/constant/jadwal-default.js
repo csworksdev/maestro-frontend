@@ -2663,6 +2663,7 @@ export const mockDataJadwal = [
 ];
 
 export const jam = [
+  { value: "0", label: "Pilih Jam" },
   { value: "06.00", label: "06.00" },
   { value: "07.00", label: "07.00" },
   { value: "08.00", label: "08.00" },

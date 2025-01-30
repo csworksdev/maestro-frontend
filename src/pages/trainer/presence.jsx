@@ -291,7 +291,17 @@ const Presence = () => {
       .flatMap((tab) => tab.data)
       .find((item) => item.order_detail_id === order_detail_id);
 
-    // console.log(updatedItem);
+    if (updatedItem && (!updatedItem.real_date || !updatedItem.real_time)) {
+      if (!updatedItem.real_date || !updatedItem.real_time) {
+        await Swal.fire({
+          title: "Oops!",
+          text: "Silahkan isi tanggal atau jam kehadiran.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
 
     if (updatedItem) {
       await handleUpdate(order_detail_id, updatedItem);
@@ -325,7 +335,7 @@ const Presence = () => {
   };
 
   const handleChangeTime = async (id, time) => {
-    if (!time) return;
+    if (!time || time === "0") return;
 
     // Update both the form value and the state synchronously
     setValue("real_time", time);
@@ -451,7 +461,8 @@ const Presence = () => {
         <Flatpickr
           id="real_date"
           name="real_date"
-          value={item.real_date || item.schedule_date}
+          value={item.real_date}
+          defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
           options={{
             minDate: DateTime.fromISO(periode.start_date).toISODate(),
             maxDate: DateTime.fromISO(periode.end_date).toISODate(),
@@ -459,7 +470,6 @@ const Presence = () => {
             allowInput: true,
             altInput: true,
             altFormat: "d F Y",
-            defaultDate: DateTime.now().toISODate(),
           }}
           register={register}
           className="form-control py-2 w-full"
@@ -472,10 +482,8 @@ const Presence = () => {
             Jam kehadiran
           </label>
           <select
-            id="real_time"
             name="real_time"
-            value={item.real_time || item.time}
-            defaultValue={DateTime.now().toFormat("HH:mm")}
+            value={item.real_time}
             onChange={(e) =>
               handleChangeTime(item.order_detail_id, e.target.value)
             }
