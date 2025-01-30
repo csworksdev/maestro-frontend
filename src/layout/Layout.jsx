@@ -86,7 +86,7 @@ const Layout = () => {
               contentWidth === "boxed" ? "container mx-auto" : "container-fluid"
             }
           >
-            {roles === "Trainer" && <Info />}
+            {/* {roles === "Trainer" && <Info />} */}
             <Suspense fallback={<Loading />}>
               <motion.div
                 key={location.pathname}
