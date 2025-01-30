@@ -154,7 +154,7 @@ const RekapBulanan = () => {
 
           if (item[objDate] !== "") {
             if (
-              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <
+              DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <
                 DateTime.fromFormat(
                   selectedPeriode[0].start_date,
                   "yyyy-MM-dd"
@@ -168,12 +168,12 @@ const RekapBulanan = () => {
                 prevPrice: prev.prevPrice + item.honor_perpertemuan,
               }));
             } else if (
-              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >=
+              DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >=
                 DateTime.fromFormat(
                   selectedPeriode[0].start_date,
                   "yyyy-MM-dd"
                 ) &&
-              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") <=
+              DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <=
                 DateTime.fromFormat(
                   selectedPeriode[0].end_date,
                   "yyyy-MM-dd"
@@ -196,7 +196,7 @@ const RekapBulanan = () => {
                 }));
               }
             } else if (
-              DateTime.fromFormat(item[objDate], "yyyy/MM/dd") >
+              DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >
                 DateTime.fromFormat(
                   selectedPeriode[0].end_date,
                   "yyyy-MM-dd"
@@ -293,7 +293,11 @@ const RekapBulanan = () => {
       accessor: "tgl_habis",
       // Cell: ({ cell }) => <span>{cell?.value}</span>,
       Cell: ({ cell }) => (
-        <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
+        <span>
+          {cell?.value
+            ? DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")
+            : ""}
+        </span>
       ),
     },
     {
@@ -452,31 +456,31 @@ const RekapBulanan = () => {
 
     let periode = "next";
     if (
-      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
       DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
     )
       periode = "prev";
     else if (
-      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
         DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
-      DateTime.fromFormat(tanggal, "yyyy/MM/dd") >=
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") >=
         DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
     )
       periode = "curr";
     else if (
-      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
       DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
     )
       periode = "next";
 
     let currentPeriode =
-      DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
       DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
         ? true
         : false;
 
     // let prevPeriode =
-    //   DateTime.fromFormat(tanggal, "yyyy/MM/dd") <=
+    //   DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
     //   DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
     //     ? true
     //     : false;
@@ -528,7 +532,7 @@ const RekapBulanan = () => {
         </span>
         <span className={`px-2 py-1 rounded  ${bgColor} text-black-500`}>
           {tanggal
-            ? DateTime.fromFormat(tanggal, "yyyy/M/dd").toFormat("dd/M")
+            ? DateTime.fromFormat(tanggal, "dd/MM/yyyy").toFormat("dd/M")
             : ""}
         </span>
       </div>
@@ -575,6 +579,7 @@ const RekapBulanan = () => {
       </Tooltip>
     );
   };
+
   const PrevPaidSign = () => {
     return (
       <Tooltip placement="top" arrow content={"Dibayar periode sebelumnya"}>
@@ -745,9 +750,9 @@ const RekapBulanan = () => {
           !data[objNamePaid] &&
           data[objNameOrderID] !== "" &&
           data[objDate] !== "" &&
-          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") <=
+          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") <=
             DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
-          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") >=
+          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") >=
             DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
         ) {
           unpaidOrderId.push(data[objNameOrderID]);

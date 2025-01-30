@@ -12,23 +12,37 @@ import {
   getTrainerScheduleByTrainer,
   DeleteTrainerSchedule,
 } from "@/axios/masterdata/trainerSchedule";
-import { baseJadwal } from "@/constant/jadwal-default";
+import { baseJadwal, mockDataJadwal } from "@/constant/jadwal-default";
 import Swal from "sweetalert2";
 import AsyncSelect from "react-select/async";
 import Badge from "@/components/ui/Badge";
+import {
+  AddTrainerScheduleNew,
+  EditTrainerScheduleNew,
+  getTrainerScheduleByTrainerNew,
+} from "@/axios/masterdata/trainerScheduleNew";
 
 // Validation schema
 const FormValidationSchema = yup.object({}).required();
 
-const Checkbox = ({ name, label, checked, onChange, badge = false }) => (
+const Checkbox = ({
+  name,
+  label,
+  checked,
+  onChange,
+  isActive,
+  badge = false,
+}) => (
   <div className={"flex items-center"}>
     <input
       type="checkbox"
+      key={name}
       name={name}
       id={name}
       checked={checked}
       onChange={onChange}
       className="form-checkbox"
+      disabled={isActive}
     />
     <label htmlFor={name} className="ml-2">
       {label}{" "}
@@ -38,10 +52,15 @@ const Checkbox = ({ name, label, checked, onChange, badge = false }) => (
             label="Libur"
             className="bg-danger-500 text-danger-500 bg-opacity-[0.12] pill"
           />
-        ) : (
+        ) : !isActive ? (
           <Badge
             label="Masuk"
             className="bg-success-500 text-success-500 bg-opacity-[0.12] pill"
+          />
+        ) : (
+          <Badge
+            label="Ada Siswa"
+            className="bg-blue-300 text-blue-400 bg-opacity-[0.12] pill"
           />
         )
       ) : null}
@@ -49,170 +68,56 @@ const Checkbox = ({ name, label, checked, onChange, badge = false }) => (
   </div>
 );
 
-const CardJadwal = ({
-  day,
-  time,
-  selected,
-  setSelected,
-  dataKolam,
-  defaultPool,
-  setDefaultPool,
-}) => {
-  const handleCheckboxChange = (day, timeValue) => {
-    const key = `${day}#${timeValue}`;
-    if (selected.some((item) => item.startsWith(`${day}#${timeValue}`))) {
-      setSelected(
-        selected.filter((item) => !item.startsWith(`${day}#${timeValue}`))
-      );
-    } else {
-      setSelected([...selected, key]);
-    }
-  };
-
-  const handleCheckAllChange = (day) => {
-    const allChecked = time.every((option) =>
-      selected.some((item) => item.startsWith(`${day}#${option.value}`))
-    );
-
-    if (allChecked) {
-      setSelected(selected.filter((item) => !item.startsWith(`${day}#`)));
-    } else {
-      const newSelections = time.map(
-        (option) => `${day}#${option.value}#${defaultPool}`
-      );
-      setSelected((prevSelected) => [
-        ...prevSelected.filter((item) => !item.startsWith(`${day}#`)),
-        ...newSelections,
-      ]);
-    }
-  };
-
+const CardJadwal = ({ params, onChange, onChangeAll }) => {
   return (
-    <Card
-      title={day}
-      headerslot={
-        <Checkbox
-          name={`${day}#checkall`}
-          label="Check All"
-          checked={time.every((option) =>
-            selected.some((item) => item.startsWith(`${day}#${option.value}`))
-          )}
-          onChange={() => handleCheckAllChange(day)}
-        />
-      }
-    >
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-4">
-          {time.map((option, i) => {
-            const isChecked = selected.some((item) =>
-              item.startsWith(`${day}#${option.value}`)
-            );
-            const selectedPool =
-              selected
-                .find((item) => item.startsWith(`${day}#${option.value}`))
-                ?.split("#")[2] || "";
-
-            return (
-              <div
-                className={`border-2 p-2 rounded-lg ${
-                  !isChecked ? "border-red-500" : "border-success-500"
-                }`}
-                key={i}
-              >
-                <Checkbox
-                  name={`${day}#${option.value}`}
-                  label={option.label}
-                  checked={isChecked}
-                  onChange={() => handleCheckboxChange(day, option.value)}
-                  badge={true}
-                />
+    <>
+      {params.map((item, i) => {
+        return (
+          <Card
+            title={item.hari}
+            headerslot={
+              <Checkbox
+                name={item.hari}
+                key={item.hari}
+                label={"pilih semua"}
+                onChange={() => onChangeAll(item.hari)}
+              />
+            }
+          >
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-4">
+                {item.data.map((option, i) => {
+                  const isChecked = option.is_avail;
+                  const isActive = option.order_id !== "";
+                  return (
+                    <div
+                      className={` p-2 rounded-lg select-none ${
+                        isChecked ? "bg-white border-blue-300" : "bg-red-100"
+                      }`}
+                      key={i}
+                    >
+                      <Checkbox
+                        name={`${item.hari}#${option.jam}`}
+                        key={`${item.hari}#${option.jam}`}
+                        label={option.jam}
+                        checked={isChecked}
+                        onChange={() =>
+                          onChange({ hari: item.hari, jam: option.jam })
+                        }
+                        badge={true}
+                        isActive={isActive}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </Card>
+            </div>
+          </Card>
+        );
+      })}
+    </>
   );
 };
-
-const inisialData = [
-  {
-    trainer_id: null,
-    kolam: [],
-    jadwal: [
-      {
-        hari: "Senin",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-      {
-        hari: "Selasa",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-      {
-        hari: "Rabu",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-      {
-        hari: "Kamis",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-      {
-        hari: "Jumat",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-      {
-        hari: "Sabtu",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-      {
-        hari: "Minggu",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-          },
-        ],
-      },
-    ],
-  },
-];
 
 const JadwalBaru = ({ data }) => {
   const [selected, setSelected] = useState([]);
@@ -221,7 +126,7 @@ const JadwalBaru = ({ data }) => {
   const [selectedPool, setSelectedPool] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission status
   const navigate = useNavigate();
-  const [listData, setListData] = useState(inisialData);
+  const [listData, setListData] = useState([]);
 
   const {
     register,
@@ -262,9 +167,9 @@ const JadwalBaru = ({ data }) => {
         is_active: true,
       };
       const kolamResponse = await getKolamAll(params);
-      const trainerScheduleResponse = await getTrainerScheduleByTrainer(
-        data.trainer_id
-      );
+      // const trainerScheduleResponse = await getTrainerScheduleByTrainer(
+      //   data.trainer_id
+      // );
 
       const kolamOption = kolamResponse.data.results
         .sort(
@@ -276,17 +181,20 @@ const JadwalBaru = ({ data }) => {
           value: item.pool_id,
           label: item.branch_name + " - " + item.name,
         }));
-      const schOption = trainerScheduleResponse.data.results.map((item) => ({
-        trainer_schedule_id: item.trainer_schedule_id,
-        day: item.day,
-        time: item.time,
-        pool: item.pool,
-      }));
 
-      schOption.forEach((item) => {
-        const key = `${item.day}#${item.time}#${item.pool}`;
-        setSelected((prevSelected) => [...prevSelected, key]);
-      });
+      const jadwalOption = await getTrainerScheduleByTrainerNew(
+        data.trainer_id
+      );
+
+      mockDataJadwal[0].trainer_id = data.trainer_id;
+
+      let tempJadwal =
+        jadwalOption.data.results.length > 0
+          ? jadwalOption.data.results
+          : mockDataJadwal;
+
+      console.log(mockDataJadwal);
+      setListData(tempJadwal);
 
       setKolamOption(kolamOption);
     } catch (error) {
@@ -297,20 +205,12 @@ const JadwalBaru = ({ data }) => {
   };
 
   const onSubmit = async (newData) => {
-    setIsSubmitting(true); // Start submission
-    const uniqueSelected = [...new Set(selected)]; // Removes duplicate entries in selected
-    const tempData = uniqueSelected.map((item) => {
-      const [day, time, pool] = item.split("#");
-      return {
-        trainer: data.trainer_id,
-        day: day,
-        time: time,
-        pool: pool,
-        is_free: true,
-      };
-    });
-    await handleAdd(tempData);
-    setIsSubmitting(false); // End submission
+    // let response = await EditTrainerScheduleNew(data.trainer_id, listData);
+    console.log(listData);
+    let response = await AddTrainerScheduleNew(JSON.parse(listData));
+    if (response) {
+      Swal.fire("Updated!", "Your file has been updated.", "success");
+    }
   };
 
   const handleAdd = async (tempData) => {
@@ -369,8 +269,54 @@ const JadwalBaru = ({ data }) => {
     return <Loading />;
   }
 
-  const selectedJadwal = (jadwal) => {
-    console.log(jadwal);
+  const handleChangeJadwal = (jadwal) => {
+    setListData((prev) =>
+      prev.map((item) =>
+        item.trainer_id === data.trainer_id
+          ? {
+              ...item,
+              datahari: item.datahari.map((hari) =>
+                hari.hari === jadwal.hari
+                  ? {
+                      ...hari,
+                      data: hari.data.map((jam) =>
+                        jam.jam === jadwal.jam
+                          ? {
+                              ...jam,
+                              is_avail: !jam.is_avail,
+                            }
+                          : jam
+                      ),
+                    }
+                  : hari
+              ),
+            }
+          : item
+      )
+    );
+  };
+
+  const handleChangeJadwalAll = (jadwal) => {
+    setListData((prev) =>
+      prev.map((item) =>
+        item.trainer_id === data.trainer_id
+          ? {
+              ...item,
+              datahari: item.datahari.map((hari) =>
+                hari.hari === jadwal
+                  ? {
+                      ...hari,
+                      data: hari.data.map((jam) => ({
+                        ...jam,
+                        is_avail: !jam.is_avail,
+                      })),
+                    }
+                  : hari
+              ),
+            }
+          : item
+      )
+    );
   };
 
   return (
@@ -392,7 +338,6 @@ const JadwalBaru = ({ data }) => {
               placeholder="Pilih Kolam"
               isMulti
               defaultOptions={kolamOption}
-              loadOptions={kolamOption}
               onChange={handlePoolChange}
               isOptionDisabled={() =>
                 listData.find((item) => item.trainer_id === data.trainer_id)
@@ -403,14 +348,12 @@ const JadwalBaru = ({ data }) => {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          {baseJadwal.map((item, i) => (
+          {listData.map((item, i) => (
             <CardJadwal
               key={i}
-              day={item.day}
-              time={item.time}
-              selected={selected}
-              setSelected={(e) => selectedJadwal(e)}
-              dataKolam={kolamOption}
+              params={item.datahari}
+              onChange={(e) => handleChangeJadwal(e)}
+              onChangeAll={(e) => handleChangeJadwalAll(e)}
             />
           ))}
         </div>
