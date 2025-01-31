@@ -80,6 +80,7 @@ const CardJadwal = ({ params, onChange, onChangeAll }) => {
                 name={item.hari}
                 key={item.hari}
                 label={"pilih semua"}
+                checked={item.data.every((jam) => jam.is_avail)}
                 onChange={() => onChangeAll(item.hari)}
               />
             }
@@ -181,6 +182,7 @@ const JadwalBaru = ({ data }) => {
           value: item.pool_id,
           label: item.branch_name + " - " + item.name,
         }));
+      setKolamOption(kolamOption);
 
       const jadwalOption = await getTrainerScheduleByTrainerNew(
         data.trainer_id
@@ -193,10 +195,7 @@ const JadwalBaru = ({ data }) => {
           ? jadwalOption.data.results
           : mockDataJadwal;
 
-      console.log(mockDataJadwal);
       setListData(tempJadwal);
-
-      setKolamOption(kolamOption);
     } catch (error) {
       console.error(error);
     } finally {
@@ -205,11 +204,16 @@ const JadwalBaru = ({ data }) => {
   };
 
   const onSubmit = async (newData) => {
-    // let response = await EditTrainerScheduleNew(data.trainer_id, listData);
-    console.log(listData);
-    let response = await AddTrainerScheduleNew(JSON.parse(listData));
-    if (response) {
-      Swal.fire("Updated!", "Your file has been updated.", "success");
+    if (data.trainer_id !== "") {
+      let response = await EditTrainerScheduleNew(data.trainer_id, listData[0]);
+      if (response) {
+        Swal.fire("Failed!", "Your file failed to update.", "error");
+      }
+    } else {
+      let response = await AddTrainerScheduleNew(listData[0]);
+      if (response) {
+        Swal.fire("Updated!", "Your file has been updated.", "success");
+      }
     }
   };
 
@@ -339,6 +343,7 @@ const JadwalBaru = ({ data }) => {
               isMulti
               defaultOptions={kolamOption}
               onChange={handlePoolChange}
+              defaultValue={null}
               isOptionDisabled={() =>
                 listData.find((item) => item.trainer_id === data.trainer_id)
                   ?.kolam.length >= (data.is_fulltime ? 10 : 1)
@@ -348,7 +353,7 @@ const JadwalBaru = ({ data }) => {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          {listData.map((item, i) => (
+          {mockDataJadwal.map((item, i) => (
             <CardJadwal
               key={i}
               params={item.datahari}

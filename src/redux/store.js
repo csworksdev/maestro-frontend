@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage"; // Default is localStorage
 import { combineReducers } from "redux";
 import authReducer from "@/redux/slicers/authSlice";
 import layoutReducer from "@/redux/slicers/layoutSlice";
+import loadingReducer from "@/redux/slicers/loadingSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -18,6 +19,7 @@ const layoutPersistConfig = {
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   layout: persistReducer(layoutPersistConfig, layoutReducer),
+  loading: persistReducer({ key: "loading", storage }, loadingReducer),
 });
 
 const store = configureStore({

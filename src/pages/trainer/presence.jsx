@@ -22,6 +22,9 @@ import { startCase, toLower } from "lodash";
 import Notfound from "@/assets/images/svg/notfound.svg";
 import { Disclosure, Tab } from "@headlessui/react";
 import Icon from "@/components/ui/Icon";
+import { useDispatch } from "react-redux";
+import { setLoading } from "@/redux/slicers/loadingSlice";
+import useScrollRestoration from "@/hooks/useScrollRestoration";
 
 const sliderSettings = {
   dots: true,
@@ -48,7 +51,9 @@ const sliderSettings = {
 };
 
 const Presence = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useSelector(
+  //   (state) => state.loading.isLoading
+  // );
   const [listData, setListData] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
@@ -59,6 +64,8 @@ const Presence = () => {
   const [selectedIndex, setSelectedIndex] = useState(
     localStorage.getItem("presenceSelected") || 0
   );
+  const dispatch = useDispatch();
+  useScrollRestoration();
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -98,7 +105,7 @@ const Presence = () => {
 
   const fetchData = async () => {
     try {
-      setIsLoading(true);
+      dispatch(setLoading(true));
       let res = await getPresenceById(user_id);
 
       // setListData(res.data.data);
@@ -109,7 +116,7 @@ const Presence = () => {
     } catch (error) {
       console.error("Error fetching data", error);
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -421,9 +428,9 @@ const Presence = () => {
     );
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  // if (isLoading) {
+  //   return <Loading />;
+  // }
 
   const onSubmit = async (formData) => {
     console.log(formData);

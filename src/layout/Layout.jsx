@@ -18,6 +18,7 @@ import { useSelector } from "react-redux";
 import Loading from "@/components/Loading";
 import { motion } from "framer-motion";
 import Info from "@/components/partials/info";
+import useScrollRestoration from "@/hooks/useScrollRestoration";
 
 const Layout = () => {
   const { width, breakpoints } = useWidth();
@@ -25,6 +26,8 @@ const Layout = () => {
   const { isAuth } = useSelector((state) => state.auth);
   const { user_id, roles } = useSelector((state) => state.auth.data);
   const navigate = useNavigate();
+
+  useScrollRestoration();
   // const roles = localStorage.getItem("roles");
 
   const [contentWidth] = useContentWidth();
@@ -49,7 +52,6 @@ const Layout = () => {
   };
 
   // const handleMobileMenuClose = () => setMobileMenu(false);
-
   return (
     <>
       <ToastContainer />
