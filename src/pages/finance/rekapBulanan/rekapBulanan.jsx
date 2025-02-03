@@ -456,7 +456,7 @@ const RekapBulanan = () => {
 
     let periode = "next";
     if (
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <
       DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
     )
       periode = "prev";
@@ -468,10 +468,11 @@ const RekapBulanan = () => {
     )
       periode = "curr";
     else if (
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
-      DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+      DateTime.fromFormat(tanggal, "dd/MM/yyyy") >
+      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
     )
       periode = "next";
+    else periode = "";
 
     let currentPeriode =
       DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
@@ -492,18 +493,6 @@ const RekapBulanan = () => {
     return (
       <div className="flex flex-col items-center">
         <span>
-          {/* {tanggal ? (
-            status === true ? (
-              <PaidSign />
-            ) : currentPeriode ? (
-              <WillPaid order_detail_id={order_detail_id} />
-            ) : prevPeriode ? (
-              <PrevPaidSign />
-            ) : (
-              <NextMonth />
-            )
-          ) : null} */}
-
           {tanggal
             ? status === true
               ? (() => {
@@ -519,9 +508,21 @@ const RekapBulanan = () => {
               : (() => {
                   switch (periode) {
                     case "curr":
-                      return <WillPaid order_detail_id={order_detail_id} />;
+                      bgColor = "bg-red-500";
+                      return (
+                        <WillPaid
+                          order_detail_id={order_detail_id}
+                          current_periode={true}
+                        />
+                      );
                     case "prev":
-                      return <WillPaid order_detail_id={order_detail_id} />;
+                      bgColor = "bg-blue-500";
+                      return (
+                        <WillPaid
+                          order_detail_id={order_detail_id}
+                          current_periode={false}
+                        />
+                      );
                     case "next":
                       return <NextMonth />;
                     default:
@@ -539,9 +540,13 @@ const RekapBulanan = () => {
     );
   };
 
-  const WillPaid = ({ order_detail_id }) => {
+  const WillPaid = ({ order_detail_id, current_periode }) => {
     return (
-      <Tooltip placement="top" arrow content={"Belum dibayar"}>
+      <Tooltip
+        placement="top"
+        arrow
+        content={current_periode ? "Belum dibayar" : "Telat Rekap"}
+      >
         <div
           className={`w-full border-b border-b-gray-500 border-opacity-10 py-2 text-sm last:mb-0 cursor-pointer 
             first:rounded-t last:rounded-b flex space-x-2 items-center rtl:space-x-reverse
@@ -750,9 +755,9 @@ const RekapBulanan = () => {
           !data[objNamePaid] &&
           data[objNameOrderID] !== "" &&
           data[objDate] !== "" &&
-          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") <=
+          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") <=
             DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
-          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") >=
+          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") >=
             DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
         ) {
           unpaidOrderId.push(data[objNameOrderID]);
