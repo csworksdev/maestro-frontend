@@ -9,12 +9,12 @@ const Header = ({ data, icons, colors }) => {
           className={`py-[18px] px-4 rounded-[6px] bg-[${colors[i]}] dark:bg-slate-900`}
           key={i}
         >
-          <div className="flex items-center space-x-6 rtl:space-x-reverse">
+          <div className="flex items-center gap-4 rtl:space-x-reverse">
             <div className="flex-none">
               {icons ? (
                 <Icon
                   icon={`heroicons-outline:${icons[i]}`}
-                  className="h-8 w-auto text-slate-900 dark:text-white"
+                  className="h-6 w-auto text-slate-900 dark:text-white"
                 />
               ) : null}
             </div>
@@ -22,7 +22,7 @@ const Header = ({ data, icons, colors }) => {
               <div className="text-slate-800 dark:text-slate-300 text-sm mb-1 font-medium">
                 {item.title}
               </div>
-              <div className="text-slate-900 dark:text-white text-lg font-medium">
+              <div className="text-slate-900 dark:text-white text-sm font-medium">
                 {item.count.toLocaleString("id-ID")}
               </div>
             </div>

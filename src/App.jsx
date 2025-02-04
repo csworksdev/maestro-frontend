@@ -78,6 +78,7 @@ const App = () => {
   const hostname = window.location.hostname;
   const subdomain = hostname.split(".")[0];
   const isAuth = useSelector((state) => state.auth.isAuth);
+  const { roles } = useSelector((state) => state.auth.data);
 
   return (
     <main className="App relative">
@@ -109,7 +110,12 @@ const App = () => {
                   </AuthenticatedRoute>
                 }
               >
-                <Route path="dashboard" element={<DashboardRevenue />} />
+                <Route
+                  path="dashboard"
+                  element={
+                    roles === "Admin" ? <Dashboard /> : <DashboardRevenue />
+                  }
+                />
                 //#region referensi
                 <Route path="cabang">
                   <Route index element={<Cabang />} />

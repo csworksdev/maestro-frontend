@@ -81,7 +81,7 @@ const Table = memo(
                 {...getTableProps()}
                 className="table  divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
               >
-                <thead className="border-t border-slate-100 dark:border-slate-800">
+                <thead className="border-t border-slate-100 dark:border-slate-800 h-[73]">
                   {headerGroups.map((headerGroup) => (
                     <tr {...headerGroup.getHeaderGroupProps?.()}>
                       {headerGroup.headers
@@ -137,7 +137,7 @@ const Table = memo(
             {/* Fixed Last Column */}
             <div className="min-w-[150px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
               <table className="table min-w-full table-fixed">
-                <thead className="border-t border-slate-100 dark:border-slate-800">
+                <thead className="border-t border-slate-100 dark:border-slate-800 h-[73]">
                   {headerGroups.map((headerGroup) => (
                     <tr {...headerGroup.getHeaderGroupProps?.()}>
                       <th className="table-th text-center text-nowrap">
