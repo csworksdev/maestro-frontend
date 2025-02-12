@@ -9,7 +9,13 @@ const BarChart = ({ height = 400, data, title }) => {
   const options = {
     chart: {
       toolbar: {
-        show: false,
+        show: true,
+      },
+      events: {
+        dataPointSelection: function (event, chartContext, config) {
+          let xValue = config.w.globals.labels[config.dataPointIndex];
+          console.log("X-Axis Value:", xValue);
+        },
       },
     },
     plotOptions: {
@@ -81,6 +87,8 @@ const BarChart = ({ height = 400, data, title }) => {
         style: {
           colors: isDark ? "#CBD5E1" : "#475569",
           fontFamily: "Inter",
+          borderColor: isDark ? "#334155" : "#E2E8F0",
+          borderwidth: 2,
         },
       },
       axisBorder: {
@@ -90,7 +98,6 @@ const BarChart = ({ height = 400, data, title }) => {
         show: false,
       },
     },
-
     fill: {
       opacity: 1,
     },

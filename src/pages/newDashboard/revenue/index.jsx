@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Header from "../header";
 import {
   getRevenueAll,
   getRevenueAllPerTahun,
@@ -7,8 +6,9 @@ import {
   getRevenueAllPerProduk,
 } from "@/axios/dashboard/revenue";
 import Card from "@/components/ui/Card";
-import BarChart from "../barChart";
-import Loading from "@/components/Loading";
+import BarChart from "@/components/globals/chart/barChart";
+import ListLoading from "@/components/skeleton/ListLoading";
+import Header from "@/components/globals/chart/header";
 
 const Revenue = () => {
   const [revenueAll, setRevenueAll] = useState([]);
@@ -58,7 +58,7 @@ const Revenue = () => {
               {revenueAllTahun.series ? (
                 <BarChart data={revenueAllTahun} title={"Revenue Per Tahun"} />
               ) : (
-                <Loading />
+                <ListLoading />
               )}
             </div>
           </Card>
@@ -72,7 +72,7 @@ const Revenue = () => {
                   title={"Revenue Per Cabang"}
                 />
               ) : (
-                <Loading />
+                <ListLoading />
               )}
             </div>
           </Card>
@@ -86,7 +86,7 @@ const Revenue = () => {
                   title={"Revenue Per Produk"}
                 />
               ) : (
-                <Loading />
+                <ListLoading />
               )}
             </div>
           </Card>

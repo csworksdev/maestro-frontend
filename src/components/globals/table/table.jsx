@@ -82,8 +82,11 @@ const Table = memo(
                 className="table  divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
               >
                 <thead className="border-t border-slate-100 dark:border-slate-800 h-[73]">
-                  {headerGroups.map((headerGroup) => (
-                    <tr {...headerGroup.getHeaderGroupProps?.()}>
+                  {headerGroups.map((headerGroup, index) => (
+                    <tr
+                      {...headerGroup.getHeaderGroupProps?.()}
+                      ref={(el) => (scrollableRowsRef.current[index] = el)}
+                    >
                       {headerGroup.headers
                         .slice(0, -1) // Exclude the last column
                         .map((column) => (
@@ -138,8 +141,11 @@ const Table = memo(
             <div className="min-w-[150px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
               <table className="table min-w-full table-fixed">
                 <thead className="border-t border-slate-100 dark:border-slate-800 h-[73]">
-                  {headerGroups.map((headerGroup) => (
-                    <tr {...headerGroup.getHeaderGroupProps?.()}>
+                  {headerGroups.map((headerGroup, index) => (
+                    <tr
+                      {...headerGroup.getHeaderGroupProps?.()}
+                      ref={(el) => (scrollableRowsRef.current[index] = el)}
+                    >
                       <th className="table-th text-center text-nowrap">
                         {
                           headerGroup.headers[

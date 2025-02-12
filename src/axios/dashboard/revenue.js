@@ -9,7 +9,7 @@ export const getRevenueAll = async () => {
     console.error("Error fetching data:", error);
   }
 };
-
+// yearly revenue
 export const getRevenueAllPerTahun = async () => {
   try {
     let response = await axiosConfig.get(prefix + "/revenue/all/tahun/");
@@ -19,6 +19,7 @@ export const getRevenueAllPerTahun = async () => {
   }
 };
 
+// per branch revenue
 export const getRevenueAllPerCabang = async () => {
   try {
     let response = await axiosConfig.get(prefix + "/revenue/all/cabang/");
@@ -28,6 +29,7 @@ export const getRevenueAllPerCabang = async () => {
   }
 };
 
+// per product revenue
 export const getRevenueAllPerProduk = async () => {
   try {
     let response = await axiosConfig.get(prefix + "/revenue/all/produk/");

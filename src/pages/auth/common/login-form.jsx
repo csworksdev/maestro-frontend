@@ -44,13 +44,14 @@ const LoginForm = () => {
       const response = await login(params);
       const { refresh, access, data } = response.data; // Ensure these fields exist
 
-      if (response.status) {
+      if (response.data) {
         dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-        Menu(data.roles);
+        Menu("Chief");
         localStorage.setItem(
           "presenceSelected",
           DateTime.now().toFormat("c") - 1
         );
+        localStorage.setItem("access", access);
         navigate("/app/dashboard");
       } else {
         Swal.fire({
