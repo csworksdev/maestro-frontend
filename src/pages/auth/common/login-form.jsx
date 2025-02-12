@@ -46,7 +46,7 @@ const LoginForm = () => {
 
       if (response.data) {
         dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-        Menu("Chief");
+        Menu(data.role);
         localStorage.setItem(
           "presenceSelected",
           DateTime.now().toFormat("c") - 1
