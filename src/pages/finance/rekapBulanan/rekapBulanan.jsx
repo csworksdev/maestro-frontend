@@ -714,23 +714,23 @@ const RekapBulanan = () => {
     if (params.length > 0) {
       const response = await BayarPelatihByTrainer(params);
       if (response.status === 200) {
-        Swal.fire("Success!", "Pelatih Sudah dibayar.", "success").then(() => {
-          setListData((prev) => ({
-            ...prev,
-            results: prev.results.map((item) => {
-              const updatedItem = { ...item };
-              Object.keys(updatedItem).forEach((key) => {
-                if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
-                  const paidKey = key.replace("_order_detail_id", "_paid");
-                  if (params.includes(updatedItem[key])) {
-                    updatedItem[paidKey] = true;
-                  }
+        // Swal.fire("Success!", "Pelatih Sudah dibayar.", "success").then(() => {
+        setListData((prev) => ({
+          ...prev,
+          results: prev.results.map((item) => {
+            const updatedItem = { ...item };
+            Object.keys(updatedItem).forEach((key) => {
+              if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
+                const paidKey = key.replace("_order_detail_id", "_paid");
+                if (params.includes(updatedItem[key])) {
+                  updatedItem[paidKey] = true;
                 }
-              });
-              return updatedItem;
-            }),
-          }));
-        });
+              }
+            });
+            return updatedItem;
+          }),
+        }));
+        // });
       }
     }
   };
@@ -755,14 +755,48 @@ const RekapBulanan = () => {
           !data[objNamePaid] &&
           data[objNameOrderID] !== "" &&
           data[objDate] !== "" &&
-          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") <=
+          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") <=
             DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
-          DateTime.fromFormat(data[objDate], "yyyy/MM/dd") >=
+          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") >=
             DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
         ) {
           unpaidOrderId.push(data[objNameOrderID]);
         }
       }
+      // setUnpaidList(unpaidOrderId);
+      handlePayAll(unpaidOrderId);
+      // alert(JSON.stringify(unpaidOrderId));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleBayarSemua = () => {
+    try {
+      // setUnpaidList([]);
+      // let x = listPeriode.filter((a) => a.name === selectedPeriode);
+      // let data = e;
+
+      let unpaidOrderId = [];
+      listData.results.map((item) => {
+        for (let index = 1; index <= 8; index++) {
+          var objDate = "p" + index;
+          var objNamePaid = "p" + index + "_paid";
+          var objNameOrderID = "p" + index + "_order_detail_id";
+
+          if (
+            !item[objNamePaid] &&
+            item[objNameOrderID] !== "" &&
+            item[objDate] !== "" &&
+            DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <=
+              DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+            DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >=
+              DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+          ) {
+            unpaidOrderId.push(item[objNameOrderID]);
+          }
+        }
+      });
       // setUnpaidList(unpaidOrderId);
       handlePayAll(unpaidOrderId);
       // alert(JSON.stringify(unpaidOrderId));
@@ -889,7 +923,7 @@ const RekapBulanan = () => {
                 <button
                   type="button"
                   className="btn text-center border border-black-500 rounded p-4"
-                  onClick={() => handlePayAll()}
+                  onClick={() => handleBayarSemua()}
                 >
                   <div className="flex flex-row gap-3 items-center">
                     <Icon

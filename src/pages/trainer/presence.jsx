@@ -269,11 +269,11 @@ const Presence = () => {
       const updateRes = await UpdatePresenceById(order_id, params);
       if (!updateRes) throw new Error("Failed to update presence");
 
-      const updateOrder = checkProduct(updatedData);
-      if (updateOrder && updateOrder.is_finish) {
-        const editRes = await EditOrder(updateOrder.order_id, updateOrder);
-        if (!editRes?.status) throw new Error("Failed to edit order");
-      }
+      // const updateOrder = checkProduct(updatedData);
+      // if (updateOrder && updateOrder.is_finish) {
+      //   const editRes = await EditOrder(updateOrder.order_id, updateOrder);
+      //   if (!editRes?.status) throw new Error("Failed to edit order");
+      // }
 
       await Swal.fire({
         title: `Siswa "${updatedData.students_info[0].fullname}"`,
