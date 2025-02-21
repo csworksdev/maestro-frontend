@@ -174,9 +174,7 @@ const Edit = (closeModal = {}) => {
       parent: newData.parent,
       phone: newData.phone,
       address: newData.address,
-      dob: isUpdate
-        ? DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd")
-        : data.dob,
+      dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
       pob: newData.pob,
       branch: newData.branch,
     };
