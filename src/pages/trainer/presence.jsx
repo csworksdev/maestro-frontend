@@ -471,8 +471,16 @@ const Presence = () => {
           value={item.real_date}
           defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
           options={{
-            minDate: DateTime.fromISO(periode.start_date).toISODate(),
-            maxDate: DateTime.fromISO(periode.end_date).toISODate(),
+            // absen coach sering telat
+            minDate: DateTime.fromFormat("2025-01-21", "yyyy-MM-dd").toFormat(
+              "yyyy-MM-dd"
+            ),
+            maxDate: DateTime.fromFormat("2025-02-20", "yyyy-MM-dd").toFormat(
+              "yyyy-MM-dd"
+            ),
+            // absen normal
+            //minDate: DateTime.fromISO(periode.start_date).toISODate(),
+            // maxDate: DateTime.fromISO(periode.end_date).toISODate(),
             disableMobile: true,
             allowInput: true,
             altInput: true,
