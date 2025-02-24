@@ -41,13 +41,10 @@ const Info = () => {
             </Button>
           </span> */}
           <span>
-            Jika mengalami kendala tidak bisa absen, bisa mencoba langkah
-            berikut :
+            Per 21 Februari 2025, Batas pengisian absen per Tanggal 20 jam 23:59
+            WIB, jika melebihi akan dihitung ke bulan berikutnya
           </span>
-          <span>
-            Coba pilih tanggal sama jamnya, terus klik hadir, terus klik cancel,
-            terus klik hadir lagi
-          </span>
+          <span>Terima Kasih!</span>
         </div>
       </div>
       <div className="flex-none">
