@@ -629,7 +629,7 @@ const RekapBulanan = () => {
 
   const PeriodSummary = () => {
     return (
-      <div className="flex flex-row gap-4 my-10">
+      <div className="flex flex-row flex-nowrap overflow-x-auto gap-4 my-10">
         {/* Previous */}
         <div className="flex flex-col gap-2 border border-black-500 rounded px-4 py-4 bg-white">
           <p className="flex justify-center gap-3">
