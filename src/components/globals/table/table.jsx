@@ -42,34 +42,49 @@ const Table = memo(
     const fixedRowsRef = useRef([]);
 
     const synchronizeHeights = () => {
-      if (scrollableRowsRef.current.length && fixedRowsRef.current.length) {
-        scrollableRowsRef.current.forEach((scrollableRow, index) => {
-          const scrollableHeight = scrollableRow?.offsetHeight || 0;
-          const fixedRow = fixedRowsRef.current[index];
-          if (fixedRow) {
-            fixedRow.style.height = `${scrollableHeight}px`;
+      requestAnimationFrame(() => {
+        if (scrollableRowsRef.current.length && fixedRowsRef.current.length) {
+          scrollableRowsRef.current.forEach((scrollableRow, index) => {
+            const scrollableHeight = scrollableRow?.offsetHeight || 0;
+            const fixedRow = fixedRowsRef.current[index];
+
+            if (fixedRow) {
+              fixedRow.style.height = `${scrollableHeight}px`;
+            }
+          });
+
+          // Ensure first row explicitly matches
+          if (scrollableRowsRef.current[1] && fixedRowsRef.current[0]) {
+            const firstRowHeight = scrollableRowsRef.current[1].offsetHeight;
+            fixedRowsRef.current[0].style.height = `${firstRowHeight}px`;
           }
-        });
-      }
+        }
+
+        // Ensure headers align
+        const scrollableHeader = document.querySelector(
+          ".scrollable-body thead tr"
+        );
+        const fixedHeader = document.querySelector(".fixed-body thead tr");
+
+        if (scrollableHeader && fixedHeader) {
+          fixedHeader.style.height = `${scrollableHeader.offsetHeight}px`;
+        }
+      });
     };
 
     useEffect(() => {
       synchronizeHeights();
 
-      // Watch for changes in table body sizes
-      const resizeObserver = new ResizeObserver(() => synchronizeHeights());
-      const scrollableTable = document.querySelector(".scrollable-body");
-      const fixedTable = document.querySelector(".fixed-body");
+      const resizeObserver = new ResizeObserver(synchronizeHeights);
 
-      if (scrollableTable && fixedTable) {
-        resizeObserver.observe(scrollableTable);
-        resizeObserver.observe(fixedTable);
-      }
+      [...scrollableRowsRef.current, ...fixedRowsRef.current].forEach((row) => {
+        if (row) resizeObserver.observe(row);
+      });
 
       return () => {
         resizeObserver.disconnect();
       };
-    }, [page, listData]);
+    }, [page, listData.results]);
 
     return (
       <>
@@ -119,17 +134,18 @@ const Table = memo(
                       <tr
                         {...row.getRowProps?.()}
                         ref={(el) => (scrollableRowsRef.current[index] = el)}
+                        className={`h-auto min-h-[50px] ${
+                          index % 2 == 0 ? "bg-blue-100" : ""
+                        }`}
                       >
-                        {row.cells
-                          .slice(0, -1) // Exclude the last column
-                          .map((cell) => (
-                            <td
-                              {...cell.getCellProps?.()}
-                              className="table-td text-wrap"
-                            >
-                              {cell.render("Cell")}
-                            </td>
-                          ))}
+                        {row.cells.slice(0, -1).map((cell) => (
+                          <td
+                            {...cell.getCellProps?.()}
+                            className="table-td text-wrap p-3 align-middle"
+                          >
+                            {cell.render("Cell")}
+                          </td>
+                        ))}
                       </tr>
                     );
                   })}
@@ -166,11 +182,12 @@ const Table = memo(
                       <tr
                         {...row.getRowProps?.()}
                         ref={(el) => (fixedRowsRef.current[index] = el)}
+                        className={`h-auto min-h-[50px] ${
+                          index % 2 == 0 ? "bg-blue-100" : ""
+                        }`}
                       >
-                        <td className="table-td text-nowrap py-0">
-                          {
-                            row.cells[row.cells.length - 1].render("Cell") // Render only the last cell
-                          }
+                        <td className="table-td text-nowrap p-3 align-middle">
+                          {row.cells[row.cells.length - 1].render("Cell")}
                         </td>
                       </tr>
                     );
