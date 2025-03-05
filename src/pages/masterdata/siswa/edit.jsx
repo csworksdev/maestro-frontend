@@ -76,7 +76,7 @@ const Edit = (closeModal = {}) => {
       });
     }
     if (isUpdate && data.dob) {
-      setValue("dob", data.dob);
+      setValue("dob", DateTime.fromISO(data.dob).toJSDate());
     }
   }, [isUpdate, data, setValue]);
 
@@ -120,7 +120,7 @@ const Edit = (closeModal = {}) => {
       fullname: values[2],
       nickname: values[3],
       gender: toString(values[5]) === "Laki-laki" ? "L" : "P",
-      parent: values[4],
+      parent: values[4] || "-",
       phone: values[11],
       address: values[10],
       pob: values[6],
@@ -174,7 +174,7 @@ const Edit = (closeModal = {}) => {
       parent: newData.parent,
       phone: newData.phone,
       address: newData.address,
-      dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
+      dob: newData.dob, //DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
       pob: newData.pob,
       branch: newData.branch,
     };
@@ -302,8 +302,8 @@ const Edit = (closeModal = {}) => {
               options={{
                 disableMobile: true,
                 allowInput: true,
-                altInput: true,
-                altFormat: "d F Y",
+                // altInput: true,
+                // altFormat: "d F Y",
               }}
               className="form-control py-2"
               onChange={(date) => setValue("dob", date[0])}
