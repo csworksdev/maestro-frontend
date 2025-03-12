@@ -8,8 +8,8 @@ import Swal from "sweetalert2";
 
 export const axiosConfig = axios.create({
   // baseURL: import.meta.env.VITE_API_URL,
-  baseURL: "https://api.maestroswim.com/",
-  // baseURL: "http://127.0.0.1:8000/",
+  // baseURL: "https://api.maestroswim.com/",
+  baseURL: "http://127.0.0.1:8000/",
   // headers: {
   //   Authorization: useSelector((state) => state.auth.access),
   // },

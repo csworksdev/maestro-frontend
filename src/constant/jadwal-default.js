@@ -2033,7 +2033,6 @@ export const baseJadwal2 = [
 export const mockDataJadwal = [
   {
     trainer_id: "",
-    kolam: [],
     datahari: [
       {
         hari: "Senin",
