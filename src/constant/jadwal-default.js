@@ -2040,7 +2040,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2049,7 +2049,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2058,7 +2058,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2067,7 +2067,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2076,7 +2076,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2085,7 +2085,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2094,7 +2094,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2103,7 +2103,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2112,7 +2112,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2121,7 +2121,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2130,7 +2130,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2139,7 +2139,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2153,7 +2153,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2162,7 +2162,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2171,7 +2171,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2180,7 +2180,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2189,7 +2189,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2198,7 +2198,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2207,7 +2207,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2216,7 +2216,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2225,7 +2225,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2234,7 +2234,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2243,7 +2243,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2252,7 +2252,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2266,7 +2266,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2275,7 +2275,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2284,7 +2284,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2293,7 +2293,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2302,7 +2302,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2311,7 +2311,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2320,7 +2320,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2329,7 +2329,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2338,7 +2338,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2347,7 +2347,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2356,7 +2356,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2365,7 +2365,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2379,7 +2379,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2388,7 +2388,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2397,7 +2397,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2406,7 +2406,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2415,7 +2415,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2424,7 +2424,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2433,7 +2433,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2442,7 +2442,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2451,7 +2451,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2460,7 +2460,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2469,7 +2469,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2478,7 +2478,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2492,7 +2492,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2501,7 +2501,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2510,7 +2510,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2519,7 +2519,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2528,7 +2528,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2537,7 +2537,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2546,7 +2546,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2555,7 +2555,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2564,7 +2564,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2573,7 +2573,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2582,7 +2582,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2591,7 +2591,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2605,7 +2605,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2614,7 +2614,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2623,7 +2623,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2632,7 +2632,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2641,7 +2641,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2650,7 +2650,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2659,7 +2659,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2668,7 +2668,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2677,7 +2677,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2686,7 +2686,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2695,7 +2695,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2704,7 +2704,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2718,7 +2718,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "06.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2727,7 +2727,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "07.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2736,7 +2736,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "08.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2745,7 +2745,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "09.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2754,7 +2754,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "10.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2763,7 +2763,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "11.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2772,7 +2772,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "12.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2781,7 +2781,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "13.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2790,7 +2790,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "14.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2799,7 +2799,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "15.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2808,7 +2808,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "16.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],
@@ -2817,7 +2817,7 @@ export const mockDataJadwal = [
           {
             ts_id: 0,
             jam: "17.00",
-            is_avail: false,
+            is_avail: true,
             is_free: true,
             order_id: "",
             student: [],

@@ -171,6 +171,30 @@ const JadwalBaru = ({ data }) => {
     mode: "all",
   });
 
+  const updateDataList = (jadwal) => {
+    setListData((prev) =>
+      prev.map((item) =>
+        item.trainer_id === data.trainer_id
+          ? {
+              ...item,
+              datahari: item.datahari.map((hari) =>
+                hari.hari === jadwal.hari
+                  ? {
+                      ...hari,
+                      data: hari.data.map((jam) =>
+                        jam.jam === jadwal.jam
+                          ? { ...jam, is_avail: jam.is_avail } // Toggle availability
+                          : jam
+                      ),
+                    }
+                  : hari
+              ),
+            }
+          : item
+      )
+    );
+  };
+
   const setInitJadwal = () => {
     const temp = [];
     initDay.forEach((hari) => {
@@ -178,14 +202,20 @@ const JadwalBaru = ({ data }) => {
         temp.push({
           day: hari,
           time: jam,
-          is_free: false,
+          is_avail: true,
           trainer_id: data.trainer_id,
         });
       });
     });
 
     temp.forEach((item) => {
-      AddTrainerScheduleV2(data.trainer_id, item);
+      AddTrainerScheduleV2(data.trainer_id, item).then((res) =>
+        updateDataList({
+          hari: item.day,
+          jam: item.time,
+          is_avail: item.is_avail,
+        })
+      );
     });
   };
 
@@ -247,7 +277,7 @@ const JadwalBaru = ({ data }) => {
         setOldSelectedPool(pools);
         setSelectedPool(pools); // ✅ Set initial selected values
       } catch (error) {
-        Swal.fire("Error", "Failed to load pool options.", "error");
+        // Swal.fire("Error", "Failed to load pool options.", "error");
       }
     };
 
@@ -403,27 +433,7 @@ const JadwalBaru = ({ data }) => {
 
   const handleChangeJadwal = (jadwal) => {
     try {
-      setListData((prev) =>
-        prev.map((item) =>
-          item.trainer_id === data.trainer_id
-            ? {
-                ...item,
-                datahari: item.datahari.map((hari) =>
-                  hari.hari === jadwal.hari
-                    ? {
-                        ...hari,
-                        data: hari.data.map((jam) =>
-                          jam.jam === jadwal.jam
-                            ? { ...jam, is_avail: !jam.is_avail } // Toggle availability
-                            : jam
-                        ),
-                      }
-                    : hari
-                ),
-              }
-            : item
-        )
-      );
+      updateDataList(jadwal);
 
       const item = { ts_id: jadwal.ts_id, is_avail: jadwal.is_avail };
       EditTrainerScheduleV2(data.trainer_id, item);
