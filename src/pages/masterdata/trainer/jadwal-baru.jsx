@@ -12,7 +12,12 @@ import {
   getTrainerScheduleByTrainer,
   DeleteTrainerSchedule,
 } from "@/axios/masterdata/trainerSchedule";
-import { baseJadwal, mockDataJadwal } from "@/constant/jadwal-default";
+import {
+  baseJadwal,
+  mockDataJadwal,
+  initDay,
+  initTime,
+} from "@/constant/jadwal-default";
 import Swal from "sweetalert2";
 import AsyncSelect from "react-select/async";
 import Badge from "@/components/ui/Badge";
@@ -26,6 +31,11 @@ import {
   DeleteTrainerPool,
   GetTrainerPool,
 } from "@/axios/schedule/trainerPool";
+import {
+  AddTrainerScheduleV2,
+  EditTrainerScheduleV2,
+  GetTrainerScheduleV2,
+} from "@/axios/schedule/trainerSchedule";
 
 // Validation schema
 const FormValidationSchema = yup.object({}).required();
@@ -81,13 +91,23 @@ const CardJadwal = ({ params, onChange, onChangeAll }) => {
           <Card
             title={item.hari}
             headerslot={
-              <Checkbox
-                name={item.hari}
-                key={item.hari}
-                label={"pilih semua"}
-                checked={item.data?.every((jam) => jam.is_avail) ?? false} // Prevents errors
-                onChange={() => onChangeAll(item.hari)}
-              />
+              <>
+                <Checkbox
+                  name={item.hari}
+                  key={item.hari}
+                  label={"Masuk"}
+                  checked={item.data?.every((jam) => jam.is_avail) ?? false} // Prevents errors
+                  onChange={() =>
+                    onChangeAll(
+                      item.data?.map((y) => ({
+                        day: item.hari,
+                        ts_id: y.ts_id,
+                        is_avail: !item.data?.every((jam) => jam.is_avail),
+                      }))
+                    )
+                  }
+                />
+              </>
             }
           >
             <div className="space-y-4">
@@ -108,7 +128,12 @@ const CardJadwal = ({ params, onChange, onChangeAll }) => {
                         label={option.jam}
                         checked={isChecked}
                         onChange={() =>
-                          onChange({ hari: item.hari, jam: option.jam })
+                          onChange({
+                            hari: item.hari,
+                            jam: option.jam,
+                            ts_id: option.ts_id,
+                            is_avail: !option.is_avail,
+                          })
                         }
                         badge={true}
                         isActive={isActive}
@@ -135,6 +160,7 @@ const JadwalBaru = ({ data }) => {
   const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission status
   const navigate = useNavigate();
   const [listData, setListData] = useState([]);
+  const [isNewTrainer, setIsNewTrainer] = useState(false);
 
   const {
     register,
@@ -144,6 +170,70 @@ const JadwalBaru = ({ data }) => {
     resolver: yupResolver(FormValidationSchema),
     mode: "all",
   });
+
+  const setInitJadwal = () => {
+    const temp = [];
+    initDay.forEach((hari) => {
+      initTime.map((jam) => {
+        temp.push({
+          day: hari,
+          time: jam,
+          is_free: false,
+          trainer_id: data.trainer_id,
+        });
+      });
+    });
+
+    temp.forEach((item) => {
+      AddTrainerScheduleV2(data.trainer_id, item);
+    });
+  };
+
+  const mergeJadwal = (params) => {
+    params.forEach((i) => {
+      setListData((prev) =>
+        prev.map((item) =>
+          item.trainer_id === data.trainer_id
+            ? {
+                ...item,
+                datahari: item.datahari.map((hari) =>
+                  hari.hari === i.day
+                    ? {
+                        ...hari,
+                        data: hari.data.map((jam) =>
+                          jam.jam === i.time
+                            ? { ...jam, is_avail: i.is_avail, ts_id: i.ts_id } // Toggle availability
+                            : jam
+                        ),
+                      }
+                    : hari
+                ),
+              }
+            : item
+        )
+      );
+    });
+  };
+
+  /**
+   * The function `handleInitJadwal` fetches a trainer's schedule and updates the state based on the
+   * response.
+   */
+  const handleInitJadwal = async () => {
+    try {
+      const trainerScheduleResponse = await GetTrainerScheduleV2(
+        data.trainer_id
+      );
+      if (trainerScheduleResponse.data.error === "not found") {
+        setIsNewTrainer(true);
+        setInitJadwal();
+      } else {
+        mergeJadwal(trainerScheduleResponse.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const fetchPools = async () => {
@@ -184,10 +274,6 @@ const JadwalBaru = ({ data }) => {
         return res;
       });
 
-      // const trainerScheduleResponse = await getTrainerScheduleByTrainer(
-      //   data.trainer_id
-      // );
-
       const kolamOption = kolamResponse.data.results
         .sort(
           (a, b) =>
@@ -207,12 +293,8 @@ const JadwalBaru = ({ data }) => {
 
       mockDataJadwal[0].trainer_id = data.trainer_id;
       setListData(mockDataJadwal);
-      // let tempJadwal =
-      //   jadwalOption.data.results.length > 0
-      //     ? jadwalOption.data.results
-      //     : mockDataJadwal;
 
-      // setListData(tempJadwal);
+      handleInitJadwal();
     } catch (error) {
       console.error(error);
     } finally {
@@ -320,7 +402,6 @@ const JadwalBaru = ({ data }) => {
   }
 
   const handleChangeJadwal = (jadwal) => {
-    console.log(jadwal);
     try {
       setListData((prev) =>
         prev.map((item) =>
@@ -343,13 +424,15 @@ const JadwalBaru = ({ data }) => {
             : item
         )
       );
+
+      const item = { ts_id: jadwal.ts_id, is_avail: jadwal.is_avail };
+      EditTrainerScheduleV2(data.trainer_id, item);
     } catch (error) {
       console.error(error);
     }
   };
 
   const handleChangeJadwalAll = (jadwal) => {
-    console.log(jadwal);
     try {
       setListData((prev) =>
         prev.map((item) =>
@@ -357,12 +440,12 @@ const JadwalBaru = ({ data }) => {
             ? {
                 ...item,
                 datahari: item.datahari.map((hari) =>
-                  hari.hari === jadwal
+                  hari.hari === jadwal[0].day
                     ? {
                         ...hari,
                         data: hari.data.map((jam) => ({
                           ...jam,
-                          is_avail: !jam.is_avail, // Toggle availability
+                          is_avail: jadwal[0].is_avail, // Toggle availability
                         })),
                       }
                     : hari
@@ -371,6 +454,10 @@ const JadwalBaru = ({ data }) => {
             : item
         )
       );
+
+      jadwal.forEach((item) => {
+        EditTrainerScheduleV2(data.trainer_id, item);
+      });
     } catch (error) {
       console.error(error);
     }
@@ -423,17 +510,6 @@ const JadwalBaru = ({ data }) => {
                 {isSubmitting ? "Saving..." : "Save Kolam"}
               </button>
             </div>
-            {/* <div className="ltr:text-right rtl:text-left space-x-3">
-              <div className="btn-group">
-                <button
-                  type="submit"
-                  className="btn btn-dark"
-                  disabled={isSubmitting} // Disable button during submission
-                >
-                  {isSubmitting ? "Saving..." : "Save Jadwal"}
-                </button>
-              </div>
-            </div> */}
           </div>
         </form>
       </Card>
@@ -454,20 +530,6 @@ const JadwalBaru = ({ data }) => {
                 onChangeAll={(e) => handleChangeJadwalAll(e)}
               />
             ))}
-          </div>
-          <div className="ltr:text-right rtl:text-left space-x-3">
-            <div className="btn-group">
-              <button type="button" className="btn" onClick={handleCancel}>
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="btn btn-dark"
-                disabled={isSubmitting} // Disable button during submission
-              >
-                {isSubmitting ? "Saving..." : "Save Jadwal"}
-              </button>
-            </div>
           </div>
         </form>
       </Card>
