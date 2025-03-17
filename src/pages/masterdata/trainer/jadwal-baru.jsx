@@ -291,7 +291,7 @@ const JadwalBaru = ({ data }) => {
         }))
       );
     }
-  }, [data?.trainer_id]);
+  }, []);
 
   const loadReference = async () => {
     try {
