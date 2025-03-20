@@ -183,7 +183,7 @@ const JadwalBaru = ({ data }) => {
                       ...hari,
                       data: hari.data.map((jam) =>
                         jam.jam === jadwal.jam
-                          ? { ...jam, is_avail: jam.is_avail } // Toggle availability
+                          ? { ...jam, is_avail: jadwal.is_avail } // Toggle availability
                           : jam
                       ),
                     }
