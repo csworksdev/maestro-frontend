@@ -1,11 +1,13 @@
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
+import { CJGetBranchDay } from "@/axios/schedule/cekJadwal";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import Select from "@/components/ui/Select";
-import { baseJadwal2 } from "@/constant/jadwal-default";
+import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
+import { calcLength } from "framer-motion";
+import { forEach } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncSelect from "react-select/async";
 
@@ -45,6 +47,13 @@ const mockData = [
           },
           {
             jam: "09.00",
+            is_free: false,
+            order_id: "",
+            student: [],
+            product: "",
+          },
+          {
+            jam: "11.00",
             is_free: false,
             order_id: "",
             student: [],
@@ -133,8 +142,10 @@ const CekJadwal = () => {
   const [poolOption, setPoolOption] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState();
+  const [selectedBranch, setSelectedBranch] = useState();
   const [jumlahSiswa, setJumlahSiswa] = useState([]);
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
+  const [jadwal, setJadwal] = useState([]);
 
   useEffect(() => {
     const storedIndex = localStorage.getItem("ScheduleSelected");
@@ -189,20 +200,88 @@ const CekJadwal = () => {
     }
   };
 
+  const fillBaseJadwalWithData = (baseJadwal, fillData) => {
+    const updatedDatahari = baseJadwal.datahari.map((day) => {
+      const dayFill = fillData.datahari?.find((d) => d.hari === day.hari);
+      if (!dayFill) return day;
+
+      const updatedData = day.data.map((slot) => {
+        const fillSlot = dayFill.data.find((f) => f.jam === slot.jam);
+        if (fillSlot) {
+          return {
+            ...slot,
+            is_free: fillSlot.is_free,
+            order_id: fillSlot.order_id || slot.order_id,
+            student: fillSlot.student || slot.student,
+            product: fillSlot.product || slot.product,
+          };
+        }
+        return slot;
+      });
+
+      return {
+        ...day,
+        data: updatedData,
+      };
+    });
+
+    return {
+      ...baseJadwal,
+      trainer_id: fillData.trainer_id || baseJadwal.trainer_id,
+      fullname: fillData.fullname || baseJadwal.fullname,
+      gender: fillData.gender || baseJadwal.gender,
+      kolam: fillData.kolam,
+      datahari: updatedDatahari,
+    };
+  };
+
+  const loadSchedule = async (branch_id, day) => {
+    try {
+      const scheduleRes = await CJGetBranchDay(branch_id, daysOfWeek[day]);
+      const data = scheduleRes.data.map((element) =>
+        fillBaseJadwalWithData({ ...BaseJadwal }, element)
+      );
+      setJadwal(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    try {
+      if (
+        selectedBranch != null &&
+        selectedBranch !== "" &&
+        selectedIndex != null
+      ) {
+        loadSchedule(selectedBranch, selectedIndex);
+      } else {
+        console.error(
+          "Invalid input: selectedBranch or selectedIndex is missing or empty."
+        );
+      }
+    } catch (error) {
+      console.error("An error occurred while loading the schedule:", error);
+    }
+  }, [selectedBranch, selectedIndex]);
+
   const processedMockData = useMemo(() => {
-    return mockData.map((mock) => ({
+    return jadwal.map((mock) => ({
       ...mock,
       activeDay:
         mock.datahari?.find((day) => day.hari === daysOfWeek[selectedIndex])
           ?.data || [],
     }));
-  }, [selectedIndex, mockData]);
+  }, [selectedIndex, jadwal]);
 
   useEffect(() => {
     loadBranch();
   }, []);
 
   const handlePoolChange = (e) => {
+    setSelectedBranch(e.value);
     loadPool(e.value);
   };
 
@@ -210,20 +289,52 @@ const CekJadwal = () => {
     setSelectedIndex(index);
   };
 
+  const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
+
+  const loadOptions = async () => {
+    return branchOption; // Assuming already fetched
+  };
+
   const PelatihLibur = React.memo(() => (
-    <div className="flex flex-col items-center justify-center bg-red-400 p-2 rounded-md text-white min-w-52 min-h-12">
+    <div className="flex items-center justify-center bg-red-400 p-2 rounded-xl text-white w-56 min-h-[80px] shadow">
       Libur
     </div>
   ));
 
   const PelatihKosong = React.memo(() => (
     <Button
-      className="flex flex-row bg-green-300 p-2 rounded-md text-black min-w-52 min-h-12 justify-center items-center gap-3"
+      className="flex bg-green-300 p-2 rounded-xl text-black w-56 min-h-[80px] justify-center items-center gap-2 shadow"
       onClick={() => alert("test")}
     >
-      <Icon icon="heroicons-outline:plus-circle" width={"24"} />
+      <Icon icon="heroicons-outline:plus-circle" width="24" />
       <span>Buat Order</span>
     </Button>
+  ));
+
+  const GridKolamDetail = React.memo(({ item }) => (
+    <div className="flex gap-4">
+      {item.activeDay?.map((timeSlot, i) =>
+        timeSlot.is_free ? (
+          <PelatihLibur key={i} />
+        ) : timeSlot.order_id !== "" ? (
+          <div
+            key={i}
+            className="shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-56 min-h-[80px] justify-start"
+          >
+            <b>{timeSlot.product}</b>
+            <div className="text-sm whitespace-pre-line">
+              {timeSlot.student.length === 1
+                ? timeSlot.student[0]
+                : timeSlot.student.map((name, idx) => (
+                    <div key={idx}>{name}</div>
+                  ))}
+            </div>
+          </div>
+        ) : (
+          <PelatihKosong key={i} />
+        )
+      )}
+    </div>
   ));
 
   const GridKolamHeader = React.memo(({ item }) => {
@@ -232,104 +343,91 @@ const CekJadwal = () => {
     );
 
     return (
-      <>
-        <div className="flex gap-3 py-1">
-          <div className="flex flex-col gap-3 mb-3">
-            <div className="border-b-4 border-blue-500 p-2 min-w-52 text-center font-semibold min-h-12">
-              Pelatih
-            </div>
-            {filteredData.map((de) => (
-              <div
-                key={de.trainer_id}
-                className={`p-2 min-w-52 h-12 grow flex flex-row items-center rounded-md ${
-                  de.gender === "L" ? `bg-blue-300` : `bg-pink-300`
-                }`}
-              >
-                {de.fullname}
-              </div>
-            ))}
+      <div className="flex gap-4 py-2">
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="border-b-4 border-blue-500 p-2 w-56 min-h-[80px] text-center font-semibold flex items-center justify-center">
+            Pelatih
           </div>
-          <div className="flex gap-3 overflow-auto">
-            <div className="flex flex-col gap-3 mb-3">
-              <div className="flex flex-row gap-3">
-                {columnHeader.slice(1).map((header, i) => (
-                  <div
-                    key={i}
-                    className="border-b-4 border-blue-500 pt-3 min-w-52 text-center font-semibold min-h-12 grow"
-                  >
-                    {header}
-                  </div>
-                ))}
-              </div>
-              {filteredData.map((de) => (
-                <GridKolamDetail key={de.trainer_id} item={de} />
+          {filteredData.map((de) => (
+            <div
+              key={de.trainer_id}
+              className={`p-2 w-56 min-h-[80px] flex items-center rounded-xl shadow ${
+                de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
+              }`}
+            >
+              {de.fullname}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-4 overflow-auto">
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex gap-4">
+              {columnHeader.slice(1).map((header, i) => (
+                <div
+                  key={i}
+                  className="border-b-4 border-blue-500 p-2 w-56 min-h-[80px] text-center font-semibold flex items-center justify-center"
+                >
+                  {header}
+                </div>
               ))}
             </div>
+            {filteredData.map((de) => (
+              <GridKolamDetail key={de.trainer_id} item={de} />
+            ))}
           </div>
         </div>
-      </>
-    );
-  });
-
-  const GridKolamDetail = React.memo(({ item }) => {
-    return (
-      <div className="flex gap-3">
-        {item.activeDay?.map((timeSlot, i) =>
-          timeSlot.is_free ? (
-            <PelatihLibur key={i} />
-          ) : timeSlot.order_id !== "" ? (
-            <div
-              key={i}
-              className="shadow shadow-blue-500/50 rounded-md p-3 flex flex-col min-w-52 min-h-12"
-            >
-              <div>Produk: {timeSlot.product}</div>
-              <div>Siswa: {timeSlot.student.join(", ")}</div>
-            </div>
-          ) : (
-            <PelatihKosong key={i} />
-          )
-        )}
       </div>
     );
   });
-  const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
 
-  const gridKolam = (params) => {
-    return (
-      <div className="flex flex-col gap-5">
-        {poolOption.map((item) => (
-          <Card
-            key={item.value}
-            title={item.label}
-            headerslot={
-              <div className="flex flex-col">
-                <div>Jumlah Pelatih : {jumlahPelatih}</div>
-                <div>Jumlah Siswa : {jumlahSiswa}</div>
+  const gridKolam = () => (
+    <div className="flex flex-col gap-6">
+      {poolOption.map((item) => (
+        <Card
+          key={item.value}
+          title={item.label}
+          headerslot={
+            <div className="flex flex-col gap-1 text-sm">
+              <div>
+                Jumlah Pelatih:{" "}
+                {
+                  jadwal.filter((trainer) => trainer.kolam.includes(item.value))
+                    .length
+                }
               </div>
-            }
-          >
-            <GridKolamHeader item={item} />
-          </Card>
-        ))}
-      </div>
-    );
-  };
-
-  const loadOptions = async () => {
-    return branchOption; // Assuming already fetched
-  };
+              <div>
+                Jumlah Siswa:{" "}
+                {jadwal
+                  .filter((trainer) => trainer.kolam.includes(item.value))
+                  .flatMap((trainer) => trainer.datahari)
+                  .flatMap((dh) => dh.data)
+                  .reduce(
+                    (total, sched) =>
+                      total + (sched.student ? sched.student.length : 0),
+                    0
+                  )}
+              </div>
+            </div>
+          }
+        >
+          <GridKolamHeader item={item} />
+        </Card>
+      ))}
+    </div>
+  );
 
   return (
     <>
       <div>
         <label className="form-label" htmlFor="kolam">
-          Kolam
+          Cabang
         </label>
         <div className="flex gap-3">
           <AsyncSelect
             name="kolam"
             label="Kolam"
-            placeholder="Pilih Kolam"
+            placeholder="Pilih Cabang"
             defaultOptions={memoizedBranchOptions}
             loadOptions={branchOption}
             onChange={handlePoolChange}
