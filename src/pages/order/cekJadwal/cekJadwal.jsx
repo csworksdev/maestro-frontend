@@ -1,13 +1,12 @@
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
 import { CJGetBranchDay } from "@/axios/schedule/cekJadwal";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
-import { calcLength } from "framer-motion";
-import { forEach } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncSelect from "react-select/async";
 
@@ -120,7 +119,6 @@ const columnHeader = [
   "15.00",
   "16.00",
   "17.00",
-  "18.00",
 ];
 
 const CekJadwal = () => {
@@ -214,6 +212,7 @@ const CekJadwal = () => {
             order_id: fillSlot.order_id || slot.order_id,
             student: fillSlot.student || slot.student,
             product: fillSlot.product || slot.product,
+            pool_name: fillSlot.pool_name || slot.pool_name,
           };
         }
         return slot;
@@ -295,15 +294,29 @@ const CekJadwal = () => {
     return branchOption; // Assuming already fetched
   };
 
+  const AdaJadwal = React.memo((timeSlot, i) => (
+    <div
+      key={i}
+      className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-full min-h-[80px] justify-start"
+    >
+      <Badge label={timeSlot.product} className="bg-primary-500 text-white" />
+      <div className="text-sm whitespace-pre-line">
+        {timeSlot.student.length === 1
+          ? timeSlot.student[0]
+          : timeSlot.student.map((name, idx) => <div key={idx}>{name}</div>)}
+      </div>
+    </div>
+  ));
+
   const PelatihLibur = React.memo(() => (
-    <div className="flex items-center justify-center bg-red-400 p-2 rounded-xl text-white w-56 min-h-[80px] shadow">
+    <div className="flex items-center justify-center bg-red-400 p-2 rounded-xl text-white w-full min-h-[80px] shadow">
       Libur
     </div>
   ));
 
   const PelatihKosong = React.memo(() => (
     <Button
-      className="flex bg-green-300 p-2 rounded-xl text-black w-56 min-h-[80px] justify-center items-center gap-2 shadow"
+      className="flex bg-white p-2 rounded-xl text-black w-full min-h-[80px] justify-center items-center gap-2 shadow"
       onClick={() => alert("test")}
     >
       <Icon icon="heroicons-outline:plus-circle" width="24" />
@@ -311,31 +324,40 @@ const CekJadwal = () => {
     </Button>
   ));
 
-  const GridKolamDetail = React.memo(({ item }) => (
-    <div className="flex gap-4">
-      {item.activeDay?.map((timeSlot, i) =>
-        timeSlot.is_free ? (
-          <PelatihLibur key={i} />
-        ) : timeSlot.order_id !== "" ? (
-          <div
-            key={i}
-            className="shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-56 min-h-[80px] justify-start"
-          >
-            <b>{timeSlot.product}</b>
-            <div className="text-sm whitespace-pre-line">
-              {timeSlot.student.length === 1
-                ? timeSlot.student[0]
-                : timeSlot.student.map((name, idx) => (
-                    <div key={idx}>{name}</div>
-                  ))}
-            </div>
-          </div>
-        ) : (
-          <PelatihKosong key={i} />
-        )
-      )}
-    </div>
-  ));
+  const GridKolamDetail = React.memo(({ item, pool }) => {
+    return (
+      <>
+        {item.activeDay?.map((timeSlot, i) =>
+          timeSlot.is_free ? (
+            <PelatihLibur key={i} />
+          ) : timeSlot.order_id !== "" ? (
+            timeSlot.pool_name === pool.label ? (
+              <div
+                key={i}
+                className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-full min-h-[80px] justify-start"
+              >
+                <Badge
+                  label={timeSlot.product}
+                  className="bg-primary-500 text-white"
+                />
+                <div className="text-sm whitespace-pre-line">
+                  {timeSlot.student.length === 1
+                    ? timeSlot.student[0]
+                    : timeSlot.student.map((name, idx) => (
+                        <div key={idx}>{name}</div>
+                      ))}
+                </div>
+              </div>
+            ) : (
+              <div>ada jadwal di {timeSlot.pool_name}</div>
+            )
+          ) : (
+            <PelatihKosong key={i} />
+          )
+        )}
+      </>
+    );
+  });
 
   const GridKolamHeader = React.memo(({ item }) => {
     const filteredData = processedMockData.filter((mock) =>
@@ -343,39 +365,42 @@ const CekJadwal = () => {
     );
 
     return (
-      <div className="flex gap-4 py-2">
-        <div className="flex flex-col gap-4 mb-4">
-          <div className="border-b-4 border-blue-500 p-2 w-56 min-h-[80px] text-center font-semibold flex items-center justify-center">
+      <div className="overflow-auto">
+        <div
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: `200px repeat(${
+              columnHeader.length - 1
+            }, 200px)`,
+          }}
+        >
+          {/* Header Row */}
+          <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-center justify-center sticky left-0 bg-white z-10">
             Pelatih
           </div>
-          {filteredData.map((de) => (
+          {columnHeader.slice(1).map((header, i) => (
             <div
-              key={de.trainer_id}
-              className={`p-2 w-56 min-h-[80px] flex items-center rounded-xl shadow ${
-                de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
-              }`}
+              key={i}
+              className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-center justify-center"
             >
-              {de.fullname}
+              {header}
             </div>
           ))}
-        </div>
 
-        <div className="flex gap-4 overflow-auto">
-          <div className="flex flex-col gap-4 mb-4">
-            <div className="flex gap-4">
-              {columnHeader.slice(1).map((header, i) => (
-                <div
-                  key={i}
-                  className="border-b-4 border-blue-500 p-2 w-56 min-h-[80px] text-center font-semibold flex items-center justify-center"
-                >
-                  {header}
-                </div>
-              ))}
-            </div>
-            {filteredData.map((de) => (
-              <GridKolamDetail key={de.trainer_id} item={de} />
-            ))}
-          </div>
+          {/* Trainer names and details */}
+          {filteredData.map((de) => (
+            <React.Fragment key={de.trainer_id}>
+              <div
+                className={`p-2 min-h-[80px] flex items-center rounded-xl shadow sticky left-0 z-10 ${
+                  de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
+                }`}
+              >
+                {de.fullname}
+              </div>
+
+              <GridKolamDetail item={de} pool={item} />
+            </React.Fragment>
+          ))}
         </div>
       </div>
     );
