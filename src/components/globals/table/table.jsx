@@ -14,7 +14,7 @@ const Table = memo(
       () =>
         listColumn.map((col) => ({
           ...col,
-          width: col.width || 120,
+          width: col.width || 150,
         })),
       [listColumn]
     );
@@ -43,51 +43,43 @@ const Table = memo(
 
     const synchronizeHeights = () => {
       requestAnimationFrame(() => {
-        // Sync header heights
+        if (scrollableRowsRef.current.length && fixedRowsRef.current.length) {
+          scrollableRowsRef.current.forEach((scrollableRow, index) => {
+            const scrollableHeight = scrollableRow?.offsetHeight || 0;
+            const fixedRow = fixedRowsRef.current[index];
+
+            if (fixedRow) {
+              fixedRow.style.height = `${scrollableHeight}px`;
+            }
+          });
+
+          // Ensure first row explicitly matches
+          if (scrollableRowsRef.current[1] && fixedRowsRef.current[0]) {
+            const firstRowHeight = scrollableRowsRef.current[1].offsetHeight;
+            fixedRowsRef.current[0].style.height = `${firstRowHeight}px`;
+          }
+        }
+
+        // Ensure headers align
         const scrollableHeader = document.querySelector(
           ".scrollable-body thead tr"
         );
         const fixedHeader = document.querySelector(".fixed-body thead tr");
 
         if (scrollableHeader && fixedHeader) {
-          const headerHeight = scrollableHeader.offsetHeight;
-          if (fixedHeader.style.height !== `${headerHeight}px`) {
-            fixedHeader.style.height = `${headerHeight}px`;
-          }
-          if (scrollableHeader.style.height !== `${headerHeight}px`) {
-            scrollableHeader.style.height = `${headerHeight}px`;
-          }
+          fixedHeader.style.height = `${scrollableHeader.offsetHeight}px`;
         }
-
-        // Sync row heights
-        page.forEach((_, index) => {
-          const scrollableRow = scrollableRowsRef.current[index];
-          const fixedRow = fixedRowsRef.current[index];
-
-          if (scrollableRow && fixedRow) {
-            const scrollableHeight = scrollableRow.offsetHeight;
-            if (fixedRow.style.height !== `${scrollableHeight}px`) {
-              fixedRow.style.height = `${scrollableHeight}px`;
-            }
-            if (scrollableRow.style.height !== `${scrollableHeight}px`) {
-              scrollableRow.style.height = `${scrollableHeight}px`;
-            }
-          }
-        });
       });
     };
 
     useEffect(() => {
       synchronizeHeights();
+
       const resizeObserver = new ResizeObserver(synchronizeHeights);
 
-      // Observe both tables' rows
-      const allRows = [
-        ...scrollableRowsRef.current.filter(Boolean),
-        ...fixedRowsRef.current.filter(Boolean),
-      ];
-
-      allRows.forEach((row) => resizeObserver.observe(row));
+      [...scrollableRowsRef.current, ...fixedRowsRef.current].forEach((row) => {
+        if (row) resizeObserver.observe(row);
+      });
 
       return () => {
         resizeObserver.disconnect();
@@ -95,108 +87,117 @@ const Table = memo(
     }, [page, listData.results]);
 
     return (
-      <Card noborder>
-        <div className="flex">
-          {/* Scrollable Table */}
-          <div className="overflow-x-auto flex-grow -mx-1 scrollable-body">
-            <table
-              {...getTableProps()}
-              className="table table-fixed divide-y divide-slate-100 dark:divide-slate-700"
-            >
-              <thead className="border-t border-slate-100 dark:border-slate-800">
-                {headerGroups.map((headerGroup, index) => (
-                  <tr
-                    {...headerGroup.getHeaderGroupProps()}
-                    ref={(el) => (scrollableRowsRef.current[index] = el)}
-                  >
-                    {headerGroup.headers.slice(0, -1).map((column) => (
-                      <th
-                        {...column.getHeaderProps(
-                          column.getSortByToggleProps()
-                        )}
-                        className="table-th text-center text-wrap"
-                      >
-                        {column.render("Header")}
-                        <span>
-                          {column.isSorted
-                            ? column.isSortedDesc
-                              ? " 🔽"
-                              : " 🔼"
-                            : ""}
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody
-                {...getTableBodyProps()}
-                className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
+      <>
+        <Card noborder>
+          <div className="flex">
+            {/* Main Scrollable Table */}
+            <div className="overflow-x-auto flex-grow -mx-1 scrollable-body">
+              <table
+                {...getTableProps()}
+                className="table  divide-y divide-slate-100 dark:divide-slate-700 table-fixed"
               >
-                {page.map((row, index) => {
-                  prepareRow(row);
-                  return (
+                <thead className="border-t border-slate-100 dark:border-slate-800 h-[73]">
+                  {headerGroups.map((headerGroup, index) => (
                     <tr
-                      {...row.getRowProps()}
+                      {...headerGroup.getHeaderGroupProps?.()}
                       ref={(el) => (scrollableRowsRef.current[index] = el)}
-                      className={`h-auto ${
-                        index % 2 === 0 ? "bg-blue-100" : ""
-                      }`}
                     >
-                      {row.cells.slice(0, -1).map((cell) => (
-                        <td
-                          {...cell.getCellProps()}
-                          className="table-td text-wrap p-3 align-middle"
-                        >
-                          {cell.render("Cell")}
-                        </td>
-                      ))}
+                      {headerGroup.headers
+                        .slice(0, -1) // Exclude the last column
+                        .map((column) => (
+                          <th
+                            {...column.getHeaderProps?.(
+                              column.getSortByToggleProps?.()
+                            )}
+                            className="table-th text-center text-wrap"
+                          >
+                            {column.render("Header")}
+                            <span>
+                              {column.isSorted
+                                ? column.isSortedDesc
+                                  ? " 🔽"
+                                  : " 🔼"
+                                : ""}
+                            </span>
+                          </th>
+                        ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </thead>
+                <tbody
+                  {...getTableBodyProps()}
+                  className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
+                >
+                  {page.map((row, index) => {
+                    prepareRow(row);
+                    return (
+                      <tr
+                        {...row.getRowProps?.()}
+                        ref={(el) => (scrollableRowsRef.current[index] = el)}
+                        className={`h-auto min-h-[50px] ${
+                          index % 2 == 0 ? "bg-blue-100" : ""
+                        }`}
+                      >
+                        {row.cells.slice(0, -1).map((cell) => (
+                          <td
+                            {...cell.getCellProps?.()}
+                            className="table-td text-wrap p-3 align-middle"
+                          >
+                            {cell.render("Cell")}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Fixed Column */}
-          <div className="w-[100px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
-            <table className="table table-fixed w-[100px]">
-              <thead className="border-t border-slate-100 dark:border-slate-800">
-                {headerGroups.map((headerGroup, index) => (
-                  <tr
-                    {...headerGroup.getHeaderGroupProps()}
-                    ref={(el) => (fixedRowsRef.current[index] = el)}
-                  >
-                    <th className="table-th text-center text-nowrap">
-                      {headerGroup.headers[
-                        headerGroup.headers.length - 1
-                      ].render("Header")}
-                    </th>
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700">
-                {page.map((row, index) => {
-                  prepareRow(row);
-                  return (
+            {/* Fixed Last Column */}
+            <div className="min-w-[150px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
+              <table className="table min-w-full table-fixed">
+                <thead className="border-t border-slate-100 dark:border-slate-800 h-[73]">
+                  {headerGroups.map((headerGroup, index) => (
                     <tr
-                      {...row.getRowProps()}
-                      ref={(el) => (fixedRowsRef.current[index] = el)}
-                      className={`h-auto ${
-                        index % 2 === 0 ? "bg-blue-100" : ""
-                      }`}
+                      {...headerGroup.getHeaderGroupProps?.()}
+                      ref={(el) => (scrollableRowsRef.current[index] = el)}
                     >
-                      <td className="table-td text-nowrap p-3 align-middle">
-                        {row.cells[row.cells.length - 1].render("Cell")}
-                      </td>
+                      <th className="table-th text-center text-nowrap">
+                        {
+                          headerGroup.headers[
+                            headerGroup.headers.length - 1
+                          ].render("Header") // Render only the last column
+                        }
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </thead>
+                <tbody
+                  {...getTableBodyProps()}
+                  className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
+                >
+                  {page.map((row, index) => {
+                    prepareRow(row);
+                    return (
+                      <tr
+                        {...row.getRowProps?.()}
+                        ref={(el) => (fixedRowsRef.current[index] = el)}
+                        className={`h-auto min-h-[50px] ${
+                          index % 2 == 0 ? "bg-blue-100" : ""
+                        }`}
+                      >
+                        <td className="table-td text-nowrap p-3 align-middle">
+                          {row.cells[row.cells.length - 1].render("Cell")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </>
     );
   },
   (prevProps, nextProps) =>

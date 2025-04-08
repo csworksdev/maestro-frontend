@@ -712,66 +712,27 @@ const RekapBulanan = () => {
 
   const handlePayAll = async (params) => {
     if (params.length > 0) {
-      params.forEach(async (order_detail_id) => {
-        let newParams = checkIfGroupPayment(params);
-        const response = await BayarPelatihByTrainer(params);
-        if (response.status === 200) {
-          setListData((prev) => ({
-            ...prev,
-            results: prev.results.map((item) => {
-              const updatedItem = { ...item };
-              Object.keys(updatedItem).forEach((key) => {
-                if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
-                  const paidKey = key.replace("_order_detail_id", "_paid");
-                  if (params.includes(updatedItem[key])) {
-                    updatedItem[paidKey] = true;
-                  }
+      const response = await BayarPelatihByTrainer(params);
+      if (response.status === 200) {
+        // Swal.fire("Success!", "Pelatih Sudah dibayar.", "success").then(() => {
+        setListData((prev) => ({
+          ...prev,
+          results: prev.results.map((item) => {
+            const updatedItem = { ...item };
+            Object.keys(updatedItem).forEach((key) => {
+              if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
+                const paidKey = key.replace("_order_detail_id", "_paid");
+                if (params.includes(updatedItem[key])) {
+                  updatedItem[paidKey] = true;
                 }
-              });
-              return updatedItem;
-            }),
-          }));
-        }
-      });
-    }
-  };
-
-  function findOrderByDetailId(orders, orderDetailId) {
-    let order = orders.find(
-      (order) =>
-        String(order.order_id) && Object.values(order).includes(orderDetailId)
-    );
-    if (!order) return null;
-
-    let matchedKey = Object.keys(order).find(
-      (key) =>
-        order[key] === orderDetailId &&
-        key.startsWith("p") &&
-        key.endsWith("_order_detail_id")
-    );
-
-    return matchedKey
-      ? { order_id: order.order_id, matched_key: matchedKey }
-      : null;
-  }
-
-  const checkIfGroupPayment = (data) => {
-    let addOrderDetailID = [];
-
-    data.forEach((orderDetailId) => {
-      const result = findOrderByDetailId(listData.results, orderDetailId);
-
-      if (result) {
-        listData.results.forEach((item) => {
-          if (item.order_id === result.order_id) {
-            if (result.matched_key in item) {
-              addOrderDetailID.push(item[result.matched_key]);
-            }
-          }
-        });
+              }
+            });
+            return updatedItem;
+          }),
+        }));
+        // });
       }
-    });
-    return addOrderDetailID.concat(data);
+    }
   };
 
   const handleBayarPerPertemuan = (order_detail_id) => {

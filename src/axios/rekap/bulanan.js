@@ -32,10 +32,10 @@ export const ExportRekapBulanan = async (periode) => {
   }
 };
 
-export const BayarPelatihByTrainer = async (order_detail_id) => {
+export const BayarPelatihByTrainer = async (trainer_id) => {
   try {
     let response = await axiosConfig.put("api/pay-trainer/", {
-      order_detail_ids: order_detail_id,
+      order_detail_ids: trainer_id,
     });
     return response;
   } catch (error) {

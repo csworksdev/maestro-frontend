@@ -44,7 +44,7 @@ const Swicth = ({
               {prevIcon ? (
                 <Icon icon={prevIcon} />
               ) : (
-                <span className="text-[9px] ">Masuk</span>
+                <span className="text-[9px] ">on</span>
               )}
             </span>
           )}
@@ -53,7 +53,7 @@ const Swicth = ({
               {nextIcon ? (
                 <Icon icon={nextIcon} />
               ) : (
-                <span className="text-[9px]">Libur</span>
+                <span className="text-[9px]">Off</span>
               )}
             </span>
           )}

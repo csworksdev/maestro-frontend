@@ -113,8 +113,8 @@ const App = () => {
                 <Route
                   path="dashboard"
                   element={
-                    roles === "Admin" ? <Dashboard /> : <DashboardRevenue />
-                    // <Dashboard />
+                    // roles === "Admin" ? <Dashboard /> : <DashboardRevenue />
+                    <Dashboard />
                   }
                 />
                 //#region referensi

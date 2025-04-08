@@ -20,16 +20,16 @@ const Earning = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      // let res = [];
-      // if (roles === "Trainer") {
-      // res = await getEarningListById(user_id);
-      let resList = await getEarningById(user_id);
-      if (resList) {
-        setListDataDashboard(resList.data);
+      let res = [];
+      if (roles === "Trainer") {
+        res = await getEarningListById(user_id);
+        let resList = await getEarningById(user_id);
+        if (resList) {
+          setListDataDashboard(resList.data);
+        }
+      } else {
+        res = await getEarningAll();
       }
-      // } else {
-      //   res = await getEarningAll();
-      // }
       setListData(res.data.data);
 
       // Group data initially
