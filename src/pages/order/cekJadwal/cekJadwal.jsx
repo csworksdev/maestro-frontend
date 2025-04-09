@@ -4,6 +4,7 @@ import { CJGetBranchDay } from "@/axios/schedule/cekJadwal";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
@@ -119,7 +120,52 @@ const columnHeader = [
   "15.00",
   "16.00",
   "17.00",
+  "18.00",
+  "19.00",
 ];
+
+const checkProduct = (product) => {
+  switch (true) {
+    case product.includes("14"):
+      return "14";
+      break;
+    case product.includes("18"):
+      return "18";
+      break;
+    case product.includes("24"):
+      return "24";
+      break;
+    case product.includes("28"):
+      return "28";
+      break;
+    case product.includes("ter"):
+      return "Terapi";
+      break;
+    case product.includes("gr"):
+      return "Grup";
+      break;
+    default:
+      return "Trial";
+      break;
+  }
+};
+
+const iconProduct = (product) => {
+  let jumlahSiswa = checkProduct(product);
+
+  switch (jumlahSiswa) {
+    case "Grup":
+      return <Icon icon="heroicons-outline:user-group" width="24" />;
+      break;
+    case jumlahSiswa.includes("2"):
+      return <Icon icon="heroicons-outline:users" width="24" />;
+      break;
+
+    default:
+      return <Icon icon="heroicons-outline:user" width="24" />;
+      break;
+  }
+};
 
 const CekJadwal = () => {
   const daysOfWeek = [
@@ -138,12 +184,65 @@ const CekJadwal = () => {
 
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);
+  const [selectedPool, setSelectedPool] = useState();
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState();
   const [selectedBranch, setSelectedBranch] = useState();
-  const [jumlahSiswa, setJumlahSiswa] = useState([]);
+  const [jumlahSiswaPerKolam, setJumlahSiswaPerKolam] = useState([]);
+  const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
   const [jadwal, setJadwal] = useState([]);
+
+  const hitungSiswaPerKolam = (params) => {
+    console.log(params);
+    if (jadwal.length === 0 || poolOption.length === 0) return;
+
+    // Step 1: Create a Set of valid pool values from poolOption
+    const validPools = new Set(params.map((pool) => pool.label));
+
+    // Step 2: Count students for only valid pools
+    const poolCounts = jadwal.reduce((acc, trainer) => {
+      trainer.datahari.forEach((hariData) => {
+        hariData.data.forEach((schedule) => {
+          const pool = schedule.pool_name;
+          if (!pool || !validPools.has(pool)) return; // skip if invalid pool
+
+          const studentCount = schedule.student?.length || 0;
+          acc[pool] = (acc[pool] || 0) + studentCount;
+        });
+      });
+      return acc;
+    }, {});
+    console.log(poolCounts);
+    setJumlahSiswaPerKolam(poolCounts);
+  };
+
+  const hitungSiswaPerHari = () => {
+    const poolDayCounts = {};
+    if (jadwal.length > 0) {
+      jadwal.forEach((trainer) => {
+        trainer.datahari.forEach((hariData) => {
+          const day = hariData.hari;
+
+          hariData.data.forEach((schedule) => {
+            const pool = schedule.pool_name;
+            if (!pool) return; // Skip if no pool
+
+            const studentCount = schedule.student?.length || 0;
+
+            if (!poolDayCounts[pool]) {
+              poolDayCounts[pool] = {};
+            }
+            if (!poolDayCounts[pool][day]) {
+              poolDayCounts[pool][day] = 0;
+            }
+            poolDayCounts[pool][day] += studentCount;
+          });
+        });
+      });
+    }
+    setJumlahSiswaPerhari(poolDayCounts);
+  };
 
   useEffect(() => {
     const storedIndex = localStorage.getItem("ScheduleSelected");
@@ -191,6 +290,7 @@ const CekJadwal = () => {
         }));
 
       setPoolOption(kolamOption);
+      // hitungSiswaPerKolam(kolamOption);
     } catch (error) {
       console.error(error);
     } finally {
@@ -290,10 +390,6 @@ const CekJadwal = () => {
 
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
 
-  const loadOptions = async () => {
-    return branchOption; // Assuming already fetched
-  };
-
   const AdaJadwal = React.memo((timeSlot, i) => (
     <div
       key={i}
@@ -309,19 +405,51 @@ const CekJadwal = () => {
   ));
 
   const PelatihLibur = React.memo(() => (
-    <div className="flex items-center justify-center bg-red-400 p-2 rounded-xl text-white w-full min-h-[80px] shadow">
-      Libur
+    <div className="flex justify-center items-center">
+      <Tooltip placement="top" arrow content={`Libur Pelatih`}>
+        <span>
+          <Icon
+            icon="heroicons-outline:calendar-days"
+            width="24"
+            color="red"
+            onClick={() => alert("test")}
+          />
+        </span>
+      </Tooltip>
     </div>
   ));
 
   const PelatihKosong = React.memo(() => (
-    <Button
-      className="flex bg-white p-2 rounded-xl text-black w-full min-h-[80px] justify-center items-center gap-2 shadow"
-      onClick={() => alert("test")}
-    >
-      <Icon icon="heroicons-outline:plus-circle" width="24" />
-      <span>Buat Order</span>
-    </Button>
+    <div className="flex justify-center items-center">
+      <Tooltip placement="top" arrow content={`Buat Order`}>
+        <span>
+          <Icon
+            icon="heroicons-outline:plus"
+            width="24"
+            color="green"
+            onClick={() => alert("test")}
+          />
+        </span>
+      </Tooltip>
+    </div>
+  ));
+
+  const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
+    <div className="flex justify-center items-center">
+      <Tooltip
+        placement="top"
+        arrow
+        content={
+          <div className="whitespace-pre-line">
+            {`Sudah ada jadwal di \n ${poolName}`}
+          </div>
+        }
+      >
+        <span>
+          <Icon icon="heroicons-outline:hand-raised" width="24" color="black" />
+        </span>
+      </Tooltip>
+    </div>
   ));
 
   const GridKolamDetail = React.memo(({ item, pool }) => {
@@ -334,22 +462,28 @@ const CekJadwal = () => {
             timeSlot.pool_name === pool.label ? (
               <div
                 key={i}
-                className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-full min-h-[80px] justify-start"
+                className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start"
               >
                 <Badge
-                  label={timeSlot.product}
-                  className="bg-primary-500 text-white"
+                  label={checkProduct(timeSlot.product)}
+                  className="bg-primary-500 text-white text-center"
                 />
-                <div className="text-sm whitespace-pre-line">
-                  {timeSlot.student.length === 1
-                    ? timeSlot.student[0]
-                    : timeSlot.student.map((name, idx) => (
-                        <div key={idx}>{name}</div>
-                      ))}
+                <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
+                  <Tooltip
+                    placement="top"
+                    arrow
+                    content={
+                      timeSlot.student.length === 1
+                        ? timeSlot.student[0]
+                        : timeSlot.student.join(", ")
+                    }
+                  >
+                    <span>{iconProduct(timeSlot.product)}</span>
+                  </Tooltip>
                 </div>
               </div>
             ) : (
-              <div>ada jadwal di {timeSlot.pool_name}</div>
+              <PelatihAdaJadwal poolName={timeSlot.pool_name} />
             )
           ) : (
             <PelatihKosong key={i} />
@@ -365,16 +499,8 @@ const CekJadwal = () => {
     );
 
     return (
-      <div className="overflow-auto">
-        <div
-          className="grid gap-2"
-          style={{
-            gridTemplateColumns: `200px repeat(${
-              columnHeader.length - 1
-            }, 200px)`,
-          }}
-        >
-          {/* Header Row */}
+      <div className="overflow-auto ">
+        <div className="grid grid-cols-15 gap-2 w-full ">
           <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-center justify-center sticky left-0 bg-white z-10">
             Pelatih
           </div>
@@ -395,7 +521,9 @@ const CekJadwal = () => {
                   de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
                 }`}
               >
-                {de.fullname}
+                <span className="text-[clamp(8px,0.7vw,14px)] p-1">
+                  {de.fullname}
+                </span>
               </div>
 
               <GridKolamDetail item={de} pool={item} />
@@ -407,38 +535,54 @@ const CekJadwal = () => {
   });
 
   const gridKolam = () => (
-    <div className="flex flex-col gap-6">
-      {poolOption.map((item) => (
-        <Card
-          key={item.value}
-          title={item.label}
-          headerslot={
-            <div className="flex flex-col gap-1 text-sm">
-              <div>
-                Jumlah Pelatih:{" "}
-                {
-                  jadwal.filter((trainer) => trainer.kolam.includes(item.value))
-                    .length
-                }
-              </div>
-              <div>
-                Jumlah Siswa:{" "}
-                {jadwal
-                  .filter((trainer) => trainer.kolam.includes(item.value))
-                  .flatMap((trainer) => trainer.datahari)
-                  .flatMap((dh) => dh.data)
+    <div className="flex flex-col h-full">
+      {poolOption &&
+      poolOption.length > 0 &&
+      selectedPool !== null &&
+      poolOption[selectedPool] ? (
+        poolOption
+          .filter((x) => x.value === poolOption[selectedPool]?.value)
+          .map((item) => {
+            const jumlahPelatih = jadwal
+              ? jadwal.filter((trainer) => trainer.kolam.includes(item.value))
+                  .length
+              : 0;
+
+            const jumlahSiswa = jadwal
+              ? jadwal
+                  .filter((trainer) => trainer.kolam === item.value)
+                  .flatMap((trainer) => trainer.datahari || [])
+                  .flatMap((dh) => dh.data || [])
                   .reduce(
                     (total, sched) =>
                       total + (sched.student ? sched.student.length : 0),
                     0
-                  )}
-              </div>
-            </div>
-          }
-        >
-          <GridKolamHeader item={item} />
-        </Card>
-      ))}
+                  )
+              : 0;
+
+            return (
+              <Card
+                key={item.value}
+                title={item.label}
+                headerslot={
+                  <div className="flex flex-col gap-1 text-sm">
+                    <div>Jumlah Pelatih: {jumlahPelatih}</div>
+                    <div>Jumlah Siswa: {jumlahSiswa}</div>
+                  </div>
+                }
+              >
+                {/* <GridKolamHeader item={item} /> */}
+                {/* <div className="h-[calc(100vh-545px)] overflow-y-auto min-h-0"> */}
+                <GridKolamHeader item={item} />
+                {/* </div> */}
+              </Card>
+            );
+          })
+      ) : (
+        <div className="text-center text-sm text-gray-400">
+          No pool selected or data not available.
+        </div>
+      )}
     </div>
   );
 
@@ -456,35 +600,60 @@ const CekJadwal = () => {
             defaultOptions={memoizedBranchOptions}
             loadOptions={branchOption}
             onChange={handlePoolChange}
-            className="grow"
+            className="grow z-20"
           />
         </div>
       </div>
-      <Tab.Group selectedIndex={selectedIndex ?? -1} onChange={handleChangeTab}>
-        <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-4 p-3">
-          {tabHari.map((item, i) => (
-            <Tab key={i}>
-              {({ selected }) => (
-                <button
-                  className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
+      <Tab.Group selectedIndex={selectedPool} onChange={setSelectedPool}>
+        <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 py-3">
+          <>
+            {poolOption.map((item, i) => (
+              <Tab key={i}>
+                {({ selected }) => (
+                  <button
+                    className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
                 ${
                   selected
                     ? "text-white bg-primary-500"
                     : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
                 }`}
-                >
-                  {`${item.hari}`}
-                </button>
-              )}
-            </Tab>
-          ))}
+                  >
+                    {`${item.label}`}
+                  </button>
+                )}
+              </Tab>
+            )) ?? null}
+          </>
         </Tab.List>
         <Tab.Panels>
-          {tabHari.map((item) => (
-            <Tab.Panel>
-              <div>{gridKolam(item)}</div>
-            </Tab.Panel>
-          ))}
+          <Tab.Group
+            selectedIndex={selectedIndex ?? -1}
+            onChange={handleChangeTab}
+          >
+            <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 pb-3 ">
+              {tabHari.map((item, i) => (
+                <Tab key={i}>
+                  {({ selected }) => (
+                    <button
+                      className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
+                ${
+                  selected
+                    ? "text-white bg-primary-500"
+                    : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
+                }`}
+                    >
+                      {`${item.hari}`}
+                    </button>
+                  )}
+                </Tab>
+              ))}
+            </Tab.List>
+            <Tab.Panels>
+              {tabHari.map((item) => (
+                <Tab.Panel>{gridKolam()}</Tab.Panel>
+              ))}
+            </Tab.Panels>
+          </Tab.Group>
         </Tab.Panels>
       </Tab.Group>
     </>
