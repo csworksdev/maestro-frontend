@@ -163,6 +163,9 @@ module.exports = {
         zoom: "zoom 1s ease-in-out infinite",
         tada: "tada 1.5s ease-in-out infinite",
       },
+      gridTemplateColumns: {
+        15: "repeat(15, minmax(0, 1fr))",
+      },
     },
   },
   plugins: [],
