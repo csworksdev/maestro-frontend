@@ -563,11 +563,11 @@ const CekJadwal = () => {
             return (
               <Card
                 key={item.value}
-                title={item.label}
+                subtitle={item.label}
                 headerslot={
                   <div className="flex flex-col gap-1 text-sm">
                     <div>Jumlah Pelatih: {jumlahPelatih}</div>
-                    <div>Jumlah Siswa: {jumlahSiswa}</div>
+                    {/* <div>Jumlah Siswa: {jumlahSiswa}</div> */}
                   </div>
                 }
               >
