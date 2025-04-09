@@ -318,14 +318,12 @@ const OrderActive = ({ is_finished }) => {
       sticky: "right",
       Cell: (row) => {
         return (
-          <div className="flex flex-row space-x-2 items-center">
-            <div className="flex space-x-2">
-              {(roles === "Admin" ? actionsAdmin : actions).map(
-                (action, index) => (
-                  <TableAction action={action} index={index} row={row} />
-                )
-              )}
-            </div>
+          <div className="flex flex-row space-x-2 justify-center items-center">
+            {(roles === "Admin" ? actionsAdmin : actions).map(
+              (action, index) => (
+                <TableAction action={action} index={index} row={row} />
+              )
+            )}
           </div>
         );
       },

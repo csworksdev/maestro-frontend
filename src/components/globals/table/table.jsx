@@ -52,7 +52,7 @@ const Table = memo(
         if (scrollableHeader && fixedHeader) {
           const headerHeight = scrollableHeader.offsetHeight;
           if (fixedHeader.style.height !== `${headerHeight}px`) {
-            fixedHeader.style.height = `${headerHeight}px`;
+            fixedHeader.style.height = `${headerHeight - 1}px`;
           }
           if (scrollableHeader.style.height !== `${headerHeight}px`) {
             scrollableHeader.style.height = `${headerHeight}px`;

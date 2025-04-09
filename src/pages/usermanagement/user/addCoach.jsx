@@ -131,11 +131,10 @@ const AddCoach = ({ handleSelectTrainer }) => {
       sticky: "right",
       Cell: (row) => {
         return (
-          <div className="flex space-x-2 items-center">
-            <div className="flex space-x-2">
-              {actions.map((item, i) => (
-                <div
-                  className={`
+          <div className="flex flex-row space-x-2 justify-center items-center">
+            {actions.map((item, i) => (
+              <div
+                className={`
                   
                     ${
                       item.name === "pilih"
@@ -144,16 +143,15 @@ const AddCoach = ({ handleSelectTrainer }) => {
                     }
                      w-full border-b border-b-gray-500 border-opacity-10 px-4 py-2 text-sm  last:mb-0 cursor-pointer 
                      first:rounded-t last:rounded-b flex  space-x-2 items-center rtl:space-x-reverse `}
-                  onClick={(e) => handlePilih(row.row.original)}
-                  key={i}
-                >
-                  <span className="text-base">
-                    <Icon icon={item.icon} />
-                  </span>
-                  <span>{item.name}</span>
-                </div>
-              ))}
-            </div>
+                onClick={(e) => handlePilih(row.row.original)}
+                key={i}
+              >
+                <span className="text-base">
+                  <Icon icon={item.icon} />
+                </span>
+                <span>{item.name}</span>
+              </div>
+            ))}
           </div>
         );
       },
