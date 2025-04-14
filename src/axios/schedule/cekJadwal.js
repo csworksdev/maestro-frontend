@@ -29,10 +29,15 @@ export const CJGetEmptySchedule = async (id) => {
   }
 };
 
-export const CJGetBranchDay = async (branch_id, day) => {
+export const CJGetBranchDay = async (selectedBranch, poolName, dayName) => {
   try {
     let response = await axiosConfig.get(
-      "/api/cekjadwal/getschedule/?branch=" + branch_id + "&day=" + day
+      "/api/cekjadwal/getschedule/?branch=" +
+        selectedBranch +
+        "&pool=" +
+        poolName +
+        "&day=" +
+        dayName
     );
     return response;
   } catch (error) {

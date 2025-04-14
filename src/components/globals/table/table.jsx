@@ -70,7 +70,7 @@ const Table = memo(
               fixedRow.style.height = `${scrollableHeight}px`;
             }
             if (scrollableRow.style.height !== `${scrollableHeight}px`) {
-              scrollableRow.style.height = `${scrollableHeight}px`;
+              scrollableRow.style.height = `${scrollableHeight - 4}px`;
             }
           }
         });

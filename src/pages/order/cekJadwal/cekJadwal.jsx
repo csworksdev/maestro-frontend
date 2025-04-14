@@ -1,6 +1,6 @@
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
-import { CJGetBranchDay } from "@/axios/schedule/cekJadwal";
+import { CJGetBranchDay, CJGetPool } from "@/axios/schedule/cekJadwal";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -8,103 +8,9 @@ import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
+import { forEach, sum } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncSelect from "react-select/async";
-
-const mockData = [
-  {
-    trainer_id: "1",
-    fullname: "coach 1",
-    gender: "L",
-    kolam: [
-      "048d240a-a6b0-41f5-b31a-c683a683b748",
-      "e12a8ae7-0be9-44a6-be37-447dcaef5e0d",
-    ],
-    datahari: [
-      {
-        hari: "Senin",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-          {
-            jam: "07.00",
-            is_free: true,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-          {
-            jam: "08.00",
-            is_free: false,
-            order_id: "123",
-            student: ["Chandra", "Setia"],
-            product: "bandung28",
-          },
-          {
-            jam: "09.00",
-            is_free: false,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-          {
-            jam: "11.00",
-            is_free: false,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    trainer_id: "2",
-    fullname: "coach 2",
-    kolam: ["048d240a-a6b0-41f5-b31a-c683a683b748"],
-    gender: "P",
-    datahari: [
-      {
-        hari: "Senin",
-        data: [
-          {
-            jam: "06.00",
-            is_free: true,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-          {
-            jam: "07.00",
-            is_free: true,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-          {
-            jam: "08.00",
-            is_free: false,
-            order_id: "123",
-            student: ["chandra"],
-            product: "bandung18",
-          },
-          {
-            jam: "09.00",
-            is_free: false,
-            order_id: "",
-            student: [],
-            product: "",
-          },
-        ],
-      },
-    ],
-  },
-];
 
 const columnHeader = [
   "Pelatih",
@@ -169,18 +75,16 @@ const iconProduct = (product) => {
 
 const CekJadwal = () => {
   const daysOfWeek = [
-    "Senin",
-    "Selasa",
-    "Rabu",
-    "Kamis",
-    "Jumat",
-    "Sabtu",
-    "Minggu",
+    { name: "Senin", data: [], total: 0 },
+    { name: "Selasa", data: [], total: 0 },
+    { name: "Rabu", data: [], total: 0 },
+    { name: "Kamis", data: [], total: 0 },
+    { name: "Jumat", data: [], total: 0 },
+    { name: "Sabtu", data: [], total: 0 },
+    { name: "Minggu", data: [], total: 0 },
   ];
 
-  const [tabHari, setTabHari] = useState(
-    daysOfWeek.map((hari) => ({ hari, data: [] }))
-  );
+  const [tabHari, setTabHari] = useState(daysOfWeek);
 
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);
@@ -192,57 +96,6 @@ const CekJadwal = () => {
   const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
   const [jadwal, setJadwal] = useState([]);
-
-  const hitungSiswaPerKolam = (params) => {
-    console.log(params);
-    if (jadwal.length === 0 || poolOption.length === 0) return;
-
-    // Step 1: Create a Set of valid pool values from poolOption
-    const validPools = new Set(params.map((pool) => pool.label));
-
-    // Step 2: Count students for only valid pools
-    const poolCounts = jadwal.reduce((acc, trainer) => {
-      trainer.datahari.forEach((hariData) => {
-        hariData.data.forEach((schedule) => {
-          const pool = schedule.pool_name;
-          if (!pool || !validPools.has(pool)) return; // skip if invalid pool
-
-          const studentCount = schedule.student?.length || 0;
-          acc[pool] = (acc[pool] || 0) + studentCount;
-        });
-      });
-      return acc;
-    }, {});
-    console.log(poolCounts);
-    setJumlahSiswaPerKolam(poolCounts);
-  };
-
-  const hitungSiswaPerHari = () => {
-    const poolDayCounts = {};
-    if (jadwal.length > 0) {
-      jadwal.forEach((trainer) => {
-        trainer.datahari.forEach((hariData) => {
-          const day = hariData.hari;
-
-          hariData.data.forEach((schedule) => {
-            const pool = schedule.pool_name;
-            if (!pool) return; // Skip if no pool
-
-            const studentCount = schedule.student?.length || 0;
-
-            if (!poolDayCounts[pool]) {
-              poolDayCounts[pool] = {};
-            }
-            if (!poolDayCounts[pool][day]) {
-              poolDayCounts[pool][day] = 0;
-            }
-            poolDayCounts[pool][day] += studentCount;
-          });
-        });
-      });
-    }
-    setJumlahSiswaPerhari(poolDayCounts);
-  };
 
   useEffect(() => {
     const storedIndex = localStorage.getItem("ScheduleSelected");
@@ -280,17 +133,20 @@ const CekJadwal = () => {
         page_size: 200,
         is_active: true,
       };
-      const kolamResponse = await getKolamByBranch(branch_id, params);
+      const kolamResponse = await CJGetPool(branch_id);
 
-      const kolamOption = kolamResponse.data.results
+      const kolamOption = kolamResponse.data
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((item) => ({
           value: item.pool_id,
           label: item.name,
+          slot: 0,
+          filled: item.total,
+          data: item.days,
         }));
 
       setPoolOption(kolamOption);
-      // hitungSiswaPerKolam(kolamOption);
+      setSelectedPool(0);
     } catch (error) {
       console.error(error);
     } finally {
@@ -300,22 +156,22 @@ const CekJadwal = () => {
 
   const fillBaseJadwalWithData = (baseJadwal, fillData) => {
     const updatedDatahari = baseJadwal.datahari.map((day) => {
-      const dayFill = fillData.datahari?.find((d) => d.hari === day.hari);
-      if (!dayFill) return day;
+      const fillDay = fillData.datahari?.find((d) => d.hari === day.hari);
+      if (!fillDay) return day;
 
       const updatedData = day.data.map((slot) => {
-        const fillSlot = dayFill.data.find((f) => f.jam === slot.jam);
-        if (fillSlot) {
-          return {
-            ...slot,
-            is_free: fillSlot.is_free,
-            order_id: fillSlot.order_id || slot.order_id,
-            student: fillSlot.student || slot.student,
-            product: fillSlot.product || slot.product,
-            pool_name: fillSlot.pool_name || slot.pool_name,
-          };
-        }
-        return slot;
+        const fillSlot = fillDay.data.find((f) => f.jam === slot.jam);
+
+        return fillSlot
+          ? {
+              ...slot,
+              is_free: fillSlot.is_free,
+              order_id: fillSlot.order_id ?? slot.order_id,
+              student: fillSlot.student ?? slot.student,
+              product: fillSlot.product ?? slot.product,
+              pool_name: fillSlot.pool_name ?? slot.pool_name,
+            }
+          : slot;
       });
 
       return {
@@ -326,20 +182,25 @@ const CekJadwal = () => {
 
     return {
       ...baseJadwal,
-      trainer_id: fillData.trainer_id || baseJadwal.trainer_id,
-      fullname: fillData.fullname || baseJadwal.fullname,
-      gender: fillData.gender || baseJadwal.gender,
-      kolam: fillData.kolam,
+      trainer_id: fillData.trainer_id ?? baseJadwal.trainer_id,
+      fullname: fillData.fullname ?? baseJadwal.fullname,
+      gender: fillData.gender ?? baseJadwal.gender,
+      kolam: fillData.kolam ?? baseJadwal.kolam,
       datahari: updatedDatahari,
     };
   };
 
-  const loadSchedule = async (branch_id, day) => {
+  const loadSchedule = async (selectedBranch, poolName, dayName) => {
     try {
-      const scheduleRes = await CJGetBranchDay(branch_id, daysOfWeek[day]);
+      const scheduleRes = await CJGetBranchDay(
+        selectedBranch,
+        poolName,
+        dayName
+      );
       const data = scheduleRes.data.map((element) =>
         fillBaseJadwalWithData({ ...BaseJadwal }, element)
       );
+
       setJadwal(data);
     } catch (error) {
       console.error(error);
@@ -348,173 +209,145 @@ const CekJadwal = () => {
     }
   };
 
-  useEffect(() => {
-    try {
-      if (
-        selectedBranch != null &&
-        selectedBranch !== "" &&
-        selectedIndex != null
-      ) {
-        loadSchedule(selectedBranch, selectedIndex);
-      } else {
-        console.error(
-          "Invalid input: selectedBranch or selectedIndex is missing or empty."
-        );
-      }
-    } catch (error) {
-      console.error("An error occurred while loading the schedule:", error);
-    }
-  }, [selectedBranch, selectedIndex]);
-
   const processedMockData = useMemo(() => {
-    return jadwal.map((mock) => ({
-      ...mock,
-      activeDay:
-        mock.datahari?.find((day) => day.hari === daysOfWeek[selectedIndex])
-          ?.data || [],
-    }));
+    return jadwal;
   }, [selectedIndex, jadwal]);
 
   useEffect(() => {
     loadBranch();
   }, []);
 
-  const handlePoolChange = (e) => {
+  const handleBranchChange = (e) => {
     setSelectedBranch(e.value);
     loadPool(e.value);
   };
 
+  const handlePoolChange = (index) => {
+    setSelectedPool(index);
+
+    const updatedTabHari = tabHari.map((item) => {
+      const newData = poolOption[index].data[item.name];
+      return {
+        ...item,
+        data: newData,
+        total: newData.total,
+      };
+    });
+
+    setTabHari(updatedTabHari);
+
+    try {
+      const poolName = poolOption[index].value;
+      const dayName = daysOfWeek[selectedIndex].name;
+
+      loadSchedule(selectedBranch, poolName, dayName);
+    } catch (error) {
+      console.error("An error occurred while loading the schedule:", error);
+    }
+  };
+
   const handleChangeTab = (index) => {
     setSelectedIndex(index);
+    try {
+      let poolName = poolOption[selectedPool].value;
+      let dayName = daysOfWeek[index].name;
+
+      // console.log(selectedBranch, poolName, dayName);
+      loadSchedule(selectedBranch, poolName, dayName);
+    } catch (error) {
+      console.error("An error occurred while loading the schedule:", error);
+    }
   };
 
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
 
-  const AdaJadwal = React.memo((timeSlot, i) => (
-    <div
-      key={i}
-      className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-full min-h-[80px] justify-start"
-    >
-      <Badge label={timeSlot.product} className="bg-primary-500 text-white" />
-      <div className="text-sm whitespace-pre-line">
-        {timeSlot.student.length === 1
-          ? timeSlot.student[0]
-          : timeSlot.student.map((name, idx) => <div key={idx}>{name}</div>)}
-      </div>
-    </div>
-  ));
-
-  const PelatihLibur = React.memo(() => (
-    <div className="flex justify-center items-center">
-      <Tooltip placement="top" arrow content={`Libur Pelatih`}>
-        <span>
-          <Icon
-            icon="heroicons-outline:calendar-days"
-            width="24"
-            color="red"
-            onClick={() => alert("test")}
-          />
-        </span>
-      </Tooltip>
-    </div>
-  ));
-
-  const PelatihKosong = React.memo(() => (
-    <div className="flex justify-center items-center">
-      <Tooltip placement="top" arrow content={`Buat Order`}>
-        <span>
-          <Icon
-            icon="heroicons-outline:plus"
-            width="24"
-            color="green"
-            onClick={() => alert("test")}
-          />
-        </span>
-      </Tooltip>
-    </div>
-  ));
-
-  const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
-    <div className="flex justify-center items-center">
-      <Tooltip
-        placement="top"
-        arrow
-        content={
-          <div className="whitespace-pre-line">
-            {`Sudah ada jadwal di \n ${poolName}`}
-          </div>
-        }
-      >
-        <span>
-          <Icon icon="heroicons-outline:hand-raised" width="24" color="black" />
-        </span>
-      </Tooltip>
-    </div>
-  ));
-
   const GridKolamDetail = React.memo(({ item, pool }) => {
+    const selectedDay = daysOfWeek[selectedIndex]?.name;
+
     return (
       <>
-        {item.activeDay?.map((timeSlot, i) =>
-          timeSlot.is_free ? (
-            <PelatihLibur key={i} />
-          ) : timeSlot.order_id !== "" ? (
-            timeSlot.pool_name === pool.label ? (
-              <div
-                key={i}
-                className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start"
-              >
-                <Badge
-                  label={checkProduct(timeSlot.product)}
-                  className="bg-primary-500 text-white text-center"
-                />
-                <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
-                  <Tooltip
-                    placement="top"
-                    arrow
-                    content={
-                      timeSlot.student.length === 1
-                        ? timeSlot.student[0]
-                        : timeSlot.student.join(", ")
-                    }
-                  >
-                    <span>{iconProduct(timeSlot.product)}</span>
-                  </Tooltip>
-                </div>
-              </div>
-            ) : (
-              <PelatihAdaJadwal poolName={timeSlot.pool_name} />
-            )
-          ) : (
-            <PelatihKosong key={i} />
-          )
-        )}
+        {item.datahari
+          .filter((x) => x.hari === selectedDay)
+          .flatMap((timeSlot, i) =>
+            timeSlot.data.map((slot, j) => {
+              const key = `${i}-${j}`;
+
+              if (slot.is_free) {
+                return <PelatihLibur key={key} />;
+              }
+
+              if (
+                slot.order_id !== "" &&
+                slot.pool_name &&
+                slot.pool_name !== ""
+              ) {
+                if (slot.pool_name === pool.label) {
+                  return (
+                    <div
+                      key={key}
+                      className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start"
+                    >
+                      <Badge
+                        label={checkProduct(slot.product)}
+                        className="bg-primary-500 text-white text-center"
+                      />
+                      <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
+                        <Tooltip
+                          placement="top"
+                          arrow
+                          content={
+                            slot.student?.length === 1
+                              ? slot.student[0]
+                              : slot.student?.join(", ")
+                          }
+                        >
+                          <span>{iconProduct(slot.product)}</span>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
+                  );
+                }
+              }
+
+              return <PelatihKosong key={key} />;
+            })
+          )}
       </>
     );
   });
 
-  const GridKolamHeader = React.memo(({ item }) => {
-    const filteredData = processedMockData.filter((mock) =>
-      mock.kolam.includes(item.value)
-    );
-
+  const GridKolamHeader = React.memo(({ item, trainers, day }) => {
     return (
       <div className="overflow-auto ">
         <div className="grid grid-cols-15 gap-2 w-full ">
-          <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-center justify-center sticky left-0 bg-white z-10">
+          <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky left-0 bg-white z-10">
             Pelatih
           </div>
-          {columnHeader.slice(1).map((header, i) => (
-            <div
-              key={i}
-              className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-center justify-center"
-            >
-              {header}
-            </div>
-          ))}
+          {columnHeader.slice(1).map((header, i) => {
+            var jumlahPerJam = item.data[day][header];
+            return (
+              <div
+                key={i}
+                className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center"
+              >
+                <>
+                  {header}
+                  {jumlahPerJam && (
+                    <>
+                      <br />({jumlahPerJam})
+                    </>
+                  )}
+                </>
+              </div>
+            );
+          })}
 
           {/* Trainer names and details */}
-          {filteredData.map((de) => (
+          {jadwal.map((de) => (
             <React.Fragment key={de.trainer_id}>
               <div
                 className={`p-2 min-h-[80px] flex items-center rounded-xl shadow sticky left-0 z-10 ${
@@ -534,57 +367,43 @@ const CekJadwal = () => {
     );
   });
 
-  const gridKolam = () => (
-    <div className="flex flex-col h-full">
-      {poolOption &&
-      poolOption.length > 0 &&
-      selectedPool !== null &&
-      poolOption[selectedPool] ? (
-        poolOption
-          .filter((x) => x.value === poolOption[selectedPool]?.value)
-          .map((item) => {
-            const jumlahPelatih = jadwal
-              ? jadwal.filter((trainer) => trainer.kolam.includes(item.value))
-                  .length
-              : 0;
+  const gridKolam = (hari) => {
+    if (jadwal && jadwal.length > 0 && poolOption && selectedPool !== null) {
+      const selectedPoolItem = poolOption[selectedPool];
+      // Uncomment and implement your filtering if needed
+      const filteredTrainers = jadwal.filter((trainer) =>
+        trainer.kolam.includes(selectedPoolItem.value)
+      );
 
-            const jumlahSiswa = jadwal
-              ? jadwal
-                  .filter((trainer) => trainer.kolam === item.value)
-                  .flatMap((trainer) => trainer.datahari || [])
-                  .flatMap((dh) => dh.data || [])
-                  .reduce(
-                    (total, sched) =>
-                      total + (sched.student ? sched.student.length : 0),
-                    0
-                  )
-              : 0;
-
-            return (
-              <Card
-                key={item.value}
-                subtitle={item.label}
-                headerslot={
-                  <div className="flex flex-col gap-1 text-sm">
-                    <div>Jumlah Pelatih: {jumlahPelatih}</div>
-                    {/* <div>Jumlah Siswa: {jumlahSiswa}</div> */}
-                  </div>
-                }
-              >
-                {/* <GridKolamHeader item={item} /> */}
-                {/* <div className="h-[calc(100vh-545px)] overflow-y-auto min-h-0"> */}
-                <GridKolamHeader item={item} />
-                {/* </div> */}
-              </Card>
-            );
-          })
-      ) : (
-        <div className="text-center text-sm text-gray-400">
-          No pool selected or data not available.
+      return (
+        <div className="flex flex-col h-full">
+          <Card
+            key={selectedPoolItem.value}
+            subtitle={selectedPoolItem.label}
+            headerslot={
+              <div className="flex flex-col gap-1 text-sm">
+                <div>Jumlah Pelatih: {jadwal.length}</div>
+              </div>
+            }
+          >
+            <GridKolamHeader
+              item={selectedPoolItem}
+              trainers={filteredTrainers}
+              day={hari}
+            />
+          </Card>
         </div>
-      )}
-    </div>
-  );
+      );
+    } else {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="text-center text-sm text-gray-400">
+            No pool selected or data not available.
+          </div>
+        </div>
+      );
+    }
+  };
 
   return (
     <>
@@ -599,12 +418,12 @@ const CekJadwal = () => {
             placeholder="Pilih Cabang"
             defaultOptions={memoizedBranchOptions}
             loadOptions={branchOption}
-            onChange={handlePoolChange}
+            onChange={handleBranchChange}
             className="grow z-20"
           />
         </div>
       </div>
-      <Tab.Group selectedIndex={selectedPool} onChange={setSelectedPool}>
+      <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
         <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 py-3">
           <>
             {poolOption.map((item, i) => (
@@ -618,7 +437,7 @@ const CekJadwal = () => {
                     : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
                 }`}
                   >
-                    {`${item.label}`}
+                    {`${item.label} (${item.filled})`}
                   </button>
                 )}
               </Tab>
@@ -642,16 +461,18 @@ const CekJadwal = () => {
                     : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
                 }`}
                     >
-                      {`${item.hari}`}
+                      {`${item.name} (${item.total})`}
                     </button>
                   )}
                 </Tab>
               ))}
             </Tab.List>
             <Tab.Panels>
-              {tabHari.map((item) => (
-                <Tab.Panel>{gridKolam()}</Tab.Panel>
-              ))}
+              {tabHari.map((item, index) => {
+                return (
+                  <Tab.Panel key={index}>{gridKolam(item.name)}</Tab.Panel>
+                );
+              })}
             </Tab.Panels>
           </Tab.Group>
         </Tab.Panels>
@@ -661,3 +482,65 @@ const CekJadwal = () => {
 };
 
 export default CekJadwal;
+
+const AdaJadwal = React.memo((timeSlot, i) => (
+  <div
+    key={i}
+    className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-full min-h-[80px] justify-start"
+  >
+    <Badge label={timeSlot.product} className="bg-primary-500 text-white" />
+    <div className="text-sm whitespace-pre-line">
+      {timeSlot.student.length === 1
+        ? timeSlot.student[0]
+        : timeSlot.student.map((name, idx) => <div key={idx}>{name}</div>)}
+    </div>
+  </div>
+));
+
+const PelatihLibur = React.memo(() => (
+  <div className="flex justify-center items-center">
+    <Tooltip placement="top" arrow content={`Libur Pelatih`}>
+      <span>
+        <Icon
+          icon="heroicons-outline:calendar-days"
+          width="24"
+          color="red"
+          onClick={() => alert("test")}
+        />
+      </span>
+    </Tooltip>
+  </div>
+));
+
+const PelatihKosong = React.memo(() => (
+  <div className="flex justify-center items-center">
+    <Tooltip placement="top" arrow content={`Buat Order`}>
+      <span>
+        <Icon
+          icon="heroicons-outline:plus"
+          width="24"
+          color="green"
+          onClick={() => alert("test")}
+        />
+      </span>
+    </Tooltip>
+  </div>
+));
+
+const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
+  <div className="flex justify-center items-center">
+    <Tooltip
+      placement="top"
+      arrow
+      content={
+        <div className="whitespace-pre-line">
+          {`Sudah ada jadwal di \n ${poolName}`}
+        </div>
+      }
+    >
+      <span>
+        <Icon icon="heroicons-outline:hand-raised" width="24" color="black" />
+      </span>
+    </Tooltip>
+  </div>
+));
