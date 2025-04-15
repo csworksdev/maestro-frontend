@@ -144,12 +144,10 @@ const Produk = () => {
       sticky: "right",
       Cell: (row) => {
         return (
-          <div className="flex space-x-2 items-center">
-            <div className="flex space-x-2">
-              {actions.map((action, index) => (
-                <TableAction action={action} index={index} row={row} />
-              ))}
-            </div>
+          <div className="flex space-x-2 justify-center items-center">
+            {actions.map((action, index) => (
+              <TableAction action={action} index={index} row={row} />
+            ))}
           </div>
         );
       },

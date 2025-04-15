@@ -19,7 +19,7 @@ const TableAction = ({ action, index, row }) => {
           key={index}
         >
           <span className="text-base">
-            <Icon icon={action.icon} />
+            <Icon icon={action.icon} width={18} />
           </span>
         </div>
       </Tooltip>
