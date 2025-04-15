@@ -147,6 +147,7 @@ const CekJadwal = () => {
 
       setPoolOption(kolamOption);
       setSelectedPool(0);
+      selectedIndex(0);
     } catch (error) {
       console.error(error);
     } finally {
@@ -313,7 +314,15 @@ const CekJadwal = () => {
                 }
               }
 
-              return <PelatihKosong key={key} />;
+              return (
+                <PelatihKosong
+                  key={key}
+                  pool={poolOption[selectedPool].value}
+                  trainer={item.trainer_id}
+                  hari={timeSlot.hari}
+                  jam={slot.jam}
+                />
+              );
             })
           )}
       </>
@@ -512,20 +521,22 @@ const PelatihLibur = React.memo(() => (
   </div>
 ));
 
-const PelatihKosong = React.memo(() => (
-  <div className="flex justify-center items-center">
-    <Tooltip placement="top" arrow content={`Buat Order`}>
-      <span>
-        <Icon
-          icon="heroicons-outline:plus"
-          width="24"
-          color="green"
-          onClick={() => alert("test")}
-        />
-      </span>
-    </Tooltip>
-  </div>
-));
+const PelatihKosong = React.memo((pool, jadwal, trainer, hari, jam) => {
+  return (
+    <div className="flex justify-center items-center">
+      <Tooltip placement="top" arrow content={`Buat Order`}>
+        <span>
+          <Icon
+            icon="heroicons-outline:plus"
+            width="24"
+            color="green"
+            onClick={() => console.table(pool, jadwal, trainer, hari, jam)}
+          />
+        </span>
+      </Tooltip>
+    </div>
+  );
+});
 
 const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
   <div className="flex justify-center items-center">
