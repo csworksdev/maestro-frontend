@@ -62,8 +62,8 @@ const Edit = () => {
               />
             </Tab.Panel>
             <Tab.Panel>
-              {/* <Jadwal data={data} /> */}
-              <JadwalBaru data={selectedData} />
+              <Jadwal data={data} />
+              {/* <JadwalBaru data={selectedData} /> */}
             </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>

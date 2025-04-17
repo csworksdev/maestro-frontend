@@ -1,3 +1,4 @@
+import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
 import { CJGetBranchDay, CJGetPool } from "@/axios/schedule/cekJadwal";
@@ -11,6 +12,10 @@ import { Icon } from "@iconify/react";
 import { forEach, sum } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncSelect from "react-select/async";
+import AddOrder from "./addJadwal";
+import Modal from "@/components/ui/Modal";
+import { DateTime } from "luxon";
+import { products } from "@/constant/data";
 
 const columnHeader = [
   "Pelatih",
@@ -85,7 +90,6 @@ const CekJadwal = () => {
   ];
 
   const [tabHari, setTabHari] = useState(daysOfWeek);
-
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);
   const [selectedPool, setSelectedPool] = useState();
@@ -96,6 +100,28 @@ const CekJadwal = () => {
   const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
   const [jadwal, setJadwal] = useState([]);
+  const [productList, setProductList] = useState([]);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [inputValue, setInputValue] = useState({
+    order_date: DateTime.now().toFormat("yyyy-MM-dd"),
+    start_date: DateTime.now().toFormat("yyyy-MM-dd"),
+    product: "",
+    promo: "",
+    is_finish: false,
+    is_paid: false,
+    trainer: "",
+    pool: "",
+    paket: "",
+    trainer_percentage: 60,
+    company_percentage: 40,
+    branch: "",
+    notes: "",
+    day: "",
+    time: "",
+    price: 0,
+    grand_total: 0,
+    students: {},
+  });
 
   useEffect(() => {
     const storedIndex = localStorage.getItem("ScheduleSelected");
@@ -155,6 +181,18 @@ const CekJadwal = () => {
     }
   };
 
+  const loadProduct = async () => {
+    try {
+      const res = await getProdukPool(poolOption[selectedPool].value);
+
+      setProductList(res.data.results);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fillBaseJadwalWithData = (baseJadwal, fillData) => {
     const updatedDatahari = baseJadwal.datahari.map((day) => {
       const fillDay = fillData.datahari?.find((d) => d.hari === day.hari);
@@ -189,6 +227,7 @@ const CekJadwal = () => {
       kolam: fillData.kolam ?? baseJadwal.kolam,
       datahari: updatedDatahari,
       total_order: fillData.total_order ?? baseJadwal.total_order,
+      percent: fillData.percent ?? baseJadwal.percent,
     };
   };
 
@@ -210,10 +249,6 @@ const CekJadwal = () => {
       setLoading(false);
     }
   };
-
-  const processedMockData = useMemo(() => {
-    return jadwal;
-  }, [selectedIndex, jadwal]);
 
   useEffect(() => {
     loadBranch();
@@ -243,6 +278,7 @@ const CekJadwal = () => {
       const dayName = daysOfWeek[selectedIndex].name;
 
       loadSchedule(selectedBranch, poolName, dayName);
+      loadProduct();
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
     }
@@ -312,8 +348,8 @@ const CekJadwal = () => {
                   return (
                     <PelatihKosong
                       key={key}
-                      pool={poolOption[selectedPool].value}
-                      trainer={item.trainer_id}
+                      pool={poolOption[selectedPool]}
+                      trainer={item}
                       hari={timeSlot.hari}
                       jam={slot.jam}
                     />
@@ -416,6 +452,37 @@ const CekJadwal = () => {
     }
   };
 
+  const handleModal = ({ pool, jadwal, trainer, hari, jam }) => {
+    setDetailModalVisible(true);
+    setInputValue((prevParams) => ({
+      ...prevParams,
+      pool: pool,
+      trainer: trainer,
+      day: hari,
+      time: jam,
+      trainer_percentage: trainer.percent,
+      company_percentage: 100 - trainer.percent,
+      branch: selectedBranch,
+    }));
+  };
+
+  const PelatihKosong = React.memo((pool, jadwal, trainer, hari, jam) => {
+    return (
+      <div className="flex justify-center items-center">
+        <Tooltip placement="top" arrow content={`Buat Order`}>
+          <span>
+            <Icon
+              icon="heroicons-outline:plus"
+              width="24"
+              color="green"
+              onClick={() => handleModal(pool, jadwal, trainer, hari, jam)} //console.table(pool, jadwal, trainer, hari, jam)}
+            />
+          </span>
+        </Tooltip>
+      </div>
+    );
+  });
+
   return (
     <>
       <div>
@@ -481,13 +548,27 @@ const CekJadwal = () => {
             <Tab.Panels>
               {tabHari.map((item, index) => {
                 return (
-                  <Tab.Panel key={index}>{gridKolam(item.name)}</Tab.Panel>
+                  <Tab.Panel key={index}>
+                    <div className="max-h-[600px] overflow-y-auto">
+                      {gridKolam(item.name)}
+                    </div>
+                  </Tab.Panel>
                 );
               })}
             </Tab.Panels>
           </Tab.Group>
         </Tab.Panels>
       </Tab.Group>
+      {detailModalVisible && (
+        <Modal
+          title="Tambah Order"
+          activeModal={detailModalVisible} // Tie to modalVisible state
+          onClose={() => setDetailModalVisible(false)} // Close modal when needed
+          className="max-w-5xl"
+        >
+          <AddOrder params={inputValue} product={productList} />
+        </Modal>
+      )}
     </>
   );
 };
@@ -522,23 +603,6 @@ const PelatihLibur = React.memo(() => (
     </Tooltip>
   </div>
 ));
-
-const PelatihKosong = React.memo((pool, jadwal, trainer, hari, jam) => {
-  return (
-    <div className="flex justify-center items-center">
-      <Tooltip placement="top" arrow content={`Buat Order`}>
-        <span>
-          <Icon
-            icon="heroicons-outline:plus"
-            width="24"
-            color="green"
-            onClick={() => console.table(pool, jadwal, trainer, hari, jam)}
-          />
-        </span>
-      </Tooltip>
-    </div>
-  );
-});
 
 const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
   <div className="flex justify-center items-center">

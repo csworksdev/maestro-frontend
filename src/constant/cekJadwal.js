@@ -4,6 +4,7 @@ export const BaseJadwal = {
   gender: "",
   kolam: [],
   total_order: 0,
+  percent: 0,
   datahari: [
     {
       hari: "Senin",
