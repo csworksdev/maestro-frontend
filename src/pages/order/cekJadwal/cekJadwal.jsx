@@ -188,6 +188,7 @@ const CekJadwal = () => {
       gender: fillData.gender ?? baseJadwal.gender,
       kolam: fillData.kolam ?? baseJadwal.kolam,
       datahari: updatedDatahari,
+      total_order: fillData.total_order ?? baseJadwal.total_order,
     };
   };
 
@@ -275,54 +276,50 @@ const CekJadwal = () => {
 
               if (slot.is_free) {
                 return <PelatihLibur key={key} />;
-              }
-
-              if (
-                slot.order_id !== "" &&
-                slot.pool_name &&
-                slot.pool_name !== ""
-              ) {
-                if (slot.pool_name === pool.label) {
-                  return (
-                    <div
-                      key={key}
-                      className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start"
-                    >
-                      <Badge
-                        label={checkProduct(slot.product)}
-                        className="bg-primary-500 text-white text-center"
-                      />
-                      <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
-                        <Tooltip
-                          placement="top"
-                          arrow
-                          content={
-                            slot.student?.length === 1
-                              ? slot.student[0]
-                              : slot.student?.join(", ")
-                          }
-                        >
-                          <span>{iconProduct(slot.product)}</span>
-                        </Tooltip>
+              } else {
+                if (slot.order_id !== "") {
+                  if (slot.pool_name === pool.label) {
+                    return (
+                      <div
+                        key={key}
+                        className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start"
+                      >
+                        <Badge
+                          label={checkProduct(slot.product)}
+                          className="bg-primary-500 text-white text-center"
+                        />
+                        <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
+                          <Tooltip
+                            placement="top"
+                            arrow
+                            content={
+                              slot.student?.length === 1
+                                ? slot.student[0]
+                                : slot.student?.join(", ")
+                            }
+                          >
+                            <span>{iconProduct(slot.product)}</span>
+                          </Tooltip>
+                        </div>
                       </div>
-                    </div>
-                  );
+                    );
+                  } else {
+                    return (
+                      <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
+                    );
+                  }
                 } else {
                   return (
-                    <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
+                    <PelatihKosong
+                      key={key}
+                      pool={poolOption[selectedPool].value}
+                      trainer={item.trainer_id}
+                      hari={timeSlot.hari}
+                      jam={slot.jam}
+                    />
                   );
                 }
               }
-
-              return (
-                <PelatihKosong
-                  key={key}
-                  pool={poolOption[selectedPool].value}
-                  trainer={item.trainer_id}
-                  hari={timeSlot.hari}
-                  jam={slot.jam}
-                />
-              );
             })
           )}
       </>
@@ -359,12 +356,17 @@ const CekJadwal = () => {
           {jadwal.map((de) => (
             <React.Fragment key={de.trainer_id}>
               <div
-                className={`p-2 min-h-[80px] flex items-center rounded-xl shadow sticky left-0 z-10 ${
+                className={`p-1 min-h-[80px] flex flex-col rounded-xl shadow sticky left-0 z-10 align-middle justify-center gap-1 ${
                   de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
                 }`}
               >
                 <span className="text-[clamp(8px,0.7vw,14px)] p-1">
-                  {de.fullname}
+                  {de.fullname && (
+                    <>
+                      {de.fullname}
+                      <br />({de.total_order})
+                    </>
+                  )}
                 </span>
               </div>
 

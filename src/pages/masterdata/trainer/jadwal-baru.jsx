@@ -435,8 +435,14 @@ const JadwalBaru = ({ data }) => {
     try {
       updateDataList(jadwal);
 
-      const item = { ts_id: jadwal.ts_id, is_avail: jadwal.is_avail };
-      EditTrainerScheduleV2(data.trainer_id, item);
+      const item = {
+        ts_id: jadwal.ts_id,
+        is_avail: jadwal.is_avail,
+        day: jadwal.hari,
+        time: jadwal.jam,
+      };
+      if (!jadwal.ts_id) AddTrainerScheduleV2(data.trainer_id, item);
+      else EditTrainerScheduleV2(data.trainer_id, item);
     } catch (error) {
       console.error(error);
     }
