@@ -7,6 +7,7 @@ import {
   menuChief,
   menuSuperUser,
   menuTrainer,
+  menuOps,
 } from "./data";
 
 const Menu = (role = "") => {
@@ -21,7 +22,8 @@ const Menu = (role = "") => {
     case "Trainer":
       menuItems = [...menuTrainer];
       break;
-    case "Opd":
+    case "Ops":
+      menuItems = [...menuOps];
       break;
     case "Chief":
       menuItems = [...menuChief];
@@ -30,7 +32,6 @@ const Menu = (role = "") => {
       menuItems = [
         ...menuSuperUser,
         ...menuAdmin,
-        ...menuAdminNew,
         ...menuChief,
         ...menuFinance,
         ...menuTrainer,

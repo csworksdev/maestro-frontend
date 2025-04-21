@@ -170,6 +170,33 @@ export const menuAdminNew = [
   },
 ];
 
+export const menuOps = [
+  {
+    isHeadr: true,
+    title: "Admin",
+  },
+  {
+    title: "Admin",
+    icon: "heroicons-outline:server",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Cek Jadwal",
+        childlink: "cek-jadwal",
+      },
+      {
+        childtitle: "Pelatih",
+        childlink: "trainer",
+      },
+      {
+        childtitle: "Order",
+        childlink: "order",
+      },
+    ],
+  },
+];
+
 export const menuAdmin = [
   {
     isHeadr: true,
@@ -241,6 +268,10 @@ export const menuAdmin = [
       //   childtitle: "Waiting List",
       //   childlink: "order/waitinglist",
       // },
+      {
+        childtitle: "Broadcast",
+        childlink: "broadcast",
+      },
     ],
   },
   {
