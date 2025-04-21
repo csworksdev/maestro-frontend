@@ -15,7 +15,6 @@ import AsyncSelect from "react-select/async";
 import AddOrder from "./addJadwal";
 import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
-import { products } from "@/constant/data";
 
 const columnHeader = [
   "Pelatih",
@@ -62,6 +61,9 @@ const checkProduct = (product) => {
 };
 
 const iconProduct = (product) => {
+  if (product === "p")
+    return <Icon icon="heroicons-outline:clipboard-document-list" width="24" />;
+
   let jumlahSiswa = checkProduct(product);
 
   switch (jumlahSiswa) {
@@ -209,6 +211,7 @@ const CekJadwal = () => {
               student: fillSlot.student ?? slot.student,
               product: fillSlot.product ?? slot.product,
               pool_name: fillSlot.pool_name ?? slot.pool_name,
+              p: fillSlot.p ?? slot.p,
             }
           : slot;
       });
@@ -324,18 +327,42 @@ const CekJadwal = () => {
                           label={checkProduct(slot.product)}
                           className="bg-primary-500 text-white text-center"
                         />
-                        <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
-                          <Tooltip
-                            placement="top"
-                            arrow
-                            content={
-                              slot.student?.length === 1
-                                ? slot.student[0]
-                                : slot.student?.join(", ")
-                            }
-                          >
-                            <span>{iconProduct(slot.product)}</span>
-                          </Tooltip>
+                        <div className="flex flex-row justify-between">
+                          <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
+                            <Tooltip
+                              placement="top"
+                              arrow
+                              content={
+                                slot.student?.length === 1
+                                  ? slot.student[0]
+                                  : slot.student?.join(", ")
+                              }
+                            >
+                              <span>{iconProduct(slot.product)}</span>
+                            </Tooltip>
+                          </div>
+                          <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
+                            <Tooltip
+                              placement="top"
+                              arrow
+                              content={
+                                slot.p && slot.p.length > 0 ? (
+                                  <div>
+                                    {slot.p.map((item, idx) => (
+                                      <div key={idx}>
+                                        <strong>P{item.meet}</strong>:{" "}
+                                        {item.tgl || "-"}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  "Tidak ada pertemuan"
+                                )
+                              }
+                            >
+                              <span>{iconProduct("p")}</span>
+                            </Tooltip>
+                          </div>
                         </div>
                       </div>
                     );
