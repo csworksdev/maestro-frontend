@@ -70,6 +70,7 @@ const TrainerCourseReminder = lazy(() => import("./pages/trainer/reminder"));
 const CourseReminder = lazy(() => import("./pages/pelatihan/reminder"));
 const CourseSchedule = lazy(() => import("./pages/trainer/schedule"));
 const CekJadwal = lazy(() => import("./pages/order/cekJadwal/cekJadwal"));
+const Broadcast = lazy(() => import("./pages/broadcast/index"));
 
 // Dashboard
 const DashboardRevenue = lazy(() => import("./pages/newDashboard/revenue"));
@@ -180,6 +181,9 @@ const App = () => {
                 </Route>
                 <Route path="cek-jadwal">
                   <Route index element={<CekJadwal />} />
+                </Route>
+                <Route path="broadcast">
+                  <Route index element={<Broadcast />} />
                 </Route>
                 <Route path="finishedOrder">
                   <Route index element={<OrderFinished />} />

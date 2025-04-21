@@ -162,6 +162,10 @@ export const menuAdminNew = [
         childtitle: "Finished",
         childlink: "finishedOrder",
       },
+      {
+        childtitle: "Broadcast",
+        childlink: "broadcast",
+      },
     ],
   },
 ];

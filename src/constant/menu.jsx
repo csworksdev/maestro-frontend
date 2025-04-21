@@ -30,6 +30,7 @@ const Menu = (role = "") => {
       menuItems = [
         ...menuSuperUser,
         ...menuAdmin,
+        ...menuAdminNew,
         ...menuChief,
         ...menuFinance,
         ...menuTrainer,

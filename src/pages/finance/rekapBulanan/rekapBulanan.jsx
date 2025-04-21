@@ -852,28 +852,6 @@ const RekapBulanan = () => {
       const blob = new Blob([response], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-
-      // Use file-saver to save the file locally
-      // saveAs(blob, `Rekap Bulan ${selectedPeriode[0].name}.xlsx`);
-      // var filename = "Rekap Bulan " + selectedPeriode[0].name + ".xlsx";
-      // var filename = "rekap bulanan.xlsx";
-      // const fileHandle = await window.showSaveFilePicker({
-      //   suggestedName: filename,
-      //   types: [
-      //     {
-      //       description: "Excel File",
-      //       accept: {
-      //         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-      //           [".xlsx"],
-      //       },
-      //     },
-      //   ],
-      // });
-
-      // // Write the file to the selected location
-      // const writable = await fileHandle.createWritable();
-      // await writable.write(blob);
-      // await writable.close();
     } catch (error) {
       console.error("Error downloading the file:", error);
     } finally {
