@@ -1,34 +1,31 @@
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { logOut } from "@/store/api/auth/authSlice";
-import Swal from "sweetalert2";
 
-// const { bearer } =
-//   useSelector((state) => state.auth.access) || sessionStorage.getItem("access");
+// Use a single env variable – set per environment
+const baseURL = import.meta.env.VITE_API_URL;
 
 export const axiosConfig = axios.create({
-  // baseURL: import.meta.env.VITE_API_URL,
-  baseURL: "https://api.maestroswim.com/",
-  // baseURL: "http://127.0.0.1:8000/",
+  baseURL,
 });
 
 export const setupInterceptors = () => {
   const dispatch = useDispatch();
-  const { user_name } = useSelector((state) => state.auth.data);
+  const { data, access } = useSelector((state) => state.auth);
+  const { user_name } = data || {};
+  const bearer = access || sessionStorage.getItem("access");
+
   axiosConfig.interceptors.request.use(
     (config) => {
-      // If username is 'testuser', dispatch logout
       if (user_name === "testuser") {
-        dispatch(logOut()); // Log out the user
+        dispatch(logOut());
         return Promise.reject("Logged out due to restricted username");
       }
 
-      // if (!config.url.includes("login")) {
-      //   // const { bearer } =
-      //   //   useSelector((state) => state.auth.access) ||
-      //   //   sessionStorage.getItem("access");
+      // if (!config.url.includes("login") && bearer) {
       //   config.headers = {
-      //     Authorization: bearer,
+      //     ...config.headers,
+      //     Authorization: `Bearer ${bearer}`,
       //   };
       // }
 

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "host": "vite --host",
-    "build": "vite build",
+    "build": "vite build --mode production",
     "preview": "vite preview",
     "start-admin": "vite --host admin.localhost --port 3001",
     "start-coach": "vite --host coach.localhost --port 3002"
