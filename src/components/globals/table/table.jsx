@@ -145,6 +145,7 @@ const Table = memo(
                     >
                       {row.cells.slice(0, -1).map((cell) => (
                         <td
+                          style={{ textTransform: "none" }}
                           {...cell.getCellProps()}
                           className="table-td text-wrap p-3 align-middle"
                         >
