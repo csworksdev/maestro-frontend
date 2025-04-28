@@ -190,13 +190,13 @@ const Produk = () => {
         return <span>{row?.cell?.value}</span>;
       },
     },
-    {
-      Header: "Kolam",
-      accessor: "pool_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
+    // {
+    //   Header: "Kolam",
+    //   accessor: "pool_name",
+    //   Cell: (row) => {
+    //     return <span>{row?.cell?.value}</span>;
+    //   },
+    // },
     {
       Header: "Paket",
       accessor: "package_name",
