@@ -9,10 +9,11 @@ export const getBroadcast = async (params) => {
   }
 };
 
-export const BroadcastExport = async () => {
+export const BroadcastExport = async (params) => {
   try {
     const response = await axiosConfig.get("/api/broadcast/export/", {
       responseType: "blob", // Important!
+      params,
     });
 
     const url = window.URL.createObjectURL(
