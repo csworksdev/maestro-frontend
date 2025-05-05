@@ -288,17 +288,22 @@ const RekapBulanan = () => {
         <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
       ),
     },
+    // {
+    //   Header: "Tanggal Kadaluwarsa",
+    //   accessor: "tgl_habis",
+    //   // Cell: ({ cell }) => <span>{cell?.value}</span>,
+    //   Cell: ({ cell }) => (
+    //     <span>
+    //       {cell?.value
+    //         ? DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")
+    //         : ""}
+    //     </span>
+    //   ),
+    // },
     {
-      Header: "Tanggal Kadaluwarsa",
-      accessor: "tgl_habis",
-      // Cell: ({ cell }) => <span>{cell?.value}</span>,
-      Cell: ({ cell }) => (
-        <span>
-          {cell?.value
-            ? DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")
-            : ""}
-        </span>
-      ),
+      Header: "Total Honor",
+      accessor: "total_honor_perpertemuan",
+      Cell: ({ cell }) => <span>{cell?.value.toLocaleString()}</span>,
     },
     {
       Header: "p1",
@@ -436,6 +441,7 @@ const RekapBulanan = () => {
         );
       },
     },
+
     {
       Header: "Action",
       accessor: "action",
@@ -836,8 +842,9 @@ const RekapBulanan = () => {
           }
         }
       });
+      // console.log(unpaidOrderId);
       // setUnpaidList(unpaidOrderId);
-      handlePayAll(unpaidOrderId);
+      handlePayAll(unpaidOrderId.sort());
       // alert(JSON.stringify(unpaidOrderId));
     } catch (error) {
       console.log(error);

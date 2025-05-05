@@ -14,7 +14,7 @@ const Menu = (role = "") => {
   let menuItems = [];
   switch (role) {
     case "Admin":
-      menuItems = [...menuAdminNew];
+      menuItems = [...menuAdminNew, ...menuFinance];
       break;
     case "Finance":
       menuItems = [...menuFinance];

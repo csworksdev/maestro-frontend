@@ -7,6 +7,9 @@ import AuthenticatedRoute from "./layout/AuthenticatedRoute";
 import PublicRoute from "./layout/PublicRoute";
 import { useSelector } from "react-redux";
 import RekapBulanan from "./pages/finance/rekapBulanan/rekapBulanan";
+import XenditTransaction from "./pages/xendit/transaction";
+import XenditInvoiceHistory from "./pages/xendit/invoice-history";
+import XenditBalance from "./pages/xendit/saldo";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -231,6 +234,17 @@ const App = () => {
                   <Route index element={<RekapBulanan />} />
                   <Route path="detailorderpelatih" element={<DetailOrder />} />
                 </Route>
+                //#region Xendit
+                <Route path="xendit">
+                  {/* <Route index element={<Produk />} /> */}
+                  <Route path="transaction" element={<XenditTransaction />} />
+                  <Route
+                    path="invoice-history"
+                    element={<XenditInvoiceHistory />}
+                  />
+                  <Route path="balance" element={<XenditBalance />} />
+                </Route>
+                //#endregion
                 <Route path="*" element={<ErrorPage />} />
               </Route>
             </>

@@ -31,7 +31,32 @@ export const menuSuperUser = [
   },
 ];
 
-export const menuFinance = [];
+export const menuFinance = [
+  {
+    isHeadr: true,
+    title: "Xendit",
+  },
+  {
+    title: "Xendit",
+    icon: "heroicons-outline:document-chart-bar",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Saldo",
+        childlink: "xendit/balance",
+      },
+      {
+        childtitle: "Transaksi",
+        childlink: "xendit/transaction",
+      },
+      {
+        childtitle: "Tautan Pembayaran",
+        childlink: "xendit/invoice-history",
+      },
+    ],
+  },
+];
 
 export const menuChief = [
   {
@@ -165,6 +190,22 @@ export const menuAdminNew = [
       {
         childtitle: "Broadcast",
         childlink: "broadcast",
+      },
+    ],
+  },
+  {
+    title: "Xendit",
+    icon: "heroicons-outline:document-chart-bar",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Transaksi",
+        childlink: "xendit/transaction",
+      },
+      {
+        childtitle: "Tautan Pembayaran",
+        childlink: "xendit/invoice-history",
       },
     ],
   },

@@ -51,6 +51,8 @@ const authSlice = createSlice({
       localStorage.removeItem("persist:layout");
       localStorage.removeItem("persist:root");
       localStorage.removeItem("sidebarCollapsed");
+      localStorage.removeItem("activeSubmenu");
+      localStorage.removeItem("activeMultiMenu");
     },
   },
 });

@@ -8,15 +8,25 @@ import useMobileMenu from "@/hooks/useMobileMenu";
 import Submenu from "./Submenu";
 
 const Navmenu = ({ menus }) => {
-  const [activeSubmenu, setActiveSubmenu] = useState(null);
-  const [activeMultiMenu, setMultiMenu] = useState(null);
+  const [activeSubmenu, setActiveSubmenu] = useState(() => {
+    const stored = localStorage.getItem("activeSubmenu");
+    return stored !== null ? parseInt(stored) : null;
+  });
+  const [activeMultiMenu, setMultiMenu] = useState(() => {
+    const stored = localStorage.getItem("activeMultiMenu");
+    return stored !== null ? parseInt(stored) : null;
+  });
 
   const toggleSubmenu = (i) => {
-    setActiveSubmenu((prev) => (prev === i ? null : i));
+    const newValue = activeSubmenu === i ? null : i;
+    setActiveSubmenu(newValue);
+    localStorage.setItem("activeSubmenu", newValue);
   };
 
   const toggleMultiMenu = (j) => {
-    setMultiMenu((prev) => (prev === j ? null : j));
+    const newValue = activeMultiMenu === j ? null : j;
+    setMultiMenu(newValue);
+    localStorage.setItem("activeMultiMenu", newValue);
   };
 
   const location = useLocation();
@@ -64,6 +74,9 @@ const Navmenu = ({ menus }) => {
     // if (mobileMenu) {
     //   setMobileMenu(false);
     // }
+
+    localStorage.setItem("activeSubmenu", submenuIndex);
+    localStorage.setItem("activeMultiMenu", multiMenuIndex);
   }, [location, menus, dispatch, mobileMenu, setMobileMenu]);
 
   return (
