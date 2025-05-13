@@ -43,7 +43,7 @@ const Checkbox = ({
           />
         )}
       </span>
-      <span className="text-slate-500 dark:text-slate-400 text-sm leading-6 capitalize">
+      <span className="text-slate-500 dark:text-slate-400 text-sm leading-6">
         {label}
       </span>
     </label>

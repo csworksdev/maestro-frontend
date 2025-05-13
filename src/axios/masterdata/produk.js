@@ -10,9 +10,9 @@ export const getProdukAll = async (data) => {
     console.error("Error fetching data:", error);
   }
 };
-export const getProdukPool = async (id) => {
+export const getProdukPool = async (id, data) => {
   try {
-    let response = await axiosConfig.get("/api/productpool/" + id + "/");
+    let response = await axiosConfig.get("/api/productpool/" + id + "/", data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

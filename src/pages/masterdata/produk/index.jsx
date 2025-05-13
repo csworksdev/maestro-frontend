@@ -99,7 +99,7 @@ const Produk = () => {
     loadBranch();
   }, []);
 
-  const fetchData = async (page = 1, size = 10, query = "") => {
+  const fetchData = async (page = 1, size = 100, query = "") => {
     const pool = poolOption?.[selectedPool];
     if (!pool) return;
 
@@ -212,8 +212,16 @@ const Produk = () => {
       },
     },
     {
-      Header: "Harga",
+      Header: "Harga Dasar",
       accessor: "price",
+      Cell: (row) => {
+        let number = parseFloat(row?.cell?.value);
+        return <span>{number.toLocaleString("IDR")}</span>;
+      },
+    },
+    {
+      Header: "Harga Jual",
+      accessor: "sellprice",
       Cell: (row) => {
         let number = parseFloat(row?.cell?.value);
         return <span>{number.toLocaleString("IDR")}</span>;

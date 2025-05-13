@@ -34,6 +34,10 @@ const Edit = () => {
         .number()
         .typeError("Harga must be a number")
         .required("Harga is required"),
+      sellprice: yup
+        .number()
+        .typeError("Harga must be a number")
+        .required("Harga is required"),
     })
     .required();
 
@@ -185,6 +189,15 @@ const Edit = () => {
             register={register}
             error={errors.price}
             defaultValue={isUpdate ? data.price : ""}
+          />
+          <Textinput
+            name="sellprice"
+            label="Harga Jual"
+            type="number"
+            placeholder="Masukan harga"
+            register={register}
+            error={errors.sellprice}
+            defaultValue={isUpdate ? data.sellprice : ""}
           />
           <div className="text-right space-x-3">
             <button

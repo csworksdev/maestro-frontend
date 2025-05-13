@@ -12,7 +12,7 @@ import { Icon } from "@iconify/react";
 import { forEach, sum } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncSelect from "react-select/async";
-import AddOrder from "./addJadwal";
+import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
 
@@ -175,7 +175,7 @@ const CekJadwal = () => {
 
       setPoolOption(kolamOption);
       setSelectedPool(0);
-      selectedIndex(0);
+      setSelectedIndex(0);
     } catch (error) {
       console.error(error);
     } finally {
@@ -183,9 +183,9 @@ const CekJadwal = () => {
     }
   };
 
-  const loadProduct = async () => {
+  const loadProduct = async (poolName) => {
     try {
-      const res = await getProdukPool(poolOption[selectedPool].value);
+      const res = await getProdukPool(poolName);
 
       setProductList(res.data.results);
     } catch (error) {
@@ -263,25 +263,25 @@ const CekJadwal = () => {
   };
 
   const handlePoolChange = (index) => {
-    setSelectedPool(index);
-
-    const updatedTabHari = tabHari.map((item) => {
-      const newData = poolOption[index].data[item.name];
-      return {
-        ...item,
-        data: newData,
-        total: newData.total,
-      };
-    });
-
-    setTabHari(updatedTabHari);
-
     try {
+      setSelectedPool(index);
+
+      const updatedTabHari = tabHari.map((item) => {
+        const newData = poolOption[index].data[item.name];
+        return {
+          ...item,
+          data: newData,
+          total: newData.total,
+        };
+      });
+
+      setTabHari(updatedTabHari);
+
       const poolName = poolOption[index].value;
       const dayName = daysOfWeek[selectedIndex].name;
 
       loadSchedule(selectedBranch, poolName, dayName);
-      loadProduct();
+      loadProduct(poolName);
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
     }
@@ -588,12 +588,17 @@ const CekJadwal = () => {
       </Tab.Group>
       {detailModalVisible && (
         <Modal
-          title="Tambah Order"
+          title="Buat Invoice"
           activeModal={detailModalVisible} // Tie to modalVisible state
           onClose={() => setDetailModalVisible(false)} // Close modal when needed
           className="max-w-5xl"
         >
-          <AddOrder params={inputValue} product={productList} />
+          <CreateInvoice
+            params={inputValue}
+            product={productList}
+            branch={selectedBranch}
+            isModalShow={setDetailModalVisible}
+          />
         </Modal>
       )}
     </>

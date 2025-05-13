@@ -57,7 +57,7 @@ const FormRepeater = () => {
               <div className="flex justify-between items-end space-x-5">
                 <div className="flex-1">
                   <Textinput
-                    label="Phone"
+                    label="Siswa"
                     type="text"
                     id={`name3${index}`}
                     placeholder="Phone"

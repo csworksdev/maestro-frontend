@@ -76,3 +76,15 @@ export const DeleteSiswa = async (id) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const CheckDuplicateSiswa = async (params) => {
+  try {
+    let response = await axiosConfig.post(
+      "/api/student/checkduplicate/",
+      params
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

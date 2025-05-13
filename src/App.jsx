@@ -46,8 +46,6 @@ const Trainer = lazy(() => import("./pages/masterdata/trainer"));
 const EditTrainer = lazy(() => import("./pages/masterdata/trainer/edit"));
 const Produk = lazy(() => import("./pages/masterdata/produk"));
 const EditProduk = lazy(() => import("./pages/masterdata/produk/edit"));
-const NewProduk = lazy(() => import("./pages/masterdata/newproduk"));
-const EditNewProduk = lazy(() => import("./pages/masterdata/newproduk/edit"));
 const Order = lazy(() => import("./pages/order/active"));
 const OrderFinished = lazy(() => import("./pages/order/finished"));
 const OrderExpired = lazy(() => import("./pages/order/expired"));
@@ -165,11 +163,6 @@ const App = () => {
                   <Route path="add" element={<EditProduk />} />
                   <Route path="edit" element={<EditProduk />} />
                 </Route>
-                {/* <Route path="newproduk">
-              <Route index element={<NewProduk />} />
-              <Route path="add" element={<EditNewProduk />} />
-              <Route path="edit" element={<EditNewProduk />} />
-            </Route> */}
                 //#endregion
                 {/*  */}
                 //#region order

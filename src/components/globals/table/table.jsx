@@ -9,7 +9,7 @@ import {
 } from "react-table";
 
 const Table = memo(
-  ({ listData, listColumn, handleSearch }) => {
+  ({ listData, listColumn, handleSearch, isAction = true }) => {
     const columns = useMemo(
       () =>
         listColumn.map((col) => ({
@@ -109,23 +109,29 @@ const Table = memo(
                     {...headerGroup.getHeaderGroupProps()}
                     ref={(el) => (scrollableRowsRef.current[index] = el)}
                   >
-                    {headerGroup.headers.slice(0, -1).map((column) => (
-                      <th
-                        {...column.getHeaderProps(
-                          column.getSortByToggleProps()
-                        )}
-                        className="table-th text-center text-wrap"
-                      >
-                        {column.render("Header")}
-                        <span>
-                          {column.isSorted
-                            ? column.isSortedDesc
-                              ? " 🔽"
-                              : " 🔼"
-                            : ""}
-                        </span>
-                      </th>
-                    ))}
+                    {(() => {
+                      const data = isAction
+                        ? headerGroup.headers.slice(0, -1)
+                        : headerGroup.headers;
+                      return data.map((column) => (
+                        <th
+                          {...column.getHeaderProps(
+                            column.getSortByToggleProps()
+                          )}
+                          className="table-th text-center text-wrap"
+                          key={column.id} // It's good practice to add a key when mapping
+                        >
+                          {column.render("Header")}
+                          <span>
+                            {column.isSorted
+                              ? column.isSortedDesc
+                                ? " 🔽"
+                                : " 🔼"
+                              : ""}
+                          </span>
+                        </th>
+                      ));
+                    })()}
                   </tr>
                 ))}
               </thead>
@@ -143,7 +149,21 @@ const Table = memo(
                         index % 2 === 0 ? "bg-blue-100" : ""
                       }`}
                     >
-                      {row.cells.slice(0, -1).map((cell) => (
+                      {(() => {
+                        const data = isAction
+                          ? row.cells.slice(0, -1)
+                          : row.cells;
+                        return data.map((cell) => (
+                          <td
+                            style={{ textTransform: "none" }}
+                            {...cell.getCellProps()}
+                            className="table-td text-wrap p-3 align-middle"
+                          >
+                            {cell.render("Cell")}
+                          </td>
+                        ));
+                      })()}
+                      {/* {row.cells.slice(0, -1).map((cell) => (
                         <td
                           style={{ textTransform: "none" }}
                           {...cell.getCellProps()}
@@ -151,51 +171,51 @@ const Table = memo(
                         >
                           {cell.render("Cell")}
                         </td>
-                      ))}
+                      ))} */}
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-
-          {/* Fixed Column */}
-          <div className="w-[100px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
-            <table className="table table-fixed w-[100px]">
-              <thead className="border-t border-slate-100 dark:border-slate-800">
-                {headerGroups.map((headerGroup, index) => (
-                  <tr
-                    {...headerGroup.getHeaderGroupProps()}
-                    ref={(el) => (fixedRowsRef.current[index] = el)}
-                  >
-                    <th className="table-th text-center text-nowrap">
-                      {headerGroup.headers[
-                        headerGroup.headers.length - 1
-                      ].render("Header")}
-                    </th>
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700">
-                {page.map((row, index) => {
-                  prepareRow(row);
-                  return (
+          {isAction ? (
+            <div className="w-[100px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
+              <table className="table table-fixed w-[100px]">
+                <thead className="border-t border-slate-100 dark:border-slate-800">
+                  {headerGroups.map((headerGroup, index) => (
                     <tr
-                      {...row.getRowProps()}
+                      {...headerGroup.getHeaderGroupProps()}
                       ref={(el) => (fixedRowsRef.current[index] = el)}
-                      className={`h-auto ${
-                        index % 2 === 0 ? "bg-blue-100" : ""
-                      }`}
                     >
-                      <td className="table-td text-nowrap p-3 align-middle">
-                        {row.cells[row.cells.length - 1].render("Cell")}
-                      </td>
+                      <th className="table-th text-center text-nowrap">
+                        {headerGroup.headers[
+                          headerGroup.headers.length - 1
+                        ].render("Header")}
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700">
+                  {page.map((row, index) => {
+                    prepareRow(row);
+                    return (
+                      <tr
+                        {...row.getRowProps()}
+                        ref={(el) => (fixedRowsRef.current[index] = el)}
+                        className={`h-auto ${
+                          index % 2 === 0 ? "bg-blue-100" : ""
+                        }`}
+                      >
+                        <td className="table-td text-nowrap p-3 align-middle">
+                          {row.cells[row.cells.length - 1].render("Cell")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
         </div>
       </Card>
     );

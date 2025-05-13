@@ -31,7 +31,7 @@ const Menu = (role = "") => {
     default:
       menuItems = [
         ...menuSuperUser,
-        ...menuAdminNew,
+        ...menuAdmin,
         ...menuChief,
         ...menuFinance,
         ...menuTrainer,

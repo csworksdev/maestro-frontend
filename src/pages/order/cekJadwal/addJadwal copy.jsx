@@ -10,50 +10,12 @@ import Icons from "@/components/ui/Icon";
 import { DateTime } from "luxon";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
-import { AddSiswa, CheckDuplicateSiswa } from "@/axios/masterdata/siswa";
-import Loading from "@/components/Loading";
-import { useSelector } from "react-redux";
-import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
-import { AddOrderScheduleV2 } from "@/axios/schedule/orderSchedule";
-import { AddOrder } from "@/axios/masterdata/order";
-import Swal from "sweetalert2";
 
-// status registrasi
-const allStatus = [
-  {
-    value: "newreg",
-    label: "Baru",
-    price: 120000,
-  },
-  {
-    value: "extend",
-    label: "Perpanjangan",
-    price: 0,
-  },
-  {
-    value: "freereg",
-    label: "Free",
-    price: 0,
-  },
-  {
-    value: "combo",
-    label: "Combo",
-    price: 300000,
-  },
-];
-
-const AddJadwal = ({ params, product, branch, isModalShow }) => {
-  // const [loadingError, setLoadingError] = useState(null);
+const AddOrder = ({ params, product, branch }) => {
+  const [loadingError, setLoadingError] = useState(null);
   const FormValidationSchema = yup.object({}).required();
   const [inputValue, setInputValue] = useState(params);
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
-  const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const { user_id, roles } = useSelector((state) => state.auth.data);
-  const { keterangan, setKeterangan } = useState(
-    "Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
-  );
-
   const {
     register,
     setValue,
@@ -69,13 +31,12 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
     defaultValues: {
       students: [
         {
-          student_id: "",
           fullname: "",
           nickname: "",
           gender: "",
           parent: "",
           phone: "",
-          address: "-",
+          address: "",
           pob: "",
           dob: "",
           branch: branch,
@@ -86,257 +47,141 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
     },
   });
 
+  // status registrasi
+  const allStatus = [
+    {
+      value: "newreg",
+      label: "Baru",
+      price: 120000,
+    },
+    {
+      value: "extend",
+      label: "Perpanjangan",
+      price: 0,
+    },
+    {
+      value: "freereg",
+      label: "Free",
+      price: 0,
+    },
+    {
+      value: "combo",
+      label: "Combo",
+      price: 300000,
+    },
+  ];
+
   // form repeater
   const { fields, append, remove } = useFieldArray({
     control,
     name: "students",
   });
 
-  // #region Handle paste
+  // #region handle paste
   const [formList, setFormList] = useState([]);
 
   const handlePaste = async () => {
-    try {
-      setIsLoadingCheckDuplicate(true);
-      const pastedData = await navigator.clipboard.readText();
-      const rows = pastedData.trim().split("\n"); // Split by line
+    const pastedData = await navigator.clipboard.readText();
+    const rows = pastedData.trim().split("\n"); // Split by line
 
-      const parsedRows = rows.map((row) => {
-        const values = row.split("\t");
+    const parsedRows = rows.map((row) => {
+      const values = row.split("\t");
 
-        return {
-          student_id: "",
-          fullname: values[2] || "",
-          nickname: values[3] || "",
-          gender: String(values[5]).trim() === "Laki-laki" ? "L" : "P",
-          parent: values[4] || "-",
-          phone: values[11] || "",
-          address: values[10] || "-",
-          pob: values[6] || "",
-          dob: values[7]
-            ? DateTime.fromFormat(values[7].trim(), "M/d/yyyy").toFormat(
-                "yyyy-MM-dd"
-              )
-            : "",
-          branch: branch,
-          reg_stat: "",
-          istrial: false,
-        };
+      return {
+        fullname: values[2] || "",
+        nickname: values[3] || "",
+        gender: String(values[5]).trim() === "Laki-laki" ? "L" : "P",
+        parent: values[4] || "-",
+        phone: values[11] || "",
+        address: values[10] || "",
+        pob: values[6] || "",
+        dob: values[7]
+          ? DateTime.fromFormat(values[7].trim(), "M/d/yyyy").toFormat(
+              "yyyy-MM-dd"
+            )
+          : "",
+        branch: branch,
+        reg_stat: "newreg",
+        istrial: false,
+      };
+    });
+
+    setFormList(parsedRows);
+    remove(0);
+    for (let index = 0; index < parsedRows.length; index++) {
+      append({
+        fullname: parsedRows[index].fullname,
+        nickname: parsedRows[index].nickname,
+        gender: parsedRows[index].gender,
+        parent: parsedRows[index].parent,
+        phone: parsedRows[index].phone,
+        address: parsedRows[index].address,
+        pob: parsedRows[index].pob,
+        dob: parsedRows[index].dob,
+        reg_stat: "newreg",
+        istrial: false,
       });
-
-      let data = parsedRows.map((item) => {
-        return {
-          fullname: item.fullname,
-          phone: item.phone,
-        };
-      });
-      let check = await CheckDuplicateSiswa({ data: data }).then((res) => {
-        return res.data.results;
-      });
-
-      let oldStudents = [];
-      for (let index = 0; index < check.length; index++) {
-        if (check[index].student_id !== null) {
-          parsedRows[index].student_id = check[index].student_id;
-          parsedRows[index].reg_stat = "extend";
-          parsedRows[index].fullname = check[index].fullname;
-          oldStudents.push({
-            student_id: check[index].student_id,
-          });
-        } else {
-          parsedRows[index].reg_stat = "newreg";
-          parsedRows[index].fullname = check[index].input_name;
-        }
-      }
-
-      setSelectedStudents(oldStudents);
-
-      setFormList(parsedRows);
-      remove(0);
-      for (let index = 0; index < parsedRows.length; index++) {
-        append({
-          student_id: parsedRows[index].student_id,
-          fullname: parsedRows[index].fullname,
-          nickname: parsedRows[index].nickname,
-          gender: parsedRows[index].gender,
-          parent: parsedRows[index].parent,
-          phone: parsedRows[index].phone,
-          address: parsedRows[index].address,
-          pob: parsedRows[index].pob,
-          dob: parsedRows[index].dob,
-          reg_stat: parsedRows[index].reg_stat,
-          istrial: false,
-        });
-        setValue(
-          "namapelanggan",
-          parsedRows[index]?.parent === "-" || parsedRows[index]?.parent === ""
-            ? parsedRows[index]?.fullname
-            : parsedRows[index]?.parent
-        );
-        setValue("phonepelanggan", parsedRows[index]?.phone);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoadingCheckDuplicate(false);
+      setValue(
+        "namapelanggan",
+        parsedRows[index]?.parent === "-" || parsedRows[index]?.parent === ""
+          ? parsedRows[index]?.fullname
+          : parsedRows[index]?.parent
+      );
+      setValue("phonepelanggan", parsedRows[index]?.phone);
     }
   };
 
   // #endregion handle paste
 
-  // #region Submit form
-  // submit student
-  const submitNewStudent = async () => {
-    try {
-      formList
-        .filter((item) => item.student_id === "")
-        .map(async (item) => {
-          const datasiswa = {
-            fullname: item.fullname,
-            nickname: item.nickname,
-            gender: item.gender ?? isGender,
-            parent: item.parent,
-            phone: item.phone,
-            address: item.address ?? "-",
-            dob: item.dob, //DateTime.fromJSDate(item.dob).toFormat("yyyy-MM-dd"),
-            pob: item.pob,
-            branch: item.branch,
-          };
-
-          await AddSiswa(datasiswa).then((res) => {
-            setSelectedStudents((prevStudents) => [
-              ...prevStudents,
-              {
-                student_id: res.data.student_id,
-              },
-            ]);
-          });
-        });
-    } catch (error) {}
-  };
-
-  const createInvoice = async () => {
-    try {
-      for (const product of selectedProduct) {
-        const updatedData = {
-          products: product.product_id,
-          trainer: inputValue.trainer.trainer_id,
-          pool: inputValue.pool.value,
-          trainer_percentage: parseInt(inputValue.trainer_percentage),
-          company_percentage: inputValue.company_percentage,
-          branch: inputValue.branch,
-          notes: "-",
-          day: inputValue.day,
-          time: inputValue.time,
-          grand_total: product.qty * product.price,
-          create_by: user_id,
-          is_finish: false,
-          is_paid: false,
-          start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
-          order_date: DateTime.now().toFormat("yyyy-MM-dd"),
-          students: selectedStudents.map((student) => ({
-            student_id: student.student_id,
-          })),
-        };
-
-        const res = await AddOrder(updatedData);
-
-        if (res) {
-          for (const student of selectedStudents) {
-            for (let i = 0; i < product.meetings; i++) {
-              const temp = {
-                order: res.data.order_id,
-                day: inputValue.day,
-                time: inputValue.time,
-                price_per_meet:
-                  (product.price * parseInt(inputValue.trainer_percentage)) /
-                  100 /
-                  product.meetings,
-                schedule_date: DateTime.now()
-                  .plus({ days: 7 * (i + 1) })
-                  .toFormat("yyyy-MM-dd"),
-                student_id: student.student_id,
-                meet: i + 1,
-                is_presence: false,
-              };
-
-              const address = await AddOrderDetail(temp);
-              // if (address.status === "success") {
-              //   console.log("Order detail added");
-              // }
-            }
-          }
-
-          // const params = {
-          //   branch: inputValue.branch,
-          //   pool_id: inputValue.pool.value,
-          //   trainer_id: inputValue.trainer.trainer_id,
-          //   order_id: res.order_id,
-          //   day: inputValue.day,
-          //   time: inputValue.time,
-          //   is_free: true,
-          // };
-
-          // await AddOrderScheduleV2(params).then(() => {
-          //   Swal.fire("Added!", "Your order has been added.", "success");
-          // });
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const onSubmit = (newData) => {
     // const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
-    // const updatedData = {
-    //   order_date: null,
-    //   products: selectedProduct,
-    //   // students: selectedStudents.map((student) => ({
-    //   //   student_id: student.value,
-    //   // })),
-    //   // start_date: DateTime.fromJSDate(newData.order_date).toFormat(
-    //   //   "yyyy-MM-dd"
-    //   // ),
-    //   trainer: inputValue.trainer.trainer_id, // This seems to be trainer ID, ensure it's correct
-    //   pool: inputValue.pool.value,
-    //   // package: product.package, // Package info might be per product
-    //   trainer_percentage: parseInt(inputValue.trainer_percentage),
-    //   company_percentage: inputValue.company_percentage,
-    //   branch: inputValue.branch,
-    //   notes: inputValue.notes,
-    //   day: inputValue.day,
-    //   time: inputValue.time,
-    //   grand_total: selectedProduct.reduce((sum, p) => sum + p.qty * p.price, 0),
-    //   create_by: user_id,
-    //   // grand_total: calculateGrandTotal(), // Implement a function to calculate grand total based on selected products and quantities
-    // };
-    // console.log(selectedStudents);
-    submitNewStudent();
-    createInvoice();
-    // console.log("Submitting Data:", newData);
+    const updatedData = {
+      order_date: null,
+      products: selectedProduct,
+      // students: selectedStudents.map((student) => ({
+      //   student_id: student.value,
+      // })),
+      // start_date: DateTime.fromJSDate(newData.order_date).toFormat(
+      //   "yyyy-MM-dd"
+      // ),
+      trainer: inputValue.trainer.trainer_id, // This seems to be trainer ID, ensure it's correct
+      pool: inputValue.pool.value,
+      // package: product.package, // Package info might be per product
+      trainer_percentage: parseInt(inputValue.trainer_percentage),
+      company_percentage: inputValue.company_percentage,
+      branch: inputValue.branch,
+      notes: inputValue.notes,
+      day: inputValue.day,
+      time: inputValue.time,
+      grand_total: selectedProduct.reduce(
+        (sum, p) => sum + p.qty * p.pprice,
+        0
+      ),
+      // grand_total: calculateGrandTotal(), // Implement a function to calculate grand total based on selected products and quantities
+    };
+    console.log("Submitting Data:", newData);
+    // if (isUpdate) {
+    //   handleUpdate(updatedData);
+    // } else {
+    //   handleAdd(updatedData);
+    // }
   };
-
-  // #endregion submit form
 
   // #region Handle Product
   const handleProductSelectionChange = (option) => {
     const currentProductId = option.product_id;
-    const isSelected = selectedProduct.some(
-      (p) => p.product_id === currentProductId
-    );
+    const isSelected = selectedProduct.some((p) => p.pid === currentProductId);
     if (isSelected) {
       setSelectedProduct(
-        selectedProduct.filter((p) => p.product_id !== currentProductId)
+        selectedProduct.filter((p) => p.pid !== currentProductId)
       );
     } else {
       setSelectedProduct([
         ...selectedProduct,
         {
-          product_id: currentProductId,
-          name: option.name,
-          price: option.price,
-          sellprice: option.sellprice,
+          pid: currentProductId,
+          pname: option.name,
+          pprice: option.price,
           qty: 0,
         },
       ]);
@@ -389,13 +234,10 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
   };
 
   // #endregion Handle Product
-
   const handleQtyChange = (productId, rawValue) => {
     setSelectedProduct((prevSelected) =>
       prevSelected.map((p) =>
-        p.product_id === productId
-          ? { ...p, qty: parseInt(rawValue, 10) || 0 }
-          : p
+        p.pid === productId ? { ...p, qty: parseInt(rawValue, 10) || 0 } : p
       )
     );
   };
@@ -413,20 +255,18 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
 
     setSelectedProduct((prevSelectedProducts) => {
       const currentTrialProductInSelection = prevSelectedProducts.find(
-        (p) => p.product_id === trialProductDefinition.product_id
+        (p) => p.pid === trialProductDefinition.product_id
       );
       const otherSelectedProducts = prevSelectedProducts.filter(
-        (p) => p.product_id !== trialProductDefinition.product_id
+        (p) => p.pid !== trialProductDefinition.product_id
       );
 
       if (trialStudentCount > 0) {
         const newTrialProductEntry = {
-          product_id: trialProductDefinition.product_id,
-          name: trialProductDefinition.name,
-          price: trialProductDefinition.price,
-          sellprice: trialProductDefinition.sellprice,
+          pid: trialProductDefinition.product_id,
+          pname: trialProductDefinition.name,
+          pprice: trialProductDefinition.price,
           qty: trialStudentCount,
-          meetings: trialProductDefinition.meetings,
         };
         // If trial product already exists with the same quantity, no change needed.
         if (
@@ -552,9 +392,9 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* {loadingError && (
+        {loadingError && (
           <p className="error-message">{loadingError.message}</p>
-        )} */}
+        )}
         <Card
           subtitle={
             <span>
@@ -570,7 +410,6 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
               className="btn-dark"
               onClick={() => handlePaste()}
               // onClick={() => append()}
-              disabled={isLoadingCheckDuplicate}
             />
           }
         >
@@ -599,7 +438,7 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                           "id-ID"
                         ).format(option.price)}`}
                         value={selectedProduct.some(
-                          (p) => p.product_id === option.product_id
+                          (p) => p.pid === option.product_id
                         )}
                         onChange={() => {
                           // This onChange is for non-trial products.
@@ -607,7 +446,7 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                           if (option.package_name.toLowerCase() !== "trial") {
                             if (
                               selectedProduct.some(
-                                (p) => p.product_id === option.product_id
+                                (p) => p.pid === option.product_id
                               )
                             )
                               handleQtyChange(option.product_id, 0);
@@ -629,12 +468,12 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                         options={{ numeral: true, blocks: [1] }}
                         value={
                           selectedProduct
-                            .find((p) => p.product_id === option.product_id)
+                            .find((p) => p.pid === option.product_id)
                             ?.qty?.toString() || "0"
                         }
                         disabled={
                           !selectedProduct.some(
-                            (p) => p.product_id === option.product_id
+                            (p) => p.pid === option.product_id
                           ) || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
                         }
                         onChange={(e) => {
@@ -659,7 +498,6 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
             </div>
 
             {/* Siswa Section */}
-
             <div className="flex flex-col space-y-2">
               {/* Header */}
               <div className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center">
@@ -669,83 +507,70 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                 <span>Delete</span>
               </div>
 
-              {isLoadingCheckDuplicate ? (
-                <Loading>
-                  <div>Sedang Memeriksa Data Siswa</div>
-                </Loading>
-              ) : (
-                <>
-                  {/* Rows */}
-                  {fields.map((item, index) => (
-                    <div
-                      key={index}
-                      className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
-                    >
-                      <Textinput
-                        type="text"
-                        id={`name3${index}`}
-                        placeholder="Nama Siswa"
-                        register={register}
-                        name={`students[${index}].fullname`}
-                        disabled={item.student_id !== ""}
-                      />
+              {/* Rows */}
+              {fields.map((item, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
+                >
+                  <Textinput
+                    type="text"
+                    id={`name3${index}`}
+                    placeholder="Nama Siswa"
+                    register={register}
+                    name={`students[${index}].fullname`}
+                  />
 
-                      <Select
-                        key={item.value}
-                        className="react-select"
-                        classNamePrefix="select"
-                        defaultValue={item.reg_stat}
-                        disabled={item.student_id !== ""}
-                        name={`students[${index}].reg_stat`}
-                        register={register}
-                        options={allStatus}
-                        onChange={(
-                          selectedOption // react-select passes the selected option object
-                        ) =>
-                          handleRegStatChange(
-                            item.fullname,
-                            "reg_stat",
-                            selectedOption.target.value // Get value from the selected option
-                          )
-                        }
-                        id="hh"
-                      />
-                      <Checkbox
-                        value={
-                          formList.find((x) => x.fullname === item.fullname)
-                            ?.istrial
-                        }
-                        activeClass="ring-primary-500 bg-primary-500"
-                        onChange={(e) =>
-                          handleRegStatChange(
-                            item.fullname,
-                            "istrial",
-                            e.target.checked
-                          )
-                        }
-                        className="mx-auto"
-                      />
+                  <Select
+                    key={item.value}
+                    className="react-select"
+                    classNamePrefix="select"
+                    defaultValue={allStatus[0]}
+                    options={allStatus}
+                    onChange={(
+                      selectedOption // react-select passes the selected option object
+                    ) =>
+                      handleRegStatChange(
+                        item.fullname,
+                        "reg_stat",
+                        selectedOption.target.value // Get value from the selected option
+                      )
+                    }
+                    id="hh"
+                  />
+                  <Checkbox
+                    value={
+                      formList.find((x) => x.fullname === item.fullname)
+                        ?.istrial
+                    }
+                    activeClass="ring-primary-500 bg-primary-500"
+                    onChange={(e) =>
+                      handleRegStatChange(
+                        item.fullname,
+                        "istrial",
+                        e.target.checked
+                      )
+                    }
+                    className="mx-auto"
+                  />
 
-                      <button
-                        onClick={() => {
-                          const studentToRemoveFullname =
-                            fields[index].fullname;
-                          remove(index);
-                          setFormList((currentList) =>
-                            currentList.filter(
-                              (s) => s.fullname !== studentToRemoveFullname
-                            )
-                          );
-                        }}
-                        type="button"
-                        className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
-                      >
-                        <Icons icon="heroicons-outline:trash" />
-                      </button>
-                    </div>
-                  ))}
-                </>
-              )}
+                  <button
+                    onClick={() => {
+                      const studentToRemoveFullname = fields[index].fullname;
+                      remove(index);
+                      setFormList((currentList) =>
+                        currentList.filter(
+                          (s) => s.fullname !== studentToRemoveFullname
+                        )
+                      );
+                    }}
+                    type="button"
+                    className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
+                  >
+                    <Icons icon="heroicons-outline:trash" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </Card>
@@ -763,11 +588,11 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                 </>
                 {selectedProduct.map((p) => (
                   <>
-                    <span className="col-span-2">{p.name}</span>
+                    <span className="col-span-2">{p.pname}</span>
                     <span className="text-left">{p.qty}</span>
                     <div className="flex justify-between">
                       <span>IDR</span>
-                      <span>{(p.qty * p.sellprice).toLocaleString()}</span>
+                      <span>{(p.qty * p.pprice).toLocaleString()}</span>
                     </div>
                   </>
                 ))}
@@ -798,7 +623,7 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                     <span>
                       {(
                         selectedProduct.reduce(
-                          (sum, p) => sum + p.qty * p.sellprice,
+                          (sum, p) => sum + p.qty * p.pprice,
                           0
                         ) +
                         Object.values(grouped).reduce(
@@ -836,20 +661,15 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                 label="Keterangan"
                 placeholder="Keterangan"
                 register={register}
-                value={keterangan}
               ></Textarea>
             </div>
           </Card>
         )}
         <div className="ltr:text-right rtl:text-left space-x-3">
           <div className="btn-group">
-            <Button
-              type="submit"
-              className="btn btn-dark"
-              disabled={selectedProduct.length === 0}
-            >
+            <button type="submit" className="btn btn-dark">
               Buat Order
-            </Button>
+            </button>
           </div>
         </div>
       </form>
@@ -857,4 +677,4 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
   );
 };
 
-export default AddJadwal;
+export default AddOrder;
