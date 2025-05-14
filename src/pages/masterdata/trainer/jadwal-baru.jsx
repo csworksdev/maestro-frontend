@@ -441,7 +441,7 @@ const JadwalBaru = ({ data }) => {
         day: jadwal.hari,
         time: jadwal.jam,
       };
-      if (!jadwal.ts_id) AddTrainerScheduleV2(data.trainer_id, item);
+      if (jadwal.ts_id === 0) AddTrainerScheduleV2(data.trainer_id, item);
       else EditTrainerScheduleV2(data.trainer_id, item);
     } catch (error) {
       console.error(error);

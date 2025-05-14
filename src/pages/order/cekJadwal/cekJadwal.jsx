@@ -15,6 +15,7 @@ import AsyncSelect from "react-select/async";
 import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
+import Swal from "sweetalert2";
 
 const columnHeader = [
   "Pelatih",
@@ -98,12 +99,15 @@ const CekJadwal = () => {
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState();
   const [selectedBranch, setSelectedBranch] = useState();
+  const [selectedDay, setSelectedDay] = useState();
   const [jumlahSiswaPerKolam, setJumlahSiswaPerKolam] = useState([]);
   const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
   const [jadwal, setJadwal] = useState([]);
   const [productList, setProductList] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [reloadDone, setReloadDone] = useState(false);
+
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
     start_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -245,7 +249,7 @@ const CekJadwal = () => {
         fillBaseJadwalWithData({ ...BaseJadwal }, element)
       );
 
-      setJadwal(data);
+      setJadwal([...data]);
     } catch (error) {
       console.error(error);
     } finally {
@@ -256,6 +260,14 @@ const CekJadwal = () => {
   useEffect(() => {
     loadBranch();
   }, []);
+
+  useEffect(() => {
+    if (reloadDone) {
+      setDetailModalVisible(false);
+      setReloadDone(false); // reset trigger
+      Swal.fire("Added!", "Your order has been added.", "success");
+    }
+  }, [reloadDone]);
 
   const handleBranchChange = (e) => {
     setSelectedBranch(e.value);
@@ -292,7 +304,7 @@ const CekJadwal = () => {
     try {
       let poolName = poolOption[selectedPool].value;
       let dayName = daysOfWeek[index].name;
-
+      setSelectedDay(daysOfWeek[index].name);
       // console.log(selectedBranch, poolName, dayName);
       loadSchedule(selectedBranch, poolName, dayName);
     } catch (error) {
@@ -442,13 +454,15 @@ const CekJadwal = () => {
   });
 
   const gridKolam = (hari) => {
-    if (jadwal && jadwal.length > 0 && poolOption && selectedPool !== null) {
-      const selectedPoolItem = poolOption[selectedPool];
-      // Uncomment and implement your filtering if needed
-      const filteredTrainers = jadwal.filter((trainer) =>
-        trainer.kolam.includes(selectedPoolItem.value)
-      );
+    const selectedPoolItem = poolOption[selectedPool];
 
+    const filteredTrainers = useMemo(() => {
+      return jadwal.filter((trainer) =>
+        trainer.kolam.includes(poolOption[selectedPool].value)
+      );
+    }, [jadwal, selectedPool, selectedPoolItem]);
+
+    if (jadwal && jadwal.length > 0 && poolOption && selectedPool !== null) {
       return (
         <div className="flex flex-col h-full">
           <Card
@@ -456,7 +470,7 @@ const CekJadwal = () => {
             subtitle={selectedPoolItem.label}
             headerslot={
               <div className="flex flex-col gap-1 text-sm">
-                <div>Jumlah Pelatih: {jadwal.length}</div>
+                <div>Jumlah Pelatih: {filteredTrainers.length}</div>
               </div>
             }
           >
@@ -572,7 +586,7 @@ const CekJadwal = () => {
                 </Tab>
               ))}
             </Tab.List>
-            <Tab.Panels>
+            <Tab.Panels key={JSON.stringify(jadwal)}>
               {tabHari.map((item, index) => {
                 return (
                   <Tab.Panel key={index}>
@@ -589,15 +603,52 @@ const CekJadwal = () => {
       {detailModalVisible && (
         <Modal
           title="Buat Invoice"
-          activeModal={detailModalVisible} // Tie to modalVisible state
-          onClose={() => setDetailModalVisible(false)} // Close modal when needed
+          activeModal={detailModalVisible}
+          onClose={async () => {
+            // await loadSchedule(
+            //   selectedBranch,
+            //   poolOption[selectedPool].value,
+            //   daysOfWeek[selectedIndex].name
+            // );
+            setDetailModalVisible(false);
+          }}
           className="max-w-5xl"
         >
           <CreateInvoice
             params={inputValue}
             product={productList}
             branch={selectedBranch}
-            isModalShow={setDetailModalVisible}
+            reloadDataMaster={() => {
+              loadSchedule(
+                selectedBranch,
+                poolOption[selectedPool].value,
+                daysOfWeek[selectedIndex].name
+              );
+              setPoolOption((prev) =>
+                prev.map((item, index) =>
+                  index === selectedPool
+                    ? { ...item, filled: item.filled + 1 }
+                    : item
+                )
+              );
+              setTabHari((prev) =>
+                prev.map((item, index) =>
+                  index === selectedIndex
+                    ? {
+                        ...item,
+                        total: item.total + 1,
+                        data: {
+                          ...item.data,
+                          [inputValue.time]:
+                            (item.data[inputValue.time] || 0) + 1,
+                        },
+                      }
+                    : item
+                )
+              );
+              setReloadDone(true); // ✅ trigger setelah selesai update
+            }}
+            // isModalShow={() => setDetailModalVisible(false)}
           />
         </Modal>
       )}

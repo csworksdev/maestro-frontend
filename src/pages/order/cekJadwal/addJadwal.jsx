@@ -42,7 +42,13 @@ const allStatus = [
   },
 ];
 
-const AddJadwal = ({ params, product, branch, isModalShow }) => {
+const AddJadwal = ({
+  params,
+  product,
+  branch,
+  isModalShow,
+  reloadDataMaster,
+}) => {
   // const [loadingError, setLoadingError] = useState(null);
   const FormValidationSchema = yup.object({}).required();
   const [inputValue, setInputValue] = useState(params);
@@ -142,6 +148,7 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
           parsedRows[index].fullname = check[index].fullname;
           oldStudents.push({
             student_id: check[index].student_id,
+            is_new: parsedRows[index].reg_stat,
           });
         } else {
           parsedRows[index].reg_stat = "newreg";
@@ -208,6 +215,7 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
               ...prevStudents,
               {
                 student_id: res.data.student_id,
+                is_new: "newreg",
               },
             ]);
           });
@@ -219,7 +227,9 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
     try {
       for (const product of selectedProduct) {
         const updatedData = {
-          products: product.product_id,
+          package: product.package,
+          price: product.price,
+          product: product.product_id,
           trainer: inputValue.trainer.trainer_id,
           pool: inputValue.pool.value,
           trainer_percentage: parseInt(inputValue.trainer_percentage),
@@ -242,6 +252,9 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
         const res = await AddOrder(updatedData);
 
         if (res) {
+          // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
+          const orderDetailPromises = [];
+
           for (const student of selectedStudents) {
             for (let i = 0; i < product.meetings; i++) {
               const temp = {
@@ -255,31 +268,32 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                 schedule_date: DateTime.now()
                   .plus({ days: 7 * (i + 1) })
                   .toFormat("yyyy-MM-dd"),
-                student_id: student.student_id,
+                student: student.student_id,
                 meet: i + 1,
                 is_presence: false,
               };
 
-              const address = await AddOrderDetail(temp);
-              // if (address.status === "success") {
-              //   console.log("Order detail added");
-              // }
+              orderDetailPromises.push(AddOrderDetail(temp));
             }
           }
 
-          // const params = {
-          //   branch: inputValue.branch,
-          //   pool_id: inputValue.pool.value,
-          //   trainer_id: inputValue.trainer.trainer_id,
-          //   order_id: res.order_id,
-          //   day: inputValue.day,
-          //   time: inputValue.time,
-          //   is_free: true,
-          // };
+          // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
+          await Promise.all(orderDetailPromises);
 
-          // await AddOrderScheduleV2(params).then(() => {
-          //   Swal.fire("Added!", "Your order has been added.", "success");
-          // });
+          // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
+          const params = {
+            branch: inputValue.branch,
+            pool: inputValue.pool.value,
+            trainer: inputValue.trainer.trainer_id,
+            order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
+            day: inputValue.day,
+            time: inputValue.time,
+            is_free: true,
+          };
+          let data = await AddOrderScheduleV2(params);
+          if (data.data.status === "success") {
+            reloadDataMaster();
+          }
         }
       }
     } catch (error) {
@@ -337,6 +351,9 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
           name: option.name,
           price: option.price,
           sellprice: option.sellprice,
+          meetings: option.meetings,
+          package: option.package,
+          package_name: option.package_name,
           qty: 0,
         },
       ]);
@@ -493,62 +510,6 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
     return acc;
   }, {});
 
-  const handleAdd = (data) => {
-    AddOrder(data)
-      .then((res) => {
-        if (res) {
-          Swal.fire("Added!", "Your order has been added.", "success").then(
-            () => {
-              const product = productData.find(
-                (item) => item.product_id === data.product
-              );
-              const trainer = trainerList.find(
-                (i) => i.trainer_id === data.trainer
-              );
-
-              selectedStudents.map((student) => {
-                const temp = orderDetail.map((item, index) => {
-                  item.order = res.data.order_id;
-                  item.day = filterTrainerByDay;
-                  item.time = filterTrainerByTime;
-                  item.price_per_meet =
-                    (data.price * parseInt(trainer.precentage_fee)) /
-                    100 /
-                    product.meetings;
-                  item.schedule_date = DateTime.fromISO(data.start_date)
-                    .plus({ days: 7 * (index + 1) })
-                    .toFormat("yyyy-MM-dd");
-                  item.student = student.value;
-                  return item;
-                });
-
-                for (let index = 0; index < temp.length; index++) {
-                  AddOrderDetail(temp[index], data).then((addres) => {
-                    if (addres.status === "success") {
-                      console.log("finished");
-                    }
-                  });
-                }
-              });
-
-              const params = {
-                coach: data.trainer,
-                day: filterTrainerByDay,
-                time: filterTrainerByTime,
-                is_free: false,
-              };
-              UpdateTrainerSchedule(params).then(() => {
-                navigate(-1);
-              });
-            }
-          );
-        }
-      })
-      .catch((error) => {
-        Swal.fire("Error", "Failed to add order.", error);
-      });
-  };
-
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -693,7 +654,7 @@ const AddJadwal = ({ params, product, branch, isModalShow }) => {
                       <Select
                         key={item.value}
                         className="react-select"
-                        classNamePrefix="select"
+                        // classNamePrefix="select"
                         defaultValue={item.reg_stat}
                         disabled={item.student_id !== ""}
                         name={`students[${index}].reg_stat`}
