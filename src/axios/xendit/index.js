@@ -37,3 +37,15 @@ export const getXenditBalanceHistory = async (params) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const XenditCreatePaymentLink = async (params) => {
+  try {
+    let response = await axiosConfig.post(
+      "/xendit/create-payment-link/",
+      params
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

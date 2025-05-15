@@ -17,6 +17,8 @@ import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
 import { AddOrderScheduleV2 } from "@/axios/schedule/orderSchedule";
 import { AddOrder } from "@/axios/masterdata/order";
 import Swal from "sweetalert2";
+import { XenditCreatePaymentLink } from "@/axios/xendit";
+import { toProperCase, toNormalizePhone } from "@/utils";
 
 // status registrasi
 const allStatus = [
@@ -149,6 +151,7 @@ const AddJadwal = ({
           oldStudents.push({
             student_id: check[index].student_id,
             is_new: parsedRows[index].reg_stat,
+            fullname: check[index].fullname,
           });
         } else {
           parsedRows[index].reg_stat = "newreg";
@@ -180,7 +183,7 @@ const AddJadwal = ({
             ? parsedRows[index]?.fullname
             : parsedRows[index]?.parent
         );
-        setValue("phonepelanggan", parsedRows[index]?.phone);
+        setValue("phonepelanggan", toNormalizePhone(parsedRows[index]?.phone));
       }
     } catch (error) {
       console.log(error);
@@ -223,7 +226,7 @@ const AddJadwal = ({
     } catch (error) {}
   };
 
-  const createInvoice = async () => {
+  const createInvoice = async (newData) => {
     try {
       for (const product of selectedProduct) {
         const updatedData = {
@@ -241,7 +244,7 @@ const AddJadwal = ({
           grand_total: product.qty * product.price,
           create_by: user_id,
           is_finish: false,
-          is_paid: false,
+          // is_paid: false,
           start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
           order_date: DateTime.now().toFormat("yyyy-MM-dd"),
           students: selectedStudents.map((student) => ({
@@ -292,7 +295,38 @@ const AddJadwal = ({
           };
           let data = await AddOrderScheduleV2(params);
           if (data.data.status === "success") {
-            reloadDataMaster();
+            let paramxendit = {
+              external_id: res.data.order_id,
+              amount:
+                selectedProduct.reduce(
+                  (sum, p) => sum + p.qty * p.sellprice,
+                  0
+                ) +
+                Object.values(grouped).reduce(
+                  (sum, value) => sum + value.total,
+                  0
+                ),
+              description: newData.keteranganpelanggan,
+              customer_name: newData.namapelanggan,
+              customer_phone: newData.phonepelanggan,
+              items: [
+                ...selectedProduct.map((p) => ({
+                  name: p.name,
+                  quantity: p.qty,
+                  price: parseInt(p.sellprice, 10),
+                })),
+                ...Object.entries(grouped)
+                  .filter(([key]) => key !== "extend")
+                  .map(([key, value]) => ({
+                    name: "Registrasi " + value.count,
+                    quantity: value.count,
+                    price: parseInt(value.total, 10),
+                  })),
+              ],
+            };
+            await XenditCreatePaymentLink(paramxendit).then((res) =>
+              reloadDataMaster()
+            );
           }
         }
       }
@@ -302,33 +336,7 @@ const AddJadwal = ({
   };
 
   const onSubmit = (newData) => {
-    // const trainer = trainerList.find((i) => i.trainer_id === newData.trainer);
-    // const updatedData = {
-    //   order_date: null,
-    //   products: selectedProduct,
-    //   // students: selectedStudents.map((student) => ({
-    //   //   student_id: student.value,
-    //   // })),
-    //   // start_date: DateTime.fromJSDate(newData.order_date).toFormat(
-    //   //   "yyyy-MM-dd"
-    //   // ),
-    //   trainer: inputValue.trainer.trainer_id, // This seems to be trainer ID, ensure it's correct
-    //   pool: inputValue.pool.value,
-    //   // package: product.package, // Package info might be per product
-    //   trainer_percentage: parseInt(inputValue.trainer_percentage),
-    //   company_percentage: inputValue.company_percentage,
-    //   branch: inputValue.branch,
-    //   notes: inputValue.notes,
-    //   day: inputValue.day,
-    //   time: inputValue.time,
-    //   grand_total: selectedProduct.reduce((sum, p) => sum + p.qty * p.price, 0),
-    //   create_by: user_id,
-    //   // grand_total: calculateGrandTotal(), // Implement a function to calculate grand total based on selected products and quantities
-    // };
-    // console.log(selectedStudents);
-    submitNewStudent();
-    createInvoice();
-    // console.log("Submitting Data:", newData);
+    createInvoice(newData);
   };
 
   // #endregion submit form
@@ -394,17 +402,6 @@ const AddJadwal = ({
     } else return true;
   };
 
-  const handleProductChange = (e) => {
-    // This function might not be needed if selection is handled by checkboxes directly
-    // Or it could be adapted if there's a single product select dropdown elsewhere
-    setInputValue((prevParams) => ({
-      ...prevParams,
-      product: e.target.value,
-      // price: product.price, // This needs to be dynamic based on selected product
-      // grand_total: 1 * product.price, // This needs to be dynamic
-    }));
-  };
-
   // #endregion Handle Product
 
   const handleQtyChange = (productId, rawValue) => {
@@ -418,6 +415,7 @@ const AddJadwal = ({
   };
 
   // useEffect to manage the trial product in selectedProduct based on formList
+  // Untuk update trial product di selectedProduct
   useEffect(() => {
     const trialStudentCount = formList.filter(
       (student) => student.istrial
@@ -426,7 +424,7 @@ const AddJadwal = ({
       (p) => p.package_name && p.package_name.toLowerCase() === "trial"
     );
 
-    if (!trialProductDefinition) return; // No trial product defined in the available products
+    if (!trialProductDefinition) return;
 
     setSelectedProduct((prevSelectedProducts) => {
       const currentTrialProductInSelection = prevSelectedProducts.find(
@@ -444,8 +442,9 @@ const AddJadwal = ({
           sellprice: trialProductDefinition.sellprice,
           qty: trialStudentCount,
           meetings: trialProductDefinition.meetings,
+          package_name: trialProductDefinition.package_name,
         };
-        // If trial product already exists with the same quantity, no change needed.
+
         if (
           currentTrialProductInSelection &&
           currentTrialProductInSelection.qty === trialStudentCount
@@ -454,8 +453,6 @@ const AddJadwal = ({
         }
         return [...otherSelectedProducts, newTrialProductEntry];
       } else {
-        // trialStudentCount is 0
-        // If trial product was present, remove it. Otherwise, no change.
         if (currentTrialProductInSelection) {
           return otherSelectedProducts;
         }
@@ -463,6 +460,26 @@ const AddJadwal = ({
       }
     });
   }, [formList, product, setSelectedProduct]);
+
+  // Untuk update keteranganpelanggan saat selectedProduct berubah
+  useEffect(() => {
+    if (selectedProduct.length > 0) {
+      const formatDeskripsi = selectedProduct
+        .map((p) => {
+          const studentNames = formList
+            .map((s) => toProperCase(s.fullname))
+            .join(", ");
+          return `${p.package_name} ${
+            p.meetings
+          }x Pertemuan A.n ${studentNames} (${toProperCase(
+            inputValue.trainer.fullname
+          )})`;
+        })
+        .join("\n"); // pisah baris
+
+      setValue("keteranganpelanggan", formatDeskripsi);
+    }
+  }, [selectedProduct, formList, inputValue.trainer, setValue]);
 
   const handleRegStatChange = (fullname, kolom, value) => {
     // Update local formList state
@@ -797,7 +814,6 @@ const AddJadwal = ({
                 label="Keterangan"
                 placeholder="Keterangan"
                 register={register}
-                value={keterangan}
               ></Textarea>
             </div>
           </Card>

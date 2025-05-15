@@ -190,7 +190,7 @@ const Edit = ({ state, onClose = null }) => {
       promo: newData.promo,
       is_finish: newData.is_finish,
       price: product.price,
-      is_paid: newData.is_paid,
+      // is_paid: newData.is_paid,
       students: selectedStudents.map((student) => ({
         student_id: student.value,
       })),

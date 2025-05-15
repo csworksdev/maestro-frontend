@@ -114,7 +114,7 @@ const CekJadwal = () => {
     product: "",
     promo: "",
     is_finish: false,
-    is_paid: false,
+    // is_paid: false,
     trainer: "",
     pool: "",
     paket: "",
@@ -604,14 +604,7 @@ const CekJadwal = () => {
         <Modal
           title="Buat Invoice"
           activeModal={detailModalVisible}
-          onClose={async () => {
-            // await loadSchedule(
-            //   selectedBranch,
-            //   poolOption[selectedPool].value,
-            //   daysOfWeek[selectedIndex].name
-            // );
-            setDetailModalVisible(false);
-          }}
+          onClose={() => setDetailModalVisible(false)}
           className="max-w-5xl"
         >
           <CreateInvoice

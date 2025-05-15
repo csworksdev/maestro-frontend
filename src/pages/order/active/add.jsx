@@ -274,7 +274,7 @@ const Add = () => {
       promo: newData.promo,
       is_finish: false,
       price: product.price,
-      is_paid: newData.is_paid,
+      // is_paid: newData.is_paid,
       students: selectedStudents.map((student) => ({
         student_id: student.value,
       })),
