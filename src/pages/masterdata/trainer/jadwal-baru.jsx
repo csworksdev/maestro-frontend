@@ -254,7 +254,7 @@ const JadwalBaru = ({ data }) => {
       const trainerScheduleResponse = await GetTrainerScheduleV2(
         data.trainer_id
       );
-      if (trainerScheduleResponse.data.error === "not found") {
+      if (trainerScheduleResponse.data.length === 0) {
         setIsNewTrainer(true);
         setInitJadwal();
       } else {
