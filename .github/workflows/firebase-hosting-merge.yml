@@ -1,18 +1,24 @@
 name: Deploy to Firebase Hosting on merge
+
 on:
   push:
     branches:
       - main
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: npm install
+
       - name: Build the project
-        run: npm run build  # Ensure this builds to the correct directory
-        env: VITE_API_URL: https://api.maestroswim.com/
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.maestroswim.com/api
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
