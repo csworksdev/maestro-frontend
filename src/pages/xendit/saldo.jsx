@@ -61,7 +61,9 @@ const XenditBalance = () => {
 
       // Fetch balance history with filters: from, to, search query (description or reference)
       getXenditBalanceHistory({
-        start_date: DateTime.fromISO(from).toFormat("yyyy-MM-dd"),
+        start_date: DateTime.fromISO(from)
+          .plus({ days: -1 })
+          .toFormat("yyyy-MM-dd"),
         end_date: DateTime.fromISO(to).toFormat("yyyy-MM-dd"),
         page: page + 1, // API page index is 1-based
         limit: size,
