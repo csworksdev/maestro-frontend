@@ -58,9 +58,9 @@ const AddJadwal = ({
   const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const { user_id, roles } = useSelector((state) => state.auth.data);
-  const { keterangan, setKeterangan } =
-    useState();
-    // "Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
+  const { keterangan, setKeterangan } = useState(
+    "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
+  );
 
   const {
     register,
