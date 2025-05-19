@@ -53,14 +53,9 @@ const XenditBalance = () => {
       setIsLoading(true);
 
       // Fetch balance data (not used in the table but could be displayed separately)
-      getXenditBalance()
-        .then((res) => {
-          setBalanceData(res.data.balance);
-        })
-        .finally(() => setIsLoading(false));
 
       // Fetch balance history with filters: from, to, search query (description or reference)
-      getXenditBalanceHistory({
+      await getXenditBalanceHistory({
         start_date: DateTime.fromISO(from)
           .plus({ days: -1 })
           .toFormat("yyyy-MM-dd"),
@@ -93,6 +88,12 @@ const XenditBalance = () => {
             return a.amount - b.amount;
           });
           setListData({ results: sortedSaldos });
+
+          getXenditBalance()
+            .then((res) => {
+              setBalanceData(res.data.balance);
+            })
+            .finally(() => setIsLoading(false));
         })
         .finally(() => setIsLoading(false));
     } catch (error) {
