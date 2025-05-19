@@ -12,6 +12,7 @@ jobs:
         run: npm install
       - name: Build the project
         run: npm run build  # Ensure this builds to the correct directory
+        env: VITE_API_URL: https://api.maestroswim.com/api/
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
