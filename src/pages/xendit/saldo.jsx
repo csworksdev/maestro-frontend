@@ -53,52 +53,50 @@ const XenditBalance = () => {
       setIsLoading(true);
 
       // Fetch balance data (not used in the table but could be displayed separately)
+      getXenditBalance().then((res) => {
+        setBalanceData(res.data.balance);
+      });
+      // .finally(() => setIsLoading(false));
 
       // Fetch balance history with filters: from, to, search query (description or reference)
-      await getXenditBalanceHistory({
-        start_date: DateTime.fromISO(from)
-          .plus({ days: -1 })
-          .toFormat("yyyy-MM-dd"),
-        end_date: DateTime.fromISO(to).toFormat("yyyy-MM-dd"),
-        page: page + 1, // API page index is 1-based
-        limit: size,
-        currency: "IDR",
-        description: query, // Apply search query as description filter
-        reference: query, // Apply search query as reference filter
-      })
-        .then((res) => {
-          let sortedSaldos = res.data.results.sort((a, b) => {
-            // 1. completed_date DESC
-            const dateA = new Date(a.completed_date);
-            const dateB = new Date(b.completed_date);
-            if (dateA > dateB) return -1;
-            if (dateA < dateB) return 1;
+      // await getXenditBalanceHistory({
+      //   start_date: DateTime.fromISO(from)
+      //     .plus({ days: -1 })
+      //     .toFormat("yyyy-MM-dd"),
+      //   end_date: DateTime.fromISO(to).toFormat("yyyy-MM-dd"),
+      //   page: page + 1, // API page index is 1-based
+      //   limit: size,
+      //   currency: "IDR",
+      //   description: query, // Apply search query as description filter
+      //   reference: query, // Apply search query as reference filter
+      // })
+      //   .then((res) => {
+      //     let sortedSaldos = res.data.results.sort((a, b) => {
+      //       // 1. completed_date DESC
+      //       const dateA = new Date(a.completed_date);
+      //       const dateB = new Date(b.completed_date);
+      //       if (dateA > dateB) return -1;
+      //       if (dateA < dateB) return 1;
 
-            // 2. reference ASC
-            if (a.reference < b.reference) return -1;
-            if (a.reference > b.reference) return 1;
+      //       // 2. reference ASC
+      //       if (a.reference < b.reference) return -1;
+      //       if (a.reference > b.reference) return 1;
 
-            // 3. line_type custom order: VAT -> FEE -> TRANSACTION
-            const lineTypeA = lineTypeOrder[a.line_type] || 99;
-            const lineTypeB = lineTypeOrder[b.line_type] || 99;
-            if (lineTypeA < lineTypeB) return -1;
-            if (lineTypeA > lineTypeB) return 1;
+      //       // 3. line_type custom order: VAT -> FEE -> TRANSACTION
+      //       const lineTypeA = lineTypeOrder[a.line_type] || 99;
+      //       const lineTypeB = lineTypeOrder[b.line_type] || 99;
+      //       if (lineTypeA < lineTypeB) return -1;
+      //       if (lineTypeA > lineTypeB) return 1;
 
-            // 4. amount ASC (kecil ke besar)
-            return a.amount - b.amount;
-          });
-          setListData({ results: sortedSaldos });
-
-          getXenditBalance()
-            .then((res) => {
-              setBalanceData(res.data.balance);
-            })
-            .finally(() => setIsLoading(false));
-        })
-        .catch((error) => {
-          console.error("Error fetching data", error);
-        })
-        .finally(() => setIsLoading(false));
+      //       // 4. amount ASC (kecil ke besar)
+      //       return a.amount - b.amount;
+      //     });
+      //     setListData({ results: sortedSaldos });
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error fetching data", error);
+      //   });
+      // .finally(() => setIsLoading(false));
     } catch (error) {
       console.error("Error fetching data", error);
     }
