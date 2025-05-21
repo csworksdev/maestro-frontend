@@ -8,6 +8,16 @@ export const getXenditTransaction = async () => {
     console.error("Error fetching data:", error);
   }
 };
+export const getXenditTransactionByID = async (transaction_id) => {
+  try {
+    let response = await axiosConfig.get(
+      "/xendit/transactions/" + transaction_id + "/"
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
 
 export const getXenditInvoiceHistory = async () => {
   try {

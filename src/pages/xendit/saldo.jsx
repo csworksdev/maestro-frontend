@@ -10,7 +10,7 @@ import Icons from "@/components/ui/Icon";
 import PaginationComponent from "@/components/globals/table/pagination";
 import clsx from "clsx";
 import Table from "@/components/globals/table/table";
-import Header from "@/components/partials/header";
+import Flatpickr from "react-flatpickr";
 
 const XenditBalance = () => {
   const navigate = useNavigate();
@@ -26,7 +26,8 @@ const XenditBalance = () => {
     DateTime.now().minus({ days: 1 }).toISODate()
   );
   const [toDate, setToDate] = useState(DateTime.now().toISODate());
-
+  const [copiedRowId, setCopiedRowId] = useState(null);
+  const [picker3, setPicker3] = useState(new Date());
   const actions = [
     {
       name: "edit",
@@ -119,14 +120,9 @@ const XenditBalance = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // Function to copy value to clipboard
-  const [isCopied, setIsCopied] = useState(false);
-
   const handleCopy = (value, rowId) => {
     navigator.clipboard.writeText(value).then(() => {
       setCopiedRowId(rowId);
-
-      // Reset after 1.5 seconds
       setTimeout(() => setCopiedRowId(null), 1500);
     });
   };
@@ -207,30 +203,24 @@ const XenditBalance = () => {
     {
       Header: "Referensi",
       accessor: "reference",
-      Cell: (row) => (
+      Cell: ({ cell, row }) => (
         <div className="flex items-center gap-2">
-          <span>{row?.cell?.value}</span>
+          <span>{cell.value}</span>
           <button
-            onClick={handleCopy}
+            onClick={() => handleCopy(cell.value, row.id)} // gunakan row.id di sini
             className="text-blue-500 hover:text-blue-700 relative transition-transform active:scale-90"
           >
             <Icons
               icon="heroicons-outline:clipboard-copy"
               className={clsx(
-                "w-5 h-5 transition-opacity transform",
-                isCopied ? "opacity-0 scale-0" : "opacity-100 scale-100"
+                "w-5 h-5 transition-opacity transform"
+                // kamu bisa tambah animasi di sini kalau mau
               )}
             />
 
-            <Icons
-              icon="heroicons-outline:check-circle"
-              className={clsx(
-                "w-5 h-5 text-green-500 absolute top-0 left-0 transition-all transform",
-                isCopied
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-50 pointer-events-none"
-              )}
-            />
+            {copiedRowId === row.id && (
+              <span style={{ marginLeft: 5, color: "green" }}>Copied!</span>
+            )}
           </button>
         </div>
       ),
@@ -267,7 +257,33 @@ const XenditBalance = () => {
           <Loading />
         ) : (
           <>
-            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            <div className="flex flex-col justify-between gap-3">
+              <div>
+                <label className="form-label" for="range-picker">
+                  Range
+                </label>
+                <Flatpickr
+                  value={picker3}
+                  id="range-picker"
+                  className="form-control py-2"
+                  onChange={(date) => {
+                    setPicker3(date);
+                    setFromDate(
+                      DateTime.fromISO(date[0]).toFormat("yyyy-MM-dd")
+                    );
+                    setToDate(DateTime.fromISO(date[1]).toFormat("yyyy-MM-dd"));
+                  }}
+                  options={{
+                    mode: "range",
+                    defaultDate: [
+                      DateTime.now().plus({ days: -1 }).toISODate(),
+                      DateTime.now().toISODate(),
+                    ],
+                  }}
+                />
+              </div>
+              <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            </div>
             <Table
               listData={listData}
               listColumn={COLUMNS}
