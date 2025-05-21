@@ -472,7 +472,7 @@ const Presence = () => {
           defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
           options={{
             // absen coach sering telat
-            minDate: DateTime.fromFormat("2025-04-20", "yyyy-MM-dd").toFormat(
+            minDate: DateTime.fromFormat("2025-04-21", "yyyy-MM-dd").toFormat(
               "yyyy-MM-dd"
             ),
             maxDate: DateTime.fromFormat("2025-05-20", "yyyy-MM-dd").toFormat(
