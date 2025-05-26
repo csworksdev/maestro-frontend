@@ -4,10 +4,8 @@ import Loading from "@/components/Loading";
 import { useNavigate } from "react-router-dom";
 import Search from "@/components/globals/table/search";
 import { getXenditBalance, getXenditBalanceHistory } from "@/axios/xendit";
-import Badge from "@/components/ui/Badge";
 import { DateTime } from "luxon";
 import Icons from "@/components/ui/Icon";
-import PaginationComponent from "@/components/globals/table/pagination";
 import clsx from "clsx";
 import Table from "@/components/globals/table/table";
 import Flatpickr from "react-flatpickr";
@@ -21,7 +19,8 @@ const XenditBalance = () => {
   const [listData, setListData] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // Searching by description or reference
   const [copiedRowId, setCopiedRowId] = useState(null);
-  const [picker3, setPicker3] = useState([]);
+  const today = new Date();
+  const [picker3, setPicker3] = useState([today, today]);
 
   const lineTypeOrder = {
     VAT: 1,
@@ -73,29 +72,26 @@ const XenditBalance = () => {
   };
 
   useEffect(() => {
-    if (picker3.length === 2) {
-      const dateParse = (idx) =>
-        DateTime.fromJSDate(new Date(picker3[idx])).toFormat("yyyy-MM-dd");
-      fetchData(dateParse(0), dateParse(1));
+    const isValidDate = (date) => date instanceof Date && !isNaN(date);
+
+    const from = picker3[0];
+    const to = picker3[1];
+
+    if (isValidDate(from) && isValidDate(to)) {
+      const start = DateTime.fromJSDate(from).toFormat("yyyy-MM-dd");
+      const end = DateTime.fromJSDate(to).toFormat("yyyy-MM-dd");
+      fetchData(start, end);
     }
-    if (picker3.length === 0) {
-      const defaultDate = DateTime.now().toFormat("yyyy-MM-dd");
-      fetchData(defaultDate, defaultDate);
-    }
-    // }, []);
   }, [searchQuery, JSON.stringify(picker3)]);
 
-  const handlePageChange = (page) => {
-    setPageIndex(page);
-  };
-
-  const handlePageSizeChange = (size) => {
-    setPageSize(size);
-  };
+  useEffect(() => {
+    const today = DateTime.now().toFormat("yyyy-MM-dd");
+    fetchData(today, today);
+  }, []);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-    setPageIndex(0); // Reset to first page on search
+    // setPageIndex(0); // Reset to first page on search
   };
 
   const handleCopy = (value, rowId) => {
@@ -115,6 +111,7 @@ const XenditBalance = () => {
     if (!isMatch || !numAmount) return "";
 
     const prefix = type === "DEBIT" ? "-" : "+";
+
     return `${prefix}${numAmount.toLocaleString()}`;
   };
 
@@ -127,11 +124,31 @@ const XenditBalance = () => {
         return (
           <div className="flex items-center gap-2">
             <span>
-              {/* {row?.original?.debit_or_credit == "CREDIT"
-                ?  */}
-              {date.toFormat("dd MMM, yyyy hh:mm")} {/*// : ""*/}
+              {row?.cell?.row?.original?.line_type == "TRANSACTION"
+                ? date.toFormat("dd MMM, yyyy hh:mm")
+                : ""}
             </span>
-            {/* <button
+          </div>
+        );
+      },
+    },
+    {
+      Header: "Tipe Transaksi",
+      accessor: "line_type",
+      Cell: (row) => (
+        <div className="flex items-center gap-2">
+          <span>{row?.cell?.value}</span>
+        </div>
+      ),
+    },
+    {
+      Header: "Deskripsi",
+      accessor: "description",
+      Cell: (row) => (
+        <div className="flex items-center gap-2">
+          <span>{row?.cell?.value}</span>
+          {row?.cell?.row?.original?.line_type == "TRANSACTION" ? (
+            <button
               onClick={() => handleCopy(row?.cell?.value)}
               className="text-blue-500 hover:text-blue-700"
             >
@@ -139,26 +156,8 @@ const XenditBalance = () => {
                 icon="heroicons-outline:clipboard-copy"
                 className="w-5 h-5"
               />
-            </button> */}
-          </div>
-        );
-      },
-    },
-    {
-      Header: "Tipe Transaksi",
-      accessor: "transaction_type",
-      Cell: (row) => (
-        <div className="flex items-center gap-2">
-          <span>{row?.cell?.value}</span>
-          {/* <button
-            onClick={() => handleCopy(row?.cell?.value)}
-            className="text-blue-500 hover:text-blue-700"
-          >
-            <Icons
-              icon="heroicons-outline:clipboard-copy"
-              className="w-5 h-5"
-            />
-          </button> */}
+            </button>
+          ) : null}
         </div>
       ),
     },
@@ -183,54 +182,81 @@ const XenditBalance = () => {
     {
       Header: "Referensi",
       accessor: "reference",
-      Cell: ({ cell, row }) => (
-        <div className="flex items-center gap-2">
-          <span>{cell.value}</span>
-          <button
-            onClick={() => handleCopy(cell.value, row.id)} // gunakan row.id di sini
-            className="text-blue-500 hover:text-blue-700 relative transition-transform active:scale-90"
-          >
-            <Icons
-              icon="heroicons-outline:clipboard-copy"
-              className={clsx(
-                "w-5 h-5 transition-opacity transform"
-                // kamu bisa tambah animasi di sini kalau mau
-              )}
-            />
+      Cell: (row) => {
+        return (
+          <div className="flex items-center gap-2">
+            <span>{row?.cell?.value}</span>
+            {row?.cell?.row?.original?.line_type == "TRANSACTION" ? (
+              <button
+                onClick={() => handleCopy(row?.cell?.value, row.id)} // gunakan row.id di sini
+                className="text-blue-500 hover:text-blue-700 relative transition-transform active:scale-90"
+              >
+                <Icons
+                  icon="heroicons-outline:clipboard-copy"
+                  className={clsx(
+                    "w-5 h-5 transition-opacity transform"
+                    // kamu bisa tambah animasi di sini kalau mau
+                  )}
+                />
 
-            {copiedRowId === row.id && (
-              <span style={{ marginLeft: 5, color: "green" }}>Copied!</span>
-            )}
-          </button>
-        </div>
-      ),
+                {copiedRowId === row.id && (
+                  <span style={{ marginLeft: 5, color: "green" }}>Copied!</span>
+                )}
+              </button>
+            ) : null}
+          </div>
+        );
+      },
     },
     {
       Header: "Debit",
       accessor: "debit",
-      Cell: ({ row }) => (
-        <div className="flex items-center gap-2 justify-end text-red-800 font-semibold">
-          {formatAmount(row, "DEBIT")}
-        </div>
-      ),
+      Cell: ({ row }) => {
+        return (
+          <div className="flex items-center gap-2 justify-end text-red-800 font-semibold">
+            <span>{formatAmount(row, "DEBIT")}</span>
+          </div>
+        );
+      },
     },
     {
       Header: "Credit",
       accessor: "credit",
       Cell: ({ row }) => (
         <div className="flex items-center gap-2 justify-end text-green-500 font-semibold">
-          {formatAmount(row, "CREDIT")}
+          <span>{formatAmount(row, "CREDIT")}</span>
+          {row?.original.line_type == "TRANSACTION" ??
+          row?.original.debit_or_credit == "CREDIT" ? (
+            <button
+              onClick={() => handleCopy(row?.original.amount, row.id)} // gunakan row.id di sini
+              className="text-blue-500 hover:text-blue-700 relative transition-transform active:scale-90"
+            >
+              <Icons
+                icon="heroicons-outline:clipboard-copy"
+                className={clsx(
+                  "w-5 h-5 transition-opacity transform"
+                  // kamu bisa tambah animasi di sini kalau mau
+                )}
+              />
+
+              {copiedRowId === row.id && (
+                <span style={{ marginLeft: 5, color: "green" }}>Copied!</span>
+              )}
+            </button>
+          ) : null}
         </div>
       ),
     },
     {
       Header: "Sudah Rekap",
       accessor: "is_recap",
-      Cell: ({ row }) => (
-        <div className="flex items-center gap-2 justify-center text-green-500 font-semibold">
-          x
-        </div>
-      ),
+      Cell: (row) => {
+        return (
+          <div className="flex items-center gap-2 justify-center text-green-500 font-semibold">
+            x
+          </div>
+        );
+      },
     },
   ];
 
@@ -245,11 +271,11 @@ const XenditBalance = () => {
         {isLoading ? (
           <Loading />
         ) : (
-          <>
-            <div className="flex flex-row justify-between gap-3">
-              <div>
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-3 gap-4 items-end mb-6">
+              <div className="col-start-1">
                 <label className="form-label" htmlFor="range-picker">
-                  Range
+                  Filter Tanggal
                 </label>
                 <Flatpickr
                   value={picker3}
@@ -264,58 +290,64 @@ const XenditBalance = () => {
                     dateFormat: "Y-m-d",
                     mode: "range",
                     defaultDate: [new Date(), new Date()],
+                    altInput: true,
+                    altFormat: "d/m/Y",
                   }}
                 />
               </div>
-              <Search searchValue={searchQuery} handleSearch={handleSearch} />
-            </div>
-            <Card bodyClass="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {listData?.results &&
-                  (() => {
-                    // Step 1: Group only DEBIT transactions per date
-                    const grouped = listData.results.reduce(
-                      (acc, transaction) => {
-                        // Validasi amount dan completed_date
-                        if (
-                          transaction.debit_or_credit === "DEBIT" &&
-                          transaction.amount &&
-                          !isNaN(transaction.amount) &&
-                          transaction.completed_date
-                        ) {
-                          const isoDate =
-                            transaction.completed_date.split("T")[0];
-                          const [year, month, day] = isoDate.split("-");
-                          const dateKey = `${day}-${month}-${year}`;
-
-                          acc[dateKey] =
-                            (acc[dateKey] || 0) + Number(transaction.amount);
-                        }
-                        return acc;
-                      },
-                      {}
-                    );
-
-                    // Step 2: Render result
-                    return Object.entries(grouped).map(([date, total]) => (
-                      <div key={date} className="p-4 border rounded shadow">
-                        <h3 className="text-lg font-semibold">{date}</h3>
-                        <p className="text-gray-700">
-                          Total Debit: {total.toLocaleString()}
-                        </p>
-                      </div>
-                    ));
-                  })()}
+              <div className="col-start-3">
+                <Search searchValue={searchQuery} handleSearch={handleSearch} />
               </div>
-            </Card>
-            <Table
-              listData={listData}
-              listColumn={COLUMNS}
-              searchValue={searchQuery}
-              handleSearch={handleSearch}
-              isAction={false}
-            />
-          </>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="text-xl font-semibold">Debit Summary</div>
+              {listData?.results &&
+                (() => {
+                  // Step 1: Group only DEBIT transactions per date
+                  const grouped = listData.results.reduce(
+                    (acc, transaction) => {
+                      // Validasi amount dan completed_date
+                      if (
+                        transaction.debit_or_credit === "DEBIT" &&
+                        transaction.amount &&
+                        !isNaN(transaction.amount) &&
+                        transaction.completed_date
+                      ) {
+                        const isoDate =
+                          transaction.completed_date.split("T")[0];
+                        const [year, month, day] = isoDate.split("-");
+                        const dateKey = `${day}-${month}-${year}`;
+
+                        acc[dateKey] =
+                          (acc[dateKey] || 0) + Number(transaction.amount);
+                      }
+                      return acc;
+                    },
+                    {}
+                  );
+
+                  // Step 2: Render result
+                  return Object.entries(grouped).map(([date, total]) => (
+                    <div key={date} className="p-4 border rounded shadow">
+                      <h3 className="text-lg font-semibold">{date}</h3>
+                      <p className="text-gray-700">
+                        Total Debit: {total.toLocaleString()}
+                      </p>
+                    </div>
+                  ));
+                })()}
+            </div>
+            {listData.length ?? (
+              <Table
+                listData={listData}
+                listColumn={COLUMNS}
+                searchValue={searchQuery}
+                handleSearch={handleSearch}
+                isAction={false}
+              />
+            )}
+          </div>
         )}
       </Card>
     </div>

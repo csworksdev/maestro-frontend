@@ -1,10 +1,10 @@
-import Button from "@/components/ui/Button";
-import Textinput from "@/components/ui/Textinput";
 import React, { useState, useEffect } from "react";
+import Button from "@/components/ui/Button";
 
 const Search = ({
   searchValue,
   handleSearch,
+  isLoading = false,
   theme = "light",
   placeholder = "Pencarian",
 }) => {
@@ -14,44 +14,49 @@ const Search = ({
     setValue(searchValue);
   }, [searchValue]);
 
-  const onChange = (e) => {
-    setValue(e.target.value);
-  };
-
-  const handleClick = () => {
-    handleSearch(value);
-  };
+  // Debounce handleSearch
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (value !== searchValue) {
+        handleSearch(value);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [value]);
 
   const themeClasses =
-    theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900";
+    theme === "dark"
+      ? "border-gray-600 bg-gray-800 text-white placeholder-gray-400"
+      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500";
 
   return (
-    <div className={`mb-4 flex justify-end ${themeClasses}`}>
-      <div className="relative w-full max-w-md">
-        <Textinput
-          // value={value || ""}
-          defaultValue={searchValue}
-          onChange={onChange}
+    <div className="flex flex-col justify-end">
+      {/* <label
+        htmlFor="search-input"
+        className="mb-1 text-sm font-medium text-gray-700"
+      >
+        Pencarian
+      </label> */}
+      <div className="relative">
+        <input
+          id="search-input"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
-          className={`w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 ${
-            theme === "dark"
-              ? "border-gray-600 bg-gray-700 text-white"
-              : "border-gray-300 bg-white text-gray-900"
-          }`}
-          aria-label="Search Input"
-          handleClick={handleClick}
+          className={`w-full py-2 px-4 pr-12 border rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${themeClasses}`}
+          aria-label="Search input"
         />
         <Button
-          className={`absolute inset-y-0 right-0 flex items-center pr-3 btn-primary ${
-            theme === "dark"
-              ? "bg-indigo-600 text-white"
-              : "bg-indigo-500 text-white"
-          }`}
-          onClick={handleClick}
-          icon="heroicons-outline:adjustments-vertical"
-          aria-label="Search Button"
+          className={`absolute inset-y-0 right-0 flex items-center px-3 ${
+            isLoading ? "cursor-not-allowed opacity-50" : "hover:bg-indigo-600"
+          } btn-primary bg-indigo-500 text-white rounded-r-md`}
+          onClick={() => handleSearch(value)}
+          disabled={isLoading}
+          icon={
+            isLoading ? "heroicons-outline:refresh" : "heroicons-outline:search"
+          }
         >
-          Cari
+          {isLoading ? "Memuat..." : "Cari"}
         </Button>
       </div>
     </div>
