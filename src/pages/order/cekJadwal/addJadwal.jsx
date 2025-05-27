@@ -881,99 +881,105 @@ const AddJadwal = ({
                 </React.Fragment>
               </div>
             </div>
-            {/* Pelanggan */}
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between">
-                <span className="text-xl font-semibold mb-2">Pelanggan</span>
-                <Checkbox
-                  name="splitInvoice"
-                  label={"Split Invoice"}
-                  value={isSplitInvoice}
-                  onChange={() => {
-                    setIsSplitInvoice(!isSplitInvoice);
-                  }}
-                />
-              </div>
-              {!isSplitInvoice || parent.length == 1 ? (
-                <>
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="namapelanggan"
-                      className="text-sm font-medium mb-1"
-                    >
-                      Nama
-                    </label>
-                    <select
-                      id="namapelanggan"
-                      {...register("namapelanggan")}
-                      className="border rounded-md p-2"
-                      onChange={(e) => {
-                        const selected = parent.find(
-                          (p) => p.name === e.target.value
-                        );
-                        setValue("namapelanggan", selected?.name || "");
-                        setValue(
-                          "phonepelanggan",
-                          toNormalizePhone(selected?.phone || "")
-                        );
-                      }}
-                    >
-                      <option value="">Pilih Orang Tua</option>
-                      {parent.map((p, index) => (
-                        <option key={index} value={p.name}>
-                          {p.name} - {p.phone}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Textinput
-                    name="phonepelanggan"
-                    label="Nomor Telepon"
-                    type="text"
-                    placeholder="Nomor WA"
-                    register={register}
-                  />
-                  <Textarea
-                    name="keteranganpelanggan"
-                    label="Keterangan"
-                    placeholder="Keterangan"
-                    register={register}
-                  ></Textarea>
-                </>
-              ) : (
-                <div className="flex flex-row gap-3 w-full">
-                  {parent.map((item, idx) => (
-                    <Card key={idx} className="flex-1 min-w-0">
-                      <Textinput
-                        name={`splitCustomers[${idx}].name`}
-                        label="Nama Pelanggan"
-                        type="text"
-                        placeholder="Nama Pelanggan"
-                        register={register}
-                        defaultValue={item.name}
-                      />
-                      <Textinput
-                        name={`splitCustomers[${idx}].phone`}
-                        label="Nomor Telepon"
-                        type="text"
-                        placeholder="Nomor WA"
-                        register={register}
-                        defaultValue={item.phone}
-                      />
-                      <Textarea
-                        name={`splitCustomers[${idx}].keterangan`}
-                        label="Keterangan"
-                        placeholder="Keterangan"
-                        register={register}
-                        defaultValue={keterangan}
-                      />
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
           </Card>
         )}
+        {/* Pelanggan Section */}
+        <Card
+          title={"Pelanggan"}
+          headerslot={
+            parent.length > 1 && (
+              <Checkbox
+                name="splitInvoice"
+                label={"Split Invoice"}
+                value={isSplitInvoice}
+                onChange={() => {
+                  setIsSplitInvoice(!isSplitInvoice);
+                }}
+              />
+            )
+          }
+        >
+          {/* Pelanggan */}
+          <div className="flex flex-col gap-3">
+            {!isSplitInvoice || parent.length == 1 ? (
+              <>
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="namapelanggan"
+                    className="text-sm font-medium mb-1"
+                  >
+                    Nama
+                  </label>
+                  <select
+                    id="namapelanggan"
+                    {...register("namapelanggan")}
+                    className="border rounded-md p-2"
+                    onChange={(e) => {
+                      const selected = parent.find(
+                        (p) => p.name === e.target.value
+                      );
+                      setValue("namapelanggan", selected?.name || "");
+                      setValue(
+                        "phonepelanggan",
+                        toNormalizePhone(selected?.phone || "")
+                      );
+                    }}
+                  >
+                    <option value="">Pilih Orang Tua</option>
+                    {parent.map((p, index) => (
+                      <option key={index} value={p.name}>
+                        {p.name} - {p.phone}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Textinput
+                  name="phonepelanggan"
+                  label="Nomor Telepon"
+                  type="text"
+                  placeholder="Nomor WA"
+                  register={register}
+                />
+                <Textarea
+                  name="keteranganpelanggan"
+                  label="Keterangan"
+                  placeholder="Keterangan"
+                  register={register}
+                ></Textarea>
+              </>
+            ) : (
+              <div className="flex flex-row gap-3 w-full">
+                {parent.map((item, idx) => (
+                  <Card key={idx} className="flex-1 min-w-0">
+                    <Textinput
+                      name={`splitCustomers[${idx}].name`}
+                      label="Nama Pelanggan"
+                      type="text"
+                      placeholder="Nama Pelanggan"
+                      register={register}
+                      defaultValue={item.name}
+                    />
+                    <Textinput
+                      name={`splitCustomers[${idx}].phone`}
+                      label="Nomor Telepon"
+                      type="text"
+                      placeholder="Nomor WA"
+                      register={register}
+                      defaultValue={item.phone}
+                    />
+                    <Textarea
+                      name={`splitCustomers[${idx}].keterangan`}
+                      label="Keterangan"
+                      placeholder="Keterangan"
+                      register={register}
+                      defaultValue={keterangan}
+                    />
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
         <div className="ltr:text-right rtl:text-left space-x-3">
           <div className="btn-group">
             <Button
