@@ -59,3 +59,12 @@ export const XenditCreatePaymentLink = async (params) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const XenditSyncSaldo = async (params) => {
+  try {
+    let response = await axiosConfig.post("/xendit/sync-saldo/", params);
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};

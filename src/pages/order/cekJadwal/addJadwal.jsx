@@ -165,15 +165,15 @@ const AddJadwal = ({
       const uniqueParentsMap = new Map();
 
       parsedRows.forEach((item) => {
-        const key = `${item.parent}-${item.phone}`;
-        if (
-          item.parent &&
-          item.parent !== "-" &&
-          item.phone &&
-          !uniqueParentsMap.has(key)
-        ) {
+        const parentName =
+          item.parent && (item.parent !== "-" || item.parent !== "")
+            ? item.fullname
+            : item.parent;
+
+        const key = `${parentName}-${item.phone}`;
+        if (item.phone && !uniqueParentsMap.has(key)) {
           uniqueParentsMap.set(key, {
-            name: toProperCase(item.parent),
+            name: toProperCase(parentName),
             phone: item.phone,
             keterangan: "",
           });
@@ -643,9 +643,9 @@ const AddJadwal = ({
               {/* Product Rows */}
               <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
                 {product.map((option, i) => {
-                  const isDisabled =
-                    handleProductDisable(option.package_name) ||
-                    option.package_name.toLowerCase() === "trial";
+                  const isDisabled = handleProductDisable(option.package_name);
+                  //  ||
+                  // option.package_name.toLowerCase() === "trial";
 
                   if (isDisabled) return null;
                   return (
@@ -886,18 +886,18 @@ const AddJadwal = ({
         {/* Pelanggan Section */}
         <Card
           title={"Pelanggan"}
-          headerslot={
-            parent.length > 1 && (
-              <Checkbox
-                name="splitInvoice"
-                label={"Split Invoice"}
-                value={isSplitInvoice}
-                onChange={() => {
-                  setIsSplitInvoice(!isSplitInvoice);
-                }}
-              />
-            )
-          }
+          // headerslot={
+          //   parent.length > 1 && (
+          //     <Checkbox
+          //       name="splitInvoice"
+          //       label={"Split Invoice"}
+          //       value={isSplitInvoice}
+          //       onChange={() => {
+          //         setIsSplitInvoice(!isSplitInvoice);
+          //       }}
+          //     />
+          //   )
+          // }
         >
           {/* Pelanggan */}
           <div className="flex flex-col gap-3">

@@ -3,17 +3,23 @@ import Card from "@/components/ui/Card";
 import Loading from "@/components/Loading";
 import { useNavigate } from "react-router-dom";
 import Search from "@/components/globals/table/search";
-import { getXenditBalance, getXenditBalanceHistory } from "@/axios/xendit";
+import {
+  getXenditBalance,
+  getXenditBalanceHistory,
+  XenditSyncSaldo,
+} from "@/axios/xendit";
 import { DateTime } from "luxon";
 import Icons from "@/components/ui/Icon";
 import clsx from "clsx";
 import Table from "@/components/globals/table/table";
 import Flatpickr from "react-flatpickr";
+import Button from "@/components/ui/Button";
 
 const XenditBalance = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSync, setIsSync] = useState(false);
 
   const [balanceData, setBalanceData] = useState(0);
   const [listData, setListData] = useState([]);
@@ -149,13 +155,17 @@ const XenditBalance = () => {
           <span>{row?.cell?.value}</span>
           {row?.cell?.row?.original?.line_type == "TRANSACTION" ? (
             <button
-              onClick={() => handleCopy(row?.cell?.value)}
+              onClick={() => handleCopy(row?.cell?.value, row.id)}
               className="text-blue-500 hover:text-blue-700"
             >
               <Icons
                 icon="heroicons-outline:clipboard-copy"
                 className="w-5 h-5"
               />
+
+              {copiedRowId === row.id && (
+                <span style={{ marginLeft: 5, color: "green" }}>Copied!</span>
+              )}
             </button>
           ) : null}
         </div>
@@ -261,12 +271,38 @@ const XenditBalance = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3">
-      <Card title={"Saldo Tersedia"}>
-        <span className="font-bold text-xl">
-          {"IDR " + balanceData.toLocaleString() ?? 0}
-        </span>
-      </Card>
+    <div className="w-full flex flex-col gap-5 justify-start">
+      <div className="min-w-[320px] max-w-md w-full">
+        <Card
+          title="Saldo Tersedia"
+          headerslot={
+            <Button
+              text="Sync Saldo"
+              icon="heroicons-outline:cloud-arrow-down"
+              className="bg-blue-200 border-sky-300 btn-md hover:bg-blue-400 text-blue-800 font-semibold"
+              onClick={async () => {
+                setIsSync(true);
+                await XenditSyncSaldo()
+                  .then(() => {
+                    const yesterday = DateTime.now()
+                      .plus({ days: -1 })
+                      .toFormat("yyyy-MM-dd");
+                    const today = DateTime.now().toFormat("yyyy-MM-dd");
+                    fetchData(today, today);
+                  })
+                  .finally(() => {
+                    setIsSync(false);
+                  });
+              }}
+              isLoading={isSync}
+            />
+          }
+        >
+          <span className="font-bold text-xl">
+            {"IDR " + (balanceData?.toLocaleString?.() ?? "0")}
+          </span>
+        </Card>
+      </div>
       <Card title="">
         {isLoading ? (
           <Loading />
