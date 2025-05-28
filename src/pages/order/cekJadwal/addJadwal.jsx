@@ -167,8 +167,8 @@ const AddJadwal = ({
       parsedRows.forEach((item) => {
         const parentName =
           item.parent && (item.parent !== "-" || item.parent !== "")
-            ? item.fullname
-            : item.parent;
+            ? item.parent
+            : item.fullname;
 
         const key = `${parentName}-${item.phone}`;
         if (item.phone && !uniqueParentsMap.has(key)) {
@@ -273,83 +273,85 @@ const AddJadwal = ({
           })),
         };
 
-        const res = await AddOrder(updatedData);
+        console.log(updatedData);
 
-        if (res) {
-          // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
-          const orderDetailPromises = [];
+        // const res = await AddOrder(updatedData);
 
-          for (const student of selectedStudents) {
-            for (let i = 0; i < product.meetings; i++) {
-              const temp = {
-                order: res.data.order_id,
-                day: inputValue.day,
-                time: inputValue.time,
-                price_per_meet:
-                  (product.price * parseInt(inputValue.trainer_percentage)) /
-                  100 /
-                  product.meetings,
-                schedule_date: DateTime.now()
-                  .plus({ days: 7 * (i + 1) })
-                  .toFormat("yyyy-MM-dd"),
-                student: student.student_id,
-                meet: i + 1,
-                is_presence: false,
-              };
+        // if (res) {
+        //   // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
+        //   const orderDetailPromises = [];
 
-              orderDetailPromises.push(AddOrderDetail(temp));
-            }
-          }
+        //   for (const student of selectedStudents) {
+        //     for (let i = 0; i < product.meetings; i++) {
+        //       const temp = {
+        //         order: res.data.order_id,
+        //         day: inputValue.day,
+        //         time: inputValue.time,
+        //         price_per_meet:
+        //           (product.price * parseInt(inputValue.trainer_percentage)) /
+        //           100 /
+        //           product.meetings,
+        //         schedule_date: DateTime.now()
+        //           .plus({ days: 7 * (i + 1) })
+        //           .toFormat("yyyy-MM-dd"),
+        //         student: student.student_id,
+        //         meet: i + 1,
+        //         is_presence: false,
+        //       };
 
-          // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
-          await Promise.all(orderDetailPromises);
+        //       orderDetailPromises.push(AddOrderDetail(temp));
+        //     }
+        //   }
 
-          // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
-          const params = {
-            branch: inputValue.branch,
-            pool: inputValue.pool.value,
-            trainer: inputValue.trainer.trainer_id,
-            order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
-            day: inputValue.day,
-            time: inputValue.time,
-            is_free: true,
-          };
-          let data = await AddOrderScheduleV2(params);
-          if (data.data.status === "success") {
-            let paramxendit = {
-              external_id: res.data.order_id,
-              amount:
-                selectedProduct.reduce(
-                  (sum, p) => sum + p.qty * p.sellprice,
-                  0
-                ) +
-                Object.values(grouped).reduce(
-                  (sum, value) => sum + value.total,
-                  0
-                ),
-              description: newData.keteranganpelanggan,
-              customer_name: newData.namapelanggan,
-              customer_phone: newData.phonepelanggan,
-              items: [
-                ...selectedProduct.map((p) => ({
-                  name: p.name,
-                  quantity: p.qty,
-                  price: parseInt(p.sellprice, 10),
-                })),
-                ...Object.entries(grouped)
-                  .filter(([key]) => key !== "extend")
-                  .map(([key, value]) => ({
-                    name: "Registrasi " + value.count,
-                    quantity: value.count,
-                    price: parseInt(value.total, 10),
-                  })),
-              ],
-            };
-            await XenditCreatePaymentLink(paramxendit).then((res) =>
-              reloadDataMaster()
-            );
-          }
-        }
+        //   // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
+        //   await Promise.all(orderDetailPromises);
+
+        //   // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
+        //   const params = {
+        //     branch: inputValue.branch,
+        //     pool: inputValue.pool.value,
+        //     trainer: inputValue.trainer.trainer_id,
+        //     order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
+        //     day: inputValue.day,
+        //     time: inputValue.time,
+        //     is_free: true,
+        //   };
+        //   let data = await AddOrderScheduleV2(params);
+        //   if (data.data.status === "success") {
+        //     let paramxendit = {
+        //       external_id: res.data.order_id,
+        //       amount:
+        //         selectedProduct.reduce(
+        //           (sum, p) => sum + p.qty * p.sellprice,
+        //           0
+        //         ) +
+        //         Object.values(grouped).reduce(
+        //           (sum, value) => sum + value.total,
+        //           0
+        //         ),
+        //       description: newData.keteranganpelanggan,
+        //       customer_name: newData.namapelanggan,
+        //       customer_phone: newData.phonepelanggan,
+        //       items: [
+        //         ...selectedProduct.map((p) => ({
+        //           name: p.name,
+        //           quantity: p.qty,
+        //           price: parseInt(p.sellprice, 10),
+        //         })),
+        //         ...Object.entries(grouped)
+        //           .filter(([key]) => key !== "extend")
+        //           .map(([key, value]) => ({
+        //             name: "Registrasi " + value.count,
+        //             quantity: value.count,
+        //             price: parseInt(value.total, 10),
+        //           })),
+        //       ],
+        //     };
+        //     await XenditCreatePaymentLink(paramxendit).then((res) =>
+        //       reloadDataMaster()
+        //     );
+        //   }
+        // }
       }
     } catch (error) {
       console.error(error);
@@ -358,7 +360,8 @@ const AddJadwal = ({
 
   const onSubmit = async (newData) => {
     try {
-      const newStudents = await submitNewStudent();
+      // const newStudents = await submitNewStudent();
+      const newStudents = [];
       const allStudents = [...selectedStudents, ...newStudents];
       setSelectedStudents(allStudents); // optional kalau UI perlu update
       await createInvoice(newData, allStudents); // kirim langsung students yang benar
@@ -470,6 +473,7 @@ const AddJadwal = ({
           sellprice: trialProductDefinition.sellprice,
           qty: trialStudentCount,
           meetings: trialProductDefinition.meetings,
+          package: trialProductDefinition.package,
           package_name: trialProductDefinition.package_name,
         };
 
@@ -498,32 +502,37 @@ const AddJadwal = ({
     const groupedByParent = formList.reduce((acc, student) => {
       const parentName = student.parent || "Unknown Parent";
       if (!acc[parentName]) acc[parentName] = [];
-      acc[parentName].push(student.fullname);
+      acc[parentName].push(student); // Simpan objek, bukan hanya fullname
       return acc;
     }, {});
 
     // Bangun deskripsi per parent
     const deskripsiPerParent = Object.entries(groupedByParent).map(
-      ([parentName, studentNames]) => {
-        // Propercase parentName
+      ([parentName, studentList]) => {
         const parentProper = toProperCase(parentName);
 
-        // Nama-nama siswa propercase, gabungkan dengan koma
-        const studentsProper = studentNames.map(toProperCase).join(", ");
-
-        // Deskripsi produk berdasarkan selectedProduct
         const produkDesc = selectedProduct
-          .map(
-            (p) =>
-              `${p.package_name} ${
-                p.meetings
-              }x Pertemuan A.n ${studentsProper} (${toProperCase(
-                inputValue.trainer.fullname
-              )})`
-          )
+          .map((p) => {
+            const isTrial = p.package_name.toLowerCase().includes("trial");
+
+            // Filter siswa berdasarkan apakah produk trial
+            const filteredStudents = studentList
+              .filter((s) => (isTrial ? s.istrial : true))
+              .map((s) => toProperCase(s.fullname));
+
+            if (filteredStudents.length === 0) return null; // Lewati jika tidak ada siswa
+
+            const studentsProper = filteredStudents.join(", ");
+
+            return ` (${p.name}) ${toProperCase(p.package_name)} ${
+              p.meetings
+            }x Pertemuan A.n ${studentsProper} (${toProperCase(
+              inputValue.trainer.fullname
+            )})`;
+          })
+          .filter(Boolean) // Buang produk yang tidak punya siswa relevan
           .join("\n");
 
-        // Gabungkan nama parent dan produk
         return `Orang Tua: ${parentProper}\n${produkDesc}`;
       }
     );
@@ -533,26 +542,37 @@ const AddJadwal = ({
 
     // Update form field splitCustomers[n].keterangan untuk tiap parent jika kamu pakai splitInvoice
     if (isSplitInvoice) {
-      // Asumsikan kamu punya array splitCustomers, dan urutan sesuai parent di groupedByParent keys
-      Object.entries(groupedByParent).forEach(([parentName], idx) => {
-        const produkDesc = selectedProduct
-          .map(
-            (p) =>
-              `${p.package_name} ${p.meetings}x Pertemuan A.n ${groupedByParent[
-                parentName
-              ]
-                .map(toProperCase)
-                .join(", ")} (${toProperCase(inputValue.trainer.fullname)})`
-          )
-          .join("\n");
+      Object.entries(groupedByParent).forEach(
+        ([parentName, studentList], idx) => {
+          const produkDesc = selectedProduct
+            .map((p) => {
+              const isTrial = p.package_name.toLowerCase().includes("trial");
 
-        setValue(`splitCustomers[${idx}].keterangan`, produkDesc, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-      });
+              // Filter siswa berdasarkan status trial
+              const filteredStudents = studentList
+                .filter((s) => (isTrial ? s.istrial : true))
+                .map((s) => toProperCase(s.fullname));
+
+              if (filteredStudents.length === 0) return null;
+
+              const studentsProper = filteredStudents.join(", ");
+
+              return `${toProperCase(p.package_name)} ${
+                p.meetings
+              }x Pertemuan A.n ${studentsProper} (${toProperCase(
+                inputValue.trainer.fullname
+              )})`;
+            })
+            .filter(Boolean)
+            .join("\n");
+
+          setValue(`splitCustomers[${idx}].keterangan`, produkDesc, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }
+      );
     } else {
-      // Kalau bukan split invoice, set satu keterangan pelanggan umum
       setValue("keteranganpelanggan", finalDeskripsi);
     }
   }, [selectedProduct, formList, inputValue.trainer, setValue, isSplitInvoice]);
@@ -821,6 +841,7 @@ const AddJadwal = ({
                   <span className="text-left font-medium">Jumlah</span>
                   <span className="text-left font-medium">Harga</span>
                 </>
+                {/* untuk produk yang dipilih */}
                 {selectedProduct.length > 0 &&
                   selectedProduct.map((p) => (
                     <>
@@ -831,13 +852,14 @@ const AddJadwal = ({
                         <span>
                           {(
                             p.qty *
-                            formList.length *
+                            (p.package_name === "trial" ? 1 : formList.length) *
                             p.sellprice
                           ).toLocaleString()}
                         </span>
                       </div>
                     </>
                   ))}
+                {/* untuk registrasi */}
                 {Object.entries(grouped)
                   .filter(([key]) => key !== "extend")
                   .map(([key, value]) => (
@@ -865,7 +887,13 @@ const AddJadwal = ({
                     <span>
                       {(
                         selectedProduct.reduce(
-                          (sum, p) => sum + p.qty * p.sellprice,
+                          (sum, p) =>
+                            sum +
+                            p.qty *
+                              (p.package_name === "trial"
+                                ? 1
+                                : formList.length) *
+                              p.sellprice,
                           0
                         ) +
                         Object.values(grouped).reduce(
@@ -886,18 +914,18 @@ const AddJadwal = ({
         {/* Pelanggan Section */}
         <Card
           title={"Pelanggan"}
-          // headerslot={
-          //   parent.length > 1 && (
-          //     <Checkbox
-          //       name="splitInvoice"
-          //       label={"Split Invoice"}
-          //       value={isSplitInvoice}
-          //       onChange={() => {
-          //         setIsSplitInvoice(!isSplitInvoice);
-          //       }}
-          //     />
-          //   )
-          // }
+          headerslot={
+            parent.length > 1 && (
+              <Checkbox
+                name="splitInvoice"
+                label={"Split Invoice"}
+                value={isSplitInvoice}
+                onChange={() => {
+                  setIsSplitInvoice(!isSplitInvoice);
+                }}
+              />
+            )
+          }
         >
           {/* Pelanggan */}
           <div className="flex flex-col gap-3">

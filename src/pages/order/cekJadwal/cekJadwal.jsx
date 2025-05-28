@@ -9,13 +9,13 @@ import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
-import { forEach, sum } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncSelect from "react-select/async";
 import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
+import Dropdown from "@/components/ui/Dropdown";
 
 const columnHeader = [
   "Pelatih",
@@ -330,16 +330,38 @@ const CekJadwal = () => {
               } else {
                 if (slot.order_id !== "") {
                   if (slot.pool_name === pool.label) {
+                    let cardColor = "bg-green-300"; // default
+                    let showPerpanjang = false;
+
+                    const pLastRaw = slot.p[slot.p.length - 1]?.tgl;
+                    if (pLastRaw) {
+                      const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
+                      const today = DateTime.now();
+
+                      const diffInDays = today.diff(pLast, "days").days;
+
+                      if (diffInDays < 0) {
+                        // pLast di masa depan
+                        cardColor = "bg-green-300";
+                      } else if (diffInDays <= 2) {
+                        cardColor = "bg-yellow-300";
+                      } else {
+                        cardColor = "bg-red-300";
+                      }
+                    }
+
                     return (
                       <div
                         key={key}
-                        className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start"
+                        className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start gap-2 min-h-[80px]`}
                       >
+                        <PaymentStatusBadge status={"settled"} />
                         <Badge
                           label={checkProduct(slot.product)}
                           className="bg-primary-500 text-white text-center"
                         />
                         <div className="flex flex-row justify-between">
+                          {/* daftar siswa */}
                           <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
                             <Tooltip
                               placement="top"
@@ -353,6 +375,7 @@ const CekJadwal = () => {
                               <span>{iconProduct(slot.product)}</span>
                             </Tooltip>
                           </div>
+                          {/* Pertemuan */}
                           <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
                             <Tooltip
                               placement="top"
@@ -375,7 +398,18 @@ const CekJadwal = () => {
                               <span>{iconProduct("p")}</span>
                             </Tooltip>
                           </div>
+                          {/* {showPerpanjang && <Button></Button>} */}
                         </div>
+                        <Dropdown
+                          classMenuItems="left-0 bottom-full mb-2 w-[220px] absolute z-50"
+                          label={
+                            <Button
+                              text="Action"
+                              className=" bg-warning-50 text-black btn-sm"
+                              iconClass="text-sm"
+                            />
+                          }
+                        />
                       </div>
                     );
                   } else {
@@ -417,11 +451,7 @@ const CekJadwal = () => {
               >
                 <>
                   {header}
-                  {jumlahPerJam && (
-                    <>
-                      <br />({jumlahPerJam})
-                    </>
-                  )}
+                  {jumlahPerJam && <>{/* <br />({jumlahPerJam}) */}</>}
                 </>
               </div>
             );
@@ -439,7 +469,7 @@ const CekJadwal = () => {
                   {de.fullname && (
                     <>
                       {de.fullname}
-                      <br />({de.total_order})
+                      {/* <br />({de.total_order}) */}
                     </>
                   )}
                 </span>
@@ -569,22 +599,23 @@ const CekJadwal = () => {
             onChange={handleChangeTab}
           >
             <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 pb-3 ">
-              {tabHari.map((item, i) => (
-                <Tab key={i}>
-                  {({ selected }) => (
-                    <button
-                      className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
+              {selectedBranch &&
+                tabHari.map((item, i) => (
+                  <Tab key={i}>
+                    {({ selected }) => (
+                      <button
+                        className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
                 ${
                   selected
                     ? "text-white bg-primary-500"
                     : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
                 }`}
-                    >
-                      {`${item.name} (${item.total})`}
-                    </button>
-                  )}
-                </Tab>
-              ))}
+                      >
+                        {`${item.name} (${item.total})`}
+                      </button>
+                    )}
+                  </Tab>
+                ))}
             </Tab.List>
             <Tab.Panels key={JSON.stringify(jadwal)}>
               {tabHari.map((item, index) => {
@@ -697,3 +728,37 @@ const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
     </Tooltip>
   </div>
 ));
+
+const STATUS_MAP = {
+  unpaid: {
+    label: "Unpaid",
+    className: "bg-amber-500 text-white",
+    icon: "heroicons-outline:clock",
+  },
+  paid: {
+    label: "Paid",
+    className: "bg-emerald-500 text-white",
+    icon: "heroicons-outline:check-circle",
+  },
+  settled: {
+    label: "Settled",
+    className: "bg-blue-500 text-white",
+    icon: "heroicons-outline:banknotes",
+  },
+  expired: {
+    label: "Expired",
+    className: "bg-gray-500 text-white",
+    icon: "heroicons-outline:x-circle",
+  },
+};
+
+const PaymentStatusBadge = ({ status }) => {
+  const statusKey = status?.toLowerCase();
+  const { label, className, icon } = STATUS_MAP[statusKey] || {
+    label: "Tidak Dikenal",
+    className: "bg-gray-300 text-white",
+    icon: "heroicons-outline:question-mark-circle",
+  };
+
+  return <Badge label={label} className={className} icon={icon} />;
+};
