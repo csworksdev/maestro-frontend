@@ -205,19 +205,13 @@ const CekJadwal = () => {
       if (!fillDay) return day;
 
       const updatedData = day.data.map((slot) => {
-        const fillSlot = fillDay.data.find((f) => f.jam === slot.jam);
+        const jam = slot.jam;
+        const orders = fillDay.data?.[jam] || [];
 
-        return fillSlot
-          ? {
-              ...slot,
-              is_free: fillSlot.is_free,
-              order_id: fillSlot.order_id ?? slot.order_id,
-              student: fillSlot.student ?? slot.student,
-              product: fillSlot.product ?? slot.product,
-              pool_name: fillSlot.pool_name ?? slot.pool_name,
-              p: fillSlot.p ?? slot.p,
-            }
-          : slot;
+        return {
+          ...slot,
+          orders: orders.length > 0 ? orders : slot.orders,
+        };
       });
 
       return {
@@ -232,9 +226,9 @@ const CekJadwal = () => {
       fullname: fillData.fullname ?? baseJadwal.fullname,
       gender: fillData.gender ?? baseJadwal.gender,
       kolam: fillData.kolam ?? baseJadwal.kolam,
-      datahari: updatedDatahari,
       total_order: fillData.total_order ?? baseJadwal.total_order,
       percent: fillData.percent ?? baseJadwal.percent,
+      datahari: updatedDatahari,
     };
   };
 
@@ -317,120 +311,103 @@ const CekJadwal = () => {
   const GridKolamDetail = React.memo(({ item, pool }) => {
     const selectedDay = daysOfWeek[selectedIndex]?.name;
 
+    const filteredDataHari =
+      item.datahari?.filter((x) => x.hari === selectedDay) || [];
+
     return (
       <>
-        {item.datahari
-          .filter((x) => x.hari === selectedDay)
-          .flatMap((timeSlot, i) =>
-            timeSlot.data.map((slot, j) => {
-              const key = `${i}-${j}`;
+        {filteredDataHari.flatMap((timeSlot, i) =>
+          timeSlot.data.map((slotObj, jIdx) => {
+            const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
 
-              if (slot.is_free) {
-                return <PelatihLibur key={key} />;
-              } else {
-                if (slot.order_id !== "") {
-                  if (slot.pool_name === pool.label) {
-                    let cardColor = "bg-green-300"; // default
-                    let showPerpanjang = false;
+            return (
+              <div
+                key={`${i}-${jIdx}`}
+                className="flex flex-col gap-2 min-h-[70px] align-center items-center"
+              >
+                {orders.map((slot, k) => {
+                  const key = `${i}-${jIdx}-${k}`;
 
-                    const pLastRaw = slot.p[slot.p.length - 1]?.tgl;
-                    if (pLastRaw) {
-                      const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
-                      const today = DateTime.now();
+                  if (slot.is_free) return <PelatihLibur key={key} />;
 
-                      const diffInDays = today.diff(pLast, "days").days;
-
-                      if (diffInDays < 0) {
-                        // pLast di masa depan
-                        cardColor = "bg-green-300";
-                      } else if (diffInDays <= 2) {
-                        cardColor = "bg-yellow-300";
-                      } else {
-                        cardColor = "bg-red-300";
+                  if (slot.order_id) {
+                    if (slot.pool_name === pool.label) {
+                      // Color logic
+                      let cardColor = "bg-green-300";
+                      const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
+                      if (pLastRaw) {
+                        const pLast = DateTime.fromFormat(
+                          pLastRaw,
+                          "dd/MM/yyyy"
+                        );
+                        const diff = DateTime.now().diff(pLast, "days").days;
+                        if (diff > 2) cardColor = "bg-red-300";
+                        else if (diff > 0) cardColor = "bg-yellow-300";
                       }
-                    }
 
-                    return (
-                      <div
-                        key={key}
-                        className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col justify-start gap-2 min-h-[80px]`}
-                      >
-                        <PaymentStatusBadge status={"settled"} />
-                        <Badge
-                          label={checkProduct(slot.product)}
-                          className="bg-primary-500 text-white text-center"
-                        />
-                        <div className="flex flex-row justify-between">
-                          {/* daftar siswa */}
-                          <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
-                            <Tooltip
-                              placement="top"
-                              arrow
-                              content={
-                                slot.student?.length === 1
-                                  ? slot.student[0]
-                                  : slot.student?.join(", ")
-                              }
-                            >
+                      return (
+                        <div
+                          key={key}
+                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col gap-2`}
+                        >
+                          <PaymentStatusBadge status="settled" />
+                          <Badge
+                            label={checkProduct(slot.product)}
+                            className="bg-primary-500 text-white text-center"
+                          />
+                          <div className="flex justify-between">
+                            <Tooltip content={slot.student?.join(", ") || ""}>
                               <span>{iconProduct(slot.product)}</span>
                             </Tooltip>
-                          </div>
-                          {/* Pertemuan */}
-                          <div className="text-sm whitespace-pre-line flex items-center justify-center pt-2">
                             <Tooltip
-                              placement="top"
-                              arrow
                               content={
-                                slot.p && slot.p.length > 0 ? (
-                                  <div>
-                                    {slot.p.map((item, idx) => (
+                                slot.p?.length
+                                  ? slot.p.map((pItem, idx) => (
                                       <div key={idx}>
-                                        <strong>P{item.meet}</strong>:{" "}
-                                        {item.tgl || "-"}
+                                        <strong>P{pItem.meet}</strong>:{" "}
+                                        {pItem.tgl || "-"}
                                       </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  "Tidak ada pertemuan"
-                                )
+                                    ))
+                                  : "Tidak ada pertemuan"
                               }
                             >
                               <span>{iconProduct("p")}</span>
                             </Tooltip>
                           </div>
-                          {/* {showPerpanjang && <Button></Button>} */}
+                          <Dropdown
+                            classMenuItems="left-0 bottom-full mb-2 w-[220px] absolute z-50"
+                            label={
+                              <Button
+                                text="Action"
+                                className="bg-warning-50 text-black btn-sm"
+                                iconClass="text-sm"
+                              />
+                            }
+                          />
                         </div>
-                        <Dropdown
-                          classMenuItems="left-0 bottom-full mb-2 w-[220px] absolute z-50"
-                          label={
-                            <Button
-                              text="Action"
-                              className=" bg-warning-50 text-black btn-sm"
-                              iconClass="text-sm"
-                            />
-                          }
-                        />
-                      </div>
-                    );
-                  } else {
+                      );
+                    }
+
+                    // Pelatih lain
                     return (
                       <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
                     );
                   }
-                } else {
+
                   return (
                     <PelatihKosong
                       key={key}
                       pool={poolOption[selectedPool]}
                       trainer={item}
                       hari={timeSlot.hari}
-                      jam={slot.jam}
+                      jam={slotObj.jam}
                     />
                   );
-                }
-              }
-            })
-          )}
+                })}
+              </div>
+            );
+          })
+        )}
       </>
     );
   });
@@ -525,6 +502,7 @@ const CekJadwal = () => {
 
   const handleModal = ({ pool, jadwal, trainer, hari, jam }) => {
     setDetailModalVisible(true);
+    loadProduct(pool.value);
     setInputValue((prevParams) => ({
       ...prevParams,
       pool: pool,
@@ -537,7 +515,7 @@ const CekJadwal = () => {
     }));
   };
 
-  const PelatihKosong = React.memo((pool, jadwal, trainer, hari, jam) => {
+  const PelatihKosong = React.memo(({ pool, jadwal, trainer, hari, jam }) => {
     return (
       <div className="flex justify-center items-center">
         <Tooltip placement="top" arrow content={`Buat Order`}>
@@ -546,7 +524,7 @@ const CekJadwal = () => {
               icon="heroicons-outline:plus"
               width="24"
               color="green"
-              onClick={() => handleModal(pool, jadwal, trainer, hari, jam)} //console.table(pool, jadwal, trainer, hari, jam)}
+              onClick={() => handleModal({ pool, jadwal, trainer, hari, jam })}
             />
           </span>
         </Tooltip>
@@ -760,5 +738,6 @@ const PaymentStatusBadge = ({ status }) => {
     icon: "heroicons-outline:question-mark-circle",
   };
 
-  return <Badge label={label} className={className} icon={icon} />;
+  // return <Badge label={label} className={className} icon={icon} />;
+  return <Badge label={label} className={className} />;
 };

@@ -18,6 +18,7 @@ import { AddOrderScheduleV2 } from "@/axios/schedule/orderSchedule";
 import { AddOrder } from "@/axios/masterdata/order";
 import { XenditCreatePaymentLink } from "@/axios/xendit";
 import { toProperCase, toNormalizePhone } from "@/utils";
+import { generateExternalId } from "@/utils/xendit-uuid";
 
 // status registrasi
 const allStatus = [
@@ -249,6 +250,9 @@ const AddJadwal = ({
 
   const createInvoice = async (newData, students) => {
     try {
+      const external_id = generateExternalId();
+      var is_finish = 0;
+
       for (const product of selectedProduct) {
         const updatedData = {
           package: product.package,
@@ -268,90 +272,97 @@ const AddJadwal = ({
           // is_paid: false,
           start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
           order_date: DateTime.now().toFormat("yyyy-MM-dd"),
-          students: students.map((student) => ({
-            student_id: student.student_id,
-          })),
+          students:
+            product.package_name === "trial"
+              ? formList
+                  .filter((s) => s.istrial)
+                  .map((student) => ({
+                    student_id: student.student_id,
+                  }))
+              : students.map((student) => ({
+                  student_id: student.student_id,
+                })),
+          invoice_id: external_id,
         };
 
-        console.log(updatedData);
+        const res = await AddOrder(updatedData);
 
-        // const res = await AddOrder(updatedData);
+        if (res) {
+          // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
+          const orderDetailPromises = [];
 
-        // if (res) {
-        //   // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
-        //   const orderDetailPromises = [];
+          for (const student of selectedStudents) {
+            for (let i = 0; i < product.meetings; i++) {
+              const temp = {
+                order: res.data.order_id,
+                day: inputValue.day,
+                time: inputValue.time,
+                price_per_meet:
+                  (product.price * parseInt(inputValue.trainer_percentage)) /
+                  100 /
+                  product.meetings,
+                schedule_date: DateTime.now()
+                  .plus({ days: 7 * (i + 1) })
+                  .toFormat("yyyy-MM-dd"),
+                student: student.student_id,
+                meet: i + 1,
+                is_presence: false,
+              };
 
-        //   for (const student of selectedStudents) {
-        //     for (let i = 0; i < product.meetings; i++) {
-        //       const temp = {
-        //         order: res.data.order_id,
-        //         day: inputValue.day,
-        //         time: inputValue.time,
-        //         price_per_meet:
-        //           (product.price * parseInt(inputValue.trainer_percentage)) /
-        //           100 /
-        //           product.meetings,
-        //         schedule_date: DateTime.now()
-        //           .plus({ days: 7 * (i + 1) })
-        //           .toFormat("yyyy-MM-dd"),
-        //         student: student.student_id,
-        //         meet: i + 1,
-        //         is_presence: false,
-        //       };
+              orderDetailPromises.push(AddOrderDetail(temp));
+            }
+          }
 
-        //       orderDetailPromises.push(AddOrderDetail(temp));
-        //     }
-        //   }
+          // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
+          await Promise.all(orderDetailPromises);
 
-        //   // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
-        //   await Promise.all(orderDetailPromises);
+          // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
+          const params = {
+            branch: inputValue.branch,
+            pool: inputValue.pool.value,
+            trainer: inputValue.trainer.trainer_id,
+            order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
+            day: inputValue.day,
+            time: inputValue.time,
+            is_free: true,
+          };
+          let data = await AddOrderScheduleV2(params);
+          if (data.data.status === "success") {
+            is_finish += 1;
+          }
+        }
 
-        //   // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
-        //   const params = {
-        //     branch: inputValue.branch,
-        //     pool: inputValue.pool.value,
-        //     trainer: inputValue.trainer.trainer_id,
-        //     order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
-        //     day: inputValue.day,
-        //     time: inputValue.time,
-        //     is_free: true,
-        //   };
-        //   let data = await AddOrderScheduleV2(params);
-        //   if (data.data.status === "success") {
-        //     let paramxendit = {
-        //       external_id: res.data.order_id,
-        //       amount:
-        //         selectedProduct.reduce(
-        //           (sum, p) => sum + p.qty * p.sellprice,
-        //           0
-        //         ) +
-        //         Object.values(grouped).reduce(
-        //           (sum, value) => sum + value.total,
-        //           0
-        //         ),
-        //       description: newData.keteranganpelanggan,
-        //       customer_name: newData.namapelanggan,
-        //       customer_phone: newData.phonepelanggan,
-        //       items: [
-        //         ...selectedProduct.map((p) => ({
-        //           name: p.name,
-        //           quantity: p.qty,
-        //           price: parseInt(p.sellprice, 10),
-        //         })),
-        //         ...Object.entries(grouped)
-        //           .filter(([key]) => key !== "extend")
-        //           .map(([key, value]) => ({
-        //             name: "Registrasi " + value.count,
-        //             quantity: value.count,
-        //             price: parseInt(value.total, 10),
-        //           })),
-        //       ],
-        //     };
-        //     await XenditCreatePaymentLink(paramxendit).then((res) =>
-        //       reloadDataMaster()
-        //     );
-        //   }
-        // }
+        if (is_finish === selectedProduct.length) {
+          let paramxendit = {
+            external_id: external_id,
+            amount:
+              selectedProduct.reduce((sum, p) => sum + p.qty * p.sellprice, 0) +
+              Object.values(grouped).reduce(
+                (sum, value) => sum + value.total,
+                0
+              ),
+            description: newData.keteranganpelanggan,
+            customer_name: newData.namapelanggan,
+            customer_phone: newData.phonepelanggan,
+            items: [
+              ...selectedProduct.map((p) => ({
+                name: p.name,
+                quantity: p.qty,
+                price: parseInt(p.sellprice, 10),
+              })),
+              ...Object.entries(grouped)
+                .filter(([key]) => key !== "extend")
+                .map(([key, value]) => ({
+                  name: "Registrasi " + value.count,
+                  quantity: value.count,
+                  price: parseInt(value.total, 10),
+                })),
+            ],
+          };
+          await XenditCreatePaymentLink(paramxendit).then((res) =>
+            reloadDataMaster()
+          );
+        }
       }
     } catch (error) {
       console.error(error);
@@ -360,8 +371,7 @@ const AddJadwal = ({
 
   const onSubmit = async (newData) => {
     try {
-      // const newStudents = await submitNewStudent();
-      const newStudents = [];
+      const newStudents = await submitNewStudent();
       const allStudents = [...selectedStudents, ...newStudents];
       setSelectedStudents(allStudents); // optional kalau UI perlu update
       await createInvoice(newData, allStudents); // kirim langsung students yang benar
