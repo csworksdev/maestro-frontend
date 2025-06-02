@@ -5,6 +5,7 @@ export const BaseJadwal = {
   kolam: [],
   total_order: 0,
   percent: 0,
+  phone: "",
   datahari: [
     {
       hari: "Senin",

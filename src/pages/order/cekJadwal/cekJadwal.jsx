@@ -92,6 +92,21 @@ const CekJadwal = () => {
     { name: "Minggu", data: [], total: 0 },
   ];
 
+  const dropdownItems = [
+    {
+      label: "Perpanjang Paket",
+      link: "#",
+    },
+    {
+      label: "Follow Up Siswa",
+      link: "#",
+    },
+    {
+      label: "Something else here",
+      link: "#",
+    },
+  ];
+
   const [tabHari, setTabHari] = useState(daysOfWeek);
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);
@@ -224,6 +239,8 @@ const CekJadwal = () => {
       ...baseJadwal,
       trainer_id: fillData.trainer_id ?? baseJadwal.trainer_id,
       fullname: fillData.fullname ?? baseJadwal.fullname,
+      nickname: fillData.nickname ?? baseJadwal.nickname,
+      phone: fillData.phone ?? baseJadwal.phone,
       gender: fillData.gender ?? baseJadwal.gender,
       kolam: fillData.kolam ?? baseJadwal.kolam,
       total_order: fillData.total_order ?? baseJadwal.total_order,
@@ -323,7 +340,7 @@ const CekJadwal = () => {
             return (
               <div
                 key={`${i}-${jIdx}`}
-                className="flex flex-col gap-2 min-h-[70px] align-center items-center"
+                className="flex flex-col gap-2 min-h-[70px] justify-center items-center"
               >
                 {orders.map((slot, k) => {
                   const key = `${i}-${jIdx}-${k}`;
@@ -383,6 +400,7 @@ const CekJadwal = () => {
                                 iconClass="text-sm"
                               />
                             }
+                            items={dropdownItems}
                           />
                         </div>
                       );
@@ -395,13 +413,28 @@ const CekJadwal = () => {
                   }
 
                   return (
-                    <PelatihKosong
-                      key={key}
-                      pool={poolOption[selectedPool]}
-                      trainer={item}
-                      hari={timeSlot.hari}
-                      jam={slotObj.jam}
-                    />
+                    <>
+                      <PelatihKosong
+                        key={key}
+                        pool={poolOption[selectedPool]}
+                        trainer={item}
+                        hari={timeSlot.hari}
+                        jam={slotObj.jam}
+                      />
+                      <Button
+                        icon={"ic:baseline-whatsapp"}
+                        className="btn-sm bg-green-500 text-white"
+                        onClick={() => {
+                          // const phone = "628123456789"; // ganti dengan nomor WA tujuan, tanpa +
+                          const pesan = encodeURIComponent(
+                            `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`
+                          );
+                          const url = `https://wa.me/${item.phone}?text=${pesan}`;
+                          window.open(url);
+                          // console.log(url);
+                        }}
+                      ></Button>
+                    </>
                   );
                 })}
               </div>
@@ -443,9 +476,9 @@ const CekJadwal = () => {
                 }`}
               >
                 <span className="text-[clamp(8px,0.7vw,14px)] p-1">
-                  {de.fullname && (
+                  {de.nickname && (
                     <>
-                      {de.fullname}
+                      {de.nickname}
                       {/* <br />({de.total_order}) */}
                     </>
                   )}
