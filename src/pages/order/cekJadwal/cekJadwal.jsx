@@ -16,6 +16,8 @@ import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import Dropdown from "@/components/ui/Dropdown";
+import { sendWhatsApp } from "@/utils/send-whatsapp";
+import WhatsAppButton from "@/components/custom/sendwhatsapp";
 
 const columnHeader = [
   "Pelatih",
@@ -412,6 +414,8 @@ const CekJadwal = () => {
                     );
                   }
 
+                  const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
+
                   return (
                     <>
                       <PelatihKosong
@@ -421,19 +425,7 @@ const CekJadwal = () => {
                         hari={timeSlot.hari}
                         jam={slotObj.jam}
                       />
-                      <Button
-                        icon={"ic:baseline-whatsapp"}
-                        className="btn-sm bg-green-500 text-white"
-                        onClick={() => {
-                          // const phone = "628123456789"; // ganti dengan nomor WA tujuan, tanpa +
-                          const pesan = encodeURIComponent(
-                            `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`
-                          );
-                          const url = `https://wa.me/${item.phone}?text=${pesan}`;
-                          window.open(url);
-                          // console.log(url);
-                        }}
-                      ></Button>
+                      {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
                     </>
                   );
                 })}
