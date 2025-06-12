@@ -1,8 +1,11 @@
+import { removeFcmToken } from "@/utils/fcm";
 import { axiosConfig } from "../config";
 
 export const login = async (data) => {
   try {
-    let response = await axiosConfig.post("/auth/users/login/", data);
+    let response = await axiosConfig.post("/auth/users/login/", data, {
+      withCredentials: true,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -12,6 +15,7 @@ export const login = async (data) => {
 export const logout = async (data) => {
   try {
     let response = await axiosConfig.post("/auth/users/logout/", data);
+    if (response) removeFcmToken();
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

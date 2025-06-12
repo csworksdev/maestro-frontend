@@ -5,6 +5,7 @@ import { Menu, Transition } from "@headlessui/react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logOut } from "@/store/api/auth/authSlice";
+import { removeFcmToken } from "@/utils/fcm";
 
 import UserAvatar from "@/assets/images/all-img/user.png";
 
@@ -38,7 +39,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // Clear user data from local storage
     // localStorage.removeItem("user");
     // localStorage.removeItem("refresh");
@@ -49,6 +50,7 @@ const Profile = () => {
     // localStorage.removeItem("userid");
     // localStorage.removeItem("username");
     navigate(0);
+    // await removeFcmToken();
     dispatch(logOut());
   };
 

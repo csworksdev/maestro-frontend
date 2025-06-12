@@ -16,7 +16,6 @@ import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import Dropdown from "@/components/ui/Dropdown";
-import { sendWhatsApp } from "@/utils/send-whatsapp";
 import WhatsAppButton from "@/components/custom/sendwhatsapp";
 
 const columnHeader = [
@@ -367,9 +366,9 @@ const CekJadwal = () => {
                       return (
                         <div
                           key={key}
-                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col gap-2`}
+                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col gap-2 w-full max-w-full overflow-hidden`}
                         >
-                          <PaymentStatusBadge status="settled" />
+                          {/* <PaymentStatusBadge status="settled" /> */}
                           <Badge
                             label={checkProduct(slot.product)}
                             className="bg-primary-500 text-white text-center"
@@ -453,7 +452,12 @@ const CekJadwal = () => {
               >
                 <>
                   {header}
-                  {jumlahPerJam && <>{/* <br />({jumlahPerJam}) */}</>}
+                  {jumlahPerJam && (
+                    <>
+                      {" "}
+                      <br />({jumlahPerJam}){" "}
+                    </>
+                  )}
                 </>
               </div>
             );
@@ -471,7 +475,7 @@ const CekJadwal = () => {
                   {de.nickname && (
                     <>
                       {de.nickname}
-                      {/* <br />({de.total_order}) */}
+                      <br />({de.total_order})
                     </>
                   )}
                 </span>

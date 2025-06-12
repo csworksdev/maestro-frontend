@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./layout/Layout";
 import AuthLayout from "./layout/AuthLayout";
@@ -10,6 +10,10 @@ import RekapBulanan from "./pages/finance/rekapBulanan/rekapBulanan";
 import XenditTransaction from "./pages/xendit/transaction";
 import XenditInvoiceHistory from "./pages/xendit/invoice-history";
 import XenditBalance from "./pages/xendit/saldo";
+import { setupInterceptors } from "./axios/config";
+import { toast } from "react-toastify";
+import { messaging, getToken, onMessage } from "@/firebase/firebase";
+import { removeFcmToken } from "@/utils/fcm";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -81,6 +85,52 @@ const App = () => {
   const subdomain = hostname.split(".")[0];
   const isAuth = useSelector((state) => state.auth.isAuth);
   const { roles } = useSelector((state) => state.auth.data);
+  setupInterceptors();
+
+  useEffect(() => {
+    // Minta izin dan ambil token
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        getToken(messaging, {
+          vapidKey: import.meta.env.FCM_VAPID_KEY,
+        })
+          .then((currentToken) => {
+            if (currentToken) {
+              console.log("FCM Token:", currentToken);
+              // Kirim token ke backend, simpan ke DB, dsb.
+            } else {
+              console.log(
+                "No registration token available. Request permission to generate one."
+              );
+            }
+          })
+          .catch(async (err) => {
+            if (err.response?.data?.detail === "Token not registered") {
+              await removeFcmToken();
+            }
+            console.log("An error occurred while retrieving token. ", err);
+          });
+      }
+    });
+
+    // // Handle pesan saat app aktif (foreground)
+    // onMessage(messaging, (payload) => {
+    //   console.log("Message received. ", payload);
+    //   alert(`${payload.notification.title} - ${payload.notification.body}`);
+    // });
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log("Message received. ", payload);
+      alert(`${payload.notification.title} - ${payload.notification.body}`);
+      toast.info(
+        `${payload.notification.title} - ${payload.notification.body}`
+      );
+    });
+
+    return () => unsubscribe(); // pastikan cleanup saat komponen unmount
+  }, []);
 
   return (
     <main className="App relative">

@@ -16,6 +16,8 @@ import { login } from "@/axios/auth/auth";
 import Menu from "@/constant/menu";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
+import { requestAndSendToken } from "@/utils/fcm";
+import { axiosConfig } from "@/axios/config";
 
 const schema = yup.object({
   username: yup.string().required("Username is required"),
@@ -46,6 +48,19 @@ const LoginForm = () => {
 
       if (response.data) {
         dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
+        // Panggil ini setelah access token sudah pasti ada
+        await requestAndSendToken(async (token) => {
+          await axiosConfig.post(
+            "/api/notifikasi/save-token/",
+            { token, device_type: "web", origin: window.location.hostname },
+            {
+              headers: {
+                Authorization: `Bearer ${access}`,
+              },
+            }
+          );
+        });
+
         Menu(data.roles);
         localStorage.setItem(
           "presenceSelected",

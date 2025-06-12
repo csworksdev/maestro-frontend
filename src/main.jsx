@@ -16,6 +16,17 @@ import { PersistGate } from "redux-persist/integration/react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/firebase-messaging-sw.js")
+    .then(function (registration) {
+      console.log("Service Worker registered:", registration);
+    })
+    .catch(function (err) {
+      console.error("Service Worker registration failed:", err);
+    });
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>

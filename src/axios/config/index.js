@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { logOut } from "@/store/api/auth/authSlice";
-
+import { removeFcmToken } from "@/utils/fcm";
 // Use a single env variable – set per environment
 const baseURL = import.meta.env.VITE_API_URL;
 
@@ -16,18 +16,24 @@ export const setupInterceptors = () => {
   const bearer = access || sessionStorage.getItem("access");
 
   axiosConfig.interceptors.request.use(
-    (config) => {
+    async (config) => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+
       if (user_name === "testuser") {
+        await removeFcmToken();
         dispatch(logOut());
         return Promise.reject("Logged out due to restricted username");
       }
 
-      // if (!config.url.includes("login") && bearer) {
-      //   config.headers = {
-      //     ...config.headers,
-      //     Authorization: `Bearer ${bearer}`,
-      //   };
-      // }
+      if (!config.url.includes("/auth/users/login/") && bearer) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${bearer}`,
+        };
+      }
 
       return config;
     },

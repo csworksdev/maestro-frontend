@@ -883,7 +883,7 @@ const RekapBulanan = () => {
               options={listTrainer
                 .map((item) => ({
                   value: item.trainer_id,
-                  label: item.fullname,
+                  label: item.nickname,
                 }))
                 .sort((a, b) => a.label.localeCompare(b.label))}
               // defaultValue={listTrainer[0]?.value || ""}
