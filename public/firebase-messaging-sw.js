@@ -36,15 +36,30 @@ messaging.onBackgroundMessage(function (payload) {
 
 self.addEventListener("push", function (event) {
   const data = event.data.json();
-  const notificationTitle = data.notification?.title || data.title;
-  const notificationOptions = {
-    body: data.notification?.body || data.body,
-    icon: "https://maestroswim.com/wp-content/uploads/2024/01/cropped-5D20BBFE-27FE-4582-A1D6-B64ABC55F5AE.png",
-    data: data,
-  };
 
-  return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
+  // Jika tab aktif, kirim message ke tab, bukan showNotification
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        if (clientList.length > 0) {
+          // Kirim message ke tab aktif
+          clientList[0].postMessage(data);
+        } else {
+          // Tidak ada tab aktif, tampilkan notification biasa
+          self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: "/icons/logo.png",
+            actions: [
+              {
+                action: "dismiss",
+                title: "Tutup",
+                icon: "/icons/close.png",
+              },
+            ],
+            data: data,
+          });
+        }
+      })
   );
 });

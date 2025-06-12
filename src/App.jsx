@@ -132,6 +132,15 @@ const App = () => {
     return () => unsubscribe(); // pastikan cleanup saat komponen unmount
   }, []);
 
+  useEffect(() => {
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      const data = event.data;
+      if (data?.title && data?.body) {
+        toast.info(`${data.title}: ${data.body}`);
+      }
+    });
+  }, []);
+
   return (
     <main className="App relative">
       <Suspense fallback={<Loading />}>
