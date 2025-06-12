@@ -18,16 +18,20 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
-  // console.log(
-  //   "[firebase-messaging-sw.js] Received background message ",
-  //   payload
-  // );
-  // const { title, body } = payload.notification;
-  // self.registration.showNotification(title, {
-  //   body: body,
-  //   icon: "/logo192.png",
-  //   data: payload.data,
-  // });
+  console.log(
+    "[firebase-messaging-sw.js] Received background message ",
+    payload
+  );
+
+  const { title, body } = payload.notification;
+
+  const notificationOptions = {
+    body: body,
+    icon: "https://maestroswim.com/wp-content/uploads/2024/01/cropped-5D20BBFE-27FE-4582-A1D6-B64ABC55F5AE.png",
+    data: payload.data,
+  };
+
+  self.registration.showNotification(title, notificationOptions);
 });
 
 self.addEventListener("push", function (event) {
