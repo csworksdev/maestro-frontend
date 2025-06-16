@@ -23,7 +23,7 @@ export const setupInterceptors = () => {
       }
 
       if (user_name === "testuser") {
-        await removeFcmToken();
+        // await removeFcmToken();
         dispatch(logOut());
         return Promise.reject("Logged out due to restricted username");
       }

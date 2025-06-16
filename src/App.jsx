@@ -14,6 +14,7 @@ import { setupInterceptors } from "./axios/config";
 import { toast } from "react-toastify";
 import { messaging, getToken, onMessage } from "@/firebase/firebase";
 import { removeFcmToken } from "@/utils/fcm";
+import isChrome from "./utils/isChrome";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -89,29 +90,31 @@ const App = () => {
 
   useEffect(() => {
     // Minta izin dan ambil token
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        getToken(messaging, {
-          vapidKey: import.meta.env.FCM_VAPID_KEY,
-        })
-          .then((currentToken) => {
-            if (currentToken) {
-              console.log("FCM Token:", currentToken);
-              // Kirim token ke backend, simpan ke DB, dsb.
-            } else {
-              console.log(
-                "No registration token available. Request permission to generate one."
-              );
-            }
+    if (isChrome()) {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          getToken(messaging, {
+            vapidKey: import.meta.env.FCM_VAPID_KEY,
           })
-          .catch(async (err) => {
-            if (err.response?.data?.detail === "Token not registered") {
-              await removeFcmToken();
-            }
-            console.log("An error occurred while retrieving token. ", err);
-          });
-      }
-    });
+            .then((currentToken) => {
+              if (currentToken) {
+                console.log("FCM Token:", currentToken);
+                // Kirim token ke backend, simpan ke DB, dsb.
+              } else {
+                console.log(
+                  "No registration token available. Request permission to generate one."
+                );
+              }
+            })
+            .catch(async (err) => {
+              if (err.response?.data?.detail === "Token not registered") {
+                await removeFcmToken();
+              }
+              console.log("An error occurred while retrieving token. ", err);
+            });
+        }
+      });
+    }
 
     // // Handle pesan saat app aktif (foreground)
     // onMessage(messaging, (payload) => {
@@ -121,24 +124,28 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Message received. ", payload);
-      alert(`${payload.notification.title} - ${payload.notification.body}`);
-      toast.info(
-        `${payload.notification.title} - ${payload.notification.body}`
-      );
-    });
+    if (isChrome()) {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        console.log("Message received. ", payload);
+        alert(`${payload.notification.title} - ${payload.notification.body}`);
+        toast.info(
+          `${payload.notification.title} - ${payload.notification.body}`
+        );
+      });
 
-    return () => unsubscribe(); // pastikan cleanup saat komponen unmount
+      return () => unsubscribe(); // pastikan cleanup saat komponen unmount
+    }
   }, []);
 
   useEffect(() => {
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      const data = event.data;
-      if (data?.title && data?.body) {
-        toast.info(`${data.title}: ${data.body}`);
-      }
-    });
+    if (isChrome()) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        const data = event.data;
+        if (data?.title && data?.body) {
+          toast.info(`${data.title}: ${data.body}`);
+        }
+      });
+    }
   }, []);
 
   return (
