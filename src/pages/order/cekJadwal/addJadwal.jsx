@@ -19,6 +19,8 @@ import { AddOrder } from "@/axios/masterdata/order";
 import { XenditCreatePaymentLink } from "@/axios/xendit";
 import { toProperCase, toNormalizePhone } from "@/utils";
 import { generateExternalId } from "@/utils/xendit-uuid";
+import InputGroup from "@/components/ui/InputGroup";
+import { products } from "@/constant/data";
 
 // status registrasi
 const allStatus = [
@@ -177,6 +179,7 @@ const AddJadwal = ({
             name: toProperCase(parentName),
             phone: item.phone,
             keterangan: "",
+            products: [],
           });
         }
       });
@@ -333,35 +336,70 @@ const AddJadwal = ({
         }
 
         if (is_finish === selectedProduct.length) {
-          let paramxendit = {
-            external_id: external_id,
-            amount:
-              selectedProduct.reduce((sum, p) => sum + p.qty * p.sellprice, 0) +
-              Object.values(grouped).reduce(
-                (sum, value) => sum + value.total,
-                0
-              ),
-            description: newData.keteranganpelanggan,
-            customer_name: newData.namapelanggan,
-            customer_phone: newData.phonepelanggan,
-            items: [
-              ...selectedProduct.map((p) => ({
-                name: p.name,
-                quantity: p.qty,
-                price: parseInt(p.sellprice, 10),
-              })),
-              ...Object.entries(grouped)
-                .filter(([key]) => key !== "extend")
-                .map(([key, value]) => ({
-                  name: "Registrasi " + value.count,
-                  quantity: value.count,
-                  price: parseInt(value.total, 10),
+          if (!isSplitInvoice) {
+            let paramxendit = {
+              external_id: external_id,
+              amount:
+                selectedProduct.reduce(
+                  (sum, p) => sum + p.qty * p.sellprice,
+                  0
+                ) +
+                Object.values(grouped).reduce(
+                  (sum, value) => sum + value.total,
+                  0
+                ),
+              description: newData.keteranganpelanggan,
+              customer_name: newData.namapelanggan,
+              customer_phone: newData.phonepelanggan,
+              items: [
+                ...selectedProduct.map((p) => ({
+                  name: p.name,
+                  quantity: p.qty,
+                  price: parseInt(p.sellprice, 10),
                 })),
-            ],
-          };
-          await XenditCreatePaymentLink(paramxendit).then((res) =>
-            reloadDataMaster()
-          );
+                ...Object.entries(grouped)
+                  .filter(([key]) => key !== "extend")
+                  .map(([key, value]) => ({
+                    name: "Registrasi " + value.count,
+                    quantity: value.count,
+                    price: parseInt(value.total, 10),
+                  })),
+              ],
+            };
+            await XenditCreatePaymentLink(paramxendit).then((res) =>
+              reloadDataMaster()
+            );
+          } else {
+            await Promise.all(
+              parent.map(async (item, idx) => {
+                let paramxendit = {
+                  external_id: external_id,
+                  amount: parseInt(newData.splitCustomers[idx].tagihan),
+                  description: newData.splitCustomers[idx].keterangan,
+                  customer_name: newData.splitCustomers[idx].name,
+                  customer_phone: newData.splitCustomers[idx].phone, // fix typo
+                  items: [
+                    ...selectedProduct.map((p) => ({
+                      name: p.name,
+                      quantity: p.qty,
+                      price: parseInt(p.sellprice, 10),
+                    })),
+                    ...Object.entries(grouped)
+                      .filter(([key]) => key !== "extend")
+                      .map(([key, value]) => ({
+                        name: "Registrasi " + value.count,
+                        quantity: value.count,
+                        price: parseInt(value.total, 10),
+                      })),
+                  ],
+                };
+
+                await XenditCreatePaymentLink(paramxendit);
+              })
+            );
+
+            reloadDataMaster(); // dipanggil setelah semua XenditCreatePaymentLink selesai
+          }
         }
       }
     } catch (error) {
@@ -558,53 +596,34 @@ const AddJadwal = ({
 
           // total of registrasi
           let total_reg = 0;
-          let subtotal =
-            studentList.forEach((element) => {
-              var x = allStatus.filter((s) => s.value === element.reg_stat);
-              total_reg += parseInt(x[0].price);
-            }) ?? 0;
-          // console.log(total_reg);
+          studentList.forEach((element) => {
+            const x = allStatus.find((s) => s.value === element.reg_stat);
+            total_reg += parseInt(x?.price || 0);
+          });
 
           // total of trial
-          let total_trial = 0;
-          // selectedProduct
-          //   .filter((p) => p.package_name === "trial")
-          //   .map((x) => {
-          //     let filteredStudents = studentList.filter(
-          //       (sl) => sl.istrial === true
-          //     );
-          //     if (filteredStudents.length === 0) return 0;
-          //     else return x.sellprice * parseInt(filteredStudents.length);
-          //   }) ?? 0;
+          let total_trial = selectedProduct
+            .filter((p) => p.package_name === "trial")
+            .reduce((acc, x) => {
+              let filteredStudents = studentList.filter(
+                (sl) => sl.istrial === true
+              );
+              if (filteredStudents.length === 0) return acc;
+              else return acc + x.sellprice * filteredStudents.length;
+            }, 0);
 
           // total of main product
-          let total_main =
-            selectedProduct
-              .filter((p) => p.package_name !== "trial")
-              .map((x) => {
-                return x.sellprice * parseInt(x.length);
-              }) ?? 0;
+          let total_main = selectedProduct
+            .filter((p) => p.package_name !== "trial")
+            .reduce((acc, x) => {
+              return acc + x.sellprice * studentList.length;
+            }, 0);
 
           totalbayar =
             parseInt(total_reg) + parseInt(total_trial) + parseInt(total_main);
-          // selectedProduct.forEach((item) => {
-          //   let subtotal = 0;
-          //   studentList.forEach((element) => {
-          //     let subtotal2 = 0;
-
-          //     if (element.reg_stat === "newreg") {
-          //       var x = allStatus.find((s) => s.value === "newreg");
-          //       subtotal += Number(x?.price);
-          //     } else subtotal += 0;
-
-          //     if (element.istrial) {
-          //       if (item.package_name === "trial") {
-          //         subtotal += Number(item.sellprice);
-          //       }
-          //     }
-          //   });
-          //   return subtotal;
-          // });
+          // const numericValue = new Intl.NumberFormat("id-ID").format(
+          //   totalbayar
+          // );
 
           const produkDesc = selectedProduct
             .map((p) => {
@@ -630,7 +649,7 @@ const AddJadwal = ({
             .filter(Boolean)
             .join("\n");
 
-          setValue(`splitCustomers[${idx}].tagihan`, Number(totalbayar), {
+          setValue(`splitCustomers[${idx}].tagihan`, totalbayar, {
             shouldValidate: true,
             shouldDirty: true,
           });
@@ -1048,37 +1067,43 @@ const AddJadwal = ({
               <div className="flex flex-row gap-3 w-full">
                 {parent.map((item, idx) => (
                   <Card key={idx} className="flex-1 min-w-0">
-                    <Textinput
-                      name={`splitCustomers[${idx}].name`}
-                      label="Nama Pelanggan"
-                      type="text"
-                      placeholder="Nama Pelanggan"
-                      register={register}
-                      defaultValue={item.name}
-                    />
-                    <Textinput
-                      name={`splitCustomers[${idx}].tagihan`}
-                      label="Tagihan"
-                      type="text"
-                      placeholder="Tagihan"
-                      register={register}
-                      value={item.tagihan}
-                    />
-                    <Textinput
-                      name={`splitCustomers[${idx}].phone`}
-                      label="Nomor Telepon"
-                      type="text"
-                      placeholder="Nomor WA"
-                      register={register}
-                      defaultValue={item.phone}
-                    />
-                    <Textarea
-                      name={`splitCustomers[${idx}].keterangan`}
-                      label="Keterangan"
-                      placeholder="Keterangan"
-                      register={register}
-                      defaultValue={keterangan}
-                    />
+                    <div className="space-y-2">
+                      <Textinput
+                        name={`splitCustomers[${idx}].name`}
+                        label="Nama"
+                        type="text"
+                        placeholder="Nama"
+                        register={register}
+                        defaultValue={item.name}
+                        horizontal
+                      />
+                      <InputGroup
+                        name={`splitCustomers[${idx}].tagihan`}
+                        type="text"
+                        label="Tagihan"
+                        prepend="Rp."
+                        register={register}
+                        defaultValue={item.tagihan}
+                        horizontal
+                      />
+                      <Textinput
+                        name={`splitCustomers[${idx}].phone`}
+                        label="Telepon"
+                        type="text"
+                        placeholder="Nomor WA"
+                        register={register}
+                        defaultValue={item.phone}
+                        horizontal
+                      />
+                      <Textarea
+                        name={`splitCustomers[${idx}].keterangan`}
+                        label="Keterangan"
+                        placeholder="Keterangan"
+                        register={register}
+                        defaultValue={keterangan}
+                        horizontal
+                      />
+                    </div>
                   </Card>
                 ))}
               </div>

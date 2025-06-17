@@ -98,7 +98,7 @@ const App = () => {
           })
             .then((currentToken) => {
               if (currentToken) {
-                console.log("FCM Token:", currentToken);
+                // console.log("FCM Token:", currentToken);
                 // Kirim token ke backend, simpan ke DB, dsb.
               } else {
                 console.log(
