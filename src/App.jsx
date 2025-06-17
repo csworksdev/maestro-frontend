@@ -126,8 +126,8 @@ const App = () => {
   useEffect(() => {
     if (isChrome()) {
       const unsubscribe = onMessage(messaging, (payload) => {
-        console.log("Message received. ", payload);
-        alert(`${payload.notification.title} - ${payload.notification.body}`);
+        // console.log("Message received. ", payload);
+        // alert(`${payload.notification.title} - ${payload.notification.body}`);
         toast.info(
           `${payload.notification.title} - ${payload.notification.body}`
         );

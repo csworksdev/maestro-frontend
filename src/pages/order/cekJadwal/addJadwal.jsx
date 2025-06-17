@@ -120,7 +120,7 @@ const AddJadwal = ({
           fullname: values[2] || "",
           nickname: values[3] || "",
           gender: String(values[5]).trim() === "Laki-laki" ? "L" : "P",
-          parent: values[4] || "-",
+          parent: values[4].length < 2 ? values[2] : values[4],
           phone: values[11] || "",
           address: values[10] || "-",
           pob: values[6] || "",
@@ -554,18 +554,72 @@ const AddJadwal = ({
     if (isSplitInvoice) {
       Object.entries(groupedByParent).forEach(
         ([parentName, studentList], idx) => {
+          let totalbayar = 0;
+
+          // total of registrasi
+          let total_reg = 0;
+          let subtotal =
+            studentList.forEach((element) => {
+              var x = allStatus.filter((s) => s.value === element.reg_stat);
+              total_reg += parseInt(x[0].price);
+            }) ?? 0;
+          // console.log(total_reg);
+
+          // total of trial
+          let total_trial = 0;
+          // selectedProduct
+          //   .filter((p) => p.package_name === "trial")
+          //   .map((x) => {
+          //     let filteredStudents = studentList.filter(
+          //       (sl) => sl.istrial === true
+          //     );
+          //     if (filteredStudents.length === 0) return 0;
+          //     else return x.sellprice * parseInt(filteredStudents.length);
+          //   }) ?? 0;
+
+          // total of main product
+          let total_main =
+            selectedProduct
+              .filter((p) => p.package_name !== "trial")
+              .map((x) => {
+                return x.sellprice * parseInt(x.length);
+              }) ?? 0;
+
+          totalbayar =
+            parseInt(total_reg) + parseInt(total_trial) + parseInt(total_main);
+          // selectedProduct.forEach((item) => {
+          //   let subtotal = 0;
+          //   studentList.forEach((element) => {
+          //     let subtotal2 = 0;
+
+          //     if (element.reg_stat === "newreg") {
+          //       var x = allStatus.find((s) => s.value === "newreg");
+          //       subtotal += Number(x?.price);
+          //     } else subtotal += 0;
+
+          //     if (element.istrial) {
+          //       if (item.package_name === "trial") {
+          //         subtotal += Number(item.sellprice);
+          //       }
+          //     }
+          //   });
+          //   return subtotal;
+          // });
+
           const produkDesc = selectedProduct
             .map((p) => {
               const isTrial = p.package_name.toLowerCase().includes("trial");
-
-              // Filter siswa berdasarkan status trial
-              const filteredStudents = studentList
-                .filter((s) => (isTrial ? s.istrial : true))
-                .map((s) => toProperCase(s.fullname));
+              let filteredStudents = studentList.filter((s) =>
+                isTrial ? s.istrial : true
+              );
 
               if (filteredStudents.length === 0) return null;
 
-              const studentsProper = filteredStudents.join(", ");
+              const studentsProper = filteredStudents
+                .map((item) => {
+                  return item.fullname;
+                })
+                .join(", ");
 
               return `${toProperCase(p.package_name)} ${
                 p.meetings
@@ -575,6 +629,11 @@ const AddJadwal = ({
             })
             .filter(Boolean)
             .join("\n");
+
+          setValue(`splitCustomers[${idx}].tagihan`, Number(totalbayar), {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
 
           setValue(`splitCustomers[${idx}].keterangan`, produkDesc, {
             shouldValidate: true,
@@ -684,7 +743,7 @@ const AddJadwal = ({
                         name="product"
                         label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
                           "id-ID"
-                        ).format(option.price)}`}
+                        ).format(option.sellprice)}`}
                         value={selectedProduct.some(
                           (p) => p.product_id === option.product_id
                         )}
@@ -996,6 +1055,14 @@ const AddJadwal = ({
                       placeholder="Nama Pelanggan"
                       register={register}
                       defaultValue={item.name}
+                    />
+                    <Textinput
+                      name={`splitCustomers[${idx}].tagihan`}
+                      label="Tagihan"
+                      type="text"
+                      placeholder="Tagihan"
+                      register={register}
+                      value={item.tagihan}
                     />
                     <Textinput
                       name={`splitCustomers[${idx}].phone`}

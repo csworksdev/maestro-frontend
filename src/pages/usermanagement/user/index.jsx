@@ -107,7 +107,7 @@ const Users = () => {
   };
 
   const handleSelectTrainer = (e) => {
-    alert("home" + JSON.stringify(e));
+    // alert("home" + JSON.stringify(e));
   };
 
   const COLUMNS = [

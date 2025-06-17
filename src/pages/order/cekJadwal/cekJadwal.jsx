@@ -64,7 +64,7 @@ const checkProduct = (product) => {
 
 const iconProduct = (product) => {
   if (product === "p")
-    return <Icon icon="heroicons-outline:clipboard-document-list" width="24" />;
+    return <Icon icon="heroicons-outline:calendar-days" width="24" />;
 
   let jumlahSiswa = checkProduct(product);
 
@@ -341,7 +341,7 @@ const CekJadwal = () => {
             return (
               <div
                 key={`${i}-${jIdx}`}
-                className="flex flex-col gap-2 min-h-[70px] justify-center items-center"
+                className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
                 {orders.map((slot, k) => {
                   const key = `${i}-${jIdx}-${k}`;
@@ -366,7 +366,7 @@ const CekJadwal = () => {
                       return (
                         <div
                           key={key}
-                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col gap-2 w-full max-w-full overflow-hidden`}
+                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-2 flex flex-col gap-2 overflow-hidden justify-center`}
                         >
                           {/* <PaymentStatusBadge status="settled" /> */}
                           <Badge
@@ -392,17 +392,24 @@ const CekJadwal = () => {
                               <span>{iconProduct("p")}</span>
                             </Tooltip>
                           </div>
-                          <Dropdown
-                            classMenuItems="left-0 bottom-full mb-2 w-[220px] absolute z-50"
-                            label={
-                              <Button
-                                text="Action"
-                                className="bg-warning-50 text-black btn-sm"
-                                iconClass="text-sm"
-                              />
-                            }
-                            items={dropdownItems}
-                          />
+                          <div className="flex flex-row justify-center">
+                            <Dropdown
+                              classMenuItems="left-0 bottom-full mb-2 w-[220px]"
+                              label={
+                                // <Button
+                                //   text="Action"
+                                //   className="bg-warning-50 text-black btn-sm"
+                                //   iconClass="text-sm"
+                                // />
+                                <Icon
+                                  icon={"heroicons-outline:bars-4"}
+                                  width="24"
+                                  color="green"
+                                />
+                              }
+                              items={dropdownItems}
+                            />
+                          </div>
                         </div>
                       );
                     }
@@ -711,7 +718,7 @@ const PelatihLibur = React.memo(() => (
           icon="heroicons-outline:calendar-days"
           width="24"
           color="red"
-          onClick={() => alert("test")}
+          // onClick={() => alert("test")}
         />
       </span>
     </Tooltip>
