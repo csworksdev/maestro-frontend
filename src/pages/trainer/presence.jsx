@@ -480,7 +480,9 @@ const Presence = () => {
             // ),
             // absen normal
             minDate: DateTime.fromISO(periode.start_date).toISODate(),
-            maxDate: DateTime.fromISO(periode.end_date).toISODate(),
+            maxDate: DateTime.fromISO(periode.end_date)
+              .plus({ days: -1 })
+              .toISODate(),
             disableMobile: true,
             allowInput: true,
             altInput: true,
