@@ -66,6 +66,7 @@ const AddJadwal = ({
   const [parent, setParent] = useState([]);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [isSplitInvoice, setIsSplitInvoice] = useState(false);
+  const [isInvoice, setIsInvoice] = useState(true);
 
   const {
     register,
@@ -335,71 +336,75 @@ const AddJadwal = ({
           }
         }
 
-        if (is_finish === selectedProduct.length) {
-          if (!isSplitInvoice) {
-            let paramxendit = {
-              external_id: external_id,
-              amount:
-                selectedProduct.reduce(
-                  (sum, p) => sum + p.qty * p.sellprice,
-                  0
-                ) +
-                Object.values(grouped).reduce(
-                  (sum, value) => sum + value.total,
-                  0
-                ),
-              description: newData.keteranganpelanggan,
-              customer_name: newData.namapelanggan,
-              customer_phone: newData.phonepelanggan,
-              items: [
-                ...selectedProduct.map((p) => ({
-                  name: p.name,
-                  quantity: p.qty,
-                  price: parseInt(p.sellprice, 10),
-                })),
-                ...Object.entries(grouped)
-                  .filter(([key]) => key !== "extend")
-                  .map(([key, value]) => ({
-                    name: "Registrasi " + value.count,
-                    quantity: value.count,
-                    price: parseInt(value.total, 10),
+        if (!isInvoice) {
+          if (is_finish === selectedProduct.length) {
+            if (!isSplitInvoice) {
+              let paramxendit = {
+                external_id: external_id,
+                amount:
+                  selectedProduct.reduce(
+                    (sum, p) => sum + p.qty * p.sellprice,
+                    0
+                  ) +
+                  Object.values(grouped).reduce(
+                    (sum, value) => sum + value.total,
+                    0
+                  ),
+                description: newData.keteranganpelanggan,
+                customer_name: newData.namapelanggan,
+                customer_phone: newData.phonepelanggan,
+                items: [
+                  ...selectedProduct.map((p) => ({
+                    name: p.name,
+                    quantity: p.qty,
+                    price: parseInt(p.sellprice, 10),
                   })),
-              ],
-            };
-            await XenditCreatePaymentLink(paramxendit).then((res) =>
-              reloadDataMaster()
-            );
-          } else {
-            await Promise.all(
-              parent.map(async (item, idx) => {
-                let paramxendit = {
-                  external_id: external_id,
-                  amount: parseInt(newData.splitCustomers[idx].tagihan),
-                  description: newData.splitCustomers[idx].keterangan,
-                  customer_name: newData.splitCustomers[idx].name,
-                  customer_phone: newData.splitCustomers[idx].phone, // fix typo
-                  items: [
-                    ...selectedProduct.map((p) => ({
-                      name: p.name,
-                      quantity: p.qty,
-                      price: parseInt(p.sellprice, 10),
+                  ...Object.entries(grouped)
+                    .filter(([key]) => key !== "extend")
+                    .map(([key, value]) => ({
+                      name: "Registrasi " + value.count,
+                      quantity: value.count,
+                      price: parseInt(value.total, 10),
                     })),
-                    ...Object.entries(grouped)
-                      .filter(([key]) => key !== "extend")
-                      .map(([key, value]) => ({
-                        name: "Registrasi " + value.count,
-                        quantity: value.count,
-                        price: parseInt(value.total, 10),
+                ],
+              };
+              await XenditCreatePaymentLink(paramxendit).then((res) =>
+                reloadDataMaster()
+              );
+            } else {
+              await Promise.all(
+                parent.map(async (item, idx) => {
+                  let paramxendit = {
+                    external_id: external_id,
+                    amount: parseInt(newData.splitCustomers[idx].tagihan),
+                    description: newData.splitCustomers[idx].keterangan,
+                    customer_name: newData.splitCustomers[idx].name,
+                    customer_phone: newData.splitCustomers[idx].phone, // fix typo
+                    items: [
+                      ...selectedProduct.map((p) => ({
+                        name: p.name,
+                        quantity: p.qty,
+                        price: parseInt(p.sellprice, 10),
                       })),
-                  ],
-                };
+                      ...Object.entries(grouped)
+                        .filter(([key]) => key !== "extend")
+                        .map(([key, value]) => ({
+                          name: "Registrasi " + value.count,
+                          quantity: value.count,
+                          price: parseInt(value.total, 10),
+                        })),
+                    ],
+                  };
 
-                await XenditCreatePaymentLink(paramxendit);
-              })
-            );
+                  await XenditCreatePaymentLink(paramxendit);
+                })
+              );
 
-            reloadDataMaster(); // dipanggil setelah semua XenditCreatePaymentLink selesai
+              reloadDataMaster(); // dipanggil setelah semua XenditCreatePaymentLink selesai
+            }
           }
+        } else {
+          reloadDataMaster();
         }
       }
     } catch (error) {
@@ -726,14 +731,26 @@ const AddJadwal = ({
             </span>
           }
           headerslot={
-            <Button
-              text="Siswa"
-              icon="heroicons-outline:plus"
-              className="btn-dark"
-              onClick={() => handlePaste()}
-              // onClick={() => append()}
-              disabled={isLoadingCheckDuplicate}
-            />
+            <div className="flex flex-row gap-5">
+              <Button
+                text="Siswa"
+                icon="heroicons-outline:plus"
+                className="btn-dark"
+                onClick={() => handlePaste()}
+                // onClick={() => append()}
+                disabled={isLoadingCheckDuplicate}
+              />
+              <div className="flex justify-center align-bottom p-3 border-2 border-green-500 border-solid rounded-md">
+                <Checkbox
+                  name="splitInvoice"
+                  label={"Tanpa Invoice"}
+                  value={isInvoice}
+                  onChange={() => {
+                    setIsInvoice(!isInvoice);
+                  }}
+                />
+              </div>
+            </div>
           }
         >
           <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
@@ -1000,116 +1017,118 @@ const AddJadwal = ({
           </Card>
         )}
         {/* Pelanggan Section */}
-        <Card
-          title={"Pelanggan"}
-          headerslot={
-            parent.length > 1 && (
-              <Checkbox
-                name="splitInvoice"
-                label={"Split Invoice"}
-                value={isSplitInvoice}
-                onChange={() => {
-                  setIsSplitInvoice(!isSplitInvoice);
-                }}
-              />
-            )
-          }
-        >
-          {/* Pelanggan */}
-          <div className="flex flex-col gap-3">
-            {!isSplitInvoice || parent.length == 1 ? (
-              <>
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="namapelanggan"
-                    className="text-sm font-medium mb-1"
-                  >
-                    Nama
-                  </label>
-                  <select
-                    id="namapelanggan"
-                    {...register("namapelanggan")}
-                    className="border rounded-md p-2"
-                    onChange={(e) => {
-                      const selected = parent.find(
-                        (p) => p.name === e.target.value
-                      );
-                      setValue("namapelanggan", selected?.name || "");
-                      setValue(
-                        "phonepelanggan",
-                        toNormalizePhone(selected?.phone || "")
-                      );
-                    }}
-                  >
-                    <option value="">Pilih Orang Tua</option>
-                    {parent.map((p, index) => (
-                      <option key={index} value={p.name}>
-                        {p.name} - {p.phone}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <Textinput
-                  name="phonepelanggan"
-                  label="Nomor Telepon"
-                  type="text"
-                  placeholder="Nomor WA"
-                  register={register}
+        {!isInvoice ? (
+          <Card
+            title={"Pelanggan"}
+            headerslot={
+              parent.length > 1 && (
+                <Checkbox
+                  name="splitInvoice"
+                  label={"Split Invoice"}
+                  value={isSplitInvoice}
+                  onChange={() => {
+                    setIsSplitInvoice(!isSplitInvoice);
+                  }}
                 />
-                <Textarea
-                  name="keteranganpelanggan"
-                  label="Keterangan"
-                  placeholder="Keterangan"
-                  register={register}
-                ></Textarea>
-              </>
-            ) : (
-              <div className="flex flex-row gap-3 w-full">
-                {parent.map((item, idx) => (
-                  <Card key={idx} className="flex-1 min-w-0">
-                    <div className="space-y-2">
-                      <Textinput
-                        name={`splitCustomers[${idx}].name`}
-                        label="Nama"
-                        type="text"
-                        placeholder="Nama"
-                        register={register}
-                        defaultValue={item.name}
-                        horizontal
-                      />
-                      <InputGroup
-                        name={`splitCustomers[${idx}].tagihan`}
-                        type="text"
-                        label="Tagihan"
-                        prepend="Rp."
-                        register={register}
-                        defaultValue={item.tagihan}
-                        horizontal
-                      />
-                      <Textinput
-                        name={`splitCustomers[${idx}].phone`}
-                        label="Telepon"
-                        type="text"
-                        placeholder="Nomor WA"
-                        register={register}
-                        defaultValue={item.phone}
-                        horizontal
-                      />
-                      <Textarea
-                        name={`splitCustomers[${idx}].keterangan`}
-                        label="Keterangan"
-                        placeholder="Keterangan"
-                        register={register}
-                        defaultValue={keterangan}
-                        horizontal
-                      />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
+              )
+            }
+          >
+            {/* Pelanggan */}
+            <div className="flex flex-col gap-3">
+              {!isSplitInvoice || parent.length == 1 ? (
+                <>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="namapelanggan"
+                      className="text-sm font-medium mb-1"
+                    >
+                      Nama
+                    </label>
+                    <select
+                      id="namapelanggan"
+                      {...register("namapelanggan")}
+                      className="border rounded-md p-2"
+                      onChange={(e) => {
+                        const selected = parent.find(
+                          (p) => p.name === e.target.value
+                        );
+                        setValue("namapelanggan", selected?.name || "");
+                        setValue(
+                          "phonepelanggan",
+                          toNormalizePhone(selected?.phone || "")
+                        );
+                      }}
+                    >
+                      <option value="">Pilih Orang Tua</option>
+                      {parent.map((p, index) => (
+                        <option key={index} value={p.name}>
+                          {p.name} - {p.phone}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <Textinput
+                    name="phonepelanggan"
+                    label="Nomor Telepon"
+                    type="text"
+                    placeholder="Nomor WA"
+                    register={register}
+                  />
+                  <Textarea
+                    name="keteranganpelanggan"
+                    label="Keterangan"
+                    placeholder="Keterangan"
+                    register={register}
+                  ></Textarea>
+                </>
+              ) : (
+                <div className="flex flex-row gap-3 w-full">
+                  {parent.map((item, idx) => (
+                    <Card key={idx} className="flex-1 min-w-0">
+                      <div className="space-y-2">
+                        <Textinput
+                          name={`splitCustomers[${idx}].name`}
+                          label="Nama"
+                          type="text"
+                          placeholder="Nama"
+                          register={register}
+                          defaultValue={item.name}
+                          horizontal
+                        />
+                        <InputGroup
+                          name={`splitCustomers[${idx}].tagihan`}
+                          type="text"
+                          label="Tagihan"
+                          prepend="Rp."
+                          register={register}
+                          defaultValue={item.tagihan}
+                          horizontal
+                        />
+                        <Textinput
+                          name={`splitCustomers[${idx}].phone`}
+                          label="Telepon"
+                          type="text"
+                          placeholder="Nomor WA"
+                          register={register}
+                          defaultValue={item.phone}
+                          horizontal
+                        />
+                        <Textarea
+                          name={`splitCustomers[${idx}].keterangan`}
+                          label="Keterangan"
+                          placeholder="Keterangan"
+                          register={register}
+                          defaultValue={keterangan}
+                          horizontal
+                        />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+        ) : null}
         <div className="ltr:text-right rtl:text-left space-x-3">
           <div className="btn-group">
             <Button
