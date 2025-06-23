@@ -67,6 +67,11 @@ const Presence = () => {
   const dispatch = useDispatch();
   useScrollRestoration();
 
+  const pelatihtelat = [
+    "a708624f-37a9-4999-94bd-5f842bd765c4",
+    "9c46b123-40d8-41e6-8f8c-391692a2bef2",
+  ];
+
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
     periode: yup.string().required("Periode is required"),
@@ -465,35 +470,68 @@ const Presence = () => {
         <label className="form-label" htmlFor="real_date">
           Tanggal Kehadiran
         </label>
-        <Flatpickr
-          id="real_date"
-          name="real_date"
-          value={item.real_date}
-          defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
-          options={{
-            // absen coach sering telat
-            // minDate: DateTime.fromFormat("2025-04-21", "yyyy-MM-dd").toFormat(
-            //   "yyyy-MM-dd"
-            // ),
-            // maxDate: DateTime.fromFormat("2025-05-20", "yyyy-MM-dd").toFormat(
-            //   "yyyy-MM-dd"
-            // ),
-            // absen normal
-            minDate: DateTime.fromISO(periode.start_date).toISODate(),
-            maxDate: DateTime.fromISO(periode.end_date)
-              .plus({ days: -1 })
-              .toISODate(),
-            disableMobile: true,
-            allowInput: true,
-            altInput: true,
-            altFormat: "d F Y",
-          }}
-          register={register}
-          className="form-control py-2 w-full"
-          onChange={(selectedDate) =>
-            handleChangeDay(item.order_detail_id, selectedDate?.[0])
-          }
-        />
+        {user_id === "a708624f-37a9-4999-94bd-5f842bd765c4" ||
+        user_id === "9c46b123-40d8-41e6-8f8c-391692a2bef2" ? (
+          <Flatpickr
+            id="real_date"
+            name="real_date"
+            value={item.real_date}
+            defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
+            options={{
+              // absen coach sering telat
+              minDate: DateTime.fromFormat("2025-05-21", "yyyy-MM-dd").toFormat(
+                "yyyy-MM-dd"
+              ),
+              maxDate: DateTime.fromFormat("2025-06-20", "yyyy-MM-dd").toFormat(
+                "yyyy-MM-dd"
+              ),
+              // absen normal
+              // minDate: DateTime.fromISO(periode.start_date).toISODate(),
+              // maxDate: DateTime.fromISO(periode.end_date)
+              //   .plus({ days: -1 })
+              //   .toISODate(),
+              disableMobile: true,
+              allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
+            }}
+            register={register}
+            className="form-control py-2 w-full"
+            onChange={(selectedDate) =>
+              handleChangeDay(item.order_detail_id, selectedDate?.[0])
+            }
+          />
+        ) : (
+          <Flatpickr
+            id="real_date"
+            name="real_date"
+            value={item.real_date}
+            defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
+            options={{
+              // absen coach sering telat
+              // minDate: DateTime.fromFormat("2025-04-21", "yyyy-MM-dd").toFormat(
+              //   "yyyy-MM-dd"
+              // ),
+              // maxDate: DateTime.fromFormat("2025-05-20", "yyyy-MM-dd").toFormat(
+              //   "yyyy-MM-dd"
+              // ),
+              // absen normal
+              minDate: DateTime.fromISO(periode.start_date).toISODate(),
+              maxDate: DateTime.fromISO(periode.end_date)
+                .plus({ days: -1 })
+                .toISODate(),
+              disableMobile: true,
+              allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
+            }}
+            register={register}
+            className="form-control py-2 w-full"
+            onChange={(selectedDate) =>
+              handleChangeDay(item.order_detail_id, selectedDate?.[0])
+            }
+          />
+        )}
         <div className="flex flex-col w-full">
           <label className="form-label mt-2" htmlFor="real_time">
             Jam kehadiran
