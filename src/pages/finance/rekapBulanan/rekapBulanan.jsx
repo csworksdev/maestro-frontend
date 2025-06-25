@@ -718,27 +718,27 @@ const RekapBulanan = () => {
 
   const handlePayAll = async (params) => {
     if (params.length > 0) {
-      params.forEach(async (order_detail_id) => {
-        let newParams = checkIfGroupPayment(params);
-        const response = await BayarPelatihByTrainer(params);
-        if (response.status === 200) {
-          setListData((prev) => ({
-            ...prev,
-            results: prev.results.map((item) => {
-              const updatedItem = { ...item };
-              Object.keys(updatedItem).forEach((key) => {
-                if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
-                  const paidKey = key.replace("_order_detail_id", "_paid");
-                  if (params.includes(updatedItem[key])) {
-                    updatedItem[paidKey] = true;
-                  }
+      // params.forEach(async (order_detail_id) => {
+      //   let newParams = checkIfGroupPayment(params);
+      const response = await BayarPelatihByTrainer(params);
+      if (response.status === 200) {
+        setListData((prev) => ({
+          ...prev,
+          results: prev.results.map((item) => {
+            const updatedItem = { ...item };
+            Object.keys(updatedItem).forEach((key) => {
+              if (key.startsWith("p") && key.endsWith("_order_detail_id")) {
+                const paidKey = key.replace("_order_detail_id", "_paid");
+                if (params.includes(updatedItem[key])) {
+                  updatedItem[paidKey] = true;
                 }
-              });
-              return updatedItem;
-            }),
-          }));
-        }
-      });
+              }
+            });
+            return updatedItem;
+          }),
+        }));
+      }
+      // });
     }
   };
 
@@ -788,29 +788,38 @@ const RekapBulanan = () => {
     try {
       // setUnpaidList([]);
       // let x = listPeriode.filter((a) => a.name === selectedPeriode);
-      let data = e;
+      // let data = e;
+      console.log(e.order_id);
+      // console.log(listData.results.filter((x) => (x.order_id = e.order_id)));
+      let filteredData = listData.results.filter(
+        (x) => x.order_id === e.order_id
+      );
 
       let unpaidOrderId = [];
-      for (let index = 1; index <= 8; index++) {
-        var objDate = "p" + index;
-        var objNamePaid = "p" + index + "_paid";
-        var objNameOrderID = "p" + index + "_order_detail_id";
+      filteredData.forEach((element) => {
+        for (let index = 1; index <= 8; index++) {
+          var objDate = "p" + index;
+          var objNamePaid = "p" + index + "_paid";
+          var objNameOrderID = "p" + index + "_order_detail_id";
 
-        if (
-          !data[objNamePaid] &&
-          data[objNameOrderID] !== "" &&
-          data[objDate] !== "" &&
-          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") <=
-            DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
-          DateTime.fromFormat(data[objDate], "dd/MM/yyyy") >=
-            DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
-        ) {
-          unpaidOrderId.push(data[objNameOrderID]);
+          if (
+            !element[objNamePaid] &&
+            element[objNameOrderID] !== "" &&
+            element[objDate] !== "" &&
+            DateTime.fromFormat(element[objDate], "dd/MM/yyyy") <=
+              DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+            DateTime.fromFormat(element[objDate], "dd/MM/yyyy") >=
+              DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+          ) {
+            unpaidOrderId.push(element[objNameOrderID]);
+          }
         }
-      }
+      });
+
       // setUnpaidList(unpaidOrderId);
       handlePayAll(unpaidOrderId);
       // alert(JSON.stringify(unpaidOrderId));
+      console.log(unpaidOrderId);
     } catch (error) {
       console.log(error);
     }

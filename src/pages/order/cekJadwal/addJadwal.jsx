@@ -20,7 +20,7 @@ import { XenditCreatePaymentLink } from "@/axios/xendit";
 import { toProperCase, toNormalizePhone } from "@/utils";
 import { generateExternalId } from "@/utils/xendit-uuid";
 import InputGroup from "@/components/ui/InputGroup";
-import { products } from "@/constant/data";
+import Flatpickr from "react-flatpickr";
 
 // status registrasi
 const allStatus = [
@@ -66,7 +66,7 @@ const AddJadwal = ({
   const [parent, setParent] = useState([]);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [isSplitInvoice, setIsSplitInvoice] = useState(false);
-  const [isInvoice, setIsInvoice] = useState(true);
+  const [isInvoice, setIsInvoice] = useState(false);
 
   const {
     register,
@@ -258,85 +258,91 @@ const AddJadwal = ({
       var is_finish = 0;
 
       for (const product of selectedProduct) {
-        const updatedData = {
-          package: product.package,
-          price: product.price,
-          product: product.product_id,
-          trainer: inputValue.trainer.trainer_id,
-          pool: inputValue.pool.value,
-          trainer_percentage: parseInt(inputValue.trainer_percentage),
-          company_percentage: inputValue.company_percentage,
-          branch: inputValue.branch,
-          notes: "-",
-          day: inputValue.day,
-          time: inputValue.time,
-          grand_total: product.qty * product.price,
-          create_by: user_id,
-          is_finish: false,
-          // is_paid: false,
-          start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
-          order_date: DateTime.now().toFormat("yyyy-MM-dd"),
-          students:
-            product.package_name === "trial"
-              ? formList
-                  .filter((s) => s.istrial)
-                  .map((student) => ({
-                    student_id: student.student_id,
-                  }))
-              : students.map((student) => ({
-                  student_id: student.student_id,
-                })),
-          invoice_id: external_id,
-        };
-
-        const res = await AddOrder(updatedData);
-
-        if (res) {
-          // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
-          const orderDetailPromises = [];
-
-          for (const student of selectedStudents) {
-            for (let i = 0; i < product.meetings; i++) {
-              const temp = {
-                order: res.data.order_id,
-                day: inputValue.day,
-                time: inputValue.time,
-                price_per_meet:
-                  (product.price * parseInt(inputValue.trainer_percentage)) /
-                  100 /
-                  product.meetings,
-                schedule_date: DateTime.now()
-                  .plus({ days: 7 * (i + 1) })
-                  .toFormat("yyyy-MM-dd"),
-                student: student.student_id,
-                meet: i + 1,
-                is_presence: false,
-              };
-
-              orderDetailPromises.push(AddOrderDetail(temp));
-            }
-          }
-
-          // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
-          await Promise.all(orderDetailPromises);
-
-          // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
-          const params = {
-            branch: inputValue.branch,
-            pool: inputValue.pool.value,
+        for (let index = 0; index < product.qty; index++) {
+          const updatedData = {
+            package: product.package,
+            price: product.price,
+            product: product.product_id,
             trainer: inputValue.trainer.trainer_id,
-            order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
+            pool: inputValue.pool.value,
+            trainer_percentage: parseInt(inputValue.trainer_percentage),
+            company_percentage: inputValue.company_percentage,
+            branch: inputValue.branch,
+            notes: "-",
             day: inputValue.day,
             time: inputValue.time,
-            is_free: true,
+            grand_total: product.qty * product.price,
+            create_by: user_id,
+            is_finish: false,
+            // is_paid: false,
+            start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
+            order_date: isInvoice
+              ? DateTime.now().toFormat("yyyy-MM-dd")
+              : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
+            students:
+              product.package_name === "trial"
+                ? formList
+                    .filter((s) => s.istrial)
+                    .map((student) => ({
+                      student_id: student.student_id,
+                    }))
+                : students.map((student) => ({
+                    student_id: student.student_id,
+                  })),
+            invoice_id: external_id,
           };
-          let data = await AddOrderScheduleV2(params);
-          if (data.data.status === "success") {
-            is_finish += 1;
+
+          console.log(updatedData);
+
+          const res = await AddOrder(updatedData);
+
+          if (res) {
+            // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
+            const orderDetailPromises = [];
+
+            for (const student of selectedStudents) {
+              for (let i = 0; i < product.meetings; i++) {
+                const temp = {
+                  order: res.data.order_id,
+                  day: inputValue.day,
+                  time: inputValue.time,
+                  price_per_meet:
+                    (product.price * parseInt(inputValue.trainer_percentage)) /
+                    100 /
+                    product.meetings,
+                  schedule_date: DateTime.now()
+                    .plus({ days: 7 * (i + 1) })
+                    .toFormat("yyyy-MM-dd"),
+                  student: student.student_id,
+                  meet: i + 1,
+                  is_presence: false,
+                };
+
+                orderDetailPromises.push(AddOrderDetail(temp));
+              }
+            }
+
+            // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
+            await Promise.all(orderDetailPromises);
+
+            // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
+            const params = {
+              branch: inputValue.branch,
+              pool: inputValue.pool.value,
+              trainer: inputValue.trainer.trainer_id,
+              order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
+              day: inputValue.day,
+              time: inputValue.time,
+              is_free: true,
+            };
+            let data = await AddOrderScheduleV2(params);
+            if (data.data.status === "success") {
+              is_finish += 1;
+            }
           }
         }
 
-        if (!isInvoice) {
+        if (isInvoice) {
           if (is_finish === selectedProduct.length) {
             if (!isSplitInvoice) {
               let paramxendit = {
@@ -742,8 +748,8 @@ const AddJadwal = ({
               />
               <div className="flex justify-center align-bottom p-3 border-2 border-green-500 border-solid rounded-md">
                 <Checkbox
-                  name="splitInvoice"
-                  label={"Tanpa Invoice"}
+                  name="buatXendit"
+                  label={"Buat Xendit"}
                   value={isInvoice}
                   onChange={() => {
                     setIsInvoice(!isInvoice);
@@ -753,184 +759,212 @@ const AddJadwal = ({
             </div>
           }
         >
-          <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
-            {/* Product Section */}
-            <div className="flex flex-col">
-              {/* Header for Product Section */}
-              <div className="grid grid-cols-[1fr_100px] gap-5">
-                <label className="form-label" htmlFor="product">
-                  Product
-                </label>
-                <label className="form-label" htmlFor="jumlah">
-                  Jumlah
-                </label>
-              </div>
-              {/* Product Rows */}
-              <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
-                {product.map((option, i) => {
-                  const isDisabled = handleProductDisable(option.package_name);
-                  //  ||
-                  // option.package_name.toLowerCase() === "trial";
+          <div className="flex flex-col gap-4">
+            {/* tanggal order akan muncul jika is invoice di centang */}
+            {!isInvoice ? (
+              <Card bodyClass="p-3">
+                <div className="flex flex-row items-center">
+                  <label className="form-label basis-1/5" htmlFor="order_date">
+                    Tanggal Order
+                  </label>
+                  <Flatpickr
+                    defaultValue={DateTime.fromJSDate(DateTime.now()).toFormat(
+                      "yyyy-MM-dd"
+                    )}
+                    name="order_date"
+                    options={{
+                      disableMobile: true,
+                      allowInput: true,
+                      altInput: true,
+                      altFormat: "d F Y",
+                    }}
+                    className="form-control py-2 bg-white basis-1/4"
+                    onChange={(date) => setValue("order_date", date[0])}
+                  />
+                </div>
+              </Card>
+            ) : null}
+            <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
+              {/* Product Section */}
+              <div className="flex flex-col">
+                {/* Header for Product Section */}
+                <div className="grid grid-cols-[1fr_100px] gap-5">
+                  <label className="form-label" htmlFor="product">
+                    Product
+                  </label>
+                  <label className="form-label" htmlFor="jumlah">
+                    Jumlah Paket
+                  </label>
+                </div>
+                {/* Product Rows */}
+                <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
+                  {product.map((option, i) => {
+                    const isDisabled = handleProductDisable(
+                      option.package_name
+                    );
+                    //  ||
+                    // option.package_name.toLowerCase() === "trial";
 
-                  if (isDisabled) return null;
-                  return (
-                    <React.Fragment key={`product-item-${option.product_id}`}>
-                      <Checkbox
-                        name="product"
-                        label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
-                          "id-ID"
-                        ).format(option.sellprice)}`}
-                        value={selectedProduct.some(
-                          (p) => p.product_id === option.product_id
-                        )}
-                        onChange={() => {
-                          // This onChange is for non-trial products.
-                          // Trial product selection is handled automatically by istrial checkboxes.
-                          if (option.package_name.toLowerCase() !== "trial") {
-                            if (
-                              selectedProduct.some(
-                                (p) => p.product_id === option.product_id
-                              )
-                            )
-                              handleQtyChange(option.product_id, 0);
-                          }
-                          handleProductSelectionChange(option);
-                        }}
-                        disabled={
-                          handleProductDisable(option.package_name) ||
-                          option.package_name.toLowerCase() === "trial"
-                        }
-                      />
-                      <Textinput
-                        isMask
-                        type="text"
-                        id={`qty${i}`}
-                        register={register}
-                        placeholder="0"
-                        className="text-right"
-                        options={{ numeral: true, blocks: [1] }}
-                        value={
-                          selectedProduct
-                            .find((p) => p.product_id === option.product_id)
-                            ?.qty?.toString() || "0"
-                        }
-                        defaultValue={1}
-                        disabled={
-                          !selectedProduct.some(
+                    if (isDisabled) return null;
+                    return (
+                      <React.Fragment key={`product-item-${option.product_id}`}>
+                        <Checkbox
+                          name="product"
+                          label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
+                            "id-ID"
+                          ).format(option.sellprice)}`}
+                          value={selectedProduct.some(
                             (p) => p.product_id === option.product_id
-                          ) || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
-                        }
-                        onChange={(e) => {
-                          let raw = e.target.rawValue || "0";
-                          let val = parseInt(raw, 10);
+                          )}
+                          onChange={() => {
+                            // This onChange is for non-trial products.
+                            // Trial product selection is handled automatically by istrial checkboxes.
+                            if (option.package_name.toLowerCase() !== "trial") {
+                              if (
+                                selectedProduct.some(
+                                  (p) => p.product_id === option.product_id
+                                )
+                              )
+                                handleQtyChange(option.product_id, 0);
+                            }
+                            handleProductSelectionChange(option);
+                          }}
+                          disabled={
+                            handleProductDisable(option.package_name) ||
+                            option.package_name.toLowerCase() === "trial"
+                          }
+                        />
+                        <Textinput
+                          isMask
+                          type="text"
+                          id={`qty${i}`}
+                          register={register}
+                          placeholder="0"
+                          className="text-right"
+                          options={{ numeral: true, blocks: [1] }}
+                          value={
+                            selectedProduct
+                              .find((p) => p.product_id === option.product_id)
+                              ?.qty?.toString() || "0"
+                          }
+                          defaultValue={1}
+                          disabled={
+                            !selectedProduct.some(
+                              (p) => p.product_id === option.product_id
+                            ) || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
+                          }
+                          onChange={(e) => {
+                            let raw = e.target.rawValue || "0";
+                            let val = parseInt(raw, 10);
 
-                          // Batas nilai min dan max
-                          const min = 1;
-                          const max = 10; //formList.length;
+                            // Batas nilai min dan max
+                            const min = 1;
+                            const max = 10; //formList.length;
 
-                          // Koreksi nilai agar sesuai dengan batasan
-                          if (val < min) val = min;
-                          if (val > max) val = max;
+                            // Koreksi nilai agar sesuai dengan batasan
+                            if (val < min) val = min;
+                            if (val > max) val = max;
 
-                          handleQtyChange(option.product_id, val.toString());
-                        }}
-                      />
-                    </React.Fragment>
-                  );
-                })}
+                            handleQtyChange(option.product_id, val.toString());
+                          }}
+                        />
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Siswa Section */}
+              {/* Siswa Section */}
 
-            <div className="flex flex-col space-y-2">
-              {/* Header */}
-              <div className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center">
-                <span>Nama Siswa</span>
-                <span>Registrasi</span>
-                <span className="text-center">Trial</span>
-                <span>Delete</span>
-              </div>
+              <div className="flex flex-col space-y-2">
+                {/* Header */}
+                <div className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center">
+                  <span>Nama Siswa</span>
+                  <span>Registrasi</span>
+                  <span className="text-center">Trial</span>
+                  <span>Delete</span>
+                </div>
 
-              {isLoadingCheckDuplicate ? (
-                <Loading>
-                  <div>Sedang Memeriksa Data Siswa</div>
-                </Loading>
-              ) : (
-                <>
-                  {/* Rows */}
-                  {fields.map((item, index) => (
-                    <div
-                      key={index}
-                      className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
-                    >
-                      <Textinput
-                        type="text"
-                        id={`name3${index}`}
-                        placeholder="Nama Siswa"
-                        register={register}
-                        name={`students[${index}].fullname`}
-                        disabled={item.student_id !== ""}
-                      />
-
-                      <Select
-                        key={item.value}
-                        className="react-select"
-                        // classNamePrefix="select"
-                        defaultValue={item.reg_stat}
-                        disabled={item.student_id !== ""}
-                        name={`students[${index}].reg_stat`}
-                        register={register}
-                        options={allStatus}
-                        onChange={(
-                          selectedOption // react-select passes the selected option object
-                        ) =>
-                          handleRegStatChange(
-                            item.fullname,
-                            "reg_stat",
-                            selectedOption.target.value // Get value from the selected option
-                          )
-                        }
-                        id="hh"
-                      />
-                      <Checkbox
-                        value={
-                          formList.find((x) => x.fullname === item.fullname)
-                            ?.istrial
-                        }
-                        activeClass="ring-primary-500 bg-primary-500"
-                        onChange={(e) =>
-                          handleRegStatChange(
-                            item.fullname,
-                            "istrial",
-                            e.target.checked
-                          )
-                        }
-                        className="mx-auto"
-                      />
-
-                      <button
-                        onClick={() => {
-                          const studentToRemoveFullname =
-                            fields[index].fullname;
-                          remove(index);
-                          setFormList((currentList) =>
-                            currentList.filter(
-                              (s) => s.fullname !== studentToRemoveFullname
-                            )
-                          );
-                          setSelectedProduct([]);
-                          forceUpdate();
-                        }}
-                        type="button"
-                        className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
+                {isLoadingCheckDuplicate ? (
+                  <Loading>
+                    <div>Sedang Memeriksa Data Siswa</div>
+                  </Loading>
+                ) : (
+                  <>
+                    {/* Rows */}
+                    {fields.map((item, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
                       >
-                        <Icons icon="heroicons-outline:trash" />
-                      </button>
-                    </div>
-                  ))}
-                </>
-              )}
+                        <Textinput
+                          type="text"
+                          id={`name3${index}`}
+                          placeholder="Nama Siswa"
+                          register={register}
+                          name={`students[${index}].fullname`}
+                          disabled={item.student_id !== ""}
+                        />
+
+                        <Select
+                          key={item.value}
+                          className="react-select"
+                          // classNamePrefix="select"
+                          defaultValue={item.reg_stat}
+                          disabled={item.student_id !== ""}
+                          name={`students[${index}].reg_stat`}
+                          register={register}
+                          options={allStatus}
+                          onChange={(
+                            selectedOption // react-select passes the selected option object
+                          ) =>
+                            handleRegStatChange(
+                              item.fullname,
+                              "reg_stat",
+                              selectedOption.target.value // Get value from the selected option
+                            )
+                          }
+                          id="hh"
+                        />
+                        <Checkbox
+                          value={
+                            formList.find((x) => x.fullname === item.fullname)
+                              ?.istrial
+                          }
+                          activeClass="ring-primary-500 bg-primary-500"
+                          onChange={(e) =>
+                            handleRegStatChange(
+                              item.fullname,
+                              "istrial",
+                              e.target.checked
+                            )
+                          }
+                          className="mx-auto"
+                        />
+
+                        <button
+                          onClick={() => {
+                            const studentToRemoveFullname =
+                              fields[index].fullname;
+                            remove(index);
+                            setFormList((currentList) =>
+                              currentList.filter(
+                                (s) => s.fullname !== studentToRemoveFullname
+                              )
+                            );
+                            setSelectedProduct([]);
+                            forceUpdate();
+                          }}
+                          type="button"
+                          className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
+                        >
+                          <Icons icon="heroicons-outline:trash" />
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </Card>
@@ -1017,7 +1051,7 @@ const AddJadwal = ({
           </Card>
         )}
         {/* Pelanggan Section */}
-        {!isInvoice ? (
+        {isInvoice ? (
           <Card
             title={"Pelanggan"}
             headerslot={
