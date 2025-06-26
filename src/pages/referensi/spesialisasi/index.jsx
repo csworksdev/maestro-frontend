@@ -163,12 +163,16 @@ const Specialization = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Spesialisasi">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Spesialisasi"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (

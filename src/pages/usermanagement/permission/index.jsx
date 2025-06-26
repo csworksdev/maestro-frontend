@@ -133,12 +133,16 @@ const Permissions = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Permissions">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Permissions"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (

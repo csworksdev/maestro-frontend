@@ -143,12 +143,16 @@ const Cabang = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Cabang">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Cabang"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (

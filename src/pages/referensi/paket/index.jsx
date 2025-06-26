@@ -165,12 +165,16 @@ const Paket = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Paket">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Paket"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (

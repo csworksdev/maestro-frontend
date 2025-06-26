@@ -191,12 +191,16 @@ const Siswa = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Siswa">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Siswa"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <SkeletionTable />
         ) : (

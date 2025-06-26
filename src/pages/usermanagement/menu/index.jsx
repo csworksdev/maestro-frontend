@@ -137,12 +137,16 @@ const Menus = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Menus">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Menus"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (

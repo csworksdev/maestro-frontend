@@ -361,13 +361,13 @@ const OrderActive = ({ is_finished }) => {
 
   return (
     <>
-      {is_finished === false ? (
+      {/* {is_finished === false ? (
         <Button className="btn-primary ">
           <Link to="add" isupdate="false">
             Tambah
           </Link>
         </Button>
-      ) : null}
+      ) : null} */}
       {isLoading ? (
         <Loading />
       ) : (

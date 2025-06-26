@@ -185,12 +185,16 @@ const Periodisasi = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Periodisasi">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Periodisasi"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (

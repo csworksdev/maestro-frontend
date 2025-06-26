@@ -441,203 +441,215 @@ const Edit = ({ state, onClose = null }) => {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <Card>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* {loadingError && (
+    <>
+      <Button
+        text="Kembali"
+        onClick={(e) => {
+          e.preventDefault();
+          navigate(-1);
+        }}
+        type="button"
+        className="bg-primary-500 text-white mb-4"
+        icon="heroicons-outline:arrow-uturn-left"
+      />
+      <div className="flex flex-col gap-5">
+        <Card>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* {loadingError && (
             <p className="error-message">{loadingError.message}</p>
           )} */}
-          <Select
-            name="branch"
-            label="Cabang"
-            placeholder="Pilih Cabang"
-            register={register}
-            error={errors.branch?.message}
-            options={branchOption}
-            defaultValue={""}
-            onChange={handleBranchChange}
-          />
-          <Select
-            name="pool"
-            label="Kolam"
-            placeholder="Pilih Kolam"
-            register={register}
-            error={errors.pool?.message}
-            options={kolamOption}
-            defaultValue={""}
-            onChange={handlePoolChange}
-          />
-          <Textarea
-            name="notes"
-            label="Catatan"
-            type="text"
-            register={register}
-            placeholder=""
-            value={poolNotes}
-            defaultValue={poolNotes ?? " "}
-            disabled
-          />
-          <div className="grid grid-cols-2 gap-4">
             <Select
-              name="day"
-              label="Hari"
-              placeholder="Pilih Hari"
+              name="branch"
+              label="Cabang"
+              placeholder="Pilih Cabang"
               register={register}
-              error={errors.day?.message}
-              options={hari}
-              defaultValue={"Senin"}
-              onChange={(date) => handleHariOption(date)}
+              error={errors.branch?.message}
+              options={branchOption}
+              defaultValue={""}
+              onChange={handleBranchChange}
             />
             <Select
-              name="jam"
-              label="Jam"
-              placeholder="Pilih Jam"
+              name="pool"
+              label="Kolam"
+              placeholder="Pilih Kolam"
               register={register}
-              error={errors.jam?.message}
-              options={jam}
-              defaultValue={"09.00"}
-              onChange={(time) => handleJamOption(time)}
+              error={errors.pool?.message}
+              options={kolamOption}
+              defaultValue={""}
+              onChange={handlePoolChange}
             />
-          </div>
-          <div className="flex flex-wrap space-x-5">
-            <label className="form-label" htmlFor="gender">
-              Gender Pelatih
-            </label>
-            {gender.map((option) => (
-              <Radio
-                key={option.value}
-                label={option.label}
-                name="gender"
-                value={option.value}
-                checked={selectGenderOption === option.value}
-                onChange={handleGenderOption}
+            <Textarea
+              name="notes"
+              label="Catatan"
+              type="text"
+              register={register}
+              placeholder=""
+              value={poolNotes}
+              defaultValue={poolNotes ?? " "}
+              disabled
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                name="day"
+                label="Hari"
+                placeholder="Pilih Hari"
+                register={register}
+                error={errors.day?.message}
+                options={hari}
+                defaultValue={"Senin"}
+                onChange={(date) => handleHariOption(date)}
               />
-            ))}
-          </div>
-          <div className="flex flex-wrap space-x-5">
-            <label className="form-label" htmlFor="product">
-              Product
-            </label>
-            <div className="flex flex-col">
-              {productOption.map((option) => (
+              <Select
+                name="jam"
+                label="Jam"
+                placeholder="Pilih Jam"
+                register={register}
+                error={errors.jam?.message}
+                options={jam}
+                defaultValue={"09.00"}
+                onChange={(time) => handleJamOption(time)}
+              />
+            </div>
+            <div className="flex flex-wrap space-x-5">
+              <label className="form-label" htmlFor="gender">
+                Gender Pelatih
+              </label>
+              {gender.map((option) => (
                 <Radio
                   key={option.value}
-                  label={
-                    option.label +
-                    " - Rp. " +
-                    new Intl.NumberFormat("id-ID").format(option.price)
-                  }
-                  name="product"
+                  label={option.label}
+                  name="gender"
                   value={option.value}
-                  checked={selectProductOption === option.value}
-                  onChange={handleProductChange}
+                  checked={selectGenderOption === option.value}
+                  onChange={handleGenderOption}
                 />
               ))}
             </div>
-          </div>
-          {/* <div className="hidden"> */}
-          <div>
-            <label className="form-label" htmlFor="order_date">
-              Tanggal Order
-            </label>
-            <Flatpickr
-              defaultValue={data.order_date}
-              name="order_date"
-              options={{
-                disableMobile: true,
-                allowInput: true,
-                altInput: true,
-                altFormat: "d F Y",
-              }}
-              className="form-control py-2"
-              onChange={(date) => setValue("order_date", date[0])}
-              readOnly={false}
-            />
-            {errors.order_date && (
-              <p className="error-message">{errors.order_date.message}</p>
-            )}
-          </div>
-          <div className="hidden">
-            <label className="form-label" htmlFor="start_date">
-              Tanggal Mulai
-            </label>
-            <Flatpickr
-              value={data.start_date}
-              name="start_date"
-              options={{
-                dateFormat: "d F Y",
-                disableMobile: "true",
-                allowInput: true,
-              }}
-              className="form-control py-2"
-              onChange={(date) => setValue("start_date", date[0])}
-              disabled={false}
-            />
-            {errors.start_date && (
-              <p className="error-message">{errors.start_date.message}</p>
-            )}
-          </div>
-
-          <Textinput
-            name="promo"
-            label="Promo"
-            type="text"
-            placeholder="Masukan promo"
-            register={register}
-            error={errors.promo?.message}
-            defaultValue={data.promo ?? ""}
-          />
-          <div>
-            <label className="form-label" htmlFor="students">
-              Siswa
-            </label>
-            <AsyncSelect
-              name="students"
-              label="Siswa"
-              placeholder="Pilih Siswa"
-              isMulti
-              defaultOptions={defaultStudentOptions}
-              loadOptions={loadOptions}
-              value={selectedStudents}
-              onChange={handleStudentChange}
-              isOptionDisabled={() => selectedStudents.length >= maxStudents}
-            />
-            {studentLoadingError && (
-              <p className="error-message">{studentLoadingError.message}</p>
-            )}
-            {errors.students && (
-              <p className="error-message">{errors.students.message}</p>
-            )}
-          </div>
-          <Select
-            name="trainer"
-            label="Pelatih"
-            placeholder={
-              trainerOption.length == 0
-                ? "Pelatih tidak tersedia"
-                : "Pilih pelatih"
-            }
-            register={register}
-            error={errors.trainer?.message}
-            options={trainerOption}
-            defaultValue={data.trainer ?? ""}
-          />
-          {trainerLoadingError && (
-            <p className="error-message">{trainerLoadingError.message}</p>
-          )}
-          <div className="ltr:text-right rtl:text-left space-x-3">
-            <div className="btn-group">
-              <button type="button" className="btn" onClick={handleCancel}>
-                Batal
-              </button>
-              <button type="submit" className="btn btn-dark">
-                Update Order
-              </button>
+            <div className="flex flex-wrap space-x-5">
+              <label className="form-label" htmlFor="product">
+                Product
+              </label>
+              <div className="flex flex-col">
+                {productOption.map((option) => (
+                  <Radio
+                    key={option.value}
+                    label={
+                      option.label +
+                      " - Rp. " +
+                      new Intl.NumberFormat("id-ID").format(option.price)
+                    }
+                    name="product"
+                    value={option.value}
+                    checked={selectProductOption === option.value}
+                    onChange={handleProductChange}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        </form>
-      </Card>
-    </div>
+            {/* <div className="hidden"> */}
+            <div>
+              <label className="form-label" htmlFor="order_date">
+                Tanggal Order
+              </label>
+              <Flatpickr
+                defaultValue={data.order_date}
+                name="order_date"
+                options={{
+                  disableMobile: true,
+                  allowInput: true,
+                  altInput: true,
+                  altFormat: "d F Y",
+                }}
+                className="form-control py-2"
+                onChange={(date) => setValue("order_date", date[0])}
+                readOnly={false}
+              />
+              {errors.order_date && (
+                <p className="error-message">{errors.order_date.message}</p>
+              )}
+            </div>
+            <div className="hidden">
+              <label className="form-label" htmlFor="start_date">
+                Tanggal Mulai
+              </label>
+              <Flatpickr
+                value={data.start_date}
+                name="start_date"
+                options={{
+                  dateFormat: "d F Y",
+                  disableMobile: "true",
+                  allowInput: true,
+                }}
+                className="form-control py-2"
+                onChange={(date) => setValue("start_date", date[0])}
+                disabled={false}
+              />
+              {errors.start_date && (
+                <p className="error-message">{errors.start_date.message}</p>
+              )}
+            </div>
+
+            <Textinput
+              name="promo"
+              label="Promo"
+              type="text"
+              placeholder="Masukan promo"
+              register={register}
+              error={errors.promo?.message}
+              defaultValue={data.promo ?? ""}
+            />
+            <div>
+              <label className="form-label" htmlFor="students">
+                Siswa
+              </label>
+              <AsyncSelect
+                name="students"
+                label="Siswa"
+                placeholder="Pilih Siswa"
+                isMulti
+                defaultOptions={defaultStudentOptions}
+                loadOptions={loadOptions}
+                value={selectedStudents}
+                onChange={handleStudentChange}
+                isOptionDisabled={() => selectedStudents.length >= maxStudents}
+              />
+              {studentLoadingError && (
+                <p className="error-message">{studentLoadingError.message}</p>
+              )}
+              {errors.students && (
+                <p className="error-message">{errors.students.message}</p>
+              )}
+            </div>
+            <Select
+              name="trainer"
+              label="Pelatih"
+              placeholder={
+                trainerOption.length == 0
+                  ? "Pelatih tidak tersedia"
+                  : "Pilih pelatih"
+              }
+              register={register}
+              error={errors.trainer?.message}
+              options={trainerOption}
+              defaultValue={data.trainer ?? ""}
+            />
+            {trainerLoadingError && (
+              <p className="error-message">{trainerLoadingError.message}</p>
+            )}
+            <div className="ltr:text-right rtl:text-left space-x-3">
+              <div className="btn-group">
+                <button type="button" className="btn" onClick={handleCancel}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-dark">
+                  Update Order
+                </button>
+              </div>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </>
   );
 };
 

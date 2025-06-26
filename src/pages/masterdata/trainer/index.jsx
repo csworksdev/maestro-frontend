@@ -14,6 +14,7 @@ import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
+import { toProperCase } from "@/utils";
 
 const Trainer = () => {
   const navigate = useNavigate();
@@ -123,7 +124,7 @@ const Trainer = () => {
       Header: "Trainer",
       accessor: "fullname",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        return <span>{toProperCase(row?.cell?.value)}</span>;
       },
     },
     {
@@ -186,22 +187,27 @@ const Trainer = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Trainer">
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
+      <Card
+        title="Trainer"
+        headerslot={
+          <Button className="btn-primary ">
+            <Link to="add" isupdate="false">
+              Tambah
+            </Link>
+          </Button>
+        }
+      >
+        <Search searchValue={searchQuery} handleSearch={handleSearch} />
         {isLoading ? (
           <SkeletionTable />
         ) : (
           <>
-            <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}
               handleSearch={handleSearch}
+              isLoading={isLoading}
             />
             <PaginationComponent
               pageSize={pageSize}

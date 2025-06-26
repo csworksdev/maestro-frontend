@@ -144,15 +144,19 @@ const Users = () => {
 
   return (
     <div className="grid grid-cols-1 justify-end">
-      <Card title="Users">
-        <div className="flex gap-3">
-          <Button className="btn-primary ">
-            <Link to="add" isupdate="false">
-              Tambah User
-            </Link>
-          </Button>
-          <AddCoach handleSelectTrainer={handleSelectTrainer} />
-        </div>
+      <Card
+        title="Users"
+        headerslot={
+          <div className="flex gap-3">
+            <Button className="btn-primary ">
+              <Link to="add" isupdate="false">
+                Tambah User
+              </Link>
+            </Button>
+            <AddCoach handleSelectTrainer={handleSelectTrainer} />
+          </div>
+        }
+      >
         {isLoading ? (
           <Loading />
         ) : (
