@@ -12,6 +12,7 @@ import {
 } from "@/axios/referensi/specialization";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
+import Button from "@/components/ui/Button";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Edit = () => {
   const FormValidationSchema = yup
     .object({
       name: yup.string().required("Nama Specialization is required"),
+      alias: yup.string().required("Alias tidak boleh kosong"),
     })
     .required();
 
@@ -70,6 +72,7 @@ const Edit = () => {
     const updatedData = {
       ...data,
       name: newData.name,
+      alias: newData.alias,
     }; // Create the updated todo object
 
     if (isUpdate) {
@@ -80,7 +83,17 @@ const Edit = () => {
   };
 
   return (
-    <div>
+    <>
+      <Button
+        text="Kembali"
+        onClick={(e) => {
+          e.preventDefault();
+          navigate(-1);
+        }}
+        type="button"
+        className="bg-primary-500 text-white mb-4"
+        icon="heroicons-outline:arrow-uturn-left"
+      />
       <Card title={isUpdate ? "Update" : "Add" + " Specialization"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
           <Textinput
@@ -88,6 +101,15 @@ const Edit = () => {
             label="Spesialisasi"
             type="text"
             placeholder="Masukan Nama Spesialisasi"
+            register={register}
+            error={errors.title}
+            defaultValue={isUpdate ? data.name : ""}
+          />
+          <Textinput
+            name="alias"
+            label="Alias"
+            type="text"
+            placeholder="Masukan singkatan, maks. 3 huruf, contoh : ABK"
             register={register}
             error={errors.title}
             defaultValue={isUpdate ? data.name : ""}
@@ -106,7 +128,7 @@ const Edit = () => {
           </div>
         </form>
       </Card>
-    </div>
+    </>
   );
 };
 

@@ -145,6 +145,13 @@ const Specialization = () => {
       },
     },
     {
+      Header: "Alias",
+      accessor: "alias",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
       Header: "action",
       accessor: "action",
       id: "action",

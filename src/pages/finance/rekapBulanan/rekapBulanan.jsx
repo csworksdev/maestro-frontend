@@ -177,7 +177,7 @@ const RekapBulanan = () => {
                 DateTime.fromFormat(
                   selectedPeriode[0].end_date,
                   "yyyy-MM-dd"
-                ) &&
+                ).plus({ days: -1 }) &&
               item[objNameOrderID] !== ""
             ) {
               if (item[objNamePaid]) {
@@ -200,7 +200,7 @@ const RekapBulanan = () => {
                 DateTime.fromFormat(
                   selectedPeriode[0].end_date,
                   "yyyy-MM-dd"
-                ) &&
+                ).plus({ days: -1 }) &&
               !item[objNamePaid] &&
               item[objNameOrderID] !== ""
             ) {
@@ -468,21 +468,27 @@ const RekapBulanan = () => {
       periode = "prev";
     else if (
       DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
-        DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+        DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd").plus({
+          days: -1,
+        }) &&
       DateTime.fromFormat(tanggal, "dd/MM/yyyy") >=
         DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
     )
       periode = "curr";
     else if (
       DateTime.fromFormat(tanggal, "dd/MM/yyyy") >
-      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
+      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd").plus({
+        days: -1,
+      })
     )
       periode = "next";
     else periode = "";
 
     let currentPeriode =
       DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
-      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd")
+      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd").plus({
+        days: -1,
+      })
         ? true
         : false;
 
@@ -807,7 +813,10 @@ const RekapBulanan = () => {
             element[objNameOrderID] !== "" &&
             element[objDate] !== "" &&
             DateTime.fromFormat(element[objDate], "dd/MM/yyyy") <=
-              DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+              DateTime.fromFormat(
+                selectedPeriode[0].end_date,
+                "yyyy-MM-dd"
+              ).plus({ days: -1 }) &&
             DateTime.fromFormat(element[objDate], "dd/MM/yyyy") >=
               DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
           ) {
@@ -843,7 +852,10 @@ const RekapBulanan = () => {
             item[objNameOrderID] !== "" &&
             item[objDate] !== "" &&
             DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <=
-              DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd") &&
+              DateTime.fromFormat(
+                selectedPeriode[0].end_date,
+                "yyyy-MM-dd"
+              ).plus({ days: -1 }) &&
             DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >=
               DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
           ) {
