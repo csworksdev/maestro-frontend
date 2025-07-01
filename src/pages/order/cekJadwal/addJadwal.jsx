@@ -244,7 +244,7 @@ const AddJadwal = ({
 
         const res = await AddSiswa(datasiswa);
         return {
-          student_id: res.data.student_id,
+          student_id: res.data.message.student_id,
           is_new: "newreg",
         };
       });
@@ -292,15 +292,15 @@ const AddJadwal = ({
             invoice_id: external_id,
           };
 
-          console.log(updatedData);
-
           const res = await AddOrder(updatedData);
 
           if (res) {
             // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
             const orderDetailPromises = [];
 
-            for (const student of selectedStudents) {
+            for (const student of selectedStudents?.length
+              ? selectedStudents
+              : students) {
               for (let i = 0; i < product.meetings; i++) {
                 const temp = {
                   order: res.data.order_id,
@@ -318,12 +318,11 @@ const AddJadwal = ({
                   is_presence: false,
                 };
 
-                orderDetailPromises.push(AddOrderDetail(temp));
+                orderDetailPromises.push(AddOrderDetail(temp)); // tanpa await
               }
             }
 
-            // ✅ TUNGGU SEMUA AddOrderDetail SELESAI
-            await Promise.all(orderDetailPromises);
+            await Promise.all(orderDetailPromises); // baru dijalankan bareng-bareng
 
             // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
             const params = {
@@ -349,7 +348,8 @@ const AddJadwal = ({
                 external_id: external_id,
                 amount:
                   selectedProduct.reduce(
-                    (sum, p) => sum + p.qty * p.sellprice,
+                    (sum, p) =>
+                      sum + p.qty * selectedStudents?.length * p.sellprice,
                     0
                   ) +
                   Object.values(grouped).reduce(
