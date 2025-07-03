@@ -120,13 +120,13 @@ const AddJadwal = ({
 
         return {
           student_id: "",
-          fullname: toProperCase(values[2]) || "",
-          nickname: toProperCase(values[3]) || "",
+          fullname: toProperCase(String(values[2]).trim()) || "",
+          nickname: toProperCase(String(values[3]).trim()) || "",
           gender: String(values[5]).trim() === "Laki-laki" ? "L" : "P",
           parent:
             values[4].length < 2
-              ? toProperCase(values[2])
-              : toProperCase(values[4]),
+              ? toProperCase(String(values[2]).trim())
+              : toProperCase(String(values[4]).trim()),
           phone: values[11] || "",
           address: values[10] || "-",
           pob: values[6] || "",
@@ -679,6 +679,31 @@ const AddJadwal = ({
     }
   }, [selectedProduct, formList, inputValue.trainer, setValue, isSplitInvoice]);
 
+  useEffect(() => {
+    const uniqueParentsMap = new Map();
+
+    formList.forEach((item) => {
+      const parentName =
+        item.parent && (item.parent !== "-" || item.parent !== "")
+          ? item.parent
+          : item.fullname;
+
+      const key = `${parentName}-${item.phone}`;
+      if (item.phone && !uniqueParentsMap.has(key)) {
+        uniqueParentsMap.set(key, {
+          name: toProperCase(parentName),
+          phone: item.phone,
+          keterangan: "",
+          products: [],
+        });
+      }
+    });
+
+    const parentList = Array.from(uniqueParentsMap.values());
+    setParent(parentList);
+    // setListParent(parsedRows);
+  }, [formList]);
+
   const handleRegStatChange = (fullname, kolom, value) => {
     // Update local formList state
     setFormList((prevSelected) =>
@@ -1119,7 +1144,7 @@ const AddJadwal = ({
                   ></Textarea>
                 </>
               ) : (
-                <div className="flex flex-row gap-3 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 w-full">
                   {parent.map((item, idx) => (
                     <Card key={idx} className="flex-1 min-w-0">
                       <div className="space-y-2">
