@@ -471,6 +471,8 @@ const AddJadwal = ({
           return false;
         case "Hydrotherapy":
           return false;
+        case "Baby Swim & Spa":
+          return false;
         default:
           return true;
       }
