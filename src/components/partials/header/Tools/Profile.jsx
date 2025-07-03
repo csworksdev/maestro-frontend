@@ -51,6 +51,7 @@ const Profile = () => {
     // localStorage.removeItem("username");
     navigate(0);
     // await removeFcmToken();
+    removeFcmToken();
     dispatch(logOut());
   };
 

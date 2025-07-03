@@ -17,6 +17,8 @@ import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import Dropdown from "@/components/ui/Dropdown";
 import WhatsAppButton from "@/components/custom/sendwhatsapp";
+import Icons from "@/components/ui/Icon";
+import { useSelector } from "react-redux";
 
 const columnHeader = [
   "Pelatih",
@@ -108,6 +110,7 @@ const CekJadwal = () => {
     },
   ];
 
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [tabHari, setTabHari] = useState(daysOfWeek);
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);
@@ -130,7 +133,7 @@ const CekJadwal = () => {
     product: "",
     promo: "",
     is_finish: false,
-    // is_paid: false,
+    is_paid: "pending",
     trainer: "",
     pool: "",
     paket: "",
@@ -246,6 +249,7 @@ const CekJadwal = () => {
       kolam: fillData.kolam ?? baseJadwal.kolam,
       total_order: fillData.total_order ?? baseJadwal.total_order,
       percent: fillData.percent ?? baseJadwal.percent,
+      is_paid: fillData.is_paid ?? baseJadwal.is_paid,
       datahari: updatedDatahari,
     };
   };
@@ -351,7 +355,8 @@ const CekJadwal = () => {
                   if (slot.order_id) {
                     if (slot.pool_name === pool.label) {
                       // Color logic
-                      let cardColor = "bg-green-300";
+                      let cardColor =
+                        "bg-white border-2 border-green-500 shadow-md shadow-lime-200/50";
                       const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
                       if (pLastRaw) {
                         const pLast = DateTime.fromFormat(
@@ -359,42 +364,63 @@ const CekJadwal = () => {
                           "dd/MM/yyyy"
                         );
                         const diff = DateTime.now().diff(pLast, "days").days;
-                        if (diff > 2) cardColor = "bg-red-300";
-                        else if (diff > 0) cardColor = "bg-yellow-300";
+                        if (diff > 2)
+                          cardColor = "bg-red-200 shadow-md shadow-red-500/50";
+                        else if (diff > 0)
+                          cardColor =
+                            "bg-yellow-500 shadow-md shadow-lime-500/50";
                       }
 
                       return (
                         <div
                           key={key}
-                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl p-2 flex flex-col gap-2 overflow-hidden justify-center`}
+                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
                         >
-                          {/* <PaymentStatusBadge status="settled" /> */}
+                          <PaymentStatusBadge status={slot.is_paid} />
                           <Badge
                             label={checkProduct(slot.product)}
-                            className="bg-primary-500 text-white text-center"
+                            className="bg-primary-500 text-white justify-center"
                           />
+                          {/* copy order id */}
+                          {user_id ===
+                          "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" ? (
+                            <button
+                              onClick={() => {
+                                var text = "order_id = '" + slot.order_id + "'";
+                                navigator.clipboard.writeText(text);
+                              }}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <Icons
+                                icon="heroicons-outline:clipboard-copy"
+                                className="w-5 h-5"
+                              />
+                            </button>
+                          ) : null}
                           <div className="flex justify-between">
                             <Tooltip content={slot.student?.join(", ") || ""}>
                               <span>{iconProduct(slot.product)}</span>
                             </Tooltip>
-                            <Tooltip
-                              content={
-                                slot.p?.length
-                                  ? slot.p.map((pItem, idx) => (
-                                      <div key={idx}>
-                                        <strong>P{pItem.meet}</strong>:{" "}
-                                        {pItem.tgl || "-"}
-                                      </div>
-                                    ))
-                                  : "Tidak ada pertemuan"
-                              }
-                            >
-                              <span>{iconProduct("p")}</span>
-                            </Tooltip>
+                            {slot?.is_paid == "Pending" ? null : (
+                              <Tooltip
+                                content={
+                                  slot.p?.length
+                                    ? slot.p.map((pItem, idx) => (
+                                        <div key={idx}>
+                                          <strong>P{pItem.meet}</strong>:{" "}
+                                          {pItem.tgl || "-"}
+                                        </div>
+                                      ))
+                                    : "Tidak ada pertemuan"
+                                }
+                              >
+                                <span>{iconProduct("p")}</span>
+                              </Tooltip>
+                            )}
                           </div>
-                          <div className="flex flex-row justify-center">
+                          <div className="flex flex-row justify-center bg-slate-200">
                             <Dropdown
-                              classMenuItems="left-0 bottom-full mb-2 w-[220px]"
+                              classMenuItems="left-0 bottom-full mb-2 w-[220px] "
                               label={
                                 // <Button
                                 //   text="Action"
@@ -402,7 +428,9 @@ const CekJadwal = () => {
                                 //   iconClass="text-sm"
                                 // />
                                 <Icon
-                                  icon={"heroicons-outline:bars-4"}
+                                  icon={
+                                    "heroicons-outline:ellipsis-horizontal-circle"
+                                  }
                                   width="24"
                                   color="green"
                                 />
@@ -445,36 +473,39 @@ const CekJadwal = () => {
 
   const GridKolamHeader = React.memo(({ item, trainers, day }) => {
     return (
-      <div className="overflow-auto ">
-        <div className="grid grid-cols-15 gap-2 w-full ">
+      <div className="w-full">
+        {/* HEADER FIX */}
+        <div className="grid grid-cols-15 gap-2 w-full">
           <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky left-0 bg-white z-10">
             Pelatih
           </div>
           {columnHeader.slice(1).map((header, i) => {
-            var jumlahPerJam = item.data[day][header];
+            const jumlahPerJam = item.data[day][header];
             return (
               <div
                 key={i}
                 className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center"
               >
-                <>
-                  {header}
-                  {jumlahPerJam && (
-                    <>
-                      {" "}
-                      <br />({jumlahPerJam}){" "}
-                    </>
-                  )}
-                </>
+                {header}
+                {jumlahPerJam && (
+                  <>
+                    <br />({jumlahPerJam})
+                  </>
+                )}
               </div>
             );
           })}
+        </div>
 
-          {/* Trainer names and details */}
+        {/* BODY SCROLL */}
+        <div className="overflow-auto max-h-[600px]">
           {jadwal.map((de) => (
-            <React.Fragment key={de.trainer_id}>
+            <div
+              key={de.trainer_id}
+              className="grid grid-cols-15 gap-3 my-2 w-full"
+            >
               <div
-                className={`p-1 min-h-[80px] flex flex-col rounded-xl shadow sticky left-0 z-10 align-middle justify-center gap-1 ${
+                className={`p-1 min-h-[80px] flex flex-col rounded-xl shadow sticky left-0 z-10 align-middle justify-center animation-ping gap-1 ${
                   de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
                 }`}
               >
@@ -489,7 +520,7 @@ const CekJadwal = () => {
               </div>
 
               <GridKolamDetail item={de} pool={item} />
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </div>
@@ -510,12 +541,12 @@ const CekJadwal = () => {
         <div className="flex flex-col h-full">
           <Card
             key={selectedPoolItem.value}
-            subtitle={selectedPoolItem.label}
-            headerslot={
-              <div className="flex flex-col gap-1 text-sm">
-                <div>Jumlah Pelatih: {filteredTrainers.length}</div>
-              </div>
-            }
+            // subtitle={selectedPoolItem.label}
+            // headerslot={
+            //   <div className="flex flex-col gap-1 text-sm">
+            //     <div>Jumlah Pelatih: {filteredTrainers.length}</div>
+            //   </div>
+            // }
           >
             <GridKolamHeader
               item={selectedPoolItem}
@@ -744,36 +775,43 @@ const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
 ));
 
 const STATUS_MAP = {
-  unpaid: {
-    label: "Unpaid",
+  pending: {
+    label: "Pending",
     className: "bg-amber-500 text-white",
-    icon: "heroicons-outline:clock",
+    icon: "heroicons-outline:banknotes",
   },
   paid: {
     label: "Paid",
     className: "bg-emerald-500 text-white",
-    icon: "heroicons-outline:check-circle",
-  },
-  settled: {
-    label: "Settled",
-    className: "bg-blue-500 text-white",
     icon: "heroicons-outline:banknotes",
   },
+  // settled: {
+  //   label: "Settled",
+  //   className: "bg-white text-slate-800",
+  //   icon: "heroicons-outline:banknotes",
+  // },
   expired: {
     label: "Expired",
-    className: "bg-gray-500 text-white",
-    icon: "heroicons-outline:x-circle",
+    className: "bg-danger-500 text-white",
+    icon: "heroicons-outline:banknotes",
   },
 };
 
 const PaymentStatusBadge = ({ status }) => {
   const statusKey = status?.toLowerCase();
   const { label, className, icon } = STATUS_MAP[statusKey] || {
-    label: "Tidak Dikenal",
+    label: status,
     className: "bg-gray-300 text-white",
-    icon: "heroicons-outline:question-mark-circle",
+    icon: "heroicons-outline:banknotes",
   };
 
-  // return <Badge label={label} className={className} icon={icon} />;
-  return <Badge label={label} className={className} />;
+  if (statusKey === "settled") return null;
+
+  return (
+    <Badge
+      label={label}
+      className={className + " animate-bounce justify-center p-1"}
+      icon={icon}
+    />
+  );
 };

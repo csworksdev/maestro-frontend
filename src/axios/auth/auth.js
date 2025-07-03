@@ -15,7 +15,7 @@ export const login = async (data) => {
 export const logout = async (data) => {
   try {
     let response = await axiosConfig.post("/auth/users/logout/", data);
-    if (response) removeFcmToken();
+    removeFcmToken();
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

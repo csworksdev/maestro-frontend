@@ -120,10 +120,13 @@ const AddJadwal = ({
 
         return {
           student_id: "",
-          fullname: values[2] || "",
-          nickname: values[3] || "",
+          fullname: toProperCase(values[2]) || "",
+          nickname: toProperCase(values[3]) || "",
           gender: String(values[5]).trim() === "Laki-laki" ? "L" : "P",
-          parent: values[4].length < 2 ? values[2] : values[4],
+          parent:
+            values[4].length < 2
+              ? toProperCase(values[2])
+              : toProperCase(values[4]),
           phone: values[11] || "",
           address: values[10] || "-",
           pob: values[6] || "",
@@ -274,7 +277,7 @@ const AddJadwal = ({
             grand_total: product.qty * product.price,
             create_by: user_id,
             is_finish: false,
-            // is_paid: false,
+            is_paid: isInvoice ? "pending" : "settled",
             start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
             order_date: isInvoice
               ? DateTime.now().toFormat("yyyy-MM-dd")

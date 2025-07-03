@@ -157,11 +157,15 @@ module.exports = {
           },
           "100%": { transform: "scale3d(1, 1, 1)" },
         },
+        flipHorizontal: {
+          "50%": { transform: "rotateY(180deg)" },
+        },
       },
       animation: {
         "spin-slow": "spin 3s linear infinite",
         zoom: "zoom 1s ease-in-out infinite",
         tada: "tada 1.5s ease-in-out infinite",
+        hflip: "flipHorizontal 2s",
       },
       gridTemplateColumns: {
         15: "repeat(15, minmax(0, 1fr))",

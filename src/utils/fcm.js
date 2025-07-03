@@ -22,7 +22,7 @@ export const requestAndSendToken = async () => {
       });
 
       if (currentToken) {
-        console.log("🎯 Token berhasil:", currentToken);
+        // console.log("🎯 Token berhasil:", currentToken);
         // Kirim ke backend di sini
         if (localStorage.getItem("fcm_token") !== currentToken) {
           sendTokenToBackend(currentToken);
