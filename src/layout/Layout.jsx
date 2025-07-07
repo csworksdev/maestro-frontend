@@ -120,9 +120,8 @@ const Layout = () => {
         ) : (
           <MobileFooterAdmin />
         )
-      ) : (
-        <Footer className={width > breakpoints.xl ? switchHeaderClass() : ""} />
-      )}
+      ) : // <Footer className={width > breakpoints.xl ? switchHeaderClass() : ""} />
+      null}
     </>
   );
 };

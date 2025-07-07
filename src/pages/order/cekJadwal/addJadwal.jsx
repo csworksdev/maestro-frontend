@@ -30,6 +30,11 @@ const allStatus = [
     price: 120000,
   },
   {
+    value: "newregcikarang",
+    label: "Baru Cikarang",
+    price: 110000,
+  },
+  {
     value: "extend",
     label: "Perpanjangan",
     price: 0,
@@ -54,7 +59,9 @@ const AddJadwal = ({
   reloadDataMaster,
 }) => {
   // const [loadingError, setLoadingError] = useState(null);
-  const FormValidationSchema = yup.object({}).required();
+  const FormValidationSchema = yup
+    .object({ order_date: yup.date().required("tanggal is required") })
+    .required();
   const [inputValue, setInputValue] = useState(params);
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
   const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
@@ -246,10 +253,16 @@ const AddJadwal = ({
         };
 
         const res = await AddSiswa(datasiswa);
-        return {
-          student_id: res.data.message.student_id,
-          is_new: "newreg",
-        };
+
+        setFormList((prev) =>
+          prev.map((x) =>
+            x.fullname === res.data.message.fullname
+              ? { ...x, student_id: res.data.message.student_id }
+              : x
+          )
+        );
+
+        return res.data.message;
       });
 
     return await Promise.all(promises);
@@ -284,7 +297,7 @@ const AddJadwal = ({
               : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
             students:
               product.package_name === "trial"
-                ? formList
+                ? newData.students
                     .filter((s) => s.istrial)
                     .map((student) => ({
                       student_id: student.student_id,
@@ -297,13 +310,13 @@ const AddJadwal = ({
 
           const res = await AddOrder(updatedData);
 
+          console.log(updatedData.students);
+
           if (res) {
             // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
             const orderDetailPromises = [];
 
-            for (const student of selectedStudents?.length
-              ? selectedStudents
-              : students) {
+            updatedData.students.forEach((student) => {
               for (let i = 0; i < product.meetings; i++) {
                 const temp = {
                   order: res.data.order_id,
@@ -323,7 +336,7 @@ const AddJadwal = ({
 
                 orderDetailPromises.push(AddOrderDetail(temp)); // tanpa await
               }
-            }
+            });
 
             await Promise.all(orderDetailPromises); // baru dijalankan bareng-bareng
 
@@ -412,12 +425,15 @@ const AddJadwal = ({
               reloadDataMaster(); // dipanggil setelah semua XenditCreatePaymentLink selesai
             }
           }
-        } else {
-          reloadDataMaster();
         }
+        // else {
+
+        // }
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      reloadDataMaster();
     }
   };
 
@@ -425,8 +441,16 @@ const AddJadwal = ({
     try {
       const newStudents = await submitNewStudent();
       const allStudents = [...selectedStudents, ...newStudents];
-      setSelectedStudents(allStudents); // optional kalau UI perlu update
-      await createInvoice(newData, allStudents); // kirim langsung students yang benar
+
+      // Buat updated students dengan student_id baru:
+      const updatedStudents = newData.students.map((x) => {
+        const found = allStudents.find((s) => s.fullname === x.fullname);
+        return found ? { ...x, student_id: found.student_id } : x;
+      });
+
+      setSelectedStudents(allStudents); // update state global
+
+      await createInvoice({ ...newData, students: updatedStudents });
     } catch (err) {
       console.error("Gagal submit atau membuat invoice:", err);
     }
@@ -776,7 +800,7 @@ const AddJadwal = ({
                 // onClick={() => append()}
                 disabled={isLoadingCheckDuplicate}
               />
-              <div className="flex justify-center align-bottom p-3 border-2 border-green-500 border-solid rounded-md">
+              {/* <div className="flex justify-center align-bottom p-3 border-2 border-green-500 border-solid rounded-md">
                 <Checkbox
                   name="buatXendit"
                   label={"Buat Xendit"}
@@ -785,7 +809,7 @@ const AddJadwal = ({
                     setIsInvoice(!isInvoice);
                   }}
                 />
-              </div>
+              </div> */}
             </div>
           }
         >
@@ -798,9 +822,7 @@ const AddJadwal = ({
                     Tanggal Order
                   </label>
                   <Flatpickr
-                    defaultValue={DateTime.fromJSDate(DateTime.now()).toFormat(
-                      "yyyy-MM-dd"
-                    )}
+                    // value={DateTime.now().toFormat("yyyy-MM-dd")}
                     name="order_date"
                     options={{
                       disableMobile: true,
@@ -881,7 +903,8 @@ const AddJadwal = ({
                           disabled={
                             !selectedProduct.some(
                               (p) => p.product_id === option.product_id
-                            ) || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
+                            )
+                            // || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
                           }
                           onChange={(e) => {
                             let raw = e.target.rawValue || "0";
@@ -999,7 +1022,7 @@ const AddJadwal = ({
           </div>
         </Card>
         {/* summary */}
-        {selectedProduct.length > 0 && (
+        {isInvoice && selectedProduct.length > 0 && (
           <Card title={"Ringkasan"}>
             {/* Produk */}
             <div className="mb-10">

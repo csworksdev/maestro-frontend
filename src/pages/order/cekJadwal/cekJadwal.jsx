@@ -58,6 +58,9 @@ const checkProduct = (product) => {
     case product.includes("gr"):
       return "Grup";
       break;
+    case product.includes("Baby"):
+      return "Baby";
+      break;
     default:
       return "Trial";
       break;
@@ -372,73 +375,76 @@ const CekJadwal = () => {
                       }
 
                       return (
-                        <div
-                          key={key}
-                          className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
-                        >
-                          <PaymentStatusBadge status={slot.is_paid} />
-                          <Badge
-                            label={checkProduct(slot.product)}
-                            className="bg-primary-500 text-white justify-center"
-                          />
-                          {/* copy order id */}
-                          {user_id ===
-                          "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" ? (
-                            <button
-                              onClick={() => {
-                                var text = "order_id = '" + slot.order_id + "'";
-                                navigator.clipboard.writeText(text);
-                              }}
-                              className="text-blue-500 hover:text-blue-700"
-                            >
-                              <Icons
-                                icon="heroicons-outline:clipboard-copy"
-                                className="w-5 h-5"
-                              />
-                            </button>
-                          ) : null}
-                          <div className="flex justify-between">
-                            <Tooltip content={slot.student?.join(", ") || ""}>
-                              <span>{iconProduct(slot.product)}</span>
-                            </Tooltip>
-                            {slot?.is_paid == "Pending" ? null : (
-                              <Tooltip
-                                content={
-                                  slot.p?.length
-                                    ? slot.p.map((pItem, idx) => (
-                                        <div key={idx}>
-                                          <strong>P{pItem.meet}</strong>:{" "}
-                                          {pItem.tgl || "-"}
-                                        </div>
-                                      ))
-                                    : "Tidak ada pertemuan"
-                                }
-                              >
-                                <span>{iconProduct("p")}</span>
-                              </Tooltip>
-                            )}
-                          </div>
-                          <div className="flex flex-row justify-center bg-slate-200">
-                            <Dropdown
-                              classMenuItems="left-0 bottom-full mb-2 w-[220px] "
-                              label={
-                                // <Button
-                                //   text="Action"
-                                //   className="bg-warning-50 text-black btn-sm"
-                                //   iconClass="text-sm"
-                                // />
-                                <Icon
-                                  icon={
-                                    "heroicons-outline:ellipsis-horizontal-circle"
-                                  }
-                                  width="24"
-                                  color="green"
-                                />
-                              }
-                              items={dropdownItems}
+                        <>
+                          <div
+                            key={key}
+                            className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
+                          >
+                            <PaymentStatusBadge status={slot.is_paid} />
+                            <Badge
+                              label={checkProduct(slot.product)}
+                              className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
                             />
+                            {/* copy order id */}
+                            {user_id ===
+                            "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" ? (
+                              <button
+                                onClick={() => {
+                                  var text =
+                                    "order_id = '" + slot.order_id + "'";
+                                  navigator.clipboard.writeText(text);
+                                }}
+                                className="text-blue-500 hover:text-blue-700"
+                              >
+                                <Icons
+                                  icon="heroicons-outline:clipboard-copy"
+                                  className="w-5 h-5"
+                                />
+                              </button>
+                            ) : null}
+                            <div className="flex justify-between">
+                              <Tooltip content={slot.student?.join(", ") || ""}>
+                                <span>{iconProduct(slot.product)}</span>
+                              </Tooltip>
+                              {slot?.is_paid == "Pending" ? null : (
+                                <Tooltip
+                                  content={
+                                    slot.p?.length
+                                      ? slot.p.map((pItem, idx) => (
+                                          <div key={idx}>
+                                            <strong>P{pItem.meet}</strong>:{" "}
+                                            {pItem.tgl || "-"}
+                                          </div>
+                                        ))
+                                      : "Tidak ada pertemuan"
+                                  }
+                                >
+                                  <span>{iconProduct("p")}</span>
+                                </Tooltip>
+                              )}
+                            </div>
+                            <div className="flex flex-row justify-center bg-slate-200">
+                              {/* <Dropdown
+                                classMenuItems="left-0 bottom-full mb-2 w-[220px] "
+                                label={
+                                  // <Button
+                                  //   text="Action"
+                                  //   className="bg-warning-50 text-black btn-sm"
+                                  //   iconClass="text-sm"
+                                  // />
+                                  <Icon
+                                    icon={
+                                      "heroicons-outline:ellipsis-horizontal-circle"
+                                    }
+                                    width="24"
+                                    color="green"
+                                  />
+                                }
+                                items={dropdownItems}
+                              /> */}
+                            </div>
                           </div>
-                        </div>
+                        </>
                       );
                     }
 
@@ -498,7 +504,7 @@ const CekJadwal = () => {
         </div>
 
         {/* BODY SCROLL */}
-        <div className="overflow-auto max-h-[600px]">
+        <div className="overflow-auto ">
           {jadwal.map((de) => (
             <div
               key={de.trainer_id}
@@ -666,9 +672,7 @@ const CekJadwal = () => {
               {tabHari.map((item, index) => {
                 return (
                   <Tab.Panel key={index}>
-                    <div className="max-h-[600px] overflow-y-auto">
-                      {gridKolam(item.name)}
-                    </div>
+                    <div className="max-h-[600px] ">{gridKolam(item.name)}</div>
                   </Tab.Panel>
                 );
               })}
@@ -810,8 +814,11 @@ const PaymentStatusBadge = ({ status }) => {
   return (
     <Badge
       label={label}
-      className={className + " animate-bounce justify-center p-1"}
-      icon={icon}
+      className={
+        className +
+        " animate-bounce justify-center text-[clamp(8px,0.7vw,10px)] p-1"
+      }
+      // icon={icon}
     />
   );
 };
