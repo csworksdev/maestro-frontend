@@ -307,7 +307,7 @@ const AddJadwal = ({
                     .map((student) => ({
                       student_id: student.student_id,
                     }))
-                : students.map((student) => ({
+                : newData.students.map((student) => ({
                     student_id: student.student_id,
                   })),
             invoice_id: external_id,
@@ -455,7 +455,7 @@ const AddJadwal = ({
 
       setSelectedStudents(allStudents); // update state global
 
-      await createInvoice({ ...newData, students: updatedStudents });
+      await createInvoice({ ...newData, updatedStudents });
     } catch (err) {
       console.error("Gagal submit atau membuat invoice:", err);
     }
