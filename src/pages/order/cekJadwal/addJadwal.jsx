@@ -119,12 +119,12 @@ const AddJadwal = ({
   const handlePaste = async () => {
     try {
       setIsLoadingCheckDuplicate(true);
+
       const pastedData = await navigator.clipboard.readText();
-      const rows = pastedData.trim().split("\n"); // Split by line
+      const rows = pastedData.trim().split("\n");
 
       const parsedRows = rows.map((row) => {
         const values = row.split("\t");
-
         return {
           student_id: "",
           fullname: toProperCase(String(values[2]).trim()) || "",
@@ -148,15 +148,14 @@ const AddJadwal = ({
         };
       });
 
-      let data = parsedRows.map((item) => {
-        return {
-          fullname: item.fullname,
-          phone: item.phone,
-        };
-      });
-      let check = await CheckDuplicateSiswa({ data: data }).then((res) => {
-        return res.data.results;
-      });
+      let data = parsedRows.map((item) => ({
+        fullname: item.fullname,
+        phone: item.phone,
+      }));
+
+      const check = await CheckDuplicateSiswa({ data }).then(
+        (res) => res.data.results
+      );
 
       let oldStudents = [];
       for (let index = 0; index < check.length; index++) {
@@ -175,9 +174,8 @@ const AddJadwal = ({
         }
       }
 
-      // Tambahkan ini
+      // Buat parent unik baru
       const uniqueParentsMap = new Map();
-
       parsedRows.forEach((item) => {
         const parentName =
           item.parent && (item.parent !== "-" || item.parent !== "")
@@ -196,35 +194,42 @@ const AddJadwal = ({
       });
 
       const parentList = Array.from(uniqueParentsMap.values());
-      setParent(parentList);
 
-      setSelectedStudents(oldStudents);
+      // 🟢 GABUNGKAN dengan parent lama
+      setParent((prev) => {
+        const prevMap = new Map(prev.map((p) => [`${p.name}-${p.phone}`, p]));
+        parentList.forEach((p) => prevMap.set(`${p.name}-${p.phone}`, p));
+        return Array.from(prevMap.values());
+      });
 
-      setFormList(parsedRows);
-      remove(0);
-      setSelectedProduct([]);
-      for (let index = 0; index < parsedRows.length; index++) {
+      // 🟢 GABUNGKAN student lama dengan yang baru
+      setSelectedStudents((prev) => [...prev, ...oldStudents]);
+
+      // 🟢 GABUNGKAN form list lama dengan baru
+      setFormList((prev) => [...prev, ...parsedRows]);
+
+      // 🟢 Tambah ke react-hook-form
+      parsedRows.forEach((row) => {
         append({
-          student_id: parsedRows[index].student_id,
-          fullname: parsedRows[index].fullname,
-          nickname: parsedRows[index].nickname,
-          gender: parsedRows[index].gender,
-          parent: parsedRows[index].parent,
-          phone: parsedRows[index].phone,
-          address: parsedRows[index].address,
-          pob: parsedRows[index].pob,
-          dob: parsedRows[index].dob,
-          reg_stat: parsedRows[index].reg_stat,
+          student_id: row.student_id,
+          fullname: row.fullname,
+          nickname: row.nickname,
+          gender: row.gender,
+          parent: row.parent,
+          phone: row.phone,
+          address: row.address,
+          pob: row.pob,
+          dob: row.dob,
+          reg_stat: row.reg_stat,
           istrial: false,
         });
+
         setValue(
           "namapelanggan",
-          parsedRows[index]?.parent === "-" || parsedRows[index]?.parent === ""
-            ? parsedRows[index]?.fullname
-            : parsedRows[index]?.parent
+          row.parent === "-" || row.parent === "" ? row.fullname : row.parent
         );
-        setValue("phonepelanggan", toNormalizePhone(parsedRows[index]?.phone));
-      }
+        setValue("phonepelanggan", toNormalizePhone(row.phone));
+      });
     } catch (error) {
       console.log(error);
     } finally {
