@@ -161,10 +161,9 @@ const OrderActive = ({ is_finished }) => {
           <div>
             {row?.cell?.value.split(",").map((substring, idx) => {
               return (
-                <div key={idx}>
-                  <span>
-                    {idx + 1}. {substring.trim()}
-                  </span>
+                <div className="flex flex-row gap-1" key={idx}>
+                  <div className="p-0 mr-1">{idx + 1}.</div>
+                  <div className="text-wrap p-0">{substring.trim()}</div>
                   <br />
                 </div>
               );

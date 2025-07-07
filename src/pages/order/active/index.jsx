@@ -9,13 +9,13 @@ const Order = () => {
     <div className="grid grid-cols-1 justify-end">
       <Card
         title="Order"
-        headerslot={
-          <Button className="btn-primary ">
-            <Link to="add" isupdate="false">
-              Tambah
-            </Link>
-          </Button>
-        }
+        // headerslot={
+        //   <Button className="btn-primary ">
+        //     <Link to="add" isupdate="false">
+        //       Tambah
+        //     </Link>
+        //   </Button>
+        // }
       >
         <OrderActive is_finished={false} />
       </Card>
