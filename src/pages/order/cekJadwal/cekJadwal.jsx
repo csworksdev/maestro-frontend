@@ -19,6 +19,7 @@ import Dropdown from "@/components/ui/Dropdown";
 import WhatsAppButton from "@/components/custom/sendwhatsapp";
 import Icons from "@/components/ui/Icon";
 import { useSelector } from "react-redux";
+import Select from "react-select";
 
 const columnHeader = [
   "Pelatih",
@@ -125,6 +126,8 @@ const CekJadwal = () => {
   const [jumlahSiswaPerKolam, setJumlahSiswaPerKolam] = useState([]);
   const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
+  const [filterPelatih, setFilterPelatih] = useState([]);
+  const [filteredPelatih, setFilteredPelatih] = useState("");
   const [jadwal, setJadwal] = useState([]);
   const [productList, setProductList] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -268,6 +271,12 @@ const CekJadwal = () => {
         fillBaseJadwalWithData({ ...BaseJadwal }, element)
       );
 
+      setFilterPelatih(
+        data.map((x) => {
+          return { value: x.trainer_id, label: x.nickname };
+        })
+      );
+
       setJadwal([...data]);
     } catch (error) {
       console.error(error);
@@ -291,6 +300,7 @@ const CekJadwal = () => {
   const handleBranchChange = (e) => {
     setSelectedBranch(e.value);
     loadPool(e.value);
+    setFilterPelatih([]);
   };
 
   const handlePoolChange = (index) => {
@@ -478,6 +488,11 @@ const CekJadwal = () => {
   });
 
   const GridKolamHeader = React.memo(({ item, trainers, day }) => {
+    let dataJadwal =
+      filteredPelatih !== ""
+        ? jadwal.filter((x) => x.trainer_id === filteredPelatih)
+        : jadwal;
+
     return (
       <div className="w-full">
         {/* HEADER FIX */}
@@ -505,7 +520,7 @@ const CekJadwal = () => {
 
         {/* BODY SCROLL */}
         <div className="overflow-auto ">
-          {jadwal.map((de) => (
+          {dataJadwal.map((de) => (
             <div
               key={de.trainer_id}
               className="grid grid-cols-15 gap-3 my-2 w-full"
@@ -630,7 +645,7 @@ const CekJadwal = () => {
               <Tab key={i}>
                 {({ selected }) => (
                   <button
-                    className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
+                    className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0 hover:bg-sky-300 
                 ${
                   selected
                     ? "text-white bg-primary-500"
@@ -649,24 +664,50 @@ const CekJadwal = () => {
             selectedIndex={selectedIndex ?? -1}
             onChange={handleChangeTab}
           >
-            <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 pb-3 ">
-              {selectedBranch &&
-                tabHari.map((item, i) => (
-                  <Tab key={i}>
-                    {({ selected }) => (
-                      <button
-                        className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
+            <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 pb-3 justify-between ">
+              <div className="flex gap-3">
+                {selectedBranch &&
+                  tabHari.map((item, i) => (
+                    <Tab key={i}>
+                      {({ selected }) => (
+                        <button
+                          className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0  hover:bg-sky-300 
                 ${
                   selected
                     ? "text-white bg-primary-500"
                     : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
                 }`}
-                      >
-                        {`${item.name} (${item.total})`}
-                      </button>
-                    )}
-                  </Tab>
-                ))}
+                        >
+                          {`${item.name} (${item.total})`}
+                        </button>
+                      )}
+                    </Tab>
+                  ))}
+              </div>
+              {selectedPool != -1 &&
+              filterPelatih &&
+              filterPelatih.length > 0 ? (
+                <Select
+                  options={filterPelatih ?? null}
+                  className="w-72 h-10 border-none"
+                  horizontal={true}
+                  isClearable={true}
+                  menuPortalTarget={
+                    typeof window !== "undefined" ? document.body : null
+                  }
+                  styles={{
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 9999,
+                    }),
+                  }}
+                  placeholder="Filter Pelatih"
+                  onChange={(e) => {
+                    // console.log(e.value);
+                    setFilteredPelatih(e?.value ?? "");
+                  }}
+                />
+              ) : null}
             </Tab.List>
             <Tab.Panels key={JSON.stringify(jadwal)}>
               {tabHari.map((item, index) => {

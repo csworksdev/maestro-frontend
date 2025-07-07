@@ -28,7 +28,7 @@ const Select = ({
   options = options || Array(3).fill("option");
   return (
     <div
-      className={`fromGroup  ${error ? "has-error" : ""}  ${
+      className={`fromGroup z-1000 ${error ? "has-error" : ""}  ${
         horizontal ? "flex" : ""
       }  ${validate ? "is-valid" : ""} `}
     >
