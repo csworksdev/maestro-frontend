@@ -416,7 +416,7 @@ const CekJadwal = () => {
                               <Tooltip content={slot.student?.join(", ") || ""}>
                                 <span>{iconProduct(slot.product)}</span>
                               </Tooltip>
-                              {slot?.is_paid == "Pending" ? null : (
+                              {slot?.is_paid == "pending" ? null : (
                                 <Tooltip
                                   content={
                                     slot.p?.length
