@@ -297,6 +297,11 @@ const CekJadwal = () => {
     }
   }, [reloadDone]);
 
+  useEffect(() => {
+    setFilterPelatih([]);
+    setFilteredPelatih("");
+  }, [selectedIndex]);
+
   const handleBranchChange = (e) => {
     setSelectedBranch(e.value);
     loadPool(e.value);
@@ -688,6 +693,7 @@ const CekJadwal = () => {
               filterPelatih &&
               filterPelatih.length > 0 ? (
                 <Select
+                  name="filteredPelatih"
                   options={filterPelatih ?? null}
                   className="w-72 h-10 border-none"
                   horizontal={true}
