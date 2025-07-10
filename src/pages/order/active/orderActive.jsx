@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
 import { DateTime } from "luxon";
 import { useSelector } from "react-redux";
+import { toProperCase } from "@/utils";
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -149,7 +150,7 @@ const OrderActive = ({ is_finished }) => {
       accessor: "trainer_name",
       id: "trainer_name",
       Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
+        return <span>{toProperCase(row?.cell?.value)}</span>;
       },
     },
     {
