@@ -39,6 +39,11 @@ const Search = ({
           placeholder={placeholder}
           className={`w-full py-2 px-4 pr-20 border rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${themeClasses}`}
           aria-label="Search input"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSearch(value);
+            }
+          }}
         />
         <Button
           className={`absolute top-1/2 -translate-y-1/2 right-0 h-[40px] flex items-center justify-center px-3 ${
