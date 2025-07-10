@@ -15,14 +15,14 @@ const Search = ({
   }, [searchValue]);
 
   // Debounce handleSearch
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (value !== searchValue) {
-        handleSearch(value);
-      }
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [value]);
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     if (value !== searchValue) {
+  //       handleSearch(value);
+  //     }
+  //   }, 500);
+  //   return () => clearTimeout(timeout);
+  // }, [value]);
 
   const themeClasses =
     theme === "dark"
