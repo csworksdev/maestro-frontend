@@ -292,7 +292,10 @@ const AddJadwal = ({
             notes: "-",
             day: inputValue.day,
             time: inputValue.time,
-            grand_total: product.qty * product.price,
+            grand_total:
+              product.package_name === "trial"
+                ? newData.students.filter((s) => s.istrial).length()
+                : newData.students.length() * product.price,
             create_by: user_id,
             is_finish: false,
             is_paid: isInvoice ? "pending" : "settled",
