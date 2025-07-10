@@ -294,8 +294,8 @@ const AddJadwal = ({
             time: inputValue.time,
             grand_total:
               product.package_name === "trial"
-                ? newData.students.filter((s) => s.istrial).length()
-                : newData.students.length() * product.price,
+                ? newData.students.filter((s) => s.istrial).length
+                : newData.students.length * product.price,
             create_by: user_id,
             is_finish: false,
             is_paid: isInvoice ? "pending" : "settled",
@@ -317,8 +317,6 @@ const AddJadwal = ({
           };
 
           const res = await AddOrder(updatedData);
-
-          console.log(updatedData.students);
 
           if (res) {
             // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
