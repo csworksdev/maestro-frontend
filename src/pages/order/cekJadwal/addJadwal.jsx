@@ -165,7 +165,7 @@ const AddJadwal = ({
           parsedRows[index].fullname = check[index].fullname;
           oldStudents.push({
             student_id: check[index].student_id,
-            is_new: parsedRows[index].reg_stat,
+            is_new: parsedRows[index].reg_stat === "extend" ? false : true,
             fullname: check[index].fullname,
           });
         } else {
