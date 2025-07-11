@@ -8,17 +8,25 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
+      # ✅ Tambahkan ini untuk install PNPM dulu
+      - name: Install PNPM
+        run: npm install -g pnpm
+
+      # ✅ Lanjut install dependencies
       - name: Install dependencies
         run: pnpm install
 
+      # ✅ Build dengan env production
       - name: Build the project
         run: pnpm run build
         env:
           VITE_API_URL: https://api.maestroswim.com
 
+      # ✅ Deploy ke Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
