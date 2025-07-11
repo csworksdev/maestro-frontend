@@ -75,7 +75,8 @@
     "uuidv4": "^6.2.13",
     "vite-plugin-compression": "^0.5.1",
     "yarn": "^1.22.19",
-    "yup": "^0.32.11"
+    "yup": "^0.32.11",
+    "packageManager": "pnpm@8.15.4"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
