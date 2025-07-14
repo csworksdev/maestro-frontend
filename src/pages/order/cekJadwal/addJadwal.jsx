@@ -10,7 +10,12 @@ import Icons from "@/components/ui/Icon";
 import { DateTime } from "luxon";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
-import { AddSiswa, CheckDuplicateSiswa } from "@/axios/masterdata/siswa";
+import {
+  AddSiswa,
+  CheckDuplicateSiswa,
+  getSiswaAll,
+  searchSiswa,
+} from "@/axios/masterdata/siswa";
 import Loading from "@/components/Loading";
 import { useSelector } from "react-redux";
 import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
@@ -21,6 +26,8 @@ import { toProperCase, toNormalizePhone } from "@/utils";
 import { generateExternalId } from "@/utils/xendit-uuid";
 import InputGroup from "@/components/ui/InputGroup";
 import Flatpickr from "react-flatpickr";
+import AsyncSelect from "react-select/async";
+import Swal from "sweetalert2";
 
 // status registrasi
 const allStatus = [
@@ -74,6 +81,12 @@ const AddJadwal = ({
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [isSplitInvoice, setIsSplitInvoice] = useState(false);
   const [isInvoice, setIsInvoice] = useState(false);
+
+  // fetch old students
+  const [defaultStudentOptions, setDefaultStudentOptions] = useState([]);
+  const [studentLoadingError, setStudentLoadingError] = useState(null);
+  const [maxStudents, setMaxStudents] = useState(5);
+  const [selectedOldStudents, setSelectedOldStudents] = useState([]);
 
   const {
     register,
@@ -736,6 +749,94 @@ const AddJadwal = ({
     // setListParent(parsedRows);
   }, [formList]);
 
+  // tarik data khusus Siswa
+  // #region
+  const handleStudentChange = (selectedOptions) => {
+    if (selectedOptions.length <= maxStudents) {
+      setSelectedOldStudents(selectedOptions);
+    } else {
+      Swal.fire(
+        "Limit Exceeded",
+        `You can only select up to ${maxStudents} students.`,
+        "warning"
+      );
+    }
+  };
+
+  const loadOptions = async (inputValue, callback) => {
+    try {
+      const response = await searchSiswa({ search: inputValue });
+      const students = response.data.results.map((student) => ({
+        value: student.student_id,
+        label: student.fullname,
+        parent: student.parent,
+        phone: student.phone,
+      }));
+      callback(students);
+    } catch (error) {
+      setStudentLoadingError(error);
+      Swal.fire("Error", "Failed to load student options.", "error");
+      callback([]);
+    }
+  };
+
+  const StudentDefaultOptions = async () => {
+    try {
+      const response = await getSiswaAll({
+        page_size: 10,
+      });
+      const students = response.data.results.map((student) => ({
+        value: student.student_id,
+        label: student.fullname,
+        parent: student.parent,
+        phone: student.phone,
+      }));
+      setDefaultStudentOptions(students);
+    } catch (error) {
+      setStudentLoadingError(error);
+      Swal.fire("Error", "Failed to load default students.", "error");
+    }
+  };
+
+  const addOldStudent = () => {
+    selectedOldStudents.length > 0 &&
+      setSelectedStudents((prev) => [...prev, ...selectedOldStudents]);
+
+    const parsedRows = selectedOldStudents.map((row) => {
+      append({
+        student_id: row.value,
+        fullname: row.label,
+        parent: row.parent,
+        phone: row.phone,
+        reg_stat: "extend",
+      });
+
+      setValue(
+        "namapelanggan",
+        row.parent === "-" || row.parent === "" ? row.fullname : row.parent
+      );
+      setValue("phonepelanggan", toNormalizePhone(row.phone));
+
+      return {
+        student_id: row.value,
+        fullname: row.label,
+        parent: row.parent,
+        phone: row.phone,
+        reg_stat: "extend",
+      };
+    });
+
+    // 🟢 GABUNGKAN form list lama dengan baru
+    setFormList((prev) => [...prev, ...parsedRows]);
+    setSelectedOldStudents([]);
+  };
+
+  useEffect(() => {
+    StudentDefaultOptions();
+  }, []);
+
+  // #endregion
+
   const handleRegStatChange = (fullname, kolom, value) => {
     // Update local formList state
     setFormList((prevSelected) =>
@@ -790,23 +891,24 @@ const AddJadwal = ({
         )} */}
         <Card
           subtitle={
-            <span>
-              Pelatih : <b>{inputValue.trainer.fullname}, </b>
-              Kolam : <b>{inputValue.pool.label}, </b>
-              Hari : <b>{inputValue.day}</b>, Jam : <b>{inputValue.time}</b>
-            </span>
+            <div className="flex flex-col">
+              <span>
+                Pelatih : <b>{inputValue.trainer.fullname}</b>
+              </span>
+              <span>
+                Kolam : <b>{inputValue.pool.label}</b>
+              </span>
+              <span>
+                Hari : <b>{inputValue.day}</b>
+              </span>
+              <span>
+                Jam : <b>{inputValue.time}</b>
+              </span>
+            </div>
           }
           headerslot={
-            <div className="flex flex-row gap-5">
-              <Button
-                text="Siswa"
-                icon="heroicons-outline:plus"
-                className="btn-dark"
-                onClick={() => handlePaste()}
-                // onClick={() => append()}
-                disabled={isLoadingCheckDuplicate}
-              />
-              {/* <div className="flex justify-center align-bottom p-3 border-2 border-green-500 border-solid rounded-md">
+            <div className="flex flex-row gap-5 items-start">
+              {/* <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
                 <Checkbox
                   name="buatXendit"
                   label={"Buat Xendit"}
@@ -816,6 +918,50 @@ const AddJadwal = ({
                   }}
                 />
               </div> */}
+              <div className="grid grid-cols-[auto_minmax(0,400px)] gap-4 items-center border border-blue-400 p-4 rounded">
+                <label>Siswa Baru</label>
+                <Button
+                  text="Siswa"
+                  icon="heroicons-outline:plus"
+                  className="btn-dark w-full max-w-[100px]"
+                  onClick={() => handlePaste()}
+                  disabled={isLoadingCheckDuplicate}
+                />
+
+                <div className="col-span-2 border-t border-gray-300 my-1"></div>
+                <label>Siswa Lama</label>
+                <div className="flex gap-3">
+                  <AsyncSelect
+                    name="students"
+                    label="Siswa"
+                    placeholder="Pilih Siswa"
+                    isMulti
+                    defaultOptions={defaultStudentOptions}
+                    loadOptions={loadOptions}
+                    value={selectedOldStudents}
+                    onChange={handleStudentChange}
+                    isOptionDisabled={() =>
+                      selectedOldStudents.length >= maxStudents
+                    }
+                    className="grow"
+                  />
+                  {selectedOldStudents.length >= 1 &&
+                  selectedOldStudents.length <= 5 ? (
+                    <Button
+                      icon="heroicons-outline:plus"
+                      className="btn-dark w-full max-w-[50px] h-full max-h-[40px]"
+                      onClick={() => addOldStudent()}
+                      disabled={isLoadingCheckDuplicate}
+                    />
+                  ) : null}
+                </div>
+                {studentLoadingError && (
+                  <p className="error-message">{studentLoadingError.message}</p>
+                )}
+                {errors.students && (
+                  <p className="error-message">{errors.students.message}</p>
+                )}
+              </div>
             </div>
           }
         >
