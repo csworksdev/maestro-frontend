@@ -20,6 +20,7 @@ import WhatsAppButton from "@/components/custom/sendwhatsapp";
 import Icons from "@/components/ui/Icon";
 import { useSelector } from "react-redux";
 import Select from "react-select";
+import Switch from "@/components/ui/Switch";
 
 const columnHeader = [
   "Pelatih",
@@ -132,6 +133,7 @@ const CekJadwal = () => {
   const [productList, setProductList] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [reloadDone, setReloadDone] = useState(false);
+  const [checked, setChecked] = useState(true);
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -371,17 +373,20 @@ const CekJadwal = () => {
                   if (slot.is_free) return <PelatihLibur key={key} />;
 
                   if (slot.order_id) {
+                    let diff = 0;
                     if (slot.pool_name === pool.label) {
                       // Color logic
                       let cardColor =
                         "bg-white border-2 border-green-500 shadow-md shadow-lime-200/50";
                       const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
+
                       if (pLastRaw) {
                         const pLast = DateTime.fromFormat(
                           pLastRaw,
                           "dd/MM/yyyy"
                         );
-                        const diff = DateTime.now().diff(pLast, "days").days;
+                        diff = DateTime.now().diff(pLast, "days").days;
+
                         if (diff > 2)
                           cardColor = "bg-red-200 shadow-md shadow-red-500/50";
                         else if (diff > 0)
@@ -391,55 +396,82 @@ const CekJadwal = () => {
 
                       return (
                         <>
-                          <div
-                            key={key}
-                            className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
-                          >
-                            <PaymentStatusBadge status={slot.is_paid} />
-                            <Badge
-                              label={checkProduct(slot.product)}
-                              className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
-                            />
-                            {/* copy order id */}
-                            {user_id ===
-                            "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" ? (
-                              <button
-                                onClick={() => {
-                                  var text =
-                                    "order_id = '" + slot.order_id + "'";
-                                  navigator.clipboard.writeText(text);
-                                }}
-                                className="text-blue-500 hover:text-blue-700"
-                              >
-                                <Icons
-                                  icon="heroicons-outline:clipboard-copy"
-                                  className="w-5 h-5"
-                                />
-                              </button>
-                            ) : null}
-                            <div className="flex justify-between">
-                              <Tooltip content={slot.student?.join(", ") || ""}>
-                                <span>{iconProduct(slot.product)}</span>
-                              </Tooltip>
-                              {slot?.is_paid == "pending" ? null : (
-                                <Tooltip
-                                  content={
-                                    slot.p?.length
-                                      ? slot.p.map((pItem, idx) => (
-                                          <div key={idx}>
-                                            <strong>P{pItem.meet}</strong>:{" "}
-                                            {pItem.tgl || "-"}
-                                          </div>
-                                        ))
-                                      : "Tidak ada pertemuan"
-                                  }
-                                >
-                                  <span>{iconProduct("p")}</span>
-                                </Tooltip>
-                              )}
+                          {checked ? (
+                            <div
+                              key={key}
+                              className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center`}
+                            >
+                              {slot.student?.map((x) => {
+                                return (
+                                  <div className="text-[clamp(8px,0.7vw,10px)]">
+                                    {x.split(" ")[0]}
+                                  </div>
+                                );
+                              })}
                             </div>
-                            <div className="flex flex-row justify-center bg-slate-200">
-                              {/* <Dropdown
+                          ) : (
+                            <>
+                              <div
+                                key={key}
+                                className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
+                              >
+                                <>
+                                  <PaymentStatusBadge status={slot.is_paid} />
+                                  <Badge
+                                    label={checkProduct(slot.product)}
+                                    className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
+                                  />
+                                  {/* copy order id */}
+                                  {user_id ===
+                                  "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" ? (
+                                    <button
+                                      onClick={() => {
+                                        var text =
+                                          "order_id = '" + slot.order_id + "'";
+                                        navigator.clipboard.writeText(text);
+                                      }}
+                                      className="text-blue-500 hover:text-blue-700"
+                                    >
+                                      <Icons
+                                        icon="heroicons-outline:clipboard-copy"
+                                        className="w-5 h-5"
+                                      />
+                                    </button>
+                                  ) : null}
+                                  <div className="flex justify-between">
+                                    <Tooltip
+                                      content={slot.student?.join(", ") || ""}
+                                    >
+                                      <span>{iconProduct(slot.product)}</span>
+                                    </Tooltip>
+                                    {slot?.is_paid == "pending" ? null : (
+                                      <Tooltip
+                                        content={
+                                          slot.p?.length
+                                            ? slot.p.map((pItem, idx) => (
+                                                <div key={idx}>
+                                                  <strong>P{pItem.meet}</strong>
+                                                  : {pItem.tgl || "-"}
+                                                </div>
+                                              ))
+                                            : "Tidak ada pertemuan"
+                                        }
+                                      >
+                                        <span>{iconProduct("p")}</span>
+                                      </Tooltip>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-row justify-center bg-slate-200">
+                                    {diff > 0 && (
+                                      <PelatihKosong
+                                        key={key}
+                                        pool={poolOption[selectedPool]}
+                                        trainer={item}
+                                        hari={timeSlot.hari}
+                                        jam={slotObj.jam}
+                                      />
+                                    )}
+                                    {/* <Dropdown
                                 classMenuItems="left-0 bottom-full mb-2 w-[220px] "
                                 label={
                                   // <Button
@@ -457,8 +489,11 @@ const CekJadwal = () => {
                                 }
                                 items={dropdownItems}
                               /> */}
-                            </div>
-                          </div>
+                                  </div>
+                                </>
+                              </div>
+                            </>
+                          )}
                         </>
                       );
                     }
@@ -627,21 +662,28 @@ const CekJadwal = () => {
 
   return (
     <>
-      <div>
-        <label className="form-label" htmlFor="kolam">
-          Cabang
-        </label>
-        <div className="flex gap-3">
-          <AsyncSelect
-            name="kolam"
-            label="Kolam"
-            placeholder="Pilih Cabang"
-            defaultOptions={memoizedBranchOptions}
-            loadOptions={branchOption}
-            onChange={handleBranchChange}
-            className="grow z-20"
-          />
+      <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row items-center gap-3">
+          <label>Cabang</label>
+          <div className="flex gap-3 min-w-[400px]">
+            <AsyncSelect
+              name="kolam"
+              label="Kolam"
+              placeholder="Pilih Cabang"
+              defaultOptions={memoizedBranchOptions}
+              loadOptions={branchOption}
+              onChange={handleBranchChange}
+              className="grow z-20"
+            />
+          </div>
         </div>
+        <Switch
+          label="Active Switch"
+          value={checked}
+          onChange={() => setChecked(!checked)}
+          prevLabel={"Detail View"}
+          nextLabel={"Student View"}
+        />
       </div>
       <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
         <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 py-3">
@@ -793,17 +835,16 @@ const AdaJadwal = React.memo((timeSlot, i) => (
 ));
 
 const PelatihLibur = React.memo(() => (
-  <div className="flex justify-center items-center">
-    <Tooltip placement="top" arrow content={`Libur Pelatih`}>
-      <span>
-        <Icon
-          icon="heroicons-outline:calendar-days"
-          width="24"
-          color="red"
-          // onClick={() => alert("test")}
-        />
-      </span>
-    </Tooltip>
+  <div className="flex flex-col justify-center items-center">
+    <span>
+      <Icon
+        icon="heroicons-outline:calendar-days"
+        width="24"
+        color="red"
+        // onClick={() => alert("test")}
+      />
+    </span>
+    <span>Libur</span>
   </div>
 ));
 

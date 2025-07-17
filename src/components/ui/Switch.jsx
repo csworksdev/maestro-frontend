@@ -4,7 +4,8 @@ import Icon from "@/components/ui/Icon";
 const Swicth = ({
   prevIcon,
   nextIcon,
-  label,
+  prevLabel,
+  nextLabel,
   id,
   disabled,
   value,
@@ -26,6 +27,7 @@ const Swicth = ({
         }
         id={id}
       >
+        {prevLabel && <span className={`${labelClass} mr-3`}>{prevLabel}</span>}
         <input
           type="checkbox"
           className="hidden"
@@ -68,7 +70,7 @@ const Swicth = ({
           `}
           />
         </div>
-        {label && <span className={labelClass}>{label}</span>}
+        {nextLabel && <span className={labelClass}>{nextLabel}</span>}
       </label>
     </div>
   );
