@@ -16,6 +16,7 @@ import Tooltip from "@/components/ui/Tooltip";
 import { DateTime } from "luxon";
 import { useSelector } from "react-redux";
 import { toProperCase } from "@/utils";
+import EditModal from "./editModal";
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const OrderActive = ({ is_finished }) => {
     },
   ];
 
-  const fetchData = async (page, size, query) => {
+  const fetchData = async (page = 1, size = 10, query) => {
     try {
       setIsLoading(true);
       setListData();
@@ -99,6 +100,12 @@ const OrderActive = ({ is_finished }) => {
   useEffect(() => {
     fetchData(pageIndex, pageSize, searchQuery);
   }, [pageIndex, pageSize, searchQuery]);
+
+  useEffect(() => {
+    if (!editModalVisible) {
+      fetchData(pageIndex, pageSize, searchQuery);
+    }
+  }, [editModalVisible]);
 
   const handlePageChange = (page) => {
     setPageIndex(page);
@@ -410,10 +417,14 @@ const OrderActive = ({ is_finished }) => {
               onClose={() => setEditModalVisible(false)} // Close modal when needed
               className="max-w-5xl"
             >
-              <Edit
-                state={{ data: modalData }}
+              <EditModal
+                defaultOrder={{ modalData }}
                 onClose={() => setEditModalVisible(false)}
               />
+              {/* <Edit
+                state={{ data: modalData }}
+                onClose={() => setEditModalVisible(false)}
+              /> */}
             </Modal>
           )}
         </>
