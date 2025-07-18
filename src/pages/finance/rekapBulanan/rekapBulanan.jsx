@@ -236,6 +236,7 @@ const RekapBulanan = () => {
   useEffect(() => {
     if (!editModalVisible && isEdited) {
       fetchRekapData();
+      setisEdited(!isEdited);
     }
   }, [editModalVisible]);
 
@@ -1041,6 +1042,7 @@ const RekapBulanan = () => {
               <EditModal
                 defaultOrder={modalData}
                 onClose={() => setEditModalVisible(false)}
+                isEdit={(e) => setisEdited(e)}
               />
             </Modal>
           )}

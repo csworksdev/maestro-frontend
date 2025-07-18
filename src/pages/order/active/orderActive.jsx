@@ -105,6 +105,7 @@ const OrderActive = ({ is_finished }) => {
   useEffect(() => {
     if (!editModalVisible && isEdited) {
       fetchData(pageIndex, pageSize, searchQuery);
+      setisEdited(!isEdited);
     }
   }, [editModalVisible]);
 
@@ -421,6 +422,7 @@ const OrderActive = ({ is_finished }) => {
               <EditModal
                 defaultOrder={modalData}
                 onClose={() => setEditModalVisible(false)}
+                isEdit={(e) => setisEdited(e)}
               />
               {/* <Edit
                 state={{ data: modalData }}
