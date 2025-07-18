@@ -38,8 +38,17 @@ const params = {
   page_size: 100,
 };
 
-const EditModal = ({ defaultOrder, onClose = null }) => {
-  const [currentOrder, SetCurrentOrder] = useState(defaultOrder.modalData);
+const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
+  const [currentOrder, setCurrentOrder] = useState(() => {
+    if (Array.isArray(defaultOrder)) {
+      return defaultOrder[0] ?? {}; // fallback kalau array kosong
+    }
+    if (defaultOrder?.modalData) {
+      return defaultOrder.modalData;
+    }
+    return defaultOrder ?? {};
+  });
+
   const [listTrainer, setListTrainer] = useState([]);
   const [listKolam, setListKolam] = useState([]);
   const [listProduct, setListProduct] = useState([]);
@@ -104,6 +113,7 @@ const EditModal = ({ defaultOrder, onClose = null }) => {
     await EditOrder(currentOrder.order_id, payload)
       .then((res) => {
         if (res.status) {
+          isEdit(true);
           onClose();
           Swal.fire({
             title: "Edited!",

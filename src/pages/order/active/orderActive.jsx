@@ -28,6 +28,7 @@ const OrderActive = ({ is_finished }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
 
   const { roles } = useSelector((state) => state.auth.data);
@@ -102,7 +103,7 @@ const OrderActive = ({ is_finished }) => {
   }, [pageIndex, pageSize, searchQuery]);
 
   useEffect(() => {
-    if (!editModalVisible) {
+    if (!editModalVisible && isEdited) {
       fetchData(pageIndex, pageSize, searchQuery);
     }
   }, [editModalVisible]);
@@ -418,7 +419,7 @@ const OrderActive = ({ is_finished }) => {
               className="max-w-5xl"
             >
               <EditModal
-                defaultOrder={{ modalData }}
+                defaultOrder={modalData}
                 onClose={() => setEditModalVisible(false)}
               />
               {/* <Edit

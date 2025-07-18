@@ -15,7 +15,7 @@ import {
   getRekapByTrainer,
 } from "@/axios/rekap/bulanan";
 import Swal from "sweetalert2";
-import { DeleteOrder } from "@/axios/masterdata/order";
+import { DeleteOrder, getOrderById } from "@/axios/masterdata/order";
 import SkeletionTable from "@/components/skeleton/Table";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
@@ -24,6 +24,7 @@ import Modal from "@/components/ui/Modal";
 import DetailOrder from "@/pages/order/active/detail";
 import { DateTime } from "luxon";
 import { forEach, toInteger, toString } from "lodash";
+import EditModal from "@/pages/order/active/editModal";
 
 const RekapBulanan = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +33,8 @@ const RekapBulanan = () => {
   const [listData, setListData] = useState({ results: [] });
   const [searchQuery, setSearchQuery] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [isDownload, setIsDownload] = useState(false);
   const [unpaidList, setUnpaidList] = useState({});
@@ -72,6 +75,13 @@ const RekapBulanan = () => {
         "bg-warning-500 text-warning-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
     },
     {
+      name: "edit",
+      icon: "heroicons-outline:pencil-square",
+      onClick: (row) => handleEdit(row.row.original),
+      className:
+        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+    },
+    {
       name: "Detail",
       icon: "heroicons-outline:eye",
       onClick: (row) => handleDetail(row.row.original),
@@ -79,13 +89,6 @@ const RekapBulanan = () => {
       className:
         "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
     },
-    // {
-    //   name: "delete",
-    //   icon: "heroicons-outline:trash",
-    //   onClick: (row) => handleDelete(row.row.original),
-    //   className:
-    //     "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    // },
   ];
 
   const fetchData = async () => {
@@ -230,6 +233,12 @@ const RekapBulanan = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!editModalVisible && isEdited) {
+      fetchRekapData();
+    }
+  }, [editModalVisible]);
+
   const onSubmit = (formData) => {
     fetchRekapData();
   };
@@ -237,6 +246,13 @@ const RekapBulanan = () => {
   const handleDetail = (e) => {
     setDetailModalVisible(true); // Open the modal
     setModalData(e); // Pass data to the modal
+  };
+
+  const handleEdit = async (e) => {
+    await getOrderById(e.order_id).then((res) => {
+      setEditModalVisible(true); // Open the modal
+      setModalData(res.data.results); // Pass data to the modal
+    });
   };
 
   const updatedListData = (newData) => {
@@ -1012,6 +1028,19 @@ const RekapBulanan = () => {
                 state={{ data: modalData }}
                 updateParentData={updatedListData}
                 fromRekap={true}
+              />
+            </Modal>
+          )}
+          {editModalVisible && (
+            <Modal
+              title="Edit Order"
+              activeModal={editModalVisible} // Tie to modalVisible state
+              onClose={() => setEditModalVisible(false)} // Close modal when needed
+              className="max-w-5xl"
+            >
+              <EditModal
+                defaultOrder={modalData}
+                onClose={() => setEditModalVisible(false)}
               />
             </Modal>
           )}
