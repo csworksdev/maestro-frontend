@@ -144,14 +144,12 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
             placeholder="Coach"
             defaultOptions={listTrainer}
             loadOptions={loadTrainerOptions}
-            onChange={(e) => setSelectedTrainer(e)}
+            onChange={(e) => setSelectedTrainer(e.value)}
           />
           {selectedTrainer &&
             selectedTrainer.label !==
               toProperCase(currentOrder.trainer_name) && (
-              <Button
-                onClick={() => updateOrder("trainer_id", selectedTrainer.value)}
-              >
+              <Button onClick={() => updateOrder("trainer", selectedTrainer)}>
                 Ganti
               </Button>
             )}
@@ -168,14 +166,12 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
             placeholder="Kolam"
             defaultOptions={listKolam}
             loadOptions={loadKolamOptions}
-            onChange={(e) => setSelectedKolam(e)}
+            onChange={(e) => setSelectedKolam(e.value)}
           />
 
           {selectedKolam &&
             selectedKolam.label !== toProperCase(currentOrder.pool_name) && (
-              <Button
-                onClick={() => updateOrder("pool_id", selectedKolam.value)}
-              >
+              <Button onClick={() => updateOrder("pool", selectedKolam)}>
                 Ganti
               </Button>
             )}
@@ -191,15 +187,13 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
             placeholder="Produk"
             defaultOptions={listProduct}
             loadOptions={loadProductOptions}
-            onChange={(e) => setSelectedProduct(e)}
+            onChange={(e) => setSelectedProduct(e.value)}
           />
 
           {selectedProduct &&
             selectedProduct.label !==
               toProperCase(currentOrder.product_name) && (
-              <Button
-                onClick={() => updateOrder("product_id", selectedProduct.value)}
-              >
+              <Button onClick={() => updateOrder("product", selectedProduct)}>
                 Ganti
               </Button>
             )}
