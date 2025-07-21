@@ -19,6 +19,18 @@ export const getOrderById = async (id) => {
     console.error("Error fetching data:", error);
   }
 };
+export const migrasiOrderById = async (orderId, key, value) => {
+  try {
+    let response = await axiosConfig.put("/api/order/migrasi/", {
+      order_id: orderId,
+      key: key,
+      value: value,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
 
 export const getOrderExpired = async (data) => {
   try {

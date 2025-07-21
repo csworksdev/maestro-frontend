@@ -216,9 +216,11 @@ const OrderActive = ({ is_finished }) => {
       accessor: "expire_date",
       id: "expire_date",
       Cell: (row) => {
-        <span>
-          {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
-        </span>;
+        return (
+          <span>
+            {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
+          </span>
+        );
       },
     },
     {

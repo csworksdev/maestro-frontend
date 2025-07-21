@@ -1,4 +1,4 @@
-import { EditOrder } from "@/axios/masterdata/order";
+import { EditOrder, migrasiOrderById } from "@/axios/masterdata/order";
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getTrainerAll } from "@/axios/masterdata/trainer";
 import { getKolamByBranch } from "@/axios/referensi/kolam";
@@ -9,7 +9,6 @@ import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import Textinput from "@/components/ui/Textinput";
 import { toProperCase } from "@/utils";
-import { update } from "lodash";
 import React from "react";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -74,11 +73,12 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
       setListKolam(formatted);
     });
     getProdukPool(currentOrder.pool).then((res) => {
-      const formatted = res.data.results.map((t) => ({
-        value: t.product_id,
-        label: toProperCase(t.name),
-      }));
-      setListProduct(formatted);
+      // const formatted = res.data.results.map((t) => ({
+      //   value: t.product_id,
+      //   label: toProperCase(t.name),
+      // }));
+      // setListProduct(formatted);
+      setListProduct(res.data.results);
     });
   }, []);
 
@@ -104,29 +104,103 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
     );
 
   const updateOrder = async (fieldName, fieldValue) => {
-    const payload = {
-      order_id: currentOrder.order_id,
-      [fieldName]: fieldValue,
-    };
+    // let payload = {};
+    // let orderDetailPromises = [];
+
+    // if (fieldName === "product") {
+    //   const productItem = listProduct.find((x) => x.product_id === fieldValue);
+    //   const b = parseInt(productItem?.meetings);
+    //   const students = currentOrder.students;
+
+    //   // 1️⃣ Filter detail lama (kalau mau)
+    //   let newDetail = currentOrder.detail.filter((d) => d.meet <= b);
+
+    //   // 2️⃣ Tambah detail baru per siswa kalau kurang
+    //   students.forEach((student) => {
+    //     const studentMeets = newDetail
+    //       .filter((d) => d.student === student.student_id)
+    //       .map((d) => d.meet);
+
+    //     for (let i = 1; i <= b; i++) {
+    //       if (!studentMeets.includes(i)) {
+    //         const detail = {
+    //           order_id: currentOrder.order_id,
+    //           meet: i,
+    //           is_presence: false,
+    //           day: currentOrder.day,
+    //           time: currentOrder.time,
+    //           is_paid: false,
+    //           schedule_date: null,
+    //           price_per_meet: Math.round(productItem.price / b),
+    //           periode: currentOrder.periode,
+    //           student: student.student_id,
+    //         };
+    //         newDetail.push(detail);
+    //         // Kalau mau add via endpoint AddOrderDetail satu per satu:
+    //         orderDetailPromises.push(AddOrderDetail(detail));
+    //       }
+    //     }
+    //   });
+
+    //   payload = {
+    //     order_id: currentOrder.order_id,
+    //     [fieldName]: fieldValue,
+    //     price: productItem.price,
+    //     grand_total: productItem.price * students.length,
+    //     // detail: newDetail, // kalau backend mendukung nested update
+    //   };
+    // } else {
+    //   payload = {
+    //     order_id: currentOrder.order_id,
+    //     [fieldName]: fieldValue,
+    //   };
+    // }
 
     // console.log(payload);
-    await EditOrder(currentOrder.order_id, payload)
-      .then((res) => {
-        if (res.status) {
-          isEdit(true);
-          onClose();
-          Swal.fire({
-            title: "Edited!",
-            text: "Your order has been updated.",
-            icon: "success",
-            timer: 1000,
-            position: "center",
-          });
-        }
-      })
-      .catch((error) => {
-        Swal.fire("Error", "Failed to update order.", "error");
-      });
+
+    // try {
+    //   const res = await EditOrder(currentOrder.order_id, payload);
+
+    //   if (res.status) {
+    //     if (fieldName === "product" && orderDetailPromises.length) {
+    //       await Promise.all(orderDetailPromises);
+    //     }
+
+    //     isEdit(true);
+    //     onClose();
+    //     Swal.fire({
+    //       title: "Edited!",
+    //       text: "Your order has been updated.",
+    //       icon: "success",
+    //       timer: 1000,
+    //       position: "center",
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error(error);
+    //   Swal.fire("Error", "Failed to update order.", "error");
+    // }
+    try {
+      const res = await migrasiOrderById(
+        currentOrder.order_id,
+        fieldName,
+        fieldValue
+      );
+
+      if (res.status) {
+        isEdit(true);
+        onClose();
+        Swal.fire({
+          title: "Edited!",
+          text: "Your order has been updated.",
+          icon: "success",
+          timer: 1000,
+          position: "center",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -185,14 +259,18 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
           <label className="text-sm text-gray-700">Ke</label>
           <AsyncSelect
             placeholder="Produk"
-            defaultOptions={listProduct}
+            defaultOptions={listProduct.map((x) => {
+              return {
+                value: x.product_id,
+                label: toProperCase(x.name),
+              };
+            })}
             loadOptions={loadProductOptions}
             onChange={(e) => setSelectedProduct(e.value)}
           />
 
           {selectedProduct &&
-            selectedProduct.label !==
-              toProperCase(currentOrder.product_name) && (
+            selectedProduct !== toProperCase(currentOrder.product) && (
               <Button onClick={() => updateOrder("product", selectedProduct)}>
                 Ganti
               </Button>
