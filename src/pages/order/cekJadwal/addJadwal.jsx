@@ -341,10 +341,11 @@ const AddJadwal = ({
                   order: res.data.order_id,
                   day: inputValue.day,
                   time: inputValue.time,
-                  price_per_meet:
+                  price_per_meet: Math.floor(
                     (product.price * parseInt(inputValue.trainer_percentage)) /
-                    100 /
-                    product.meetings,
+                      100 /
+                      product.meetings
+                  ),
                   schedule_date: DateTime.now()
                     .plus({ days: 7 * (i + 1) })
                     .toFormat("yyyy-MM-dd"),
