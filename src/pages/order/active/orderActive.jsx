@@ -173,7 +173,9 @@ const OrderActive = ({ is_finished }) => {
               return (
                 <div className="flex flex-row gap-1" key={idx}>
                   <div className="p-0 mr-1">{idx + 1}.</div>
-                  <div className="text-wrap p-0">{substring.trim()}</div>
+                  <div className="text-wrap p-0">
+                    {toProperCase(substring).trim()}
+                  </div>
                   <br />
                 </div>
               );

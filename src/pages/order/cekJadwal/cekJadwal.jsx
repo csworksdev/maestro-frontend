@@ -21,6 +21,7 @@ import Icons from "@/components/ui/Icon";
 import { useSelector } from "react-redux";
 import Select from "react-select";
 import Switch from "@/components/ui/Switch";
+import { toProperCase } from "@/utils";
 
 const columnHeader = [
   "Pelatih",
@@ -275,7 +276,7 @@ const CekJadwal = () => {
 
       setFilterPelatih(
         data.map((x) => {
-          return { value: x.trainer_id, label: x.nickname };
+          return { value: x.trainer_id, label: toProperCase(x.nickname) };
         })
       );
 
@@ -570,10 +571,10 @@ const CekJadwal = () => {
                   de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
                 }`}
               >
-                <span className="text-[clamp(8px,0.7vw,14px)] p-1">
+                <span className="text-[clamp(8px,0.7vw,14px)] p-1 font-semibold">
                   {de.nickname && (
                     <>
-                      {de.nickname}
+                      {toProperCase(de.nickname)}
                       <br />({de.total_order})
                     </>
                   )}
