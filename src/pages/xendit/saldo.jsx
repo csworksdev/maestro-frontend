@@ -257,17 +257,17 @@ const XenditBalance = () => {
         </div>
       ),
     },
-    {
-      Header: "Sudah Rekap",
-      accessor: "is_recap",
-      Cell: (row) => {
-        return (
-          <div className="flex items-center gap-2 justify-center text-green-500 font-semibold">
-            x
-          </div>
-        );
-      },
-    },
+    // {
+    //   Header: "Sudah Rekap",
+    //   accessor: "is_recap",
+    //   Cell: (row) => {
+    //     return (
+    //       <div className="flex items-center gap-2 justify-center text-green-500 font-semibold">
+    //         x
+    //       </div>
+    //     );
+    //   },
+    // },
   ];
 
   return (

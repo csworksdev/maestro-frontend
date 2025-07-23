@@ -234,8 +234,8 @@ const App = () => {
                 //#region order
                 <Route path="order">
                   <Route index element={<Order />} />
-                  <Route path="add" element={<AddOrder />} />
-                  <Route path="edit" element={<EditOrder />} />
+                  {/* <Route path="add" element={<AddOrder />} />
+                  <Route path="edit" element={<EditOrder />} /> */}
                   <Route path="detail" element={<DetailOrder />} />
 
                   <Route path="expired" element={<OrderExpired />} />
