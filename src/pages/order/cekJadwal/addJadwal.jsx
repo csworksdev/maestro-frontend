@@ -318,12 +318,12 @@ const AddJadwal = ({
               : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
             students:
               product.package_name === "trial"
-                ? newData.students
+                ? newData.updatedStudents
                     .filter((s) => s.istrial)
                     .map((student) => ({
                       student_id: student.student_id,
                     }))
-                : newData.students.map((student) => ({
+                : newData.updatedStudents.map((student) => ({
                     student_id: student.student_id,
                   })),
             invoice_id: external_id,
