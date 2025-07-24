@@ -14,6 +14,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import Swal from "sweetalert2";
+import Flatpickr from "react-flatpickr";
+import { DateTime } from "luxon";
 
 const Hari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 
@@ -56,6 +58,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedHari, setSelectedHari] = useState(null);
   const [selectedJam, setSelectedJam] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     getTrainerAll(params).then((res) => {
@@ -104,82 +107,6 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
     );
 
   const updateOrder = async (fieldName, fieldValue) => {
-    // let payload = {};
-    // let orderDetailPromises = [];
-
-    // if (fieldName === "product") {
-    //   const productItem = listProduct.find((x) => x.product_id === fieldValue);
-    //   const b = parseInt(productItem?.meetings);
-    //   const students = currentOrder.students;
-
-    //   // 1️⃣ Filter detail lama (kalau mau)
-    //   let newDetail = currentOrder.detail.filter((d) => d.meet <= b);
-
-    //   // 2️⃣ Tambah detail baru per siswa kalau kurang
-    //   students.forEach((student) => {
-    //     const studentMeets = newDetail
-    //       .filter((d) => d.student === student.student_id)
-    //       .map((d) => d.meet);
-
-    //     for (let i = 1; i <= b; i++) {
-    //       if (!studentMeets.includes(i)) {
-    //         const detail = {
-    //           order_id: currentOrder.order_id,
-    //           meet: i,
-    //           is_presence: false,
-    //           day: currentOrder.day,
-    //           time: currentOrder.time,
-    //           is_paid: false,
-    //           schedule_date: null,
-    //           price_per_meet: Math.round(productItem.price / b),
-    //           periode: currentOrder.periode,
-    //           student: student.student_id,
-    //         };
-    //         newDetail.push(detail);
-    //         // Kalau mau add via endpoint AddOrderDetail satu per satu:
-    //         orderDetailPromises.push(AddOrderDetail(detail));
-    //       }
-    //     }
-    //   });
-
-    //   payload = {
-    //     order_id: currentOrder.order_id,
-    //     [fieldName]: fieldValue,
-    //     price: productItem.price,
-    //     grand_total: productItem.price * students.length,
-    //     // detail: newDetail, // kalau backend mendukung nested update
-    //   };
-    // } else {
-    //   payload = {
-    //     order_id: currentOrder.order_id,
-    //     [fieldName]: fieldValue,
-    //   };
-    // }
-
-    // console.log(payload);
-
-    // try {
-    //   const res = await EditOrder(currentOrder.order_id, payload);
-
-    //   if (res.status) {
-    //     if (fieldName === "product" && orderDetailPromises.length) {
-    //       await Promise.all(orderDetailPromises);
-    //     }
-
-    //     isEdit(true);
-    //     onClose();
-    //     Swal.fire({
-    //       title: "Edited!",
-    //       text: "Your order has been updated.",
-    //       icon: "success",
-    //       timer: 1000,
-    //       position: "center",
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   Swal.fire("Error", "Failed to update order.", "error");
-    // }
     try {
       const res = await migrasiOrderById(
         currentOrder.order_id,
@@ -249,6 +176,36 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
                 Ganti
               </Button>
             )}
+        </div>
+      </Card>
+      <Card title={"Ganti Tanggal Order"}>
+        <div className="grid grid-cols-[auto,1fr,auto,auto,1fr,auto] gap-4 items-center">
+          <label className="text-sm text-gray-700">Dari</label>
+          <Textinput readOnly defaultValue={currentOrder.order_date} />
+          <Icons icon="heroicons-outline:arrows-right-left" width={24} />
+          <label className="text-sm text-gray-700">Ke</label>
+          <Flatpickr
+            name="order_date"
+            options={{
+              disableMobile: true,
+              allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
+            }}
+            className="form-control py-2"
+            onChange={(date) => {
+              setSelectedDate(
+                DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd")
+              );
+            }}
+            readOnly={false}
+          />
+
+          {selectedDate && selectedDate !== currentOrder.order_date && (
+            <Button onClick={() => updateOrder("date", selectedDate)}>
+              Ganti
+            </Button>
+          )}
         </div>
       </Card>
       <Card title={"Ganti Produk"}>
