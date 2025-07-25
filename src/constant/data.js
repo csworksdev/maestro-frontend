@@ -234,6 +234,10 @@ export const menuOps = [
         childtitle: "Order",
         childlink: "order",
       },
+      {
+        childtitle: "Rekap Bulanan",
+        childlink: "rekap-bulanan",
+      },
     ],
   },
 ];
