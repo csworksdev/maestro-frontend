@@ -223,6 +223,10 @@ export const menuOps = [
     isHide: true,
     child: [
       {
+        childtitle: "Okupansi",
+        childlink: "dashboard/operasional/okupansi",
+      },
+      {
         childtitle: "Cek Jadwal",
         childlink: "cek-jadwal",
       },
