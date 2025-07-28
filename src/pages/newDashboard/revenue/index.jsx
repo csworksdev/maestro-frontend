@@ -9,6 +9,7 @@ import Card from "@/components/ui/Card";
 import BarChart from "@/components/globals/chart/barChart";
 import ListLoading from "@/components/skeleton/ListLoading";
 import Header from "@/components/globals/chart/header";
+import OkupansiBranch from "../operasional/okupansi";
 
 const Revenue = () => {
   const [revenueAll, setRevenueAll] = useState([]);
@@ -42,6 +43,7 @@ const Revenue = () => {
 
   return (
     <>
+      {/* <OkupansiBranch /> */}
       <Card bodyClass="p-4 mb-5">
         <div className="grid md:grid-cols-4 col-span-1 gap-4">
           <Header

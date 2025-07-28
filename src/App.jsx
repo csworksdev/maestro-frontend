@@ -81,6 +81,10 @@ const Broadcast = lazy(() => import("./pages/broadcast/index"));
 // Dashboard
 const DashboardRevenue = lazy(() => import("./pages/newDashboard/revenue"));
 
+const DashboardOkupansi = lazy(() =>
+  import("./pages/newDashboard/operasional")
+);
+
 const App = () => {
   const hostname = window.location.hostname;
   const subdomain = hostname.split(".")[0];
@@ -289,10 +293,21 @@ const App = () => {
                   <Route path="edit" element={<UMPermissionsEdit />} />
                 </Route>
                 //#endregion
+                {/*  */}
+                //#region Finance
                 <Route path="rekap-bulanan">
                   <Route index element={<RekapBulanan />} />
                   <Route path="detailorderpelatih" element={<DetailOrder />} />
                 </Route>
+                //#endregion Finance
+                {/*  */}
+                //#region Dashboar operasional
+                <Route path="Dashboard/Operasional">
+                  <Route index element={<DashboardOkupansi />} />
+                  {/* <Route path="detailorderpelatih" element={<DetailOrder />} /> */}
+                </Route>
+                //#endregion Finance
+                {/*  */}
                 //#region Xendit
                 <Route path="xendit">
                   {/* <Route index element={<Produk />} /> */}

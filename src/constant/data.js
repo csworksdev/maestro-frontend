@@ -102,8 +102,8 @@ export const menuChief = [
     isHide: true,
     child: [
       {
-        childtitle: "Produk",
-        childlink: "produk",
+        childtitle: "Okupansi",
+        childlink: "Dashboard/Operasional",
       },
       {
         childtitle: "Pelatih",
