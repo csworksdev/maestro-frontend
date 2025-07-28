@@ -155,6 +155,14 @@ const OrderActive = ({ is_finished }) => {
 
   const COLUMNS = [
     {
+      Header: "Admin",
+      accessor: "create_by_username",
+      id: "create_by_username",
+      Cell: (row) => {
+        return <span>{toProperCase(row?.cell?.value)}</span>;
+      },
+    },
+    {
       Header: "Pelatih",
       accessor: "trainer_name",
       id: "trainer_name",
@@ -220,7 +228,9 @@ const OrderActive = ({ is_finished }) => {
       Cell: (row) => {
         return (
           <span>
-            {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
+            {row?.cell?.value !== null
+              ? DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")
+              : ""}
           </span>
         );
       },
