@@ -5,6 +5,7 @@ import ChartJs from "@/pages/chart/chartjs";
 import React from "react";
 import Chart from "react-apexcharts";
 import useDarkMode from "@/hooks/useDarkMode";
+import Button from "@/components/ui/Button";
 
 const OkupansiBranch = ({ data, height = 335 }) => {
   const [isDark] = useDarkMode();
@@ -65,16 +66,29 @@ const OkupansiBranch = ({ data, height = 335 }) => {
             ],
           };
           return (
-            <Card title={"#1" + index} subtitle={x.branch_name}>
-              <div>Jadwal Tersedia : {x.total_slot_tersedia}</div>
-              <div>Jadwal Terisi : {x.total_slot_terisi}</div>
-              <div>Jadwal Kosong : {x.total_slot_kosong}</div>
+            <Card title={"#" + (index + 1) + " - " + x.branch_name}>
+              <div>Jumlah Pelatih : {x.jumlah_pelatih}</div>
+              <div>
+                Jadwal Tersedia :{" "}
+                {parseInt(x.total_slot_tersedia).toLocaleString("id-ID")}
+              </div>
+              <div>
+                Jadwal Terisi :{" "}
+                {parseInt(x.total_slot_terisi).toLocaleString("id-ID")}
+              </div>
+              <div>
+                Jadwal Kosong :{" "}
+                {parseInt(x.total_slot_kosong).toLocaleString("id-ID")}
+              </div>
               <Chart
                 options={options}
                 series={series}
                 type="pie"
                 height={height}
               />
+              <Button>
+                <label>Lihat Detail</label>
+              </Button>
             </Card>
           );
         })}
