@@ -103,7 +103,7 @@ export const menuChief = [
     child: [
       {
         childtitle: "Okupansi",
-        childlink: "Dashboard/Operasional",
+        childlink: "dashboard/operasional/okupansi",
       },
       {
         childtitle: "Pelatih",

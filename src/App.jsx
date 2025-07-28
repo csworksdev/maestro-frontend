@@ -15,6 +15,8 @@ import { toast } from "react-toastify";
 import { messaging, getToken, onMessage } from "@/firebase/firebase";
 import { removeFcmToken } from "@/utils/fcm";
 import isChrome from "./utils/isChrome";
+import OkupansiBranch from "./pages/newDashboard/operasional/okupansi_branch";
+import OkupansiPool from "./pages/newDashboard/operasional/okupansi_branch";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -182,13 +184,22 @@ const App = () => {
                   </AuthenticatedRoute>
                 }
               >
-                <Route
-                  path="dashboard"
-                  element={
-                    roles === "Admin" ? <Dashboard /> : <DashboardRevenue />
-                    // <Dashboard />
-                  }
-                />
+                <Route path="dashboard">
+                  //#region Dashboar operasional
+                  <Route
+                    index
+                    element={
+                      roles === "Admin" ? <Dashboard /> : <DashboardRevenue />
+                    }
+                  />
+                  <Route path="operasional">
+                    <Route path="okupansi">
+                      <Route index element={<DashboardOkupansi />} />
+                      <Route path="pool" element={<OkupansiBranch />} />
+                    </Route>
+                  </Route>
+                  //#endregion Finance
+                </Route>
                 //#region referensi
                 <Route path="cabang">
                   <Route index element={<Cabang />} />
@@ -301,12 +312,6 @@ const App = () => {
                 </Route>
                 //#endregion Finance
                 {/*  */}
-                //#region Dashboar operasional
-                <Route path="Dashboard/Operasional">
-                  <Route index element={<DashboardOkupansi />} />
-                  {/* <Route path="detailorderpelatih" element={<DetailOrder />} /> */}
-                </Route>
-                //#endregion Finance
                 {/*  */}
                 //#region Xendit
                 <Route path="xendit">

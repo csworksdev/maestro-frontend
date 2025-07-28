@@ -6,9 +6,27 @@ import React from "react";
 import Chart from "react-apexcharts";
 import useDarkMode from "@/hooks/useDarkMode";
 import Button from "@/components/ui/Button";
+import { useNavigate } from "react-router-dom";
+import { getOkupansiBranch } from "@/axios/dashboard_opr/okupansi";
 
-const OkupansiBranch = ({ data, height = 335 }) => {
+const Okupansi = ({ data, height = 335 }) => {
   const [isDark] = useDarkMode();
+  const navigate = useNavigate();
+
+  const detailHandleClick = async (x) => {
+    const branchData = x;
+    let res = await getOkupansiBranch(branchData.branch_id);
+
+    if (res && res.data) {
+      navigate("pool", {
+        state: {
+          branch_name: branchData.branch_name,
+          data: res.data,
+        },
+      });
+    }
+  };
+
   return (
     <div className="grid grid-cols-4 gap-4">
       {data
@@ -66,7 +84,7 @@ const OkupansiBranch = ({ data, height = 335 }) => {
             ],
           };
           return (
-            <Card title={"#" + (index + 1) + " - " + x.branch_name}>
+            <Card title={"#" + (index + 1) + " - " + x.branch_name} key={index}>
               <div>Jumlah Pelatih : {x.jumlah_pelatih}</div>
               <div>
                 Jadwal Tersedia :{" "}
@@ -86,7 +104,7 @@ const OkupansiBranch = ({ data, height = 335 }) => {
                 type="pie"
                 height={height}
               />
-              <Button>
+              <Button onClick={() => detailHandleClick(x)}>
                 <label>Lihat Detail</label>
               </Button>
             </Card>
@@ -96,4 +114,4 @@ const OkupansiBranch = ({ data, height = 335 }) => {
   );
 };
 
-export default OkupansiBranch;
+export default Okupansi;
