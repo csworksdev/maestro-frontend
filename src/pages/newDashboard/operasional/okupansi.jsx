@@ -18,7 +18,7 @@ const Okupansi = ({ data, height = 335 }) => {
     let res = await getOkupansiBranch(branchData.branch_id);
 
     if (res && res.data) {
-      navigate("pool", {
+      navigate("branch", {
         state: {
           branch_name: branchData.branch_name,
           data: res.data,

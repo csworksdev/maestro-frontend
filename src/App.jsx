@@ -15,8 +15,6 @@ import { toast } from "react-toastify";
 import { messaging, getToken, onMessage } from "@/firebase/firebase";
 import { removeFcmToken } from "@/utils/fcm";
 import isChrome from "./utils/isChrome";
-import OkupansiBranch from "./pages/newDashboard/operasional/okupansi_branch";
-import OkupansiPool from "./pages/newDashboard/operasional/okupansi_branch";
 
 // Lazy loading for pages
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -83,8 +81,15 @@ const Broadcast = lazy(() => import("./pages/broadcast/index"));
 // Dashboard
 const DashboardRevenue = lazy(() => import("./pages/newDashboard/revenue"));
 
+// Dashboard Operasional
 const DashboardOkupansi = lazy(() =>
   import("./pages/newDashboard/operasional")
+);
+const OkupansiBranch = lazy(() =>
+  import("./pages/newDashboard/operasional/okupansi_branch")
+);
+const OkupansiPool = lazy(() =>
+  import("./pages/newDashboard/operasional/okupansi_pool")
 );
 
 const App = () => {
@@ -195,7 +200,10 @@ const App = () => {
                   <Route path="operasional">
                     <Route path="okupansi">
                       <Route index element={<DashboardOkupansi />} />
-                      <Route path="pool" element={<OkupansiBranch />} />
+                      <Route path="branch">
+                        <Route index element={<OkupansiBranch />} />
+                        <Route path="pool" element={<OkupansiPool />} />
+                      </Route>
                     </Route>
                   </Route>
                   //#endregion Finance

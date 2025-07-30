@@ -1,34 +1,33 @@
-import Calculation from "@/components/partials/widget/chart/Calculation";
 import Card from "@/components/ui/Card";
 import { colors } from "@/constant/data";
-import ChartJs from "@/pages/chart/chartjs";
 import React from "react";
 import Chart from "react-apexcharts";
 import useDarkMode from "@/hooks/useDarkMode";
 import Button from "@/components/ui/Button";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { getOkupansiPool } from "@/axios/dashboard_opr/okupansi";
+import { toProperCase } from "@/utils";
 
-const OkupansiBranch = ({ height = 335 }) => {
+const OkupansiPool = ({ height = 335 }) => {
   const [isDark] = useDarkMode();
   const location = useLocation();
   const navigate = useNavigate();
-  const { branch_name, data } = location.state || {};
+  const { pool_name, data } = location.state || {};
+  console.log(location.state);
 
-  const detailHandleClick = async (x) => {
-    const poolData = x;
-    let res = await getOkupansiPool(poolData.pool_id);
+  // const detailHandleClick = async (x) => {
+  //   const branchData = x;
+  //   let res = await getOkupansiPool(branchData.branch_id);
 
-    if (res && res.data) {
-      navigate("pool", {
-        state: {
-          pool_name: poolData.pool_name,
-          data: res.data,
-        },
-      });
-    }
-  };
+  //   if (res && res.data) {
+  //     navigate("pool", {
+  //       state: {
+  //         branch_name: branchData.branch_name,
+  //         data: res.data,
+  //       },
+  //     });
+  //   }
+  // };
 
   return (
     <>
@@ -44,7 +43,7 @@ const OkupansiBranch = ({ height = 335 }) => {
       />
       <div className="flex flex-col gap-8">
         <Card>
-          <h3>Cabang : {branch_name}</h3>
+          <h3>Kolam : {pool_name}</h3>
         </Card>
         <div className="grid grid-cols-4 gap-4">
           {data
@@ -105,10 +104,12 @@ const OkupansiBranch = ({ height = 335 }) => {
               };
               return (
                 <Card
-                  title={"#" + (index + 1) + " - " + x.pool_name}
-                  key={branch_name + index}
+                  title={
+                    "#" + (index + 1) + " - " + toProperCase(x.trainer_nickname)
+                  }
+                  key={x.id + index}
                 >
-                  <div>Jumlah Pelatih : {x.jumlah_pelatih}</div>
+                  {/* <div>Jumlah Pelatih : {x.jumlah_pelatih}</div> */}
                   <div>
                     Jadwal Tersedia :{" "}
                     {parseInt(x.total_slot_tersedia).toLocaleString("id-ID")}
@@ -127,9 +128,9 @@ const OkupansiBranch = ({ height = 335 }) => {
                     type="pie"
                     height={height}
                   />
-                  <Button onClick={() => detailHandleClick(x)}>
+                  {/* <Button>
                     <label>Lihat Detail</label>
-                  </Button>
+                  </Button> */}
                 </Card>
               );
             })}
@@ -139,4 +140,4 @@ const OkupansiBranch = ({ height = 335 }) => {
   );
 };
 
-export default OkupansiBranch;
+export default OkupansiPool;
