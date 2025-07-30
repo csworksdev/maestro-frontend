@@ -13,7 +13,6 @@ const OkupansiPool = ({ height = 335 }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { pool_name, data } = location.state || {};
-  console.log(location.state);
 
   // const detailHandleClick = async (x) => {
   //   const branchData = x;
