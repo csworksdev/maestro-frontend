@@ -1,11 +1,8 @@
-import React, { Fragment, useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
-import Icon from "@/components/ui/Icon";
-import { Tab, Disclosure, Transition, Menu } from "@headlessui/react";
 import Table from "@/components/globals/table/table";
 import { DeleteRoles, getRolesAll } from "@/axios/userManagement/role";
 import Loading from "@/components/Loading";
-import Dropdown from "@/components/ui/Dropdown";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
