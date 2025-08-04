@@ -92,6 +92,9 @@ const OkupansiPool = lazy(() =>
   import("./pages/newDashboard/operasional/okupansi_pool")
 );
 
+// Wati
+const KontakWati = lazy(() => import("./pages/wati/kontak"));
+
 const App = () => {
   const hostname = window.location.hostname;
   const subdomain = hostname.split(".")[0];
@@ -233,6 +236,11 @@ const App = () => {
                   <Route index element={<Specialization />} />
                   <Route path="add" element={<EditSpecialization />} />
                   <Route path="edit" element={<EditSpecialization />} />
+                </Route>
+                <Route path="kontakwati">
+                  <Route index element={<KontakWati />} />
+                  {/* <Route path="add" element={<EditSpecialization />} />
+                  <Route path="edit" element={<EditSpecialization />} /> */}
                 </Route>
                 //#endregion
                 {/*  */}

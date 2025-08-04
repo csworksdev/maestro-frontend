@@ -6,10 +6,62 @@ import {
   useSortBy,
   useGlobalFilter,
   useFilters,
+  useRowSelect,
 } from "react-table";
 
+const IndeterminateCheckbox = React.forwardRef(
+  ({ indeterminate, ...rest }, ref) => {
+    const defaultRef = React.useRef();
+    const resolvedRef = ref || defaultRef;
+
+    React.useEffect(() => {
+      resolvedRef.current.indeterminate = indeterminate;
+    }, [resolvedRef, indeterminate]);
+
+    return (
+      <>
+        <input
+          type="checkbox"
+          ref={resolvedRef}
+          {...rest}
+          className="table-checkbox"
+        />
+      </>
+    );
+  }
+);
+
+const withCheckboxColumn = (isCheckbox) => {
+  return (hooks) => {
+    if (!isCheckbox) return;
+
+    hooks.visibleColumns.push((columns) => [
+      {
+        id: "selection",
+        Header: ({ getToggleAllRowsSelectedProps }) => (
+          <div>
+            <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+          </div>
+        ),
+        Cell: ({ row }) => (
+          <div>
+            <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+          </div>
+        ),
+      },
+      ...columns,
+    ]);
+  };
+};
+
 const Table = memo(
-  ({ listData, listColumn, handleSearch, isAction = true }) => {
+  ({
+    listData,
+    listColumn,
+    handleSearch,
+    isAction = true,
+    isChecbox = false,
+  }) => {
     const columns = useMemo(
       () =>
         listColumn.map((col) => ({
@@ -32,7 +84,10 @@ const Table = memo(
       useFilters,
       useGlobalFilter,
       useSortBy,
-      usePagination
+      usePagination,
+      useRowSelect,
+
+      withCheckboxColumn(isChecbox)
     );
 
     const { getTableProps, getTableBodyProps, headerGroups, page, prepareRow } =

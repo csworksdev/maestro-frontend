@@ -132,22 +132,22 @@ export const menuTrainer = [
     isOpen: true,
     isHide: true,
     child: [
-      {
-        childtitle: "Dashboard",
-        childlink: "coach/dashboard",
-      },
+      // {
+      //   childtitle: "Dashboard",
+      //   childlink: "coach/dashboard",
+      // },
       {
         childtitle: "Earning",
         childlink: "coach/earning",
       },
-      {
-        childtitle: "Reminder",
-        childlink: "coach/reminder",
-      },
-      {
-        childtitle: "Schedule",
-        childlink: "coach/schedule",
-      },
+      // {
+      //   childtitle: "Reminder",
+      //   childlink: "coach/reminder",
+      // },
+      // {
+      //   childtitle: "Schedule",
+      //   childlink: "coach/schedule",
+      // },
       {
         childtitle: "Presence",
         childlink: "coach/presence",
@@ -190,6 +190,10 @@ export const menuAdminNew = [
       {
         childtitle: "Broadcast",
         childlink: "broadcast",
+      },
+      {
+        childtitle: "Kontak Wati",
+        childlink: "kontakwati",
       },
     ],
   },
@@ -271,22 +275,22 @@ export const menuAdmin = [
       },
     ],
   },
-  {
-    title: "Pelatihan",
-    icon: "heroicons-outline:academic-cap",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Reminder",
-        childlink: "course/reminder",
-      },
-      {
-        childtitle: "Jadwal",
-        childlink: "course/schedule",
-      },
-    ],
-  },
+  // {
+  //   title: "Pelatihan",
+  //   icon: "heroicons-outline:academic-cap",
+  //   isOpen: true,
+  //   isHide: true,
+  //   child: [
+  //     {
+  //       childtitle: "Reminder",
+  //       childlink: "course/reminder",
+  //     },
+  //     {
+  //       childtitle: "Jadwal",
+  //       childlink: "course/schedule",
+  //     },
+  //   ],
+  // },
   {
     title: "Order",
     icon: "heroicons-outline:academic-cap",
@@ -348,6 +352,10 @@ export const menuAdmin = [
       {
         childtitle: "Spesialisasi Terapi",
         childlink: "spesialisasi",
+      },
+      {
+        childtitle: "Kontak Wati",
+        childlink: "kontakwati",
       },
     ],
   },
