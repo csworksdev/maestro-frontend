@@ -12,21 +12,7 @@ const OkupansiPool = ({ height = 335 }) => {
   const [isDark] = useDarkMode();
   const location = useLocation();
   const navigate = useNavigate();
-  const { pool_name, data } = location.state || {};
-
-  // const detailHandleClick = async (x) => {
-  //   const branchData = x;
-  //   let res = await getOkupansiPool(branchData.branch_id);
-
-  //   if (res && res.data) {
-  //     navigate("pool", {
-  //       state: {
-  //         branch_name: branchData.branch_name,
-  //         data: res.data,
-  //       },
-  //     });
-  //   }
-  // };
+  const { pool_name, data, heatmap } = location.state || {};
 
   return (
     <>
@@ -42,9 +28,9 @@ const OkupansiPool = ({ height = 335 }) => {
       />
       <div className="flex flex-col gap-8">
         <Card>
-          <h3>Kolam : {pool_name}</h3>
+          <h5>Kolam : {pool_name}</h5>
         </Card>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-6 gap-4">
           {data
             .sort(
               (a, b) =>
@@ -110,15 +96,15 @@ const OkupansiPool = ({ height = 335 }) => {
                 >
                   {/* <div>Jumlah Pelatih : {x.jumlah_pelatih}</div> */}
                   <div>
-                    Jadwal Tersedia :{" "}
+                    Tersedia :{" "}
                     {parseInt(x.total_slot_tersedia).toLocaleString("id-ID")}
                   </div>
                   <div>
-                    Jadwal Terisi :{" "}
+                    Terisi :{" "}
                     {parseInt(x.total_slot_terisi).toLocaleString("id-ID")}
                   </div>
                   <div>
-                    Jadwal Kosong :{" "}
+                    Kosong :{" "}
                     {parseInt(x.total_slot_kosong).toLocaleString("id-ID")}
                   </div>
                   <Chart
@@ -130,6 +116,31 @@ const OkupansiPool = ({ height = 335 }) => {
                   {/* <Button>
                     <label>Lihat Detail</label>
                   </Button> */}
+                </Card>
+              );
+            })}
+        </div>
+
+        <Card>
+          <h5>Heatmap</h5>
+        </Card>
+        <div className="grid grid-cols-7 gap-4">
+          {heatmap &&
+            heatmap.map((item, index) => {
+              return (
+                <Card subtitle={item.day} key={item.day + index}>
+                  <div className="grid grid-cols-2 text-center">
+                    <div>Hari</div>
+                    <div>Order</div>
+                  </div>
+                  {item.data.map((day, x) => {
+                    return (
+                      <div className="grid grid-cols-2">
+                        <div>{day.time}</div>
+                        <div className="text-right">{day.count}</div>
+                      </div>
+                    );
+                  })}
                 </Card>
               );
             })}

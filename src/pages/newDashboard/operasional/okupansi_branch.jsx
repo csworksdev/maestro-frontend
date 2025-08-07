@@ -8,7 +8,10 @@ import useDarkMode from "@/hooks/useDarkMode";
 import Button from "@/components/ui/Button";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { getOkupansiPool } from "@/axios/dashboard_opr/okupansi";
+import {
+  getOkupansiPool,
+  getOkupansiPoolHeatMap,
+} from "@/axios/dashboard_opr/okupansi";
 
 const OkupansiBranch = ({ height = 335 }) => {
   const [isDark] = useDarkMode();
@@ -19,12 +22,14 @@ const OkupansiBranch = ({ height = 335 }) => {
   const detailHandleClick = async (x) => {
     const poolData = x;
     let res = await getOkupansiPool(poolData.pool_id);
+    let resPool = await getOkupansiPoolHeatMap(poolData.pool_id);
 
-    if (res && res.data) {
+    if (res && res.data && resPool) {
       navigate("pool", {
         state: {
           pool_name: poolData.pool_name,
           data: res.data,
+          heatmap: resPool.data,
         },
       });
     }
