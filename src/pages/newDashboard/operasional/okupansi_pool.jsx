@@ -8,7 +8,7 @@ import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toProperCase } from "@/utils";
 
-const OkupansiPool = ({ height = 335 }) => {
+const OkupansiPool = ({ height = 300 }) => {
   const [isDark] = useDarkMode();
   const location = useLocation();
   const navigate = useNavigate();
@@ -135,7 +135,7 @@ const OkupansiPool = ({ height = 335 }) => {
                   </div>
                   {item.data.map((day, x) => {
                     return (
-                      <div className="grid grid-cols-2">
+                      <div className="grid grid-cols-2 border-b border-gray-200 py-2">
                         <div>{day.time}</div>
                         <div className="text-right">{day.count}</div>
                       </div>
