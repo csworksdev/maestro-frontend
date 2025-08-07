@@ -17,13 +17,24 @@ import svgRabitImage from "@/assets/images/svg/rabit.svg";
 import { useDispatch } from "react-redux";
 import { logOut } from "@/redux/slicers/authSlice";
 import { useSelector } from "react-redux";
+import Menu from "@/constant/menu";
 
 const MobileMenu = ({ className = "custom-class" }) => {
   const scrollableNodeRef = useRef();
   const [scroll, setScroll] = useState(false);
   const dispatch = useDispatch();
 
-  let menuItems = JSON.parse(localStorage.getItem("menuItems"));
+  const [menuItems, setMenuItems] = useState([]);
+  // let menuItems = JSON.parse(localStorage.getItem("menuItems"));
+
+  const data = useSelector((state) => state.auth.data); // ✅ DI SINI BENAR
+
+  useEffect(() => {
+    if (data?.roles?.length) {
+      const generatedMenu = Menu(data.roles);
+      setMenuItems(generatedMenu);
+    }
+  }, [data]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,7 +92,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
         className="sidebar-menu px-4 h-[calc(100%-80px)]"
         scrollableNodeProps={{ ref: scrollableNodeRef }}
       >
-        <Navmenu menus={menuItems} />
+        {menuItems.length > 0 && <Navmenu menus={menuItems} />}
         <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
           <button onClick={() => dispatch(logOut())}>
             <span>Logout</span>

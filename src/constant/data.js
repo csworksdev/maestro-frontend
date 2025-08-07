@@ -34,27 +34,55 @@ export const menuSuperUser = [
 export const menuFinance = [
   {
     isHeadr: true,
+    title: "Database",
+  },
+  {
+    title: "Order",
+    icon: "heroicons-outline:newspaper",
+    link: "order",
+  },
+  {
+    title: "Produk",
+    icon: "heroicons-outline:rectangle-stack",
+    link: "produk",
+  },
+  {
+    title: "Paket",
+    icon: "heroicons-outline:archive-box",
+    link: "paket",
+  },
+  {
+    title: "Periode",
+    icon: "heroicons-outline:calendar-days",
+    link: "periodisasi",
+  },
+  {
+    isHeadr: true,
+    title: "Rekapan",
+  },
+  {
+    title: "Rekap Bulanan",
+    icon: "heroicons-outline:calendar-days",
+    link: "rekap-bulanan",
+  },
+  {
+    isHeadr: true,
     title: "Xendit",
   },
   {
-    title: "Xendit",
-    icon: "heroicons-outline:document-chart-bar",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Saldo",
-        childlink: "xendit/balance",
-      },
-      {
-        childtitle: "Transaksi",
-        childlink: "xendit/transaction",
-      },
-      {
-        childtitle: "Tautan Pembayaran",
-        childlink: "xendit/invoice-history",
-      },
-    ],
+    title: "Saldo",
+    icon: "heroicons-outline:banknotes",
+    link: "xendit/balance",
+  },
+  {
+    title: "Transaksi",
+    icon: "heroicons-outline:table-cells",
+    link: "xendit/transaction",
+  },
+  {
+    title: "Tautan Pembayaran",
+    icon: "heroicons-outline:link",
+    link: "xendit/invoice-history",
   },
 ];
 
@@ -124,129 +152,96 @@ export const menuChief = [
 export const menuTrainer = [
   {
     isHeadr: true,
-    title: "Coach",
+    title: "Latihan",
   },
   {
-    title: "Training",
-    icon: "heroicons-outline:academic-cap",
-    isOpen: true,
-    isHide: true,
-    child: [
-      // {
-      //   childtitle: "Dashboard",
-      //   childlink: "coach/dashboard",
-      // },
-      {
-        childtitle: "Earning",
-        childlink: "coach/earning",
-      },
-      // {
-      //   childtitle: "Reminder",
-      //   childlink: "coach/reminder",
-      // },
-      // {
-      //   childtitle: "Schedule",
-      //   childlink: "coach/schedule",
-      // },
-      {
-        childtitle: "Presence",
-        childlink: "coach/presence",
-      },
-    ],
+    title: "Earning",
+    icon: "heroicons-outline:banknotes",
+    link: "coach/earning",
+  },
+  {
+    title: "Presence",
+    icon: "heroicons-outline:queue-list",
+    link: "coach/presence",
   },
 ];
 
 export const menuAdminNew = [
   {
     isHeadr: true,
-    title: "Admin",
+    title: "Administrasi",
   },
   {
-    title: "Admin",
-    icon: "heroicons-outline:server",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Cek Jadwal",
-        childlink: "cek-jadwal",
-      },
-      {
-        childtitle: "Siswa",
-        childlink: "siswa",
-      },
-      {
-        childtitle: "Pelatih",
-        childlink: "trainer",
-      },
-      {
-        childtitle: "Order",
-        childlink: "order",
-      },
-      {
-        childtitle: "Finished",
-        childlink: "finishedOrder",
-      },
-      {
-        childtitle: "Broadcast",
-        childlink: "broadcast",
-      },
-      {
-        childtitle: "Kontak Wati",
-        childlink: "kontakwati",
-      },
-    ],
+    title: "Cek Jadwal",
+    icon: "heroicons-outline:calendar-days",
+    link: "cek-jadwal",
   },
   {
-    title: "Xendit",
-    icon: "heroicons-outline:document-chart-bar",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Transaksi",
-        childlink: "xendit/transaction",
-      },
-      {
-        childtitle: "Tautan Pembayaran",
-        childlink: "xendit/invoice-history",
-      },
-    ],
+    title: "Siswa",
+    icon: "heroicons-outline:users",
+    link: "siswa",
+  },
+  {
+    title: "Pelatih",
+    icon: "heroicons-outline:user-circle",
+    link: "trainer",
+  },
+  {
+    title: "Order",
+    icon: "heroicons-outline:shopping-bag",
+    link: "order",
+  },
+  // {
+  //   title: "Order Finished",
+  //   icon: "heroicons-outline:check",
+  //   link: "finishedOrder",
+  // },
+  {
+    title: "Broadcast",
+    icon: "heroicons-outline:globe-americas",
+    link: "broadcast",
+  },
+  {
+    title: "Kontak Wati",
+    icon: "heroicons-outline:user-group",
+    link: "kontakwati",
   },
 ];
 
-export const menuOps = [
+export const menuOpx = [
   {
     isHeadr: true,
-    title: "Admin",
+    title: "Operasional",
   },
   {
-    title: "Admin",
-    icon: "heroicons-outline:server",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Okupansi",
-        childlink: "dashboard/operasional/okupansi",
-      },
-      {
-        childtitle: "Cek Jadwal",
-        childlink: "cek-jadwal",
-      },
-      {
-        childtitle: "Pelatih",
-        childlink: "trainer",
-      },
-      {
-        childtitle: "Order",
-        childlink: "order",
-      },
-      {
-        childtitle: "Rekap Bulanan",
-        childlink: "rekap-bulanan",
-      },
-    ],
+    title: "Okupansi",
+    icon: "heroicons-outline:presentation-chart-line",
+    link: "dashboard/operasional/okupansi",
+  },
+  {
+    title: "Cek Jadwal",
+    icon: "heroicons-outline:calendar-days",
+    link: "cek-jadwal",
+  },
+  {
+    title: "Pelatih",
+    icon: "heroicons-outline:users",
+    link: "trainer",
+  },
+  {
+    title: "Order",
+    icon: "heroicons-outline:shopping-bag",
+    link: "order",
+  },
+  {
+    title: "Rekap Bulanan",
+    icon: "heroicons-outline:calendar-days",
+    link: "rekap-bulanan",
+  },
+  {
+    title: "User",
+    icon: "heroicons-outline:users",
+    link: "user",
   },
 ];
 

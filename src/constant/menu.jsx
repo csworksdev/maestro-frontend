@@ -7,14 +7,14 @@ import {
   menuChief,
   menuSuperUser,
   menuTrainer,
-  menuOps,
+  menuOpx,
 } from "./data";
 
 const Menu = (role = "") => {
   let menuItems = [];
   switch (role) {
     case "Admin":
-      menuItems = [...menuAdminNew, ...menuFinance];
+      menuItems = [...menuAdminNew];
       break;
     case "Finance":
       menuItems = [...menuFinance];
@@ -22,24 +22,26 @@ const Menu = (role = "") => {
     case "Trainer":
       menuItems = [...menuTrainer];
       break;
-    case "Ops":
-      menuItems = [...menuOps];
+    case "Opx":
+      menuItems = [...menuOpx];
       break;
     case "Chief":
       menuItems = [...menuChief];
       break;
     default:
       menuItems = [
-        ...menuSuperUser,
-        ...menuAdmin,
         ...menuChief,
+        ...menuSuperUser,
+        ...menuAdminNew,
         ...menuFinance,
-        ...menuTrainer,
+        // ...menuTrainer,
       ];
       break;
   }
 
   localStorage.setItem("menuItems", JSON.stringify(menuItems));
+
+  return menuItems;
 };
 
 export default Menu;

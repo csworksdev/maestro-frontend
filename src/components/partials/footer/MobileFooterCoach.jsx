@@ -6,7 +6,7 @@ import FooterAvatar from "@/assets/images/users/user-1.jpg";
 const MobileFooter = () => {
   return (
     <div className="bg-white bg-no-repeat custom-dropshadow footer-bg dark:bg-slate-700 flex justify-around items-center backdrop-filter backdrop-blur-[40px] fixed left-0 w-full z-[9999] bottom-0 py-[12px] px-4">
-      <NavLink to="/app/coach/earning">
+      <NavLink to="coach/earning">
         {({ isActive }) => (
           <div>
             <span
@@ -54,7 +54,7 @@ const MobileFooter = () => {
         )}
       </NavLink> */}
       <NavLink
-        to="/app/profile"
+        to="profile"
         className="relative bg-white bg-no-repeat backdrop-filter backdrop-blur-[40px] rounded-full footer-bg dark:bg-slate-700 h-[65px] w-[65px] z-[-1] -mt-[40px] flex justify-center items-center"
       >
         {({ isActive }) => (
@@ -73,7 +73,7 @@ const MobileFooter = () => {
           </div>
         )}
       </NavLink>
-      <NavLink to="/app/coach/presence">
+      <NavLink to="coach/presence">
         {({ isActive }) => (
           <div>
             <span

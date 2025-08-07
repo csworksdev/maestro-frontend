@@ -6,12 +6,23 @@ import SimpleBar from "simplebar-react";
 import useSidebar from "@/hooks/useSidebar";
 import useSemiDark from "@/hooks/useSemiDark";
 import useSkin from "@/hooks/useSkin";
+import { useSelector } from "react-redux";
+import Menu from "@/constant/menu";
 
 const Sidebar = () => {
   const scrollableNodeRef = useRef(null);
   const [scroll, setScroll] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
+  // let menuItems = JSON.parse(localStorage.getItem("menuItems"));
 
-  let menuItems = JSON.parse(localStorage.getItem("menuItems"));
+  const data = useSelector((state) => state.auth.data); // ✅ DI SINI BENAR
+
+  useEffect(() => {
+    if (data?.roles?.length) {
+      const generatedMenu = Menu(data.roles);
+      setMenuItems(generatedMenu);
+    }
+  }, [data]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,10 +82,12 @@ const Sidebar = () => {
         ></div>
 
         <SimpleBar
-          className="sidebar-menu px-4 h-[calc(100%-80px)]"
+          className="sidebar-menu px-4 h-[calc(100%-90px)] pb-7"
           scrollableNodeProps={{ ref: scrollableNodeRef }}
         >
-          <Navmenu menus={menuItems} onMenuClick={handleMenuClick} />
+          {menuItems.length > 0 && (
+            <Navmenu menus={menuItems} onMenuClick={handleMenuClick} />
+          )}
         </SimpleBar>
       </div>
     </div>
