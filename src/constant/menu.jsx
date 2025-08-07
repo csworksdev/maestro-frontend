@@ -32,6 +32,7 @@ const Menu = (role = "") => {
       menuItems = [
         ...menuChief,
         ...menuSuperUser,
+        ...menuOpx,
         ...menuAdminNew,
         ...menuFinance,
         // ...menuTrainer,

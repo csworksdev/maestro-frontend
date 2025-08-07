@@ -224,6 +224,21 @@ export const menuOpx = [
     link: "trainer",
   },
   {
+    title: "Cabang",
+    icon: "heroicons-outline:globe-asia-australia",
+    link: "cabang",
+  },
+  {
+    title: "Kolam",
+    icon: "heroicons-outline:home",
+    link: "kolam",
+  },
+  {
+    title: "Spesialisasi",
+    icon: "heroicons-outline:heart",
+    link: "spesialisasi",
+  },
+  {
     title: "Order",
     icon: "heroicons-outline:shopping-bag",
     link: "order",
