@@ -182,11 +182,6 @@ export const menuAdminNew = [
     link: "siswa",
   },
   {
-    title: "Pelatih",
-    icon: "heroicons-outline:user-circle",
-    link: "trainer",
-  },
-  {
     title: "Order",
     icon: "heroicons-outline:shopping-bag",
     link: "order",
