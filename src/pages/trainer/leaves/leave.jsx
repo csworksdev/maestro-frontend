@@ -9,8 +9,10 @@ import Swal from "sweetalert2";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
+import { getTrainerLeave } from "@/axios/cuti";
+import { useSelector } from "react-redux";
 
-const Cabang = () => {
+const Leave = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,21 +21,7 @@ const Cabang = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const actions = [
-    {
-      name: "edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
-    },
-    {
-      name: "delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
-  ];
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
 
   const fetchData = async (page, size, query) => {
     try {
@@ -43,9 +31,9 @@ const Cabang = () => {
         page_size: size,
         search: query,
       };
-      getCabangAll(params)
+      getTrainerLeave(user_id, params)
         .then((res) => {
-          setListData(res.data);
+          setListData(res);
         })
         .finally(() => setIsLoading(false));
     } catch (error) {
@@ -70,69 +58,104 @@ const Cabang = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  const handleDelete = (e) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#22c55e",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        DeleteCabang(e.branch_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
-        });
-      }
-    });
-  };
+  //   const handleDelete = (e) => {
+  //     Swal.fire({
+  //       title: "Are you sure?",
+  //       text: "You won't be able to revert this!",
+  //       icon: "warning",
+  //       showCancelButton: true,
+  //       confirmButtonColor: "#22c55e",
+  //       cancelButtonColor: "#ef4444",
+  //       confirmButtonText: "Yes, delete it!",
+  //     }).then((result) => {
+  //       if (result.isConfirmed) {
+  //         DeleteCabang(e.branch_id).then((res) => {
+  //           if (res.status) {
+  //             Swal.fire("Deleted!", "Your file has been deleted.", "success");
+  //             fetchData(pageIndex, pageSize, searchQuery);
+  //           }
+  //         });
+  //       }
+  //     });
+  //   };
 
-  const handleEdit = (e) => {
-    navigate("edit", {
-      state: {
-        isupdate: "true",
-        data: e,
-      },
-    });
-  };
+  //   const handleEdit = (e) => {
+  //     navigate("edit", {
+  //       state: {
+  //         isupdate: "true",
+  //         data: e,
+  //       },
+  //     });
+  //   };
 
   const COLUMNS = [
     {
-      Header: "Cabang",
-      accessor: "name",
+      Header: "Tanggal Mulai",
+      accessor: "start_date",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
     },
     {
-      Header: "action",
-      accessor: "action",
-      id: "action",
-      sticky: "right",
+      Header: "Tanggal Selesai",
+      accessor: "end_date",
       Cell: (row) => {
-        return (
-          <div className="flex flex-row space-x-2 justify-center items-center">
-            {actions.map((action, index) => (
-              <TableAction action={action} index={index} row={row} />
-            ))}
-          </div>
-        );
+        return <span>{row?.cell?.value}</span>;
       },
     },
+    {
+      Header: "Alasan Cuti",
+      accessor: "reason",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Status Pengajuan",
+      accessor: "status",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Disetujui Oleh",
+      accessor: "approved_by",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Disetujui Tanggal",
+      accessor: "approved_at",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    // {
+    //   Header: "action",
+    //   accessor: "action",
+    //   id: "action",
+    //   sticky: "right",
+    //   Cell: (row) => {
+    //     return (
+    //       <div className="flex flex-row space-x-2 justify-center items-center">
+    //         {actions.map((action, index) => (
+    //           <TableAction action={action} index={index} row={row} />
+    //         ))}
+    //       </div>
+    //     );
+    //   },
+    // },
   ];
 
   return (
     <div className="grid grid-cols-1 justify-end">
       <Card
-        title="Cabang"
+        title="Pengajuan Cuti"
         headerslot={
           <Button className="btn-primary ">
-            <Link to="add" isupdate="false">
-              Tambah
+            <Link to="ajukan" isupdate="false">
+              Buat Ajuan
             </Link>
           </Button>
         }
@@ -141,12 +164,13 @@ const Cabang = () => {
           <Loading />
         ) : (
           <>
-            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            {/* <Search searchValue={searchQuery} handleSearch={handleSearch} /> */}
             <Table
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}
               handleSearch={handleSearch}
+              isAction={false}
             />
             <PaginationComponent
               pageSize={pageSize}
@@ -166,4 +190,4 @@ const Cabang = () => {
   );
 };
 
-export default Cabang;
+export default Leave;

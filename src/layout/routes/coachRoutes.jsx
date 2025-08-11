@@ -17,6 +17,8 @@ const CoachPerformance = lazy(() => import("@/pages/trainer/performance"));
 const CoachSchedule = lazy(() => import("@/pages/trainer/schedule"));
 const CoachPresence = lazy(() => import("@/pages/trainer/presence"));
 const TrainerCourseReminder = lazy(() => import("@/pages/trainer/reminder"));
+const Leave = lazy(() => import("@/pages/trainer/leaves/leave"));
+const LeaveForm = lazy(() => import("@/pages/trainer/leaves/leaveForm"));
 
 const ErrorPage = lazy(() => import("@/pages/404"));
 
@@ -47,14 +49,18 @@ export const CoachRoutes = () => {
         }
       >
         {/* <Route path="dashboard" element={<CoachDashboard />} /> */}
-        <Route path="coach">
-          <Route index element={<CoachDashboard />} />
-          <Route path="earning" element={<CoachEarning />} />
-          {/* <Route path="performance" element={<CoachPerformance />} />
+        {/* <Route path="coach">
+          <Route index element={<CoachDashboard />} /> */}
+        <Route path="earning" element={<CoachEarning />} />
+        {/* <Route path="performance" element={<CoachPerformance />} />
           <Route path="schedule" element={<CoachSchedule />} /> */}
-          <Route path="presence" element={<CoachPresence />} />
-          {/* <Route path="reminder" element={<TrainerCourseReminder />} /> */}
+        <Route path="presence" element={<CoachPresence />} />
+        {/* <Route path="reminder" element={<TrainerCourseReminder />} /> */}
+        <Route path="leaves">
+          <Route index element={<Leave />} />
+          <Route path="ajukan" element={<LeaveForm />} />
         </Route>
+        {/* </Route> */}
         <Route path="*" element={<ErrorPage />} />
       </Route>
     </Routes>

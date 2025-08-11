@@ -157,13 +157,18 @@ export const menuTrainer = [
   {
     title: "Earning",
     icon: "heroicons-outline:banknotes",
-    link: "coach/earning",
+    link: "earning",
   },
   {
     title: "Presence",
     icon: "heroicons-outline:queue-list",
-    link: "coach/presence",
+    link: "presence",
   },
+  // {
+  //   title: "Leave",
+  //   icon: "heroicons-outline:queue-list",
+  //   link: "leaves",
+  // },
 ];
 
 export const menuAdminNew = [

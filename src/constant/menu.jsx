@@ -19,7 +19,7 @@ const Menu = (role = "") => {
     case "Finance":
       menuItems = [...menuFinance];
       break;
-    case "Trainer":
+    case "Coach":
       menuItems = [...menuTrainer];
       break;
     case "Opx":
