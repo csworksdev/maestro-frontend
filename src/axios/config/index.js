@@ -23,7 +23,7 @@ export const setupInterceptors = (dispatch, getState) => {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      if (user_name === "testuser" || roles === "Trainer") {
+      if (user_name === "testuser") {
         // await removeFcmToken();
         dispatch(logOut());
         return Promise.reject("Logged out due to restricted username");
