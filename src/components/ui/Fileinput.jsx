@@ -4,6 +4,7 @@ const Fileinput = ({
   name,
   label = "Browse",
   onChange,
+  onRemove, // ➡ callback baru untuk hapus file
   placeholder = "Choose a file or drop it here...",
   multiple,
   preview,
@@ -11,7 +12,7 @@ const Fileinput = ({
   id,
   selectedFile,
   badge,
-  selectedFiles,
+  selectedFiles = [],
 }) => {
   return (
     <div>
@@ -34,7 +35,7 @@ const Fileinput = ({
                 {selectedFile && (
                   <span
                     className={
-                      badge ? " badge-title" : "text-slate-900 dark:text-white"
+                      badge ? "badge-title" : "text-slate-900 dark:text-white"
                     }
                   >
                     {selectedFile.name}
@@ -51,12 +52,10 @@ const Fileinput = ({
                 {selectedFiles.length > 0 && (
                   <span
                     className={
-                      badge ? " badge-title" : "text-slate-900 dark:text-white"
+                      badge ? "badge-title" : "text-slate-900 dark:text-white"
                     }
                   >
-                    {selectedFiles.length > 0
-                      ? selectedFiles.length + " files selected"
-                      : ""}
+                    {selectedFiles.length} files selected
                   </span>
                 )}
                 {selectedFiles.length === 0 && (
@@ -68,20 +67,31 @@ const Fileinput = ({
               {label}
             </span>
           </div>
+
+          {/* Preview untuk single */}
           {!multiple && preview && selectedFile && (
-            <div className="w-[200px] h-[200px] mx-auto mt-6  ">
+            <div className="w-[200px] h-[200px] mx-auto mt-6 relative">
               <img
                 src={selectedFile ? URL.createObjectURL(selectedFile) : ""}
-                className="w-full  h-full block rounded object-contain border p-2  border-slate-200"
+                className="w-full h-full block rounded object-contain border p-2 border-slate-200"
                 alt={selectedFile?.name}
               />
+              <button
+                type="button"
+                onClick={() => onRemove && onRemove()}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs"
+              >
+                ✕
+              </button>
             </div>
           )}
+
+          {/* Preview untuk multiple */}
           {multiple && preview && selectedFiles.length > 0 && (
-            <div className="flex flex-wrap space-x-5 rtl:space-x-reverse">
+            <div className="flex flex-wrap gap-5 mt-6">
               {selectedFiles.map((file, index) => (
                 <div
-                  className="xl:w-1/5 md:w-1/3 w-1/2 rounded mt-6 border p-2  border-slate-200"
+                  className="xl:w-1/5 md:w-1/3 w-1/2 rounded border p-2 border-slate-200 relative"
                   key={index}
                 >
                   <img
@@ -89,6 +99,13 @@ const Fileinput = ({
                     className="object-cover w-full h-full rounded"
                     alt={file?.name}
                   />
+                  <button
+                    type="button"
+                    onClick={() => onRemove && onRemove(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
             </div>

@@ -6,7 +6,7 @@ import FooterAvatar from "@/assets/images/users/user-1.jpg";
 const MobileFooter = () => {
   return (
     <div className="bg-white bg-no-repeat custom-dropshadow footer-bg dark:bg-slate-700 flex justify-around items-center backdrop-filter backdrop-blur-[40px] fixed left-0 w-full z-[9999] bottom-0 py-[12px] px-4">
-      <NavLink to="coach/earning">
+      <NavLink to="earning">
         {({ isActive }) => (
           <div>
             <span
@@ -73,7 +73,7 @@ const MobileFooter = () => {
           </div>
         )}
       </NavLink>
-      <NavLink to="coach/presence">
+      <NavLink to="presence">
         {({ isActive }) => (
           <div>
             <span

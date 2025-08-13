@@ -29,7 +29,7 @@ const Select = ({
   return (
     <div
       className={`fromGroup z-1000 ${error ? "has-error" : ""}  ${
-        horizontal ? "flex" : ""
+        horizontal ? "flex items-center" : ""
       }  ${validate ? "is-valid" : ""} `}
     >
       {label && (

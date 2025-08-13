@@ -114,7 +114,7 @@ const Layout = () => {
       </div>
 
       {width < breakpoints.md ? (
-        roles == "Trainer" ? (
+        roles == "Coach" ? (
           <MobileFooterCoach />
         ) : (
           <MobileFooterAdmin />

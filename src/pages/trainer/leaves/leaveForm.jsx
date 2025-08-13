@@ -14,25 +14,31 @@ import { useState } from "react";
 import HomeBredCurbs from "@/pages/dashboard/HomeBredCurbs";
 import { DateTime } from "luxon";
 import { getOrderAll } from "@/axios/masterdata/order";
+import Select from "@/components/ui/Select";
+import { jam } from "@/constant/jadwal-default";
+import Fileinput from "@/components/ui/Fileinput";
 
 const LeaveForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isupdate = "false", data = {} } = location.state ?? {};
-  const isUpdate = isupdate == "true";
+  const today = new Date();
   const FormValidationSchema = yup
     .object({
       name: yup.string().required("Nama Cabang is required"),
     })
     .required();
-
+  const [files, setFiles] = React.useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
-  const today = new Date();
-  const [picker3, setPicker3] = useState([null, null]);
+  const [picker3, setPicker3] = useState([today, today]);
   const [leaveRange, setLeaveRange] = useState(0);
   const [leaveDay, setLeaveDay] = useState([]);
   const [impactStudent, setImpactStudent] = useState([]);
-
+  const treatment = [
+    { value: "reschedule", label: "Reschedule" },
+    { value: "inval", label: "Inval" },
+  ];
+  const [selectedTreatment, setSelectedTreatment] = useState("");
+  const [openDays, setOpenDays] = useState([]);
   const {
     register,
     control,
@@ -85,9 +91,6 @@ const LeaveForm = () => {
         setLeaveRange(diffDays);
         setLeaveDay(hariArray);
 
-        console.log(`Total hari: ${diffDays}`);
-        console.log(`Hari-hari:`, hariArray);
-
         // Kalau tetap mau fetch data
         //   fetchData(start.toFormat("yyyy-MM-dd"), end.toFormat("yyyy-MM-dd"));
         let res = await getOrderAll({
@@ -95,7 +98,7 @@ const LeaveForm = () => {
           "search[is_finish]": false,
           "search[day]": hariArray.join(","),
         });
-        console.log(res.data);
+
         setImpactStudent(res.data);
       }
     };
@@ -114,80 +117,213 @@ const LeaveForm = () => {
     // });
   };
 
+  const toggleDay = (index) => {
+    setOpenDays((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
+
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
-        <h4>A. Pengajuan Cuti</h4>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <h4 className="text-lg font-semibold">A. Pengajuan Izin</h4>
         <Card>
-          <>
-            <label className="form-label" htmlFor="range-picker">
-              Tanggal pengajuan cuti
-            </label>
-            <Flatpickr
-              value={picker3}
-              id="range-picker"
-              // readonly
-              className="w-full py-2 px-3 border border-gray-300 rounded-md bg-white text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              onChange={(date) => {
-                setPicker3(date);
-              }}
-              options={{
-                minDate: "today",
-                dateFormat: "Y-m-d",
-                mode: "range",
-                // defaultDate: [new Date(), new Date()],
-                altInput: true,
-                altFormat: "d/m/Y",
-              }}
+          <div className="space-y-4">
+            <div>
+              <label className="form-label" htmlFor="range-picker">
+                Tanggal pengajuan izin
+              </label>
+              <Flatpickr
+                value={picker3}
+                id="range-picker"
+                className="w-full py-2 px-3 border border-gray-300 rounded-md bg-white"
+                onChange={(date) => setPicker3(date)}
+                options={{
+                  minDate: "today",
+                  dateFormat: "Y-m-d",
+                  mode: "range",
+                  altInput: true,
+                  altFormat: "d/m/Y",
+                }}
+              />
+            </div>
+
+            <Textarea
+              name="reason"
+              label="Keterangan Izin"
+              register={register}
+              error={errors.reason?.message}
             />
-          </>
-          <Textarea
-            name="reason"
-            label="Keterangan Cuti"
-            // placeholder="Ketera"
-            register={register}
-            error={errors.reason?.message}
-            defaultValue="-"
-          />
-          <div className="ltr:text-right rtl:text-left space-x-3 mt-4">
-            <button
-              type="button"
-              className="btn text-center"
-              onClick={() => handleCancel()}
-            >
-              batal
-            </button>
-            <button className="btn btn-dark  text-center">Ajukan Cuti</button>
           </div>
         </Card>
+
         {leaveRange > 0 && impactStudent.results && (
           <>
-            <h4>B. Penanganan Siswa</h4>
-            {leaveDay.map((element, index) => (
-              <Card key={index} title={`Hari ${element}`}>
-                <div className="grid grid-cols-5" key={element + index}>
-                  <Card subtitle={"Paket"}>
-                    {impactStudent.results.map((item, i) => {
-                      return (
-                        <>
-                          <span key={item.order_id + i}>
-                            Tanggal Order : {item.order_date}
-                          </span>
-                          <div key={item.students + i}>
-                            Siswa :{" "}
-                            {item.students.map((x, idx) => (
-                              <>{idx + 1 + ". " + x.student_fullname}</>
-                            ))}
+            <h4 className="text-lg font-semibold">B. Penanganan Siswa</h4>
+            {leaveDay
+              .filter((day) =>
+                impactStudent.results.some((res) =>
+                  res.detail.some(
+                    (d) =>
+                      d.day.trim().toLowerCase() === day.trim().toLowerCase()
+                  )
+                )
+              )
+              .map((day, dayIndex) => (
+                <div
+                  key={dayIndex}
+                  className="border border-gray-200 rounded-lg overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleDay(dayIndex)}
+                    className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 text-left"
+                  >
+                    <span className="font-medium">Hari {day}</span>
+                    <svg
+                      className={`w-5 h-5 transform transition-transform ${
+                        openDays.includes(dayIndex) ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {openDays.includes(dayIndex) && (
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      {impactStudent.results
+                        .filter((f) => f.day === day)
+                        .map((item, i) => (
+                          <div key={`${item.order_id}-${i}`} className="">
+                            {/* Paket */}
+                            <Card
+                              subtitle={
+                                <div className="border-b last:border-b-0">
+                                  <span className="block font-medium text-gray-700">
+                                    Tanggal Order: {item.order_date}
+                                  </span>
+                                  <span className="block font-medium text-gray-700">
+                                    Jam: {item.time}
+                                  </span>
+                                  <div className="mt-2 space-y-1">
+                                    <p className="font-semibold">Siswa:</p>
+                                    {item.students.map((student, idx) => (
+                                      <div
+                                        key={`${item.order_id}-student-${idx}`}
+                                        className="pl-2 text-gray-600"
+                                      >
+                                        {idx + 1}. {student.student_fullname}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              }
+                            >
+                              <div className="flex flex-col gap-4">
+                                <Select
+                                  name="treatment"
+                                  label="Penanganan"
+                                  placeholder="Pilih Penanganan"
+                                  register={register}
+                                  error={errors.branch?.message}
+                                  options={treatment}
+                                  defaultValue=""
+                                  onChange={(e) =>
+                                    setSelectedTreatment(e.target.value)
+                                  }
+                                />
+
+                                {selectedTreatment === "reschedule" && (
+                                  <>
+                                    {/* Tanggal Pengganti */}
+                                    <div className="flex flex-col w-full">
+                                      <label
+                                        className="form-label font-medium text-gray-700"
+                                        htmlFor="real_date"
+                                      >
+                                        Tanggal Pengganti
+                                      </label>
+                                      <Flatpickr
+                                        id="real_date"
+                                        name="real_date"
+                                        defaultValue={DateTime.now().toFormat(
+                                          "yyyy-MM-dd"
+                                        )}
+                                        options={{
+                                          minDate: "today",
+                                          disableMobile: true,
+                                          allowInput: true,
+                                          altInput: true,
+                                          altFormat: "d F Y",
+                                        }}
+                                        register={register}
+                                        className="form-control py-2 w-full"
+                                      />
+                                    </div>
+
+                                    {/* Jam Pengganti */}
+                                    <div className="flex flex-col w-full">
+                                      <Select
+                                        name="real_time"
+                                        label="Jam Pengganti"
+                                        placeholder="Pilih Jam"
+                                        options={jam}
+                                        className="form-select w-full"
+                                        register={register}
+                                      />
+                                    </div>
+                                    <Fileinput
+                                      id={item.order_id}
+                                      placeholder="Bukti Chat"
+                                      multiple
+                                      preview
+                                      selectedFiles={files}
+                                      onChange={(e) =>
+                                        setFiles(Array.from(e.target.files))
+                                      }
+                                      onRemove={(index) =>
+                                        setFiles((prev) =>
+                                          prev.filter((_, i) => i !== index)
+                                        )
+                                      }
+                                    />
+                                  </>
+                                )}
+
+                                {selectedTreatment &&
+                                  selectedTreatment !== "reschedule" && (
+                                    <div className="text-gray-500 italic">
+                                      Invalid treatment
+                                    </div>
+                                  )}
+                              </div>
+                            </Card>
                           </div>
-                        </>
-                      );
-                    })}
-                  </Card>
+                        ))}
+                    </div>
+                  )}
                 </div>
-              </Card>
-            ))}
+              ))}
           </>
         )}
+        <div className="flex flex-col sm:flex-row gap-3 justify-end mt-4">
+          <button
+            type="button"
+            className="btn w-full sm:w-auto"
+            onClick={handleCancel}
+          >
+            Batal
+          </button>
+          <button className="btn btn-dark w-full sm:w-auto">Ajukan Izin</button>
+        </div>
       </form>
     </>
   );
