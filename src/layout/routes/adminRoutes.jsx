@@ -98,7 +98,7 @@ import { Routes } from "react-router-dom";
 
 const AdminRoutes = () => {
   const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
-  console.log(roles);
+
   return (
     <Routes>
       {/* Authenticated Routes for Admin */}

@@ -33,50 +33,47 @@ const App = () => {
   setupInterceptors();
 
   useEffect(() => {
-    if (isChrome()) {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          getToken(messaging, {
-            vapidKey: import.meta.env.FCM_VAPID_KEY,
+    if (!isChrome()) return;
+
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        getToken(messaging, { vapidKey: import.meta.env.VITE_FCM_VAPID_KEY })
+          .then((token) => {
+            if (!token) console.log("No registration token available.");
           })
-            .then((currentToken) => {
-              if (!currentToken) {
-                console.log("No registration token available.");
-              }
-            })
-            .catch(async (err) => {
-              if (err.response?.data?.detail === "Token not registered") {
-                await removeFcmToken();
-              }
-              console.log("An error occurred while retrieving token. ", err);
-            });
-        }
-      });
-    }
+          .catch(async (err) => {
+            if (err.response?.data?.detail === "Token not registered") {
+              await removeFcmToken();
+            }
+            console.error("Error retrieving token:", err);
+          });
+      }
+    });
+
+    const unsubscribe = onMessage(messaging, (payload) => {
+      toast.info(
+        `${payload.notification.title} - ${payload.notification.body}`
+      );
+    });
+
+    const swListener = (event) => {
+      const { title, body } = event.data || {};
+      if (title && body) toast.info(`${title}: ${body}`);
+    };
+    navigator.serviceWorker.addEventListener("message", swListener);
+
+    return () => {
+      unsubscribe();
+      navigator.serviceWorker.removeEventListener("message", swListener);
+    };
   }, []);
 
-  useEffect(() => {
-    if (isChrome()) {
-      const unsubscribe = onMessage(messaging, (payload) => {
-        toast.info(
-          `${payload.notification.title} - ${payload.notification.body}`
-        );
-      });
-
-      return () => unsubscribe();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isChrome()) {
-      navigator.serviceWorker.addEventListener("message", (event) => {
-        const data = event.data;
-        if (data?.title && data?.body) {
-          toast.info(`${data.title}: ${data.body}`);
-        }
-      });
-    }
-  }, []);
+  const routesMap = {
+    admin: <AdminRoutes />,
+    coach: <CoachRoutes />,
+    finance: <FinanceRoutes />,
+    opx: <OpxRoutes />,
+  };
 
   return (
     <main className="App relative">
@@ -97,19 +94,7 @@ const App = () => {
           </Route>
 
           {/* Domain routes */}
-          {subdomain === "admin" && (
-            <Route path="*" element={<AdminRoutes />} />
-          )}
-          {subdomain === "coach" && (
-            <Route path="*" element={<CoachRoutes />} />
-          )}
-          {subdomain === "finance" && (
-            <Route path="*" element={<FinanceRoutes />} />
-          )}
-          {subdomain === "opx" && <Route path="*" element={<OpxRoutes />} />}
-
-          {/* Fallback */}
-          <Route path="*" element={<ErrorPage />} />
+          <Route path="*" element={routesMap[subdomain] || <ErrorPage />} />
         </Routes>
       </Suspense>
     </main>
