@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 import Layout from "./layout/Layout";
@@ -30,12 +30,7 @@ const App = () => {
   const hostname = window.location.hostname;
   const subdomain = hostname.split(".")[0];
   // const isAuth = useSelector((state) => state.auth.isAuth);
-  const dispatch = useDispatch();
-  const state = useSelector((state) => state);
-
-  useEffect(() => {
-    setupInterceptors(dispatch, () => state);
-  }, [dispatch, state]);
+  setupInterceptors();
 
   useEffect(() => {
     if (isChrome()) {
