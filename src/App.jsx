@@ -28,7 +28,7 @@ const ErrorPage = lazy(() => import("./pages/404"));
 
 const App = () => {
   const hostname = window.location.hostname;
-  const subdomain = hostname.split(".")[0];
+  let subdomain = hostname.split(".")[0];
   // const isAuth = useSelector((state) => state.auth.isAuth);
   setupInterceptors();
 
