@@ -68,6 +68,11 @@ const App = () => {
     };
   }, []);
 
+  // hapus prefix "dev" kalau ada
+  if (subdomain.startsWith("dev")) {
+    subdomain = subdomain.replace("dev", "");
+  }
+
   const routesMap = {
     admin: <AdminRoutes />,
     coach: <CoachRoutes />,
