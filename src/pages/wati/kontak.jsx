@@ -15,6 +15,7 @@ import { DateTime } from "luxon";
 const furits = [
   { value: "80106972-bbe5-4802-ad4b-0176a618b7b3", label: "Della" },
   { value: "ab4e8249-6ee7-405e-b69e-7d8015b4451d", label: "Lena" },
+  { value: "0d6bd594-4c49-49db-93a0-e36c4ea2ba90", label: "Alivia" },
 ];
 
 const styles = {

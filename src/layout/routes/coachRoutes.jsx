@@ -56,7 +56,7 @@ export const CoachRoutes = () => {
           <Route path="schedule" element={<CoachSchedule />} /> */}
         <Route path="presence" element={<CoachPresence />} />
         {/* <Route path="reminder" element={<TrainerCourseReminder />} /> */}
-        <Route path="leaves">
+        <Route path="izin">
           <Route index element={<Leave />} />
           <Route path="ajukan" element={<LeaveForm />} />
         </Route>

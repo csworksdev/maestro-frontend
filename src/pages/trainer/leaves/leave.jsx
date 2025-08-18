@@ -35,7 +35,10 @@ const Leave = () => {
         .then((res) => {
           setListData(res);
         })
-        .finally(() => setIsLoading(false));
+        .finally(() => setIsLoading(false))
+        .catch((error) => {
+          console.log(error);
+        });
     } catch (error) {
       console.error("Error fetching data", error);
     }
