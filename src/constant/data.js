@@ -164,11 +164,11 @@ export const menuTrainer = [
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },
-  // {
-  //   title: "Leave",
-  //   icon: "heroicons-outline:queue-list",
-  //   link: "leaves",
-  // },
+  {
+    title: "Leave",
+    icon: "heroicons-outline:queue-list",
+    link: "leaves",
+  },
 ];
 
 export const menuAdminNew = [
