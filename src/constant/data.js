@@ -167,7 +167,7 @@ export const menuTrainer = [
   {
     title: "Leave",
     icon: "heroicons-outline:queue-list",
-    link: "leaves",
+    link: "izin",
   },
 ];
 

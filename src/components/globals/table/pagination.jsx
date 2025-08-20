@@ -56,14 +56,15 @@ const PaginationComponent = ({
   };
 
   return (
-    <div className="md:flex md:space-y-0 space-y-5 justify-between mt-6 items-center">
-      <div className="flex items-center space-x-3 rtl:space-x-reverse">
+    <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mt-6">
+      {/* Page Size */}
+      <div className="flex items-center space-x-3 rtl:space-x-reverse justify-center">
         <span className="flex space-x-2 rtl:space-x-reverse items-center">
           <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
             Page Size
           </span>
           <select
-            className="form-control py-2"
+            className="form-control py-2 w-24 sm:w-auto"
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
           >
@@ -73,9 +74,11 @@ const PaginationComponent = ({
           </select>
         </span>
       </div>
-      <div className="flex items-center space-x-3 rtl:space-x-reverse">
+
+      {/* Pagination Buttons */}
+      <div className="flex flex-wrap items-center gap-2 justify-center">
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+          className={`text-lg sm:text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
             !canPreviousPage
               ? "opacity-50 cursor-not-allowed"
               : "hover:scale-110"
@@ -86,7 +89,7 @@ const PaginationComponent = ({
           <Icon icon="heroicons-outline:chevron-double-left" />
         </button>
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+          className={`text-lg sm:text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
             !canPreviousPage
               ? "opacity-50 cursor-not-allowed"
               : "hover:scale-110"
@@ -96,11 +99,11 @@ const PaginationComponent = ({
         >
           <Icon icon="heroicons-outline:chevron-left" />
         </button>
+
         {generatePageNumbers().map((page) => (
           <button
             key={page}
-            aria-current="page"
-            className={`text-sm rounded leading-[16px] flex h-6 w-6 items-center justify-center transition-all duration-300 ${
+            className={`text-xs sm:text-sm rounded leading-[16px] flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center transition-all duration-300 ${
               page === pageIndex
                 ? "bg-blue-500 text-white font-medium"
                 : "bg-slate-100 dark:bg-slate-700 dark:text-slate-400 text-slate-900 font-normal hover:bg-blue-200"
@@ -110,8 +113,9 @@ const PaginationComponent = ({
             {page + 1}
           </button>
         ))}
+
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+          className={`text-lg sm:text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
             !canNextPage ? "opacity-50 cursor-not-allowed" : "hover:scale-110"
           }`}
           onClick={() => nextPage()}
@@ -120,7 +124,7 @@ const PaginationComponent = ({
           <Icon icon="heroicons-outline:chevron-right" />
         </button>
         <button
-          className={`text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
+          className={`text-lg sm:text-xl leading-4 text-slate-900 dark:text-white transition-all duration-300 ${
             !canNextPage ? "opacity-50 cursor-not-allowed" : "hover:scale-110"
           }`}
           onClick={() => gotoPage(pageCount - 1)}
@@ -129,22 +133,23 @@ const PaginationComponent = ({
           <Icon icon="heroicons-outline:chevron-double-right" />
         </button>
       </div>
-      <div className="flex items-center space-x-3 rtl:space-x-reverse">
+
+      {/* Go To Page */}
+      <div className="flex items-center justify-center sm:justify-start space-x-2">
         <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-          Go to page:
+          Go to:
         </span>
         <input
           type="number"
-          className="form-control py-2"
+          className="form-control py-2 w-20 sm:w-[70px]"
           value={inputPage}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           min={1}
           max={pageCount}
-          style={{ width: "70px" }}
         />
         <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-          of {pageCount} Page
+          / {pageCount}
         </span>
       </div>
     </div>

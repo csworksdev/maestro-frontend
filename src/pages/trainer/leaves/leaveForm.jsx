@@ -82,20 +82,24 @@ const LeaveForm = () => {
 
   const onSubmit = (formData) => {
     const payload = {
-      leave: {
-        trainer: user_id,
-        start_date: picker3[0],
-        end_date: picker3[1],
-        reason: formData.reason,
-        status: "pending",
-      },
-      leaveImpact: leaveData.leaveImpact,
+      trainer: user_id,
+      start_date: DateTime.fromJSDate(picker3[0]).toFormat("yyyy-MM-dd"),
+      end_date: DateTime.fromJSDate(picker3[1]).toFormat("yyyy-MM-dd"),
+      reason: formData.reason,
+      status: "pending",
+      replacements: leaveData.leaveImpact,
     };
 
-    createTrainerLeave(payload).then((res) => {
+    console.log(payload);
+
+    createTrainerLeave(user_id, payload).then((res) => {
       if (res.status) {
-        Swal.fire("Berhasil", "Pengajuan izin berhasil dikirim", "success");
-        navigate(-1);
+        Swal.fire({
+          title: "Berhasil",
+          text: "Pengajuan izin berhasil dikirim",
+          icon: "success",
+          timer: 1000,
+        }).then(navigate(-1));
       }
     });
   };
@@ -220,7 +224,7 @@ const LeaveForm = () => {
                   <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {dayItems.map((item, i) => (
                       <Card
-                        key={`${item.order_detail}-${i}`}
+                        key={`${item.meet}-${i}`}
                         subtitle={
                           <>
                             <span className="block font-medium">
@@ -244,15 +248,36 @@ const LeaveForm = () => {
                             label="Penanganan"
                             options={treatmentOptions}
                             value={item.replacement_type}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              const idx = leaveData.leaveImpact.findIndex(
+                                (li) => li === item
+                              );
+
                               updateLeaveImpact(
-                                leaveData.leaveImpact.findIndex(
-                                  (li) => li === item
-                                ),
+                                idx,
                                 "replacement_type",
-                                e.target.value
-                              )
-                            }
+                                newValue
+                              );
+
+                              if (newValue === "inval") {
+                                // kasih default langsung
+                                if (item.available_trainer?.length > 0) {
+                                  updateLeaveImpact(
+                                    idx,
+                                    "substitute_trainer",
+                                    item.available_trainer[0].trainer_id
+                                  );
+                                }
+                                if (item.missed_meet?.length > 0) {
+                                  updateLeaveImpact(
+                                    idx,
+                                    "meet",
+                                    item.missed_meet[0]
+                                  );
+                                }
+                              }
+                            }}
                           />
 
                           {item.replacement_type === "reschedule" ? (
@@ -269,7 +294,9 @@ const LeaveForm = () => {
                                         (li) => li === item
                                       ),
                                       "new_date",
-                                      date[0]
+                                      DateTime.fromJSDate(date[0]).toFormat(
+                                        "yyyy-MM-dd"
+                                      )
                                     )
                                   }
                                   options={{
@@ -319,71 +346,56 @@ const LeaveForm = () => {
                                     label: trainer.nickname,
                                   })
                                 )}
-                                // value={item.substitute_trainer}
-                                onChange={(e) =>
+                                // defaultValue supaya langsung muncul kalau ada data
+                                defaultValue={
+                                  item.substitute_trainer
+                                    ? item.available_trainer
+                                        .map((trainer) => ({
+                                          value: trainer.trainer_id,
+                                          label: trainer.nickname,
+                                        }))
+                                        .find(
+                                          (opt) =>
+                                            opt.value ===
+                                            item.substitute_trainer
+                                        )
+                                    : null
+                                }
+                                onChange={(option) =>
                                   updateLeaveImpact(
                                     leaveData.leaveImpact.findIndex(
                                       (li) => li === item
                                     ),
                                     "substitute_trainer",
-                                    e.target.value
+                                    option?.value || null
                                   )
                                 }
                               />
+
                               <Select
                                 label="Pertemuan Inval"
                                 options={item.missed_meet.map((m) => ({
                                   value: m,
                                   label: "Ke - " + m,
                                 }))}
-                                // value={item.substitute_trainer}
-                                onChange={(e) =>
+                                defaultValue={
+                                  item.meet
+                                    ? {
+                                        value: item.meet,
+                                        label: "Ke - " + item.meet,
+                                      }
+                                    : null
+                                }
+                                onChange={(option) =>
                                   updateLeaveImpact(
                                     leaveData.leaveImpact.findIndex(
                                       (li) => li === item
                                     ),
-                                    "substitute_trainer",
-                                    e.target.value
+                                    "meet",
+                                    option?.value || null
                                   )
                                 }
                               />
-                              {/* <div>
-                                <label className="form-label">
-                                  Tanggal Pengganti
-                                </label>
-                                <Flatpickr
-                                  value={item.new_date}
-                                  onChange={(date) =>
-                                    updateLeaveImpact(
-                                      leaveData.leaveImpact.findIndex(
-                                        (li) => li === item
-                                      ),
-                                      "new_date",
-                                      date[0]
-                                    )
-                                  }
-                                  options={{
-                                    minDate: "today",
-                                    altInput: true,
-                                    altFormat: "d F Y",
-                                  }}
-                                  className="form-control py-2 w-full"
-                                />
-                              </div>
-                              <Select
-                                label="Jam Pengganti"
-                                options={jam}
-                                value={item.new_time}
-                                onChange={(e) =>
-                                  updateLeaveImpact(
-                                    leaveData.leaveImpact.findIndex(
-                                      (li) => li === item
-                                    ),
-                                    "new_time",
-                                    e.target.value
-                                  )
-                                }
-                              /> */}
                             </>
                           )}
                         </div>

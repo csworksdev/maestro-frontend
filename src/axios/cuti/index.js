@@ -26,7 +26,7 @@ export const getTrainerLeave = async (trainer_id, params) => {
   try {
     const response = await axiosConfig.get(
       "/api/leave-request/" + trainer_id + "/",
-      params
+      { params }
     );
     return response.data;
   } catch (error) {
