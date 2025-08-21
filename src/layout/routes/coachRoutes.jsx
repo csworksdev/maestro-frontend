@@ -48,6 +48,7 @@ export const CoachRoutes = () => {
           </AuthenticatedRoute>
         }
       >
+        <Route index element={<Navigate to="presence" replace />} />
         {/* <Route path="dashboard" element={<CoachDashboard />} /> */}
         {/* <Route path="coach">
           <Route index element={<CoachDashboard />} /> */}

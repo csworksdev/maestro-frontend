@@ -73,6 +73,7 @@ const FinanceRoutes = () => {
           </AuthenticatedRoute>
         }
       >
+        <Route index element={<Navigate to="order" replace />} />
         <Route path="paket">
           <Route index element={<Paket />} />
           <Route path="add" element={<EditPaket />} />

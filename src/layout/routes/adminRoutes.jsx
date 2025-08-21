@@ -110,12 +110,10 @@ const AdminRoutes = () => {
           </AuthenticatedRoute>
         }
       >
+        <Route index element={<Navigate to="order" replace />} />
         <Route path="dashboard">
           //#region Dashboar operasional
-          <Route
-            index
-            element={roles === "Admin" ? <Dashboard /> : <DashboardRevenue />}
-          />
+          <Route element={<Dashboard />} />
           <Route path="operasional">
             <Route path="okupansi">
               <Route index element={<DashboardOkupansi />} />
