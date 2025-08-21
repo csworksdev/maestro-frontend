@@ -15,13 +15,13 @@ const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const DashboardRevenue = lazy(() => import("@/pages/newDashboard/revenue"));
 const DashboardOkupansi = lazy(() =>
-  import("@/pages/newDashboard/operasional")
+  import("@/pages/newDashboard/operasional/okupansi")
 );
 const OkupansiBranch = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi_branch")
+  import("@/pages/newDashboard/operasional/okupansi/okupansi_branch")
 );
 const OkupansiPool = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi_pool")
+  import("@/pages/newDashboard/operasional/okupansi/okupansi_pool")
 );
 
 // Referensi
