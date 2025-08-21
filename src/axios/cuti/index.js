@@ -13,11 +13,20 @@ export const createTrainerLeave = async (trainer_id, data) => {
   }
 };
 
+export const getImpactedStudent = async (params) => {
+  try {
+    const response = await axiosConfig.get("/api/impact-student/", { params });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating leave request:", error);
+  }
+};
+
 export const getTrainerLeave = async (trainer_id, params) => {
   try {
     const response = await axiosConfig.get(
       "/api/leave-request/" + trainer_id + "/",
-      params
+      { params }
     );
     return response.data;
   } catch (error) {

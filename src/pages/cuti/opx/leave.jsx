@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
-import Table from "@/components/globals/table/table";
-import { DeleteCabang, getCabangAll } from "@/axios/referensi/cabang";
 import Loading from "@/components/Loading";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
-import TableAction from "@/components/globals/table/tableAction";
 import { getTrainerLeave } from "@/axios/cuti";
 import { useSelector } from "react-redux";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
-import Radio from "@/components/ui/Radio";
 
 const Leave = () => {
-  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 

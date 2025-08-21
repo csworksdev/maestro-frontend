@@ -6,6 +6,7 @@ import AuthLayout from "../AuthLayout";
 import PublicRoute from "../PublicRoute";
 import AuthenticatedRoute from "../AuthenticatedRoute";
 import { Routes } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 const LoginTrainer = lazy(() => import("@/pages/auth/login2"));
 const RegisterTrainer = lazy(() => import("@/pages/auth/register2"));
@@ -48,6 +49,7 @@ export const CoachRoutes = () => {
           </AuthenticatedRoute>
         }
       >
+        <Route index element={<Navigate to="presence" replace />} />
         {/* <Route path="dashboard" element={<CoachDashboard />} /> */}
         {/* <Route path="coach">
           <Route index element={<CoachDashboard />} /> */}

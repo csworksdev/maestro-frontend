@@ -14,8 +14,9 @@ import Select from "@/components/ui/Select";
 import Fileinput from "@/components/ui/Fileinput";
 import { jam } from "@/constant/jadwal-default";
 
-import { createTrainerLeave } from "@/axios/cuti";
+import { createTrainerLeave, getImpactedStudent } from "@/axios/cuti";
 import { getOrderAll } from "@/axios/masterdata/order";
+import { axiosConfig } from "@/axios/config";
 
 // =====================
 // VALIDATION SCHEMA
@@ -81,20 +82,24 @@ const LeaveForm = () => {
 
   const onSubmit = (formData) => {
     const payload = {
-      leave: {
-        trainer: user_id,
-        start_date: picker3[0],
-        end_date: picker3[1],
-        reason: formData.reason,
-        status: "pending",
-      },
-      leaveImpact: leaveData.leaveImpact,
+      trainer: user_id,
+      start_date: DateTime.fromJSDate(picker3[0]).toFormat("yyyy-MM-dd"),
+      end_date: DateTime.fromJSDate(picker3[1]).toFormat("yyyy-MM-dd"),
+      reason: formData.reason,
+      status: "pending",
+      replacements: leaveData.leaveImpact,
     };
 
-    createTrainerLeave(payload).then((res) => {
+    console.log(payload);
+
+    createTrainerLeave(user_id, payload).then((res) => {
       if (res.status) {
-        Swal.fire("Berhasil", "Pengajuan izin berhasil dikirim", "success");
-        navigate(-1);
+        Swal.fire({
+          title: "Berhasil",
+          text: "Pengajuan izin berhasil dikirim",
+          icon: "success",
+          timer: 1000,
+        }).then(navigate(-1));
       }
     });
   };
@@ -124,39 +129,22 @@ const LeaveForm = () => {
       setLeaveRange(diffDays);
       setLeaveDay(hariArray);
 
-      const res = await getOrderAll({
-        "search[trainer_id]": user_id,
-        "search[is_finish]": false,
-        "search[day]": hariArray.join(","),
-      });
+      try {
+        const params = {
+          trainer_id: "ccb64204-7fcd-412c-9afe-715f3a8b6374", //user_id,
+          is_finish: "false",
+          day: hariArray.join(","),
+        };
 
-      const tempImpact = [];
+        const res = await getImpactedStudent(params);
 
-      res.data.results.forEach((order) => {
-        order.detail.forEach((d) => {
-          const key = `${order.order_id}-${d.day}-${d.time}`;
-          if (
-            !tempImpact.some(
-              (item) =>
-                `${item.order_detail}-${item.day}-${item.new_time}` === key
-            )
-          ) {
-            tempImpact.push({
-              day: d.day, // masih dari detail
-              leave_id: null,
-              order_detail: order.order_id,
-              replacement_type: "reschedule",
-              substitute_trainer: null,
-              new_date: null,
-              new_time: d.time,
-              students: order.students || [], // ✅ dari root
-            });
-          }
-        });
-      });
-
-      setLeaveData((prev) => ({ ...prev, leaveImpact: tempImpact }));
-      setImpactStudent(res.data);
+        if (res) {
+          setLeaveData((prev) => ({ ...prev, leaveImpact: res }));
+          setImpactStudent(res); // optional
+        }
+      } catch (err) {
+        console.error("Error fetching impact student:", err);
+      }
     };
 
     fetchImpactStudent();
@@ -196,7 +184,7 @@ const LeaveForm = () => {
       </Card>
 
       {/* Bagian B */}
-      {leaveRange > 0 && impactStudent.results && (
+      {leaveRange > 0 && impactStudent && (
         <>
           <h4 className="text-lg font-semibold">B. Penanganan Siswa</h4>
           {leaveDay.map((day, dayIndex) => {
@@ -236,7 +224,7 @@ const LeaveForm = () => {
                   <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {dayItems.map((item, i) => (
                       <Card
-                        key={`${item.order_detail}-${i}`}
+                        key={`${item.meet}-${i}`}
                         subtitle={
                           <>
                             <span className="block font-medium">
@@ -247,7 +235,7 @@ const LeaveForm = () => {
                                 <p className="font-semibold">Siswa:</p>
                                 {item.students.map((student, idx) => (
                                   <div key={idx} className="pl-2 text-gray-600">
-                                    {idx + 1}. {student.student_fullname}
+                                    {idx + 1}. {student.fullname}
                                   </div>
                                 ))}
                               </div>
@@ -260,15 +248,36 @@ const LeaveForm = () => {
                             label="Penanganan"
                             options={treatmentOptions}
                             value={item.replacement_type}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              const idx = leaveData.leaveImpact.findIndex(
+                                (li) => li === item
+                              );
+
                               updateLeaveImpact(
-                                leaveData.leaveImpact.findIndex(
-                                  (li) => li === item
-                                ),
+                                idx,
                                 "replacement_type",
-                                e.target.value
-                              )
-                            }
+                                newValue
+                              );
+
+                              if (newValue === "inval") {
+                                // kasih default langsung
+                                if (item.available_trainer?.length > 0) {
+                                  updateLeaveImpact(
+                                    idx,
+                                    "substitute_trainer",
+                                    item.available_trainer[0].trainer_id
+                                  );
+                                }
+                                if (item.missed_meet?.length > 0) {
+                                  updateLeaveImpact(
+                                    idx,
+                                    "meet",
+                                    item.missed_meet[0]
+                                  );
+                                }
+                              }
+                            }}
                           />
 
                           {item.replacement_type === "reschedule" ? (
@@ -285,7 +294,9 @@ const LeaveForm = () => {
                                         (li) => li === item
                                       ),
                                       "new_date",
-                                      date[0]
+                                      DateTime.fromJSDate(date[0]).toFormat(
+                                        "yyyy-MM-dd"
+                                      )
                                     )
                                   }
                                   options={{
@@ -310,7 +321,7 @@ const LeaveForm = () => {
                                   )
                                 }
                               />
-                              <Fileinput
+                              {/* <Fileinput
                                 placeholder="Bukti Chat"
                                 multiple
                                 preview
@@ -323,44 +334,65 @@ const LeaveForm = () => {
                                     prev.filter((_, idx) => idx !== index)
                                   )
                                 }
-                              />
+                              /> */}
                             </>
                           ) : (
                             <>
-                              <div>
-                                <label className="form-label">
-                                  Tanggal Pengganti
-                                </label>
-                                <Flatpickr
-                                  value={item.new_date}
-                                  onChange={(date) =>
-                                    updateLeaveImpact(
-                                      leaveData.leaveImpact.findIndex(
-                                        (li) => li === item
-                                      ),
-                                      "new_date",
-                                      date[0]
-                                    )
-                                  }
-                                  options={{
-                                    minDate: "today",
-                                    altInput: true,
-                                    altFormat: "d F Y",
-                                  }}
-                                  className="form-control py-2 w-full"
-                                />
-                              </div>
                               <Select
-                                label="Jam Pengganti"
-                                options={jam}
-                                value={item.new_time}
-                                onChange={(e) =>
+                                label="Pelatih Inval"
+                                options={item.available_trainer.map(
+                                  (trainer) => ({
+                                    value: trainer.trainer_id,
+                                    label: trainer.nickname,
+                                  })
+                                )}
+                                // defaultValue supaya langsung muncul kalau ada data
+                                defaultValue={
+                                  item.substitute_trainer
+                                    ? item.available_trainer
+                                        .map((trainer) => ({
+                                          value: trainer.trainer_id,
+                                          label: trainer.nickname,
+                                        }))
+                                        .find(
+                                          (opt) =>
+                                            opt.value ===
+                                            item.substitute_trainer
+                                        )
+                                    : null
+                                }
+                                onChange={(option) =>
                                   updateLeaveImpact(
                                     leaveData.leaveImpact.findIndex(
                                       (li) => li === item
                                     ),
-                                    "new_time",
-                                    e.target.value
+                                    "substitute_trainer",
+                                    option?.value || null
+                                  )
+                                }
+                              />
+
+                              <Select
+                                label="Pertemuan Inval"
+                                options={item.missed_meet.map((m) => ({
+                                  value: m,
+                                  label: "Ke - " + m,
+                                }))}
+                                defaultValue={
+                                  item.meet
+                                    ? {
+                                        value: item.meet,
+                                        label: "Ke - " + item.meet,
+                                      }
+                                    : null
+                                }
+                                onChange={(option) =>
+                                  updateLeaveImpact(
+                                    leaveData.leaveImpact.findIndex(
+                                      (li) => li === item
+                                    ),
+                                    "meet",
+                                    option?.value || null
                                   )
                                 }
                               />
