@@ -155,20 +155,20 @@ export const menuTrainer = [
     title: "Latihan",
   },
   {
-    title: "Earning",
+    title: "Rekapan",
     icon: "heroicons-outline:banknotes",
     link: "earning",
   },
   {
-    title: "Presence",
+    title: "Absesnsi",
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },
-  {
-    title: "Leave",
-    icon: "heroicons-outline:queue-list",
-    link: "izin",
-  },
+  // {
+  //   title: "Pengajuan Izin",
+  //   icon: "heroicons-outline:queue-list",
+  //   link: "izin",
+  // },
 ];
 
 export const menuAdminNew = [
