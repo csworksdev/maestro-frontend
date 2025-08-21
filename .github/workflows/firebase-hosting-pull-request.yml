@@ -13,18 +13,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install dependencies
+      # Install Node.js
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      # Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9   # atau versi sesuai package kamu
+          run_install: false
+
+      # Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       # Build project
       - name: Build project
-        run: npm run build   # pastikan ini menghasilkan folder dist
+        run: pnpm build   # pastikan ini menghasilkan folder dist
 
       # Deploy to Firebase Hosting
       - uses: FirebaseExtended/action-hosting-deploy@v0
@@ -33,4 +41,3 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MAESTRO_FRONTEND }}
           projectId: maestro-front
           channelId: pr${{ github.event.pull_request.number }}
-
