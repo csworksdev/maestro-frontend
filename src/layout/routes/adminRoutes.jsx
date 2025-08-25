@@ -97,6 +97,8 @@ import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Leave from "@/pages/izin/admin/leave";
+import Promo from "@/pages/masterdata/promo";
+import EditPromo from "@/pages/masterdata/promo/edit";
 
 const AdminRoutes = () => {
   const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -175,6 +177,11 @@ const AdminRoutes = () => {
           <Route index element={<Produk />} />
           <Route path="add" element={<EditProduk />} />
           <Route path="edit" element={<EditProduk />} />
+        </Route>
+        <Route path="promo">
+          <Route index element={<Promo />} />
+          <Route path="add" element={<EditPromo />} />
+          <Route path="edit" element={<EditPromo />} />
         </Route>
         //#endregion
         {/*  */}

@@ -211,6 +211,11 @@ export const menuAdminNew = [
     icon: "heroicons-outline:user-group",
     link: "kontakwati",
   },
+  {
+    title: "Promo",
+    icon: "heroicons-outline:globe-americas",
+    link: "promo",
+  },
 ];
 
 export const menuOpx = [
