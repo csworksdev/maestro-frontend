@@ -1934,4 +1934,7 @@
   }
 }
 @layer utilities {
+  .flatpickr-input[readonly] {
+    @apply bg-white text-gray-900 cursor-pointer;
+  }
 } /*# sourceMappingURL=app.css.map */

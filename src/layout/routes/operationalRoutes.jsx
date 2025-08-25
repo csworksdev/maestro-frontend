@@ -95,6 +95,7 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
+import Leave from "@/pages/izin/opx/leave";
 
 const OpxRoutes = () => {
   const data = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -149,6 +150,9 @@ const OpxRoutes = () => {
           <Route index element={<Cabang />} />
           <Route path="add" element={<EditCabang />} />
           <Route path="edit" element={<EditCabang />} />
+        </Route>
+        <Route path="list-izin">
+          <Route index element={<Leave />} />
         </Route>
         <Route path="kolam">
           <Route index element={<Kolam />} />

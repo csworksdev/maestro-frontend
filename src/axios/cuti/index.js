@@ -37,7 +37,9 @@ export const getTrainerLeave = async (trainer_id, params) => {
 // list semua cuti
 export const getAllTrainerLeaves = async (params = {}) => {
   try {
-    const response = await axiosConfig.get("/api/trainer-leave/", { params });
+    const response = await axiosConfig.get("api/leave-request/pending/", {
+      params,
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching trainer leaves:", error);
@@ -57,8 +59,8 @@ export const getTrainerLeaveById = async (id) => {
 // approve cuti
 export const approveTrainerLeave = async (id, data) => {
   try {
-    const response = await axiosConfig.post(
-      `/api/trainer-leave/${id}/approve/`,
+    const response = await axiosConfig.patch(
+      `/api/leave-request/${id}/approve/`,
       data
     );
     return response.data;
@@ -67,24 +69,11 @@ export const approveTrainerLeave = async (id, data) => {
   }
 };
 
-// reject cuti
-export const rejectTrainerLeave = async (id, data) => {
-  try {
-    const response = await axiosConfig.post(
-      `/api/trainer-leave/${id}/reject/`,
-      data
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error rejecting trainer leave:", error);
-  }
-};
-
 // ajukan keberatan oleh admin
 export const submitObjection = async (leaveId, data) => {
   try {
     const response = await axiosConfig.post(
-      `/api/trainer-leave/${leaveId}/object/`,
+      `/api/leave-request/${leaveId}/object/`,
       data
     );
     return response.data;

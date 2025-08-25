@@ -96,6 +96,7 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import Leave from "@/pages/izin/admin/leave";
 
 const AdminRoutes = () => {
   const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -250,6 +251,9 @@ const AdminRoutes = () => {
           <Route path="transaction" element={<XenditTransaction />} />
           <Route path="invoice-history" element={<XenditInvoiceHistory />} />
           <Route path="balance" element={<XenditBalance />} />
+        </Route>
+        <Route path="list-izin">
+          <Route index element={<Leave />} />
         </Route>
         //#endregion
         {/* Fallback */}
