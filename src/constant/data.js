@@ -164,11 +164,11 @@ export const menuTrainer = [
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },
-  {
-    title: "Pengajuan Izin",
-    icon: "heroicons-outline:queue-list",
-    link: "izin",
-  },
+  // {
+  //   title: "Pengajuan Izin",
+  //   icon: "heroicons-outline:queue-list",
+  //   link: "izin",
+  // },
 ];
 
 export const menuAdminNew = [
