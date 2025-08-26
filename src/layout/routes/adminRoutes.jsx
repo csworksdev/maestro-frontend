@@ -15,13 +15,13 @@ const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const DashboardRevenue = lazy(() => import("@/pages/newDashboard/revenue"));
 const DashboardOkupansi = lazy(() =>
-  import("@/pages/newDashboard/operasional")
+  import("@/pages/newDashboard/operasional/okupansi")
 );
 const OkupansiBranch = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi_branch")
+  import("@/pages/newDashboard/operasional/okupansi/okupansi_branch")
 );
 const OkupansiPool = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi_pool")
+  import("@/pages/newDashboard/operasional/okupansi/okupansi_pool")
 );
 
 // Referensi
@@ -96,6 +96,9 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import Leave from "@/pages/izin/admin/leave";
+import Promo from "@/pages/masterdata/promo";
+import EditPromo from "@/pages/masterdata/promo/edit";
 
 const AdminRoutes = () => {
   const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -175,6 +178,11 @@ const AdminRoutes = () => {
           <Route path="add" element={<EditProduk />} />
           <Route path="edit" element={<EditProduk />} />
         </Route>
+        <Route path="promo">
+          <Route index element={<Promo />} />
+          <Route path="add" element={<EditPromo />} />
+          <Route path="edit" element={<EditPromo />} />
+        </Route>
         //#endregion
         {/*  */}
         //#region order
@@ -250,6 +258,9 @@ const AdminRoutes = () => {
           <Route path="transaction" element={<XenditTransaction />} />
           <Route path="invoice-history" element={<XenditInvoiceHistory />} />
           <Route path="balance" element={<XenditBalance />} />
+        </Route>
+        <Route path="list-izin">
+          <Route index element={<Leave />} />
         </Route>
         //#endregion
         {/* Fallback */}

@@ -15,13 +15,13 @@ const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const DashboardRevenue = lazy(() => import("@/pages/newDashboard/revenue"));
 const DashboardOkupansi = lazy(() =>
-  import("@/pages/newDashboard/operasional")
+  import("@/pages/newDashboard/operasional/okupansi")
 );
 const OkupansiBranch = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi_branch")
+  import("@/pages/newDashboard/operasional/okupansi/okupansi_branch")
 );
 const OkupansiPool = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi_pool")
+  import("@/pages/newDashboard/operasional/okupansi/okupansi_pool")
 );
 
 // Referensi
@@ -95,6 +95,7 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
+import Leave from "@/pages/izin/opx/leave";
 
 const OpxRoutes = () => {
   const data = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -149,6 +150,9 @@ const OpxRoutes = () => {
           <Route index element={<Cabang />} />
           <Route path="add" element={<EditCabang />} />
           <Route path="edit" element={<EditCabang />} />
+        </Route>
+        <Route path="list-izin">
+          <Route index element={<Leave />} />
         </Route>
         <Route path="kolam">
           <Route index element={<Kolam />} />

@@ -2,7 +2,7 @@ import { getOkupansi } from "@/axios/dashboard_opr/okupansi";
 import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
-import Okupansi from "./okupansi";
+import Okupansi from ".";
 
 const DashboardOkupansi = () => {
   const [branch, setBranch] = useState([]);

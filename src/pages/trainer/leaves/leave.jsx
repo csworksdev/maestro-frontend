@@ -113,7 +113,7 @@ const Leave = () => {
       },
     },
     {
-      Header: "Alasan Cuti",
+      Header: "Alasan Izin",
       accessor: "reason",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
@@ -160,7 +160,7 @@ const Leave = () => {
   return (
     <div className="grid grid-cols-1 justify-end">
       <Card
-        title="Pengajuan Cuti"
+        title="Pengajuan Izin"
         headerslot={
           <Button className="btn-primary ">
             <Link to="ajukan" isupdate="false">
@@ -222,7 +222,7 @@ const Leave = () => {
                     {/* Header Info */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
                       <div className="text-sm">
-                        <p className="text-gray-500">Tanggal Cuti</p>
+                        <p className="text-gray-500">Tanggal Izin</p>
                         <p className="font-medium">
                           {DateTime.fromISO(item.start_date)
                             .setLocale("id")

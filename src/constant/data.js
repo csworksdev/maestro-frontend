@@ -164,11 +164,11 @@ export const menuTrainer = [
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },
-  // {
-  //   title: "Pengajuan Izin",
-  //   icon: "heroicons-outline:queue-list",
-  //   link: "izin",
-  // },
+  {
+    title: "Pengajuan Izin",
+    icon: "heroicons-outline:queue-list",
+    link: "izin",
+  },
 ];
 
 export const menuAdminNew = [
@@ -177,19 +177,24 @@ export const menuAdminNew = [
     title: "Administrasi",
   },
   {
+    title: "Order",
+    icon: "heroicons-outline:shopping-bag",
+    link: "order",
+  },
+  {
     title: "Cek Jadwal",
     icon: "heroicons-outline:calendar-days",
     link: "cek-jadwal",
   },
   {
+    title: "Pengajuan Izin",
+    icon: "heroicons-outline:queue-list",
+    link: "izin",
+  },
+  {
     title: "Siswa",
     icon: "heroicons-outline:users",
     link: "siswa",
-  },
-  {
-    title: "Order",
-    icon: "heroicons-outline:shopping-bag",
-    link: "order",
   },
   // {
   //   title: "Order Finished",
@@ -205,6 +210,11 @@ export const menuAdminNew = [
     title: "Kontak Wati",
     icon: "heroicons-outline:user-group",
     link: "kontakwati",
+  },
+  {
+    title: "Promo",
+    icon: "heroicons-outline:globe-americas",
+    link: "promo",
   },
 ];
 
@@ -222,6 +232,11 @@ export const menuOpx = [
     title: "Cek Jadwal",
     icon: "heroicons-outline:calendar-days",
     link: "cek-jadwal",
+  },
+  {
+    title: "Ajuan Izin Pelatih",
+    icon: "heroicons-outline:calendar-days",
+    link: "list-izin",
   },
   {
     title: "Pelatih",

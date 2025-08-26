@@ -112,7 +112,9 @@
   @import "utility/calander";
   @import "utility/full-calender";
   @import "components/print.scss";
-
 }
 @layer utilities {
+  .flatpickr-input[readonly] {
+    @apply bg-white text-gray-900 cursor-pointer;
+  }
 }
