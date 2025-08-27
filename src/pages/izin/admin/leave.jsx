@@ -84,7 +84,9 @@ const Leave = () => {
         admin: user_id,
         leave_request: leaveId,
       };
-      await submitObjection(leaveId, payload);
+      await submitObjection(leaveId, payload).then(() => {
+        fetchData(pageIndex, pageSize, searchQuery);
+      });
     } catch (err) {
       console.error("Gagal submit objection:", err);
     }
@@ -214,40 +216,60 @@ const Leave = () => {
 
                                 {/* Reason */}
                                 <div className="mb-4">
-                                  <p className="text-xs text-gray-500">
-                                    Alasan
+                                  <p className="text-xs text-gray-500 font-bold">
+                                    Alasan izin pelatih
                                   </p>
                                   <p className="text-sm font-medium">
                                     {item.reason}
                                   </p>
                                 </div>
 
-                                {selectedFilter === "pending" && (
-                                  <form
-                                    key={item.leave_id}
-                                    onSubmit={handleSubmit((data) =>
-                                      onSubmit(data, item.leave_id)
-                                    )}
-                                    className="space-y-4 my-2"
-                                  >
-                                    <Textinput
-                                      name={`alasan_${item.leave_id}`}
-                                      label="Keberatan"
-                                      id={`alasan_${item.leave_id}`}
-                                      type="text"
-                                      // placeholder="Masukan Nama Cabang"
-                                      register={register}
-                                      error={errors.title}
-                                    />
-                                    <div className="flex flex-col gap-3">
-                                      <Button
-                                        icon="heroicons-outline:exclamation-triangle"
-                                        text="Submit"
-                                        className="btn-success  rounded-[999px] p-2"
-                                        type="submit"
+                                {selectedFilter === "pending" ? (
+                                  !item.objections?.[0]?.reason ? (
+                                    <form
+                                      key={item.leave_id}
+                                      onSubmit={handleSubmit((data) =>
+                                        onSubmit(data, item.leave_id)
+                                      )}
+                                      className="space-y-4 my-2"
+                                    >
+                                      <Textinput
+                                        name={`alasan_${item.leave_id}`}
+                                        label="Keberatan"
+                                        id={`alasan_${item.leave_id}`}
+                                        type="text"
+                                        // placeholder="Masukan Nama Cabang"
+                                        register={register}
+                                        error={errors.title}
                                       />
+                                      <div className="flex flex-col gap-3">
+                                        <Button
+                                          icon="heroicons-outline:exclamation-triangle"
+                                          text="Submit"
+                                          className="btn-success  rounded-[999px] p-2"
+                                          type="submit"
+                                        />
+                                      </div>
+                                    </form>
+                                  ) : (
+                                    <div className="mb-4">
+                                      <p className="text-xs text-gray-500 font-bold">
+                                        Alasan Admin
+                                      </p>
+                                      <p className="text-sm font-medium">
+                                        {item.objections?.[0]?.reason}
+                                      </p>
                                     </div>
-                                  </form>
+                                  )
+                                ) : (
+                                  <div className="mb-4">
+                                    <p className="text-xs text-gray-500 font-bold">
+                                      Alasan Admin
+                                    </p>
+                                    <p className="text-sm font-medium">
+                                      {item.objections?.[0]?.reason}
+                                    </p>
+                                  </div>
                                 )}
 
                                 {/* Replacement Section */}

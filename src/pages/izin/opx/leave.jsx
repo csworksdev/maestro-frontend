@@ -66,6 +66,8 @@ const Leave = () => {
   const handleApproval = (leave_id, isApproved = false) => {
     approveTrainerLeave(leave_id, {
       action: isApproved ? "approve" : "reject",
+    }).then(() => {
+      fetchData(pageIndex, pageSize, searchQuery);
     });
   };
 
@@ -220,14 +222,22 @@ const Leave = () => {
                                   />
 
                                   {/* Teks di kanan */}
-                                  <div>
-                                    <p className="text-xs text-gray-500">
-                                      Info Admin :
-                                    </p>
-                                    <p className="text-sm font-medium">
-                                      {item.objections[0]?.reason}
-                                    </p>
-                                  </div>
+                                  {item.objections?.[0]?.reason ? (
+                                    <div>
+                                      <p className="text-xs text-gray-500">
+                                        Info Admin :
+                                      </p>
+                                      <p className="text-sm font-medium">
+                                        {item.objections[0]?.reason}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <p className="text-xs text-gray-500">
+                                        Admin belum memberikan keterangan
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* Reason */}
