@@ -15,6 +15,7 @@ import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import Radio from "@/components/ui/Radio";
 import { Icon } from "@iconify/react";
+import { useRef } from "react";
 
 const Leave = () => {
   const navigate = useNavigate();
@@ -29,30 +30,75 @@ const Leave = () => {
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
 
-  const fetchData = async (page, size, query) => {
-    try {
-      setIsLoading(true);
-      const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
-      };
-      getTrainerLeave(user_id, params)
-        .then((res) => {
-          setListData(res);
-          setData(res.results);
-        })
-        .finally(() => setIsLoading(false))
-        .catch((error) => {
-          console.log(error);
-        });
-    } catch (error) {
-      console.error("Error fetching data", error);
-    }
-  };
+  const socketRef = useRef(null); // ✅ simpan di ref, bukan state
 
   useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
+    const ws = new WebSocket(
+      `${import.meta.env.VITE_API_WS}/ws/leave/${user_id}/`
+    );
+    socketRef.current = ws;
+
+    ws.onopen = () =>
+      ws.send(
+        JSON.stringify({
+          action: "get_trainer_leaves",
+          trainer_id: user_id,
+          status: selectStatus,
+        })
+      );
+
+    ws.onmessage = (event) => {
+      setData(JSON.parse(event.data));
+      setIsLoading(false);
+    };
+
+    ws.onclose = () => console.log("❌ Disconnected");
+
+    // return () => {
+    //   console.log("🔌 Closing socket...");
+    //   ws.close();
+    // };
+  }, [selectStatus]);
+
+  // const sendMessage = () => {
+  //   const ws = socketRef.current;
+  //   if (ws && ws.readyState === WebSocket.OPEN) {
+  //     ws.send(
+  //       JSON.stringify({
+  //         action: "get_trainer_leaves",
+  //         trainer_id: user_id,
+  //         status: selectStatus,
+  //       })
+  //     );
+  //   } else {
+  //     console.warn("⚠️ WebSocket not connected yet");
+  //   }
+  // };
+
+  // const fetchData = async (page, size, query) => {
+  //   try {
+  //     setIsLoading(true);
+  //     const params = {
+  //       page: page + 1,
+  //       page_size: size,
+  //       search: query,
+  //     };
+  //     getTrainerLeave(user_id, params)
+  //       .then((res) => {
+  //         setListData(res);
+  //         setData(res.results);
+  //       })
+  //       .finally(() => setIsLoading(false))
+  //       .catch((error) => {
+  //         console.log(error);
+  //       });
+  //   } catch (error) {
+  //     console.error("Error fetching data", error);
+  //   }
+  // };
+
+  useEffect(() => {
+    // fetchData(pageIndex, pageSize, searchQuery);
   }, [pageIndex, pageSize, searchQuery]);
 
   const handlePageChange = (page) => {
@@ -276,7 +322,7 @@ const Leave = () => {
               </div>
             </div>
 
-            <PaginationComponent
+            {/* <PaginationComponent
               pageSize={pageSize}
               pageIndex={pageIndex}
               pageCount={Math.ceil(listData.count / pageSize)}
@@ -288,7 +334,7 @@ const Leave = () => {
               previousPage={() => handlePageChange(pageIndex - 1)}
               nextPage={() => handlePageChange(pageIndex + 1)}
               setPageSize={handlePageSizeChange}
-            />
+            /> */}
           </>
         )}
       </Card>
