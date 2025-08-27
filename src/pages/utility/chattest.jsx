@@ -6,7 +6,7 @@ export default function ChatTest() {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8001/ws/chat/test/");
+    const ws = new WebSocket(import.meta.env.VITE_API_WS + "ws/chat/test/");
 
     ws.onopen = () => {
       console.log("✅ Connected to WebSocket");
