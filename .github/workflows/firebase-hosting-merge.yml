@@ -26,6 +26,7 @@ jobs:
         env:
           VITE_API_URL: https://api.maestroswim.com
           VITE_API_WS: wss://api.maestroswim.com
+          VITE_FCM_VAPID_KEY: BBpYnY0UFcX2KhZWVQaWytwVlRqSLTwAhKQEfkuVnCKQBjymJRo6IeifLov-A8OvkhhM_yiPJO8I1vZaypxWjG8
 
       # ✅ Deploy ke Firebase Hosting
       - name: Deploy to Firebase Hosting
