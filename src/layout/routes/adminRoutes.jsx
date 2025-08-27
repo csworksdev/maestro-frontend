@@ -99,6 +99,7 @@ import { Navigate } from "react-router-dom";
 import Leave from "@/pages/izin/admin/leave";
 import Promo from "@/pages/masterdata/promo";
 import EditPromo from "@/pages/masterdata/promo/edit";
+import ChatTest from "@/pages/utility/chattest";
 
 const AdminRoutes = () => {
   const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -261,6 +262,9 @@ const AdminRoutes = () => {
         </Route>
         <Route path="list-izin">
           <Route index element={<Leave />} />
+        </Route>
+        <Route path="chattest">
+          <Route index element={<ChatTest />} />
         </Route>
         //#endregion
         {/* Fallback */}
