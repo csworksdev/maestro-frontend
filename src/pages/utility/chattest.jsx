@@ -1,34 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function ChatTest() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null); // ✅ simpan di ref, bukan state
 
   useEffect(() => {
-    const ws = new WebSocket(import.meta.env.VITE_API_WS + "ws/chat/test/");
+    const ws = new WebSocket(`${import.meta.env.VITE_API_WS}ws/chat/test/`);
+    socketRef.current = ws;
 
-    ws.onopen = () => {
-      console.log("✅ Connected to WebSocket");
-    };
+    ws.onopen = () => console.log("✅ Connected to WebSocket");
 
     ws.onmessage = (event) => {
       console.log("📩 Message:", event.data);
-      setMessages((prev) => [...prev, event.data]);
+      setMessages((prev) => {
+        const updated = [...prev, event.data];
+        return updated.slice(-100); // ✅ batasi max 100 pesan
+      });
     };
 
-    ws.onclose = () => {
-      console.log("❌ Disconnected");
+    ws.onclose = () => console.log("❌ Disconnected");
+
+    return () => {
+      console.log("🔌 Closing socket...");
+      ws.close();
     };
-
-    setSocket(ws);
-
-    return () => ws.close();
   }, []);
 
   const sendMessage = () => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ message: input }));
+    const ws = socketRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ message: input }));
       setInput("");
     } else {
       console.warn("⚠️ WebSocket not connected yet");
