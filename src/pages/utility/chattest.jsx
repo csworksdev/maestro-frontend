@@ -6,7 +6,7 @@ export default function ChatTest() {
   const socketRef = useRef(null); // ✅ simpan di ref, bukan state
 
   useEffect(() => {
-    const ws = new WebSocket(`${import.meta.env.VITE_API_WS}ws/chat/test/`);
+    const ws = new WebSocket(`${import.meta.env.VITE_API_WS}/ws/chat/test/`);
     socketRef.current = ws;
 
     ws.onopen = () => console.log("✅ Connected to WebSocket");
