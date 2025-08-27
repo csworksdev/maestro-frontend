@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import Radio from "@/components/ui/Radio";
+import { Icon } from "@iconify/react";
 
 const Leave = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const Leave = () => {
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("pending");
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
@@ -66,96 +67,6 @@ const Leave = () => {
     setSearchQuery(query);
     setPageIndex(0); // Reset to first page on search
   };
-
-  //   const handleDelete = (e) => {
-  //     Swal.fire({
-  //       title: "Are you sure?",
-  //       text: "You won't be able to revert this!",
-  //       icon: "warning",
-  //       showCancelButton: true,
-  //       confirmButtonColor: "#22c55e",
-  //       cancelButtonColor: "#ef4444",
-  //       confirmButtonText: "Yes, delete it!",
-  //     }).then((result) => {
-  //       if (result.isConfirmed) {
-  //         DeleteCabang(e.branch_id).then((res) => {
-  //           if (res.status) {
-  //             Swal.fire("Deleted!", "Your file has been deleted.", "success");
-  //             fetchData(pageIndex, pageSize, searchQuery);
-  //           }
-  //         });
-  //       }
-  //     });
-  //   };
-
-  //   const handleEdit = (e) => {
-  //     navigate("edit", {
-  //       state: {
-  //         isupdate: "true",
-  //         data: e,
-  //       },
-  //     });
-  //   };
-
-  const COLUMNS = [
-    {
-      Header: "Tanggal Mulai",
-      accessor: "start_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Tanggal Selesai",
-      accessor: "end_date",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Alasan Izin",
-      accessor: "reason",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Status Pengajuan",
-      accessor: "status",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Disetujui Oleh",
-      accessor: "approved_by",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Disetujui Tanggal",
-      accessor: "approved_at",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    // {
-    //   Header: "action",
-    //   accessor: "action",
-    //   id: "action",
-    //   sticky: "right",
-    //   Cell: (row) => {
-    //     return (
-    //       <div className="flex flex-row space-x-2 justify-center items-center">
-    //         {actions.map((action, index) => (
-    //           <TableAction action={action} index={index} row={row} />
-    //         ))}
-    //       </div>
-    //     );
-    //   },
-    // },
-  ];
 
   return (
     <div className="grid grid-cols-1 justify-end">
@@ -249,6 +160,31 @@ const Leave = () => {
                     <div className="mb-6">
                       <p className="text-sm text-gray-500">Alasan</p>
                       <p className="font-medium">{item.reason}</p>
+                    </div>
+
+                    {/* Reason */}
+                    <div className="mb-4 border border-yellow-300 rounded-2xl p-2 flex items-start gap-2">
+                      {/* Icon di kiri */}
+                      <Icon
+                        icon="heroicons-outline:information-circle"
+                        className="w-5 h-5 text-yellow-500 mt-0.5"
+                      />
+
+                      {/* Teks di kanan */}
+                      {item.objections?.[0]?.reason ? (
+                        <div>
+                          <p className="text-xs text-gray-500">Info Admin :</p>
+                          <p className="text-sm font-medium">
+                            {item.objections[0]?.reason}
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            Admin belum memberikan keterangan
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Replacement Section */}
