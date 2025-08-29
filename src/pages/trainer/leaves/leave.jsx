@@ -16,103 +16,16 @@ import { toProperCase } from "@/utils";
 import Radio from "@/components/ui/Radio";
 import { Icon } from "@iconify/react";
 import { useRef } from "react";
+import { useLeaveSocket } from "@/hooks/useLeaveSocket";
+import LoaderCircle from "@/components/Loader-circle";
 
 const Leave = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [listData, setListData] = useState({ count: 0, results: [] });
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("pending");
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
-  const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
+  const [selectStatus, setSelectStatus] = useState("pending");
 
-  const socketRef = useRef(null); // ✅ simpan di ref, bukan state
-
-  useEffect(() => {
-    const ws = new WebSocket(
-      `${import.meta.env.VITE_API_WS}/ws/leave/${user_id}/`
-    );
-    socketRef.current = ws;
-
-    ws.onopen = () =>
-      ws.send(
-        JSON.stringify({
-          action: "get_trainer_leaves",
-          trainer_id: user_id,
-          status: selectStatus,
-        })
-      );
-
-    ws.onmessage = (event) => {
-      setData(JSON.parse(event.data));
-      setIsLoading(false);
-    };
-
-    ws.onclose = () => console.log("❌ Disconnected");
-
-    // return () => {
-    //   console.log("🔌 Closing socket...");
-    //   ws.close();
-    // };
-  }, [selectStatus]);
-
-  // const sendMessage = () => {
-  //   const ws = socketRef.current;
-  //   if (ws && ws.readyState === WebSocket.OPEN) {
-  //     ws.send(
-  //       JSON.stringify({
-  //         action: "get_trainer_leaves",
-  //         trainer_id: user_id,
-  //         status: selectStatus,
-  //       })
-  //     );
-  //   } else {
-  //     console.warn("⚠️ WebSocket not connected yet");
-  //   }
-  // };
-
-  // const fetchData = async (page, size, query) => {
-  //   try {
-  //     setIsLoading(true);
-  //     const params = {
-  //       page: page + 1,
-  //       page_size: size,
-  //       search: query,
-  //     };
-  //     getTrainerLeave(user_id, params)
-  //       .then((res) => {
-  //         setListData(res);
-  //         setData(res.results);
-  //       })
-  //       .finally(() => setIsLoading(false))
-  //       .catch((error) => {
-  //         console.log(error);
-  //       });
-  //   } catch (error) {
-  //     console.error("Error fetching data", error);
-  //   }
-  // };
-
-  useEffect(() => {
-    // fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
-
-  const handlePageChange = (page) => {
-    setPageIndex(page);
-  };
-
-  const handlePageSizeChange = (size) => {
-    setPageSize(size);
-  };
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    setPageIndex(0); // Reset to first page on search
-  };
+  const { data, isLoading } = useLeaveSocket(user_id, roles, selectStatus);
 
   return (
     <div className="grid grid-cols-1 justify-end">
@@ -135,40 +48,44 @@ const Leave = () => {
                 Status Ajuan
               </label>
               <div className="grid grid-cols-2 gap-3 sm:flex sm:space-x-4 sm:space-y-0 space-y-3">
-                {status.map((option) => {
-                  // mapping warna berdasarkan status
-                  const colorMap = {
-                    approved: "green",
-                    rejected: "red",
-                    pending: "yellow",
-                  };
-                  const color = colorMap[option.toLowerCase()] || "blue";
+                {isLoading ? (
+                  <LoaderCircle />
+                ) : (
+                  status.map((option) => {
+                    // mapping warna berdasarkan status
+                    const colorMap = {
+                      approved: "green",
+                      rejected: "red",
+                      pending: "yellow",
+                    };
+                    const color = colorMap[option.toLowerCase()] || "blue";
 
-                  return (
-                    <label
-                      key={option}
-                      className={`flex items-center justify-center px-4 py-2 border rounded-lg cursor-pointer transition
+                    return (
+                      <label
+                        key={option}
+                        className={`flex items-center justify-center px-4 py-2 border rounded-lg cursor-pointer transition
             ${
               selectStatus === option
                 ? `border-${color}-500 bg-${color}-50 text-${color}-700 font-semibold`
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
             }`}
-                    >
-                      <input
-                        type="radio"
-                        name="status"
-                        value={option}
-                        checked={selectStatus === option}
-                        onChange={(e) => {
-                          setSelectStatus(e.target.value);
-                          handleSearch(e.target.value);
-                        }}
-                        className="hidden"
-                      />
-                      {toProperCase(option)}
-                    </label>
-                  );
-                })}
+                      >
+                        <input
+                          type="radio"
+                          name="status"
+                          value={option}
+                          checked={selectStatus === option}
+                          onChange={(e) => {
+                            setSelectStatus(e.target.value);
+                            // handleSearch(e.target.value);
+                          }}
+                          className="hidden"
+                        />
+                        {toProperCase(option)}
+                      </label>
+                    );
+                  })
+                )}
               </div>
             </div>
 

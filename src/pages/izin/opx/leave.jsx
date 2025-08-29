@@ -9,11 +9,9 @@ import { useSelector } from "react-redux";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import { Icon } from "@iconify/react";
+import { useLeaveSocket } from "@/hooks/useLeaveSocket";
 
 const Leave = () => {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -21,33 +19,7 @@ const Leave = () => {
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
-  const [selectedFilter, setSelectedFilter] = useState("pending");
-
-  const fetchData = async (page, size, query) => {
-    try {
-      setIsLoading(true);
-      const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
-      };
-      getAllTrainerLeaves(params)
-        .then((res) => {
-          setListData(res);
-          setData(res.results);
-        })
-        .finally(() => setIsLoading(false))
-        .catch((error) => {
-          console.log(error);
-        });
-    } catch (error) {
-      console.error("Error fetching data", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
+  const { data, isLoading } = useLeaveSocket(user_id, roles, selectStatus);
 
   const handlePageChange = (page) => {
     setPageIndex(page);
@@ -58,16 +30,17 @@ const Leave = () => {
   };
 
   const handleSearch = (query) => {
-    setSelectedFilter(query);
+    setSelectStatus(query);
     setSearchQuery(query);
     setPageIndex(0); // Reset to first page on search
   };
 
   const handleApproval = (leave_id, isApproved = false) => {
     approveTrainerLeave(leave_id, {
-      action: isApproved ? "approve" : "reject",
+      action: isApproved ? "approved" : "rejected",
     }).then(() => {
-      fetchData(pageIndex, pageSize, searchQuery);
+      // fetchData(pageIndex, pageSize, searchQuery);
+      setSelectStatus(isApproved ? "approved" : "rejected");
     });
   };
 
@@ -191,7 +164,7 @@ const Leave = () => {
                                         .toFormat("cccc, dd LLLL yyyy")}
                                     </p>
                                   </div>
-                                  {selectedFilter === "pending" && (
+                                  {selectStatus === "pending" && (
                                     <div className="flex flex-col gap-3">
                                       <Button
                                         icon="heroicons-outline:check"

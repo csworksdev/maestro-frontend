@@ -95,8 +95,6 @@ const LeaveForm = () => {
       ),
     };
 
-    console.log(payload);
-
     createTrainerLeave(user_id, payload).then((res) => {
       if (res.status) {
         Swal.fire({
