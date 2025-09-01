@@ -6,16 +6,19 @@ import { Link, useNavigate } from "react-router-dom";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
-import { EditKontak, getKontakAll } from "@/axios/wati/kontak";
+import { batchEditKontak, EditKontak, getKontakAll } from "@/axios/wati/kontak";
 import Select from "react-select";
 import Textinput from "@/components/ui/Textinput";
 import { Icon } from "@iconify/react";
 import { DateTime } from "luxon";
+import { useSelector } from "react-redux";
+import { useCallback } from "react";
 
 const furits = [
   { value: "80106972-bbe5-4802-ad4b-0176a618b7b3", label: "Della" },
   { value: "ab4e8249-6ee7-405e-b69e-7d8015b4451d", label: "Lena" },
   { value: "0d6bd594-4c49-49db-93a0-e36c4ea2ba90", label: "Alivia" },
+  { value: "f7d9fff1-5455-4cb5-bb92-9bea6a61b447", label: "Chandra" },
 ];
 
 const styles = {
@@ -29,11 +32,12 @@ const Kontak = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedID, setSelectedID] = useState([]);
 
   const actions = [
     {
@@ -93,6 +97,11 @@ const Kontak = () => {
       },
     });
   };
+
+  const handleSelectionChange = useCallback((rows) => {
+    const ids = rows.map((row) => row.id);
+    setSelectedID(ids);
+  }, []);
 
   const COLUMNS = [
     {
@@ -306,10 +315,20 @@ const Kontak = () => {
       <Card
         title="Trainer"
         headerslot={
-          <Button className="btn-primary ">
-            <Link to="add" isupdate="false">
-              Tambah
-            </Link>
+          <Button
+            className="btn-primary"
+            // disabled={selectedID.length === 0} // ✅ disable kalau belum ada yang dipilih
+            onClick={async () => {
+              try {
+                const payload = { admin: user_id }; // data yg mau diupdate
+                const res = await batchEditKontak(selectedID, payload);
+                if (res) fetchData(pageIndex, pageSize, searchQuery);
+              } catch (err) {
+                console.error("Batch update failed:", err);
+              }
+            }}
+          >
+            Claim
           </Button>
         }
       >
@@ -325,7 +344,8 @@ const Kontak = () => {
               handleSearch={handleSearch}
               isLoading={isLoading}
               isAction={false}
-              isCheckBox={false}
+              isCheckbox={true}
+              onSelectionChange={handleSelectionChange}
             />
             <PaginationComponent
               pageSize={pageSize}

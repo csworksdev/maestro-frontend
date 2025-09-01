@@ -8,9 +8,8 @@ import {
   useFilters,
   useRowSelect,
 } from "react-table";
-
 const IndeterminateCheckbox = React.forwardRef(
-  ({ indeterminate, ...rest }, ref) => {
+  ({ indeterminate, id, ...rest }, ref) => {
     const defaultRef = React.useRef();
     const resolvedRef = ref || defaultRef;
 
@@ -19,14 +18,13 @@ const IndeterminateCheckbox = React.forwardRef(
     }, [resolvedRef, indeterminate]);
 
     return (
-      <>
-        <input
-          type="checkbox"
-          ref={resolvedRef}
-          {...rest}
-          className="table-checkbox"
-        />
-      </>
+      <input
+        id={id}
+        type="checkbox"
+        ref={resolvedRef}
+        {...rest}
+        className="table-checkbox"
+      />
     );
   }
 );
@@ -40,12 +38,18 @@ const withCheckboxColumn = (isCheckbox) => {
         id: "selection",
         Header: ({ getToggleAllRowsSelectedProps }) => (
           <div>
-            <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+            <IndeterminateCheckbox
+              id={"header"}
+              {...getToggleAllRowsSelectedProps()}
+            />
           </div>
         ),
         Cell: ({ row }) => (
           <div>
-            <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+            <IndeterminateCheckbox
+              id={`select-${row.id}`}
+              {...row.getToggleRowSelectedProps()}
+            />
           </div>
         ),
       },
@@ -60,7 +64,8 @@ const Table = memo(
     listColumn,
     handleSearch,
     isAction = true,
-    isChecbox = false,
+    isCheckbox = false,
+    onSelectionChange,
   }) => {
     const columns = useMemo(
       () =>
@@ -87,11 +92,24 @@ const Table = memo(
       usePagination,
       useRowSelect,
 
-      withCheckboxColumn(isChecbox)
+      withCheckboxColumn(isCheckbox)
     );
 
-    const { getTableProps, getTableBodyProps, headerGroups, page, prepareRow } =
-      tableInstance;
+    const {
+      getTableProps,
+      getTableBodyProps,
+      headerGroups,
+      page,
+      prepareRow,
+      state: { selectedRowIds }, // ✅ id rows terpilih (object {0: true, 3: true, ...})
+      selectedFlatRows, // ✅ array row yang kepilih
+    } = tableInstance;
+
+    useEffect(() => {
+      if (onSelectionChange) {
+        onSelectionChange(selectedFlatRows.map((row) => row.original));
+      }
+    }, [selectedFlatRows, onSelectionChange]);
 
     const scrollableRowsRef = useRef([]);
     const fixedRowsRef = useRef([]);
