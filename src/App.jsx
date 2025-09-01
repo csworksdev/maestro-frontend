@@ -51,15 +51,21 @@ const App = () => {
     });
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      toast.info(
-        `${payload.notification.title} - ${payload.notification.body}`
-      );
+      const title = payload.notification?.title;
+      const body = payload.notification?.body;
+
+      if (title && body) {
+        toast.info(`${title} - ${body}`);
+      }
     });
 
     const swListener = (event) => {
       const { title, body } = event.data || {};
-      if (title && body) toast.info(`${title}: ${body}`);
+      if (title && body) {
+        toast.info(`${title}: ${body}`);
+      }
     };
+
     navigator.serviceWorker.addEventListener("message", swListener);
 
     return () => {
