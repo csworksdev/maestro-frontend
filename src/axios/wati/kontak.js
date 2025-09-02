@@ -22,3 +22,16 @@ export const EditKontak = async (id, data) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const batchEditKontak = async (ids, data) => {
+  try {
+    let response = await axiosConfig.patch(
+      "/wati/newcontact/claim/",
+      { ids, data } // ✅ kirim ids + data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
