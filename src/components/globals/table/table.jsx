@@ -9,7 +9,10 @@ import {
   useRowSelect,
 } from "react-table";
 const IndeterminateCheckbox = React.forwardRef(
-  ({ indeterminate, id, ...rest }, ref) => {
+  (
+    { indeterminate, isHeader, rows, rowId, onSelectionChange, ...rest },
+    ref
+  ) => {
     const defaultRef = React.useRef();
     const resolvedRef = ref || defaultRef;
 
@@ -19,44 +22,26 @@ const IndeterminateCheckbox = React.forwardRef(
 
     return (
       <input
-        id={id}
         type="checkbox"
         ref={resolvedRef}
         {...rest}
+        onChange={(e) => {
+          // jalankan handler bawaan react-table
+          rest.onChange && rest.onChange(e);
+
+          if (e.target.checked) {
+            if (isHeader && rowId) {
+              onSelectionChange(rows); // langsung kirim array id
+            } else if (rowId) {
+              onSelectionChange([rowId]); // biar konsisten array juga
+            }
+          }
+        }}
         className="table-checkbox"
       />
     );
   }
 );
-
-const withCheckboxColumn = (isCheckbox) => {
-  return (hooks) => {
-    if (!isCheckbox) return;
-
-    hooks.visibleColumns.push((columns) => [
-      {
-        id: "selection",
-        Header: ({ getToggleAllRowsSelectedProps }) => (
-          <div>
-            <IndeterminateCheckbox
-              id={"header"}
-              {...getToggleAllRowsSelectedProps()}
-            />
-          </div>
-        ),
-        Cell: ({ row }) => (
-          <div>
-            <IndeterminateCheckbox
-              id={`select-${row.id}`}
-              {...row.getToggleRowSelectedProps()}
-            />
-          </div>
-        ),
-      },
-      ...columns,
-    ]);
-  };
-};
 
 const Table = memo(
   ({
@@ -92,7 +77,37 @@ const Table = memo(
       usePagination,
       useRowSelect,
 
-      withCheckboxColumn(isCheckbox)
+      (hooks) => {
+        isCheckbox &&
+          hooks.visibleColumns.push((columns) => [
+            {
+              id: "selection",
+              // Header
+              Header: ({ getToggleAllRowsSelectedProps, rows }) => (
+                <div>
+                  <IndeterminateCheckbox
+                    {...getToggleAllRowsSelectedProps()}
+                    isHeader
+                    rows={rows.map((r) => r.original.id)} // biar bisa dapetin semua id
+                    onSelectionChange={onSelectionChange}
+                  />
+                </div>
+              ),
+
+              // Cell
+              Cell: ({ row }) => (
+                <div>
+                  <IndeterminateCheckbox
+                    {...row.getToggleRowSelectedProps()}
+                    rowId={row.original.id}
+                    onSelectionChange={onSelectionChange}
+                  />
+                </div>
+              ),
+            },
+            ...columns,
+          ]);
+      }
     );
 
     const {
@@ -101,18 +116,30 @@ const Table = memo(
       headerGroups,
       page,
       prepareRow,
-      state: { selectedRowIds }, // ✅ id rows terpilih (object {0: true, 3: true, ...})
-      selectedFlatRows, // ✅ array row yang kepilih
+      selectedFlatRows,
     } = tableInstance;
-
-    useEffect(() => {
-      if (onSelectionChange) {
-        onSelectionChange(selectedFlatRows.map((row) => row.original));
-      }
-    }, [selectedFlatRows, onSelectionChange]);
 
     const scrollableRowsRef = useRef([]);
     const fixedRowsRef = useRef([]);
+
+    const prevRowsRef = useRef([]);
+
+    useEffect(() => {
+      const prevIds = prevRowsRef.current.map((r) => r.original?.id);
+      const newIds = selectedFlatRows.map((r) => r.original?.id);
+
+      // bandingkan prev vs new
+      const isSame =
+        prevIds.length === newIds.length &&
+        prevIds.every((id, i) => id === newIds[i]);
+
+      if (!isSame) {
+        onSelectionChange(selectedFlatRows);
+      }
+
+      // update prev
+      prevRowsRef.current = selectedFlatRows;
+    }, [selectedFlatRows, onSelectionChange]);
 
     const synchronizeHeights = () => {
       requestAnimationFrame(() => {
@@ -214,10 +241,12 @@ const Table = memo(
               >
                 {page.map((row, index) => {
                   prepareRow(row);
+                  let { key, ...rest } = row.getRowProps();
                   return (
                     <tr
                       {...row.getRowProps()}
                       ref={(el) => (scrollableRowsRef.current[index] = el)}
+                      key={key}
                       className={`h-auto ${
                         index % 2 === 0 ? "bg-blue-100" : ""
                       }`}

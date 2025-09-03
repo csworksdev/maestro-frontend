@@ -99,11 +99,29 @@ const Kontak = () => {
   };
 
   const handleSelectionChange = useCallback((rows) => {
-    const ids = rows.map((row) => row.id);
+    if (!Array.isArray(rows)) {
+      console.warn("handleSelectionChange called with non-array:", rows);
+      return;
+    }
+
+    const ids = [
+      ...new Set(
+        rows
+          .map((r) => (r?.original ? r.original.id : r.id ?? null))
+          .filter(Boolean) // buang null/undefined
+      ),
+    ];
     setSelectedID(ids);
   }, []);
 
   const COLUMNS = [
+    // {
+    //   Header: "ID",
+    //   accessor: "id",
+    //   Cell: (row) => {
+    //     return <span>{row?.cell?.value}</span>;
+    //   },
+    // },
     {
       Header: "Nomor WA",
       accessor: "wa_id",
@@ -142,11 +160,9 @@ const Kontak = () => {
             await EditKontak(row.original.id, {
               sender_name: value,
             });
-            alert("Berhasil update");
             setOriginalValue(value);
           } catch (err) {
             console.error(err);
-            alert("Gagal update");
           }
         };
 
@@ -207,11 +223,9 @@ const Kontak = () => {
             await EditKontak(row.original.id, {
               admin: selected.value,
             });
-            alert("Berhasil update");
             setOriginal(selected);
           } catch (err) {
             console.error(err);
-            alert("Gagal update");
           }
         };
 
@@ -271,10 +285,8 @@ const Kontak = () => {
             await EditKontak(row.original.id, {
               tag: value,
             });
-            alert("Berhasil update");
           } catch (err) {
             console.error(err);
-            alert("Gagal update");
           }
           setOriginalValue(value);
         };
@@ -320,6 +332,7 @@ const Kontak = () => {
             // disabled={selectedID.length === 0} // ✅ disable kalau belum ada yang dipilih
             onClick={async () => {
               try {
+                // console.log(selectedID);
                 const payload = { admin: user_id }; // data yg mau diupdate
                 const res = await batchEditKontak(selectedID, payload);
                 if (res) fetchData(pageIndex, pageSize, searchQuery);
