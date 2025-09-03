@@ -351,9 +351,10 @@ const CekJadwal = () => {
   };
 
   const handlePerpanjang = async (order_id) => {
-    let res = await PerpanjangOrder(order_id);
-    if (res)
-      loadSchedule(selectedBranch, poolOption[selectedPool].value, selectedDay);
+    // let res = await PerpanjangOrder(order_id);
+    // if (res)
+    //   loadSchedule(selectedBranch, poolOption[selectedPool].value, selectedDay);
+    alert("belum release, mohon sabar 😜");
   };
 
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
