@@ -475,6 +475,15 @@ const CekJadwal = () => {
                                   <PerpanjangPaket order_id={slot.order_id} />
                                 </>
                               </div>
+                              {/* {!slot.is_free && (
+                                <PelatihKosong
+                                  key={key}
+                                  pool={poolOption[selectedPool]}
+                                  trainer={item}
+                                  hari={timeSlot.hari}
+                                  jam={slotObj.jam}
+                                />
+                              )} */}
                             </>
                           )}
                         </>
@@ -489,26 +498,26 @@ const CekJadwal = () => {
 
                   const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
 
-                  // return (
-                  //   <>
-                  //     <PelatihKosong
-                  //       key={key}
-                  //       pool={poolOption[selectedPool]}
-                  //       trainer={item}
-                  //       hari={timeSlot.hari}
-                  //       jam={slotObj.jam}
-                  //     />
-                  //     {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
-                  //   </>
-                  // );
+                  return (
+                    <>
+                      <PelatihKosong
+                        key={key}
+                        pool={poolOption[selectedPool]}
+                        trainer={item}
+                        hari={timeSlot.hari}
+                        jam={slotObj.jam}
+                      />
+                      {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
+                    </>
+                  );
                 })}
-                <PelatihKosong
+                {/* <PelatihKosong
                   key={i}
                   pool={poolOption[selectedPool]}
                   trainer={item}
                   hari={timeSlot.hari}
                   jam={slotObj.jam}
-                />
+                /> */}
               </div>
             );
           })
