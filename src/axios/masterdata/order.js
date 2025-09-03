@@ -80,3 +80,13 @@ export const DeleteOrder = async (id) => {
     return { status: "error", message: error.message };
   }
 };
+
+export const PerpanjangOrder = async (id) => {
+  try {
+    const response = await axiosConfig.post(`/api/order/${id}/perpanjang/`);
+    return response;
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    return { status: "error", message: error.message };
+  }
+};

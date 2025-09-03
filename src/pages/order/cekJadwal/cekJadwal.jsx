@@ -22,6 +22,7 @@ import { useSelector } from "react-redux";
 import Select from "react-select";
 import Switch from "@/components/ui/Switch";
 import { toProperCase } from "@/utils";
+import { PerpanjangOrder } from "@/axios/masterdata/order";
 
 const columnHeader = [
   "Pelatih",
@@ -349,6 +350,13 @@ const CekJadwal = () => {
     }
   };
 
+  const handlePerpanjang = async (order_id) => {
+    // let res = await PerpanjangOrder(order_id);
+    // if (res)
+    //   loadSchedule(selectedBranch, poolOption[selectedPool].value, selectedDay);
+    alert("belum release, mohon sabar 😜");
+  };
+
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
 
   const GridKolamDetail = React.memo(({ item, pool }) => {
@@ -400,7 +408,7 @@ const CekJadwal = () => {
                           {checked ? (
                             <div
                               key={key}
-                              className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center`}
+                              className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center gap-3`}
                             >
                               {slot.student?.map((x) => {
                                 return (
@@ -409,6 +417,7 @@ const CekJadwal = () => {
                                   </div>
                                 );
                               })}
+                              <PerpanjangPaket order_id={slot.order_id} />
                             </div>
                           ) : (
                             <>
@@ -417,6 +426,7 @@ const CekJadwal = () => {
                                 className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
                               >
                                 <>
+                                  <AdminBadge admin={slot.admin} />
                                   <PaymentStatusBadge status={slot.is_paid} />
                                   <Badge
                                     label={checkProduct(slot.product)}
@@ -462,37 +472,18 @@ const CekJadwal = () => {
                                       </Tooltip>
                                     )}
                                   </div>
-                                  <div className="flex flex-row justify-center bg-slate-200">
-                                    {diff > 0 && (
-                                      <PelatihKosong
-                                        key={key}
-                                        pool={poolOption[selectedPool]}
-                                        trainer={item}
-                                        hari={timeSlot.hari}
-                                        jam={slotObj.jam}
-                                      />
-                                    )}
-                                    {/* <Dropdown
-                                classMenuItems="left-0 bottom-full mb-2 w-[220px] "
-                                label={
-                                  // <Button
-                                  //   text="Action"
-                                  //   className="bg-warning-50 text-black btn-sm"
-                                  //   iconClass="text-sm"
-                                  // />
-                                  <Icon
-                                    icon={
-                                      "heroicons-outline:ellipsis-horizontal-circle"
-                                    }
-                                    width="24"
-                                    color="green"
-                                  />
-                                }
-                                items={dropdownItems}
-                              /> */}
-                                  </div>
+                                  <PerpanjangPaket order_id={slot.order_id} />
                                 </>
                               </div>
+                              {/* {!slot.is_free && (
+                                <PelatihKosong
+                                  key={key}
+                                  pool={poolOption[selectedPool]}
+                                  trainer={item}
+                                  hari={timeSlot.hari}
+                                  jam={slotObj.jam}
+                                />
+                              )} */}
                             </>
                           )}
                         </>
@@ -520,6 +511,13 @@ const CekJadwal = () => {
                     </>
                   );
                 })}
+                {/* <PelatihKosong
+                  key={i}
+                  pool={poolOption[selectedPool]}
+                  trainer={item}
+                  hari={timeSlot.hari}
+                  jam={slotObj.jam}
+                /> */}
               </div>
             );
           })
@@ -647,15 +645,45 @@ const CekJadwal = () => {
   const PelatihKosong = React.memo(({ pool, jadwal, trainer, hari, jam }) => {
     return (
       <div className="flex justify-center items-center">
-        <Tooltip placement="top" arrow content={`Buat Order`}>
-          <span>
+        <Tooltip placement="top" arrow content="Buat Order">
+          <button
+            onClick={() => handleModal({ pool, jadwal, trainer, hari, jam })}
+            className="p-2 rounded-full bg-green-50 hover:bg-green-100 
+                     transition duration-200 ease-in-out transform 
+                     hover:scale-105 shadow-sm"
+          >
             <Icon
               icon="heroicons-outline:plus"
-              width="24"
-              color="green"
-              onClick={() => handleModal({ pool, jadwal, trainer, hari, jam })}
+              width="20"
+              height="20"
+              className="text-green-600"
             />
-          </span>
+          </button>
+        </Tooltip>
+      </div>
+    );
+  });
+
+  const PerpanjangPaket = React.memo(({ order_id }) => {
+    return (
+      <div className="flex justify-center items-center">
+        <Tooltip placement="top" arrow content="Perpanjang Paket">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              console.log(order_id);
+              handlePerpanjang(order_id);
+            }}
+            className="p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition 
+                     duration-200 ease-in-out transform hover:scale-105 shadow-sm"
+          >
+            <Icon
+              icon="heroicons-outline:heart"
+              width="20"
+              height="20"
+              className="text-pink-600"
+            />
+          </button>
         </Tooltip>
       </div>
     );
@@ -678,6 +706,7 @@ const CekJadwal = () => {
             />
           </div>
         </div>
+        {/* Card View */}
         <Switch
           label="Active Switch"
           value={checked}
@@ -836,16 +865,16 @@ const AdaJadwal = React.memo((timeSlot, i) => (
 ));
 
 const PelatihLibur = React.memo(() => (
-  <div className="flex flex-col justify-center items-center">
-    <span>
+  <div className="flex flex-col items-center justify-center space-y-1">
+    <div className="p-2 rounded-full bg-red-50 shadow-sm">
       <Icon
         icon="heroicons-outline:calendar-days"
-        width="24"
-        color="red"
-        // onClick={() => alert("test")}
+        width="20"
+        height="20"
+        className="text-red-500"
       />
-    </span>
-    <span>Libur</span>
+    </div>
+    <span className="text-xs font-medium text-red-600">Libur</span>
   </div>
 ));
 
@@ -855,14 +884,22 @@ const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
       placement="top"
       arrow
       content={
-        <div className="whitespace-pre-line">
-          {`Sudah ada jadwal di \n ${poolName}`}
+        <div className="whitespace-pre-line text-sm text-gray-700">
+          {`Sudah ada jadwal di \n${poolName}`}
         </div>
       }
     >
-      <span>
-        <Icon icon="heroicons-outline:hand-raised" width="24" color="black" />
-      </span>
+      <div
+        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 
+                      transition duration-200 ease-in-out shadow-sm cursor-default"
+      >
+        <Icon
+          icon="heroicons-outline:hand-raised"
+          width="20"
+          height="20"
+          className="text-gray-600"
+        />
+      </div>
     </Tooltip>
   </div>
 ));
@@ -908,6 +945,20 @@ const PaymentStatusBadge = ({ status }) => {
         " animate-bounce justify-center text-[clamp(8px,0.7vw,10px)] p-1"
       }
       // icon={icon}
+    />
+  );
+};
+
+const AdminBadge = ({ admin }) => {
+  return (
+    <Badge
+      label={admin}
+      className="animate-bounce justify-center text-[clamp(9px,0.8vw,12px)] 
+                 px-3 py-1 rounded-full 
+                 bg-white text-pink-700 font-semibold 
+                 shadow-md shadow-pink-200 
+                 border border-pink-300
+                 hover:bg-pink-200 transition"
     />
   );
 };
