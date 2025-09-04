@@ -343,7 +343,6 @@ const CekJadwal = () => {
       let poolName = poolOption[selectedPool].value;
       let dayName = daysOfWeek[index].name;
       setSelectedDay(daysOfWeek[index].name);
-      // console.log(selectedBranch, poolName, dayName);
       loadSchedule(selectedBranch, poolName, dayName);
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
@@ -371,6 +370,8 @@ const CekJadwal = () => {
           timeSlot.data.map((slotObj, jIdx) => {
             const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
 
+            if (orders[0]?.is_free) return <PelatihLibur key={jIdx} />;
+
             return (
               <div
                 key={`${i}-${jIdx}`}
@@ -379,7 +380,7 @@ const CekJadwal = () => {
                 {orders.map((slot, k) => {
                   const key = `${i}-${jIdx}-${k}`;
 
-                  if (slot.is_free) return <PelatihLibur key={key} />;
+                  // if (slot.is_free) return <PelatihLibur key={key} />;
 
                   if (slot.order_id) {
                     let diff = 0;
@@ -498,26 +499,26 @@ const CekJadwal = () => {
 
                   const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
 
-                  return (
-                    <>
-                      <PelatihKosong
-                        key={key}
-                        pool={poolOption[selectedPool]}
-                        trainer={item}
-                        hari={timeSlot.hari}
-                        jam={slotObj.jam}
-                      />
-                      {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
-                    </>
-                  );
+                  // return (
+                  //   <>
+                  //     <PelatihKosong
+                  //       key={key}
+                  //       pool={poolOption[selectedPool]}
+                  //       trainer={item}
+                  //       hari={timeSlot.hari}
+                  //       jam={slotObj.jam}
+                  //     />
+                  //     {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
+                  //   </>
+                  // );
                 })}
-                {/* <PelatihKosong
+                <PelatihKosong
                   key={i}
                   pool={poolOption[selectedPool]}
                   trainer={item}
                   hari={timeSlot.hari}
                   jam={slotObj.jam}
-                /> */}
+                />
               </div>
             );
           })
@@ -671,7 +672,6 @@ const CekJadwal = () => {
           <button
             onClick={(e) => {
               e.preventDefault();
-              console.log(order_id);
               handlePerpanjang(order_id);
             }}
             className="p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition 
@@ -781,7 +781,6 @@ const CekJadwal = () => {
                   }}
                   placeholder="Filter Pelatih"
                   onChange={(e) => {
-                    // console.log(e.value);
                     setFilteredPelatih(e?.value ?? "");
                   }}
                 />
