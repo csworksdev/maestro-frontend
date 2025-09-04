@@ -883,7 +883,7 @@ const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
       placement="top"
       arrow
       content={
-        <div className="whitespace-pre-line text-sm text-gray-700">
+        <div className="whitespace-pre-line text-sm text-white">
           {`Sudah ada jadwal di \n${poolName}`}
         </div>
       }
