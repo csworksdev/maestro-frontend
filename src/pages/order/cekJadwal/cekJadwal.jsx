@@ -343,7 +343,6 @@ const CekJadwal = () => {
       let poolName = poolOption[selectedPool].value;
       let dayName = daysOfWeek[index].name;
       setSelectedDay(daysOfWeek[index].name);
-      // console.log(selectedBranch, poolName, dayName);
       loadSchedule(selectedBranch, poolName, dayName);
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
@@ -371,153 +370,138 @@ const CekJadwal = () => {
           timeSlot.data.map((slotObj, jIdx) => {
             const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
 
+            // Jika free langsung render PelatihLibur
+            if (orders[0]?.is_free) {
+              return <PelatihLibur key={jIdx} />;
+            }
+
+            // Cek apakah ada slot di pool lain
+            const hasOtherPool = orders.some(
+              (slot) => slot.order_id && slot.pool_name !== pool.label
+            );
+
+            // Fungsi bantu: tentukan warna card
+            const getCardColor = (slot) => {
+              let cardColor =
+                "bg-white border-2 border-green-500 shadow-md shadow-lime-200/50";
+
+              const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
+              if (pLastRaw) {
+                const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
+                const diff = DateTime.now().diff(pLast, "days").days;
+
+                if (diff > 2)
+                  cardColor = "bg-red-200 shadow-md shadow-red-500/50";
+                else if (diff > 0)
+                  cardColor = "bg-yellow-500 shadow-md shadow-lime-500/50";
+              }
+
+              return cardColor;
+            };
+
+            // Fungsi bantu: render slot untuk pool yang sama
+            const renderSamePoolSlot = (slot, key) => {
+              const cardColor = getCardColor(slot);
+
+              if (checked) {
+                return (
+                  <div
+                    key={key}
+                    className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center gap-3`}
+                  >
+                    {slot.student?.map((x, idx) => (
+                      <div key={idx} className="text-[clamp(8px,0.7vw,10px)]">
+                        {x.split(" ")[0]}
+                      </div>
+                    ))}
+                    <PerpanjangPaket order_id={slot.order_id} />
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={key}
+                  className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
+                >
+                  <>
+                    <AdminBadge admin={slot.admin} />
+                    <PaymentStatusBadge status={slot.is_paid} />
+                    <Badge
+                      label={checkProduct(slot.product)}
+                      className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
+                    />
+                    {/* copy order id */}
+                    {user_id === "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" && (
+                      <button
+                        onClick={() => {
+                          const text = `order_id = '${slot.order_id}'`;
+                          navigator.clipboard.writeText(text);
+                        }}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <Icons
+                          icon="heroicons-outline:clipboard-copy"
+                          className="w-5 h-5"
+                        />
+                      </button>
+                    )}
+                    <div className="flex justify-between">
+                      <Tooltip content={slot.student?.join(", ") || ""}>
+                        <span>{iconProduct(slot.product)}</span>
+                      </Tooltip>
+                      {slot?.is_paid !== "pending" && (
+                        <Tooltip
+                          content={
+                            slot.p?.length
+                              ? slot.p.map((pItem, idx) => (
+                                  <div key={idx}>
+                                    <strong>P{pItem.meet}</strong>:{" "}
+                                    {pItem.tgl || "-"}
+                                  </div>
+                                ))
+                              : "Tidak ada pertemuan"
+                          }
+                        >
+                          <span>{iconProduct("p")}</span>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <PerpanjangPaket order_id={slot.order_id} />
+                  </>
+                </div>
+              );
+            };
+
+            // Fungsi bantu: render slot pool lain
+            const renderOtherPoolSlot = (slot, key) => (
+              <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
+            );
+
             return (
               <div
                 key={`${i}-${jIdx}`}
                 className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
                 {orders.map((slot, k) => {
+                  if (!slot.order_id) return null; // skip slot kosong
+
                   const key = `${i}-${jIdx}-${k}`;
-
-                  if (slot.is_free) return <PelatihLibur key={key} />;
-
-                  if (slot.order_id) {
-                    let diff = 0;
-                    if (slot.pool_name === pool.label) {
-                      // Color logic
-                      let cardColor =
-                        "bg-white border-2 border-green-500 shadow-md shadow-lime-200/50";
-                      const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
-
-                      if (pLastRaw) {
-                        const pLast = DateTime.fromFormat(
-                          pLastRaw,
-                          "dd/MM/yyyy"
-                        );
-                        diff = DateTime.now().diff(pLast, "days").days;
-
-                        if (diff > 2)
-                          cardColor = "bg-red-200 shadow-md shadow-red-500/50";
-                        else if (diff > 0)
-                          cardColor =
-                            "bg-yellow-500 shadow-md shadow-lime-500/50";
-                      }
-
-                      return (
-                        <>
-                          {checked ? (
-                            <div
-                              key={key}
-                              className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center gap-3`}
-                            >
-                              {slot.student?.map((x) => {
-                                return (
-                                  <div className="text-[clamp(8px,0.7vw,10px)]">
-                                    {x.split(" ")[0]}
-                                  </div>
-                                );
-                              })}
-                              <PerpanjangPaket order_id={slot.order_id} />
-                            </div>
-                          ) : (
-                            <>
-                              <div
-                                key={key}
-                                className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
-                              >
-                                <>
-                                  <AdminBadge admin={slot.admin} />
-                                  <PaymentStatusBadge status={slot.is_paid} />
-                                  <Badge
-                                    label={checkProduct(slot.product)}
-                                    className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
-                                  />
-                                  {/* copy order id */}
-                                  {user_id ===
-                                  "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" ? (
-                                    <button
-                                      onClick={() => {
-                                        var text =
-                                          "order_id = '" + slot.order_id + "'";
-                                        navigator.clipboard.writeText(text);
-                                      }}
-                                      className="text-blue-500 hover:text-blue-700"
-                                    >
-                                      <Icons
-                                        icon="heroicons-outline:clipboard-copy"
-                                        className="w-5 h-5"
-                                      />
-                                    </button>
-                                  ) : null}
-                                  <div className="flex justify-between">
-                                    <Tooltip
-                                      content={slot.student?.join(", ") || ""}
-                                    >
-                                      <span>{iconProduct(slot.product)}</span>
-                                    </Tooltip>
-                                    {slot?.is_paid == "pending" ? null : (
-                                      <Tooltip
-                                        content={
-                                          slot.p?.length
-                                            ? slot.p.map((pItem, idx) => (
-                                                <div key={idx}>
-                                                  <strong>P{pItem.meet}</strong>
-                                                  : {pItem.tgl || "-"}
-                                                </div>
-                                              ))
-                                            : "Tidak ada pertemuan"
-                                        }
-                                      >
-                                        <span>{iconProduct("p")}</span>
-                                      </Tooltip>
-                                    )}
-                                  </div>
-                                  <PerpanjangPaket order_id={slot.order_id} />
-                                </>
-                              </div>
-                              {/* {!slot.is_free && (
-                                <PelatihKosong
-                                  key={key}
-                                  pool={poolOption[selectedPool]}
-                                  trainer={item}
-                                  hari={timeSlot.hari}
-                                  jam={slotObj.jam}
-                                />
-                              )} */}
-                            </>
-                          )}
-                        </>
-                      );
-                    }
-
-                    // Pelatih lain
-                    return (
-                      <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
-                    );
+                  if (slot.pool_name === pool.label) {
+                    return renderSamePoolSlot(slot, key);
                   }
-
-                  const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
-
-                  return (
-                    <>
-                      <PelatihKosong
-                        key={key}
-                        pool={poolOption[selectedPool]}
-                        trainer={item}
-                        hari={timeSlot.hari}
-                        jam={slotObj.jam}
-                      />
-                      {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
-                    </>
-                  );
+                  return renderOtherPoolSlot(slot, key);
                 })}
-                {/* <PelatihKosong
-                  key={i}
-                  pool={poolOption[selectedPool]}
-                  trainer={item}
-                  hari={timeSlot.hari}
-                  jam={slotObj.jam}
-                /> */}
+
+                {!hasOtherPool && (
+                  <PelatihKosong
+                    key={i}
+                    pool={poolOption[selectedPool]}
+                    trainer={item}
+                    hari={timeSlot.hari}
+                    jam={slotObj.jam}
+                  />
+                )}
               </div>
             );
           })
@@ -525,6 +509,21 @@ const CekJadwal = () => {
       </>
     );
   });
+
+  // const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
+
+  // return (
+  //   <>
+  //     <PelatihKosong
+  //       key={key}
+  //       pool={poolOption[selectedPool]}
+  //       trainer={item}
+  //       hari={timeSlot.hari}
+  //       jam={slotObj.jam}
+  //     />
+  //     {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
+  //   </>
+  // );
 
   const GridKolamHeader = React.memo(({ item, trainers, day }) => {
     let dataJadwal =
@@ -671,7 +670,6 @@ const CekJadwal = () => {
           <button
             onClick={(e) => {
               e.preventDefault();
-              console.log(order_id);
               handlePerpanjang(order_id);
             }}
             className="p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition 
@@ -781,7 +779,6 @@ const CekJadwal = () => {
                   }}
                   placeholder="Filter Pelatih"
                   onChange={(e) => {
-                    // console.log(e.value);
                     setFilteredPelatih(e?.value ?? "");
                   }}
                 />
@@ -884,7 +881,7 @@ const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
       placement="top"
       arrow
       content={
-        <div className="whitespace-pre-line text-sm text-gray-700">
+        <div className="whitespace-pre-line text-sm text-white">
           {`Sudah ada jadwal di \n${poolName}`}
         </div>
       }
