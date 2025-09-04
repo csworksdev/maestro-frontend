@@ -223,11 +223,11 @@ export const menuOpx = [
     isHeadr: true,
     title: "Operasional",
   },
-  {
-    title: "Okupansi",
-    icon: "heroicons-outline:presentation-chart-line",
-    link: "dashboard/operasional/okupansi",
-  },
+  // {
+  //   title: "Okupansi",
+  //   icon: "heroicons-outline:presentation-chart-line",
+  //   link: "dashboard/operasional/okupansi",
+  // },
   {
     title: "Cek Jadwal",
     icon: "heroicons-outline:calendar-days",
