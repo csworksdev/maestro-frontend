@@ -738,6 +738,8 @@ const RekapBulanan = () => {
 
   const handlePayAll = async (params) => {
     if (params.length > 0) {
+      // params.forEach(async (order_detail_id) => {
+      //   let newParams = checkIfGroupPayment(params);
       const response = await BayarPelatihByTrainer(params);
       if (response.status === 200) {
         setListData((prev) => ({
@@ -756,6 +758,7 @@ const RekapBulanan = () => {
           }),
         }));
       }
+      // });
     }
   };
 
@@ -778,12 +781,36 @@ const RekapBulanan = () => {
       : null;
   }
 
+  const checkIfGroupPayment = (data) => {
+    let addOrderDetailID = [];
+
+    data.forEach((orderDetailId) => {
+      const result = findOrderByDetailId(listData.results, orderDetailId);
+
+      if (result) {
+        listData.results.forEach((item) => {
+          if (item.order_id === result.order_id) {
+            if (result.matched_key in item) {
+              addOrderDetailID.push(item[result.matched_key]);
+            }
+          }
+        });
+      }
+    });
+    return addOrderDetailID.concat(data);
+  };
+
   const handleBayarPerPertemuan = (order_detail_id) => {
     handlePayAll([order_detail_id]);
   };
 
   const handleBayarPerOrder = (e) => {
     try {
+      // setUnpaidList([]);
+      // let x = listPeriode.filter((a) => a.name === selectedPeriode);
+      // let data = e;
+      console.log(e.order_id);
+      // console.log(listData.results.filter((x) => (x.order_id = e.order_id)));
       let filteredData = listData.results.filter(
         (x) => x.order_id === e.order_id
       );
@@ -811,7 +838,11 @@ const RekapBulanan = () => {
           }
         }
       });
+
+      // setUnpaidList(unpaidOrderId);
       handlePayAll(unpaidOrderId);
+      // alert(JSON.stringify(unpaidOrderId));
+      console.log(unpaidOrderId);
     } catch (error) {
       console.log(error);
     }
@@ -819,6 +850,10 @@ const RekapBulanan = () => {
 
   const handleBayarSemua = () => {
     try {
+      // setUnpaidList([]);
+      // let x = listPeriode.filter((a) => a.name === selectedPeriode);
+      // let data = e;
+
       let unpaidOrderId = [];
       listData.results.map((item) => {
         for (let index = 1; index <= 8; index++) {
@@ -842,7 +877,10 @@ const RekapBulanan = () => {
           }
         }
       });
+      // console.log(unpaidOrderId);
+      // setUnpaidList(unpaidOrderId);
       handlePayAll(unpaidOrderId.sort());
+      // alert(JSON.stringify(unpaidOrderId));
     } catch (error) {
       console.log(error);
     }

@@ -372,7 +372,18 @@ const CekJadwal = () => {
 
             // Jika free langsung render PelatihLibur
             if (orders[0]?.is_free) {
-              return <PelatihLibur key={jIdx} />;
+              return (
+                <div className="flex flex-col gap-4">
+                  <PelatihLibur key={jIdx} />
+                  <PelatihKosong
+                    key={i}
+                    pool={poolOption[selectedPool]}
+                    trainer={item}
+                    hari={timeSlot.hari}
+                    jam={slotObj.jam}
+                  />
+                </div>
+              );
             }
 
             // Cek apakah ada slot di pool lain

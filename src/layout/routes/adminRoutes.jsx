@@ -96,8 +96,9 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
-import Leave from "@/pages/izin/admin/leave";
-import Promo from "@/pages/masterdata/promo";
+const Promo = lazy(() => import("@/pages/masterdata/promo"));
+const Leave = lazy(() => import("@/pages/izin/admin/leave"));
+const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 import EditPromo from "@/pages/masterdata/promo/edit";
 import ChatTest from "@/pages/utility/chattest";
 
@@ -267,6 +268,10 @@ const AdminRoutes = () => {
           <Route index element={<ChatTest />} />
         </Route>
         //#endregion
+        {/* Followup Perpanjang */}
+        <Route path="followup-perpanjang">
+          <Route index element={<FolloupPerpanjang />} />
+        </Route>
         {/* Fallback */}
         <Route path="*" element={<ErrorPage />} />
       </Route>

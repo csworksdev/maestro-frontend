@@ -22,6 +22,7 @@ const Leave = lazy(() => import("@/pages/trainer/leaves/leave"));
 const LeaveForm = lazy(() => import("@/pages/trainer/leaves/leaveForm"));
 
 const ErrorPage = lazy(() => import("@/pages/404"));
+const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 
 export const CoachRoutes = () => {
   return (
@@ -61,6 +62,9 @@ export const CoachRoutes = () => {
         <Route path="izin">
           <Route index element={<Leave />} />
           <Route path="ajukan" element={<LeaveForm />} />
+        </Route>
+        <Route path="followup-perpanjang">
+          <Route index element={<FolloupPerpanjang />} />
         </Route>
         {/* </Route> */}
         <Route path="*" element={<ErrorPage />} />
