@@ -50,6 +50,7 @@ const Table = memo(
     handleSearch,
     isAction = true,
     isCheckbox = false,
+    isPagination = true,
     onSelectionChange,
   }) => {
     const columns = useMemo(
@@ -61,15 +62,18 @@ const Table = memo(
       [listColumn]
     );
 
-    const data = useMemo(() => listData.results, [listData.results]);
+    const data = useMemo(() => listData?.results ?? [], [listData?.results]);
 
     const tableInstance = useTable(
       {
         columns,
         data,
-        manualPagination: true,
+        manualPagination: isPagination,
         manualFilters: true,
-        pageCount: Math.ceil(listData.count / data.length),
+        pageCount:
+          isPagination && data.length > 0
+            ? Math.ceil((listData?.count ?? data.length) / data.length)
+            : 0,
       },
       useFilters,
       useGlobalFilter,

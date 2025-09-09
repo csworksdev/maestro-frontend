@@ -95,7 +95,8 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
-import Leave from "@/pages/izin/opx/leave";
+const Leave = lazy(() => import("@/pages/izin/admin/leave"));
+const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 
 const OpxRoutes = () => {
   const data = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -180,6 +181,9 @@ const OpxRoutes = () => {
           <Route index element={<UMUser />} />
           <Route path="add" element={<UMUserEdit />} />
           <Route path="edit" element={<UMUserEdit />} />
+        </Route>
+        <Route path="followup-perpanjang">
+          <Route index element={<FolloupPerpanjang />} />
         </Route>
         <Route path="*" element={<ErrorPage />} />
       </Route>
