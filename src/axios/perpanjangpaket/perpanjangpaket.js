@@ -29,3 +29,8 @@ export const deleteFollowup = (id) => {
 export const getFollowupSummary = (params = null) => {
   return axiosConfig.get("/api/followups/summary/", params);
 };
+
+// Summary per trainer (admin bisa lihat semua, trainer hanya punya dia)
+export const getPendingFollowUpView = (params = null) => {
+  return axiosConfig.get("/api/followups/pending/", params);
+};
