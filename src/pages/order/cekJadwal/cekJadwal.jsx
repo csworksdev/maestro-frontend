@@ -349,10 +349,27 @@ const CekJadwal = () => {
     }
   };
 
-  const handlePerpanjang = async (order_id) => {
-    let res = await PerpanjangOrder(order_id);
-    if (res)
-      loadSchedule(selectedBranch, poolOption[selectedPool].value, selectedDay);
+  const handlePerpanjang = (order_id, slot) => {
+    Swal.fire({
+      title: "Perpanjang paket ",
+      text: `Siswa ${slot.student} akan diperpanjang ?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Perpanjang",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        let res = await PerpanjangOrder(order_id);
+        if (res)
+          loadSchedule(
+            selectedBranch,
+            poolOption[selectedPool].value,
+            selectedDay
+          );
+      }
+    });
+
     // alert("belum release, mohon sabar 😜");
   };
 
@@ -425,7 +442,7 @@ const CekJadwal = () => {
                         {x.split(" ")[0]}
                       </div>
                     ))}
-                    <PerpanjangPaket order_id={slot.order_id} />
+                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
                   </div>
                 );
               }
@@ -478,7 +495,7 @@ const CekJadwal = () => {
                         </Tooltip>
                       )}
                     </div>
-                    <PerpanjangPaket order_id={slot.order_id} />
+                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
                   </>
                 </div>
               );
@@ -674,14 +691,14 @@ const CekJadwal = () => {
     );
   });
 
-  const PerpanjangPaket = React.memo(({ order_id }) => {
+  const PerpanjangPaket = React.memo(({ order_id, slot }) => {
     return (
       <div className="flex justify-center items-center">
         <Tooltip placement="top" arrow content="Perpanjang Paket">
           <button
             onClick={(e) => {
               e.preventDefault();
-              handlePerpanjang(order_id);
+              handlePerpanjang(order_id, slot);
             }}
             className="p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition 
                      duration-200 ease-in-out transform hover:scale-105 shadow-sm"
