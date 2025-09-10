@@ -1,36 +1,95 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Icon from "@/components/ui/Icon";
-import { getFollowupSummary } from "@/axios/perpanjangpaket/perpanjangpaket";
-import { toProperCase } from "@/utils";
+import {
+  getFollowupSummary,
+  getPendingFollowUpView,
+} from "@/axios/perpanjangpaket/perpanjangpaket";
 import LoaderCircle from "@/components/Loader-circle";
+import Card from "@/components/ui/Card";
+import SkeletionTable from "@/components/skeleton/Table";
+import Table from "@/components/globals/table/table";
+import PaginationComponent from "@/components/globals/table/pagination";
+import { DateTime } from "luxon";
+import Search from "@/components/globals/table/search";
 
 const DashboardPerpanjangTrainer = () => {
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, roles } = useSelector((state) => state.auth.data);
+
   const [summary, setSummary] = useState([]);
+  const [listData, setListData] = useState({ count: 0, results: [] });
   const [loading, setLoading] = useState(true);
 
-  const loadSummary = async () => {
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchSummary = async () => {
     try {
-      const params = { roles, trainer_id: user_id };
-
+      const params = { roles: roles, trainer_id: user_id };
       const res = await getFollowupSummary({ params });
-
       setSummary(res.data.results);
     } catch (err) {
-      console.error("Failed to fetch followup summary:", err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch summary:", err);
+    }
+  };
+
+  const fetchPending = async (page, size, query) => {
+    try {
+      const params = {
+        page: page + 1,
+        page_size: size,
+        search: query,
+        roles: roles,
+        trainer_id: user_id,
+      };
+      const res = await getPendingFollowUpView({ params });
+      setListData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch pending followups:", err);
     }
   };
 
   useEffect(() => {
-    loadSummary();
-  }, []);
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchSummary(),
+        fetchPending(pageIndex, pageSize, searchQuery),
+      ]);
+      setLoading(false);
+    };
+    loadData();
+  }, [pageIndex, pageSize, searchQuery, roles, user_id]);
 
-  if (loading) return <LoaderCircle />;
+  const handlePageChange = (page) => setPageIndex(page);
+  const handlePageSizeChange = (size) => setPageSize(size);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setPageIndex(0);
+  };
 
-  // helper untuk bikin statistik card
+  const COLUMNS = [
+    {
+      Header: "Siswa",
+      accessor: "student_name",
+      Cell: (row) => <span>{row?.cell?.value}</span>,
+    },
+    {
+      Header: "Tanggal Follow Up",
+      accessor: "pending_date",
+      Cell: (row) =>
+        row?.cell?.value
+          ? DateTime.fromISO(row?.cell?.value).toFormat("dd LLLL yyyy")
+          : "-",
+    },
+    {
+      Header: "Nomor Wa",
+      accessor: "student_phone",
+      Cell: (row) => <span>{row?.cell?.value}</span>,
+    },
+  ];
+
   const buildStatistics = (data) => [
     {
       title: "Total Orders",
@@ -77,60 +136,58 @@ const DashboardPerpanjangTrainer = () => {
   ];
 
   return (
-    <div className="space-y-6 grid grid-cols-3 grid-rows-2 lg:grid-cols-1">
-      {roles !== "Coach" ? (
-        // ADMIN → tampilkan semua trainer
-        summary.map((trainer, idx) => (
-          <div key={idx}>
-            <h3 className="text-lg font-semibold mb-3 text-slate-700 dark:text-white">
-              {toProperCase(trainer.trainer_name)}
-            </h3>
-            <div className="grid md:grid-cols-6 gap-4">
-              {buildStatistics(trainer).map((item, i) => (
-                <div
-                  key={i}
-                  className={`${item.bg} rounded-md p-4 bg-opacity-[0.15] dark:bg-opacity-50 text-center`}
-                >
-                  <div
-                    className={`${item.text} mx-auto h-10 w-10 flex flex-col items-center justify-center rounded-full bg-white text-2xl mb-4`}
-                  >
-                    <Icon icon={item.icon} />
-                  </div>
-                  <span className="block text-sm text-slate-600 font-medium dark:text-white mb-1">
-                    {item.title}
-                  </span>
-                  <span className="block text-2xl text-slate-900 dark:text-white font-medium">
-                    {item.count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))
-      ) : (
-        // COACH → tampilkan hanya summary dirinya
+    <>
+      <div className="space-y-6 grid grid-cols-3 grid-rows-2 lg:grid-cols-1">
         <div className="grid md:grid-cols-6 gap-4">
-          {buildStatistics(summary[0] || {}).map((trainer, idx) => (
+          {buildStatistics(summary[0] || {}).map((item, idx) => (
             <div
               key={idx}
-              className={`${trainer.bg} rounded-md p-4 bg-opacity-[0.15] dark:bg-opacity-50 text-center`}
+              className={`${item.bg} rounded-md p-4 bg-opacity-[0.15] dark:bg-opacity-50 text-center`}
             >
               <div
-                className={`${trainer.text} mx-auto h-10 w-10 flex flex-col items-center justify-center rounded-full bg-white text-2xl mb-4`}
+                className={`${item.text} mx-auto h-10 w-10 flex flex-col items-center justify-center rounded-full bg-white text-2xl mb-4`}
               >
-                <Icon icon={trainer.icon} />
+                <Icon icon={item.icon} />
               </div>
               <span className="block text-sm text-slate-600 font-medium dark:text-white mb-1">
-                {trainer.title}
+                {item.title}
               </span>
               <span className="block text-2xl text-slate-900 dark:text-white font-medium">
-                {trainer.count}
+                {item.count}
               </span>
             </div>
           ))}
         </div>
-      )}
-    </div>
+      </div>
+
+      <Card title="Siswa Perpanjang">
+        {loading ? (
+          <SkeletionTable />
+        ) : (
+          <>
+            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            <Table
+              listData={listData}
+              listColumn={COLUMNS}
+              searchValue={searchQuery}
+              handleSearch={handleSearch}
+              isAction={false}
+            />
+            <PaginationComponent
+              pageSize={pageSize}
+              pageIndex={pageIndex}
+              pageCount={Math.ceil(listData.count / pageSize)}
+              canPreviousPage={pageIndex > 0}
+              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
+              gotoPage={handlePageChange}
+              previousPage={() => handlePageChange(pageIndex - 1)}
+              nextPage={() => handlePageChange(pageIndex + 1)}
+              setPageSize={handlePageSizeChange}
+            />
+          </>
+        )}
+      </Card>
+    </>
   );
 };
 
