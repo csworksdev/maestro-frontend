@@ -1,10 +1,28 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import { Link } from "react-router-dom";
 import { Menu } from "@headlessui/react";
-import { notifications } from "@/constant/data";
+// import { notifications } from "@/constant/data";
 import Card from "@/components/ui/Card";
+import { axiosConfig } from "@/axios/config";
+import { formatDistanceToNow } from "date-fns";
+
 const NotificationPage = () => {
+  const [notifications, setNotifications] = useState([]);
+
+  // fetch awal
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await axiosConfig("/api/notifications/");
+        setNotifications(res.data.notifications || res.data); // tergantung DRF pagination
+      } catch (err) {
+        console.error("Notif fetch error", err);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <div>
       <Card bodyClass="p-0">
@@ -54,10 +72,12 @@ const NotificationPage = () => {
                               : " text-slate-600 dark:text-slate-300"
                           } text-xs leading-4`}
                         >
-                          {item.desc}
+                          {item.message}
                         </div>
                         <div className="text-slate-400 dark:text-slate-400 text-xs mt-1">
-                          3 min ago
+                          {formatDistanceToNow(new Date(item.created_at), {
+                            addSuffix: true,
+                          })}
                         </div>
                       </div>
                       {item.unread && (

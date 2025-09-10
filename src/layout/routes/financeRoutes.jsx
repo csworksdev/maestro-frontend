@@ -39,6 +39,8 @@ const XenditInvoiceHistory = lazy(() =>
 );
 const XenditBalance = lazy(() => import("@/pages/xendit/saldo"));
 
+const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
+
 // Fallback
 const ErrorPage = lazy(() => import("@/pages/404"));
 
@@ -115,6 +117,7 @@ const FinanceRoutes = () => {
           <Route path="invoice-history" element={<XenditInvoiceHistory />} />
           <Route path="balance" element={<XenditBalance />} />
         </Route>
+        <Route index path="notifications" element={<NotificationPage />} />
         {/* Fallback */}
         <Route path="*" element={<ErrorPage />} />
       </Route>

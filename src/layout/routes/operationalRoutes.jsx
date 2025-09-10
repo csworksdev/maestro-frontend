@@ -97,6 +97,7 @@ import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
+const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 
 const OpxRoutes = () => {
   const data = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -185,6 +186,7 @@ const OpxRoutes = () => {
         <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
         </Route>
+        <Route index path="notifications" element={<NotificationPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Route>
     </Routes>

@@ -96,11 +96,12 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import ChatTest from "@/pages/utility/chattest";
 const Promo = lazy(() => import("@/pages/masterdata/promo"));
 const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
-import EditPromo from "@/pages/masterdata/promo/edit";
-import ChatTest from "@/pages/utility/chattest";
+const EditPromo = lazy(() => import("@/pages/masterdata/promo/edit"));
+const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 
 const AdminRoutes = () => {
   const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
@@ -162,6 +163,7 @@ const AdminRoutes = () => {
           {/* <Route path="add" element={<EditSpecialization />} />
                   <Route path="edit" element={<EditSpecialization />} /> */}
         </Route>
+        <Route index path="notifications" element={<NotificationPage />} />
         //#endregion
         {/*  */}
         //#region master data
