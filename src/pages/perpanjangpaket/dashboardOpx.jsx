@@ -33,21 +33,21 @@ const DashboardPerpanjangOpx = () => {
   // helper untuk bikin statistik card
   const buildStatistics = (data) => [
     {
-      title: "Total Orders",
+      title: "Total Paket",
       count: data.total || 0,
       bg: "bg-info-500",
       text: "text-info-500",
       icon: "heroicons-outline:menu-alt-1",
     },
     {
-      title: "Pending",
+      title: "Paket Berjalan",
       count: data.pending || 0,
       bg: "bg-warning-500",
       text: "text-warning-500",
       icon: "heroicons-outline:clock",
     },
     {
-      title: "In Progress",
+      title: "Sedang Follow Up",
       count: data.in_progress || 0,
       bg: "bg-primary-500",
       text: "text-primary-500",
@@ -68,7 +68,7 @@ const DashboardPerpanjangOpx = () => {
       icon: "heroicons-outline:x-circle",
     },
     {
-      title: "Total Students",
+      title: "Total Siswa",
       count: data.students || 0,
       bg: "bg-indigo-500",
       text: "text-indigo-500",

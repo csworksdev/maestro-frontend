@@ -12,6 +12,7 @@ import SearchModal from "./Tools/SearchModal";
 import Profile from "./Tools/Profile";
 import useRtl from "@/hooks/useRtl";
 import useMobileMenu from "@/hooks/useMobileMenu";
+import Notification from "./Tools/Notification";
 
 const Header = ({ className = "custom-class" }) => {
   const [collapsed, setMenuCollapsed] = useSidebar();
@@ -120,6 +121,7 @@ const Header = ({ className = "custom-class" }) => {
 
           {/* Nav Tools */}
           <div className="nav-tools flex items-center lg:space-x-6 space-x-3 rtl:space-x-reverse">
+            <Notification />
             <SwitchDark />
             {width >= breakpoints.md && <Profile />}
             {width <= breakpoints.md && (

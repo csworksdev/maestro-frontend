@@ -116,7 +116,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
 
       if (res.status) {
         isEdit(true);
-        onClose();
+        // onClose();
         Swal.fire({
           title: "Edited!",
           text: "Your order has been updated.",

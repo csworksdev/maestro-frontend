@@ -5,6 +5,7 @@ import { combineReducers } from "redux";
 import authReducer from "@/redux/slicers/authSlice";
 import layoutReducer from "@/redux/slicers/layoutSlice";
 import loadingReducer from "@/redux/slicers/loadingSlice";
+import notificationsReducer from "@/redux/slicers/notificationsSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -15,10 +16,18 @@ const layoutPersistConfig = {
   key: "layout",
   storage,
 };
+const notificationPersistConfig = {
+  key: "notification",
+  storage,
+};
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   layout: persistReducer(layoutPersistConfig, layoutReducer),
+  notifications: persistReducer(
+    notificationPersistConfig,
+    notificationsReducer
+  ),
   loading: persistReducer({ key: "loading", storage }, loadingReducer),
 });
 

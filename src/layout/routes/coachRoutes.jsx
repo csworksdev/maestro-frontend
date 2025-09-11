@@ -23,6 +23,7 @@ const LeaveForm = lazy(() => import("@/pages/trainer/leaves/leaveForm"));
 
 const ErrorPage = lazy(() => import("@/pages/404"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
+const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 
 export const CoachRoutes = () => {
   return (
@@ -66,6 +67,7 @@ export const CoachRoutes = () => {
         <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
         </Route>
+        <Route index path="notifications" element={<NotificationPage />} />
         {/* </Route> */}
         <Route path="*" element={<ErrorPage />} />
       </Route>
