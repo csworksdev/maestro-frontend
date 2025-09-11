@@ -92,21 +92,21 @@ const DashboardPerpanjangTrainer = () => {
 
   const buildStatistics = (data) => [
     {
-      title: "Total Orders",
+      title: "Total Paket",
       count: data.total || 0,
       bg: "bg-info-500",
       text: "text-info-500",
       icon: "heroicons-outline:menu-alt-1",
     },
     {
-      title: "Pending",
+      title: "Paket Berjalan",
       count: data.pending || 0,
       bg: "bg-warning-500",
       text: "text-warning-500",
       icon: "heroicons-outline:clock",
     },
     {
-      title: "In Progress",
+      title: "Sedang Follow Up",
       count: data.in_progress || 0,
       bg: "bg-primary-500",
       text: "text-primary-500",
@@ -127,7 +127,7 @@ const DashboardPerpanjangTrainer = () => {
       icon: "heroicons-outline:x-circle",
     },
     {
-      title: "Total Students",
+      title: "Total Siswa",
       count: data.students || 0,
       bg: "bg-indigo-500",
       text: "text-indigo-500",
@@ -137,30 +137,28 @@ const DashboardPerpanjangTrainer = () => {
 
   return (
     <>
-      <div className="space-y-6 grid grid-cols-3 grid-rows-2 lg:grid-cols-1">
-        <div className="grid md:grid-cols-6 gap-4">
-          {buildStatistics(summary[0] || {}).map((item, idx) => (
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        {buildStatistics(summary[0] || {}).map((item, idx) => (
+          <div
+            key={idx}
+            className={`${item.bg} rounded-md p-4 bg-opacity-[0.15] dark:bg-opacity-50 text-center`}
+          >
             <div
-              key={idx}
-              className={`${item.bg} rounded-md p-4 bg-opacity-[0.15] dark:bg-opacity-50 text-center`}
+              className={`${item.text} mx-auto h-10 w-10 flex items-center justify-center rounded-full bg-white text-2xl mb-4`}
             >
-              <div
-                className={`${item.text} mx-auto h-10 w-10 flex flex-col items-center justify-center rounded-full bg-white text-2xl mb-4`}
-              >
-                <Icon icon={item.icon} />
-              </div>
-              <span className="block text-sm text-slate-600 font-medium dark:text-white mb-1">
-                {item.title}
-              </span>
-              <span className="block text-2xl text-slate-900 dark:text-white font-medium">
-                {item.count}
-              </span>
+              <Icon icon={item.icon} />
             </div>
-          ))}
-        </div>
+            <span className="block text-sm text-slate-600 font-medium dark:text-white mb-1">
+              {item.title}
+            </span>
+            <span className="block text-2xl text-slate-900 dark:text-white font-medium">
+              {item.count}
+            </span>
+          </div>
+        ))}
       </div>
 
-      <Card title="Siswa Perpanjang">
+      <Card title="Siswa Follow Up" className="mt-6">
         {loading ? (
           <SkeletionTable />
         ) : (
