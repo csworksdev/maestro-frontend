@@ -20,6 +20,7 @@ import FinanceRoutes from "./layout/routes/financeRoutes";
 import OpxRoutes from "./layout/routes/operationalRoutes";
 
 const LoginAdmin = lazy(() => import("@/pages/auth/login"));
+const LoginCoach = lazy(() => import("@/pages/auth/login2"));
 const RegisterAdmin = lazy(() => import("@/pages/auth/register"));
 const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 
@@ -99,7 +100,10 @@ const App = () => {
               </PublicRoute>
             }
           >
-            <Route path="login" element={<LoginAdmin />} />
+            <Route
+              path="login"
+              element={subdomain === "coach" ? <LoginCoach /> : <LoginAdmin />}
+            />
             <Route path="register" element={<RegisterAdmin />} />
             <Route path="forgot-password" element={<ForgotPassAdmin />} />
           </Route>
