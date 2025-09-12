@@ -42,6 +42,11 @@ export const menuFinance = [
     link: "order",
   },
   {
+    title: "Siswa",
+    icon: "heroicons-outline:users",
+    link: "siswa",
+  },
+  {
     title: "Produk",
     icon: "heroicons-outline:rectangle-stack",
     link: "produk",
