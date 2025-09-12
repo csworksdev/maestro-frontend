@@ -50,42 +50,43 @@ const LoginForm = () => {
       const { refresh, access, data } = response.data; // Ensure these fields exist
 
       if (response.data) {
-        if (
-          data.roles.toLowerCase().includes(subdomain.toLowerCase()) ||
-          data.roles.toLowerCase().includes("superuser") ||
-          data.roles.toLowerCase().includes("chief")
-        ) {
-          dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-          // Panggil ini setelah access token sudah pasti ada
-          await requestAndSendToken(async (token) => {
-            await axiosConfig.post(
-              "/api/notifikasi/save-token/",
-              { token, device_type: "web", origin: window.location.hostname },
-              {
-                headers: {
-                  Authorization: `Bearer ${access}`,
-                },
-              }
-            );
-          });
-
-          // Menu(data.roles);
-          localStorage.setItem(
-            "presenceSelected",
-            DateTime.now().toFormat("c") - 1
+        // if (
+        //   data.roles.toLowerCase().includes(subdomain.toLowerCase()) ||
+        //   data.roles.toLowerCase().includes("superuser") ||
+        //   data.roles.toLowerCase().includes("chief") ||
+        //   data.roles.toLowerCase().includes("chief")
+        // ) {
+        dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
+        // Panggil ini setelah access token sudah pasti ada
+        await requestAndSendToken(async (token) => {
+          await axiosConfig.post(
+            "/api/notifikasi/save-token/",
+            { token, device_type: "web", origin: window.location.hostname },
+            {
+              headers: {
+                Authorization: `Bearer ${access}`,
+              },
+            }
           );
-          localStorage.setItem("access", access);
-          navigate("/");
-        } else {
-          Swal.fire({
-            title: "username or password invalid",
-          });
-        }
+        });
+
+        // Menu(data.roles);
+        localStorage.setItem(
+          "presenceSelected",
+          DateTime.now().toFormat("c") - 1
+        );
+        localStorage.setItem("access", access);
+        navigate("/");
       } else {
         Swal.fire({
           title: "username or password invalid",
         });
       }
+      // } else {
+      //   Swal.fire({
+      //     title: "username or password invalid",
+      //   });
+      // }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
     }
