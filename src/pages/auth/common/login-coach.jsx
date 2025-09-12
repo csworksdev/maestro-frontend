@@ -47,19 +47,19 @@ const LoginForm = () => {
       if (response.data) {
         dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
         // Panggil ini setelah access token sudah pasti ada
-        // await requestAndSendToken(async (token) => {
-        //   await axiosConfig
-        //     .post(
-        //       "/api/notifikasi/save-token/",
-        //       { token, device_type: "web", origin: window.location.hostname },
-        //       {
-        //         headers: {
-        //           Authorization: `Bearer ${access}`,
-        //         },
-        //       }
-        //     )
-        //     .then((res) => console.log(res));
-        // });
+        await requestAndSendToken(async (token) => {
+          await axiosConfig
+            .post(
+              "/api/notifikasi/save-token/",
+              { token, device_type: "web", origin: window.location.hostname },
+              {
+                headers: {
+                  Authorization: `Bearer ${access}`,
+                },
+              }
+            )
+            .then((res) => console.log(res));
+        });
 
         Menu(data.roles);
         localStorage.setItem("access", access);
