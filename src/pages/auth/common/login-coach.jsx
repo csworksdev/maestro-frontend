@@ -63,7 +63,7 @@ const LoginForm = () => {
 
         Menu(data.roles);
         localStorage.setItem("access", access);
-        navigate("/app/dashboard");
+        navigate("/");
       } else {
         Swal.fire({
           title: "username or password invalid",
