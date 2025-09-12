@@ -32,6 +32,10 @@ const RekapBulanan = lazy(() =>
   import("@/pages/finance/rekapBulanan/rekapBulanan")
 );
 
+// Siswa
+const Siswa = lazy(() => import("@/pages/masterdata/siswa"));
+const EditSiswa = lazy(() => import("@/pages/masterdata/siswa/edit"));
+
 // Xendit
 const XenditTransaction = lazy(() => import("@/pages/xendit/transaction"));
 const XenditInvoiceHistory = lazy(() =>
@@ -100,6 +104,11 @@ const FinanceRoutes = () => {
           <Route path="detail" element={<DetailOrder />} />
           <Route path="expired" element={<OrderExpired />} />
           <Route path="waitinglist" element={<Waitinglist />} />
+        </Route>
+        <Route path="siswa">
+          <Route index element={<Siswa />} />
+          <Route path="add" element={<EditSiswa />} />
+          <Route path="edit" element={<EditSiswa />} />
         </Route>
         <Route path="finishedOrder">
           <Route index element={<OrderFinished />} />
