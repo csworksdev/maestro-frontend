@@ -169,11 +169,11 @@ export const menuTrainer = [
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },
-  {
-    title: "Follow Up Perpanjang",
-    icon: "heroicons-outline:globe-americas",
-    link: "followup-perpanjang",
-  },
+  // {
+  //   title: "Follow Up Perpanjang",
+  //   icon: "heroicons-outline:globe-americas",
+  //   link: "followup-perpanjang",
+  // },
   // {
   //   title: "Pengajuan Izin",
   //   icon: "heroicons-outline:queue-list",
