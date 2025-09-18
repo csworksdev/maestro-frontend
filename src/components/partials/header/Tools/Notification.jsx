@@ -48,7 +48,7 @@ const Notification = () => {
     socketRef.current = new WebSocket(
       `${
         import.meta.env.VITE_API_WS
-      }/ws/notifications/?token=${localStorage.getItem("access")}`
+      }/ws/notifications/?token=${localStorage.getItem("fcm_token")}`
     );
 
     socketRef.current.onopen = () => {

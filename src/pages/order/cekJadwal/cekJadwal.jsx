@@ -349,28 +349,59 @@ const CekJadwal = () => {
     }
   };
 
-  const handlePerpanjang = (order_id, slot) => {
-    Swal.fire({
-      title: "Perpanjang paket ",
-      text: `Siswa ${slot.student} akan diperpanjang ?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#22c55e",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Perpanjang",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        let res = await PerpanjangOrder(order_id);
-        if (res)
-          loadSchedule(
-            selectedBranch,
-            poolOption[selectedPool].value,
-            selectedDay
-          );
-      }
-    });
+  const handlePerpanjang = async (order_id, slot) => {
+    // Swal.fire({
+    //   title: "Perpanjang paket ",
+    //   text: `Siswa ${slot.student} akan diperpanjang ?`,
+    //   icon: "warning",
+    //   showCancelButton: true,
+    //   confirmButtonColor: "#22c55e",
+    //   cancelButtonColor: "#ef4444",
+    //   confirmButtonText: "Perpanjang",
+    // }).then(async (result) => {
+    //   if (result.isConfirmed) {
+    //     let res = await PerpanjangOrder(order_id);
+    //     if (res)
+    //       loadSchedule(
+    //         selectedBranch,
+    //         poolOption[selectedPool].value,
+    //         selectedDay
+    //       );
+    //   }
+    // });
 
-    // alert("belum release, mohon sabar 😜");
+    const { value: order_date } = await Swal.fire({
+      title: "Perpanjang paket ",
+      text: `Siswa ${slot.student} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
+      input: "date",
+      icon: "question",
+      didOpen: () => {
+        const today = new Date().toISOString();
+        Swal.getInput().max = today.split("T")[0];
+      },
+    });
+    if (order_date) {
+      // console.log(order_date);
+      Swal.fire({
+        title: "Perpanjang paket ",
+        text: `Siswa ${slot.student} akan diperpanjang ke tanggal ${order_date} ?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#22c55e",
+        cancelButtonColor: "#ef4444",
+        confirmButtonText: "Perpanjang",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          let res = await PerpanjangOrder(order_id, order_date);
+          if (res)
+            loadSchedule(
+              selectedBranch,
+              poolOption[selectedPool].value,
+              selectedDay
+            );
+        }
+      });
+    }
   };
 
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
