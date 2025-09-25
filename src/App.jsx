@@ -17,6 +17,7 @@ import CoachRoutes from "./layout/routes/coachRoutes";
 import AdminRoutes from "./layout/routes/adminRoutes";
 import FinanceRoutes from "./layout/routes/financeRoutes";
 import OpxRoutes from "./layout/routes/operationalRoutes";
+import { useFcmToken } from "./hooks/useFCMToken";
 
 const LoginAdmin = lazy(() => import("@/pages/auth/login"));
 const LoginCoach = lazy(() => import("@/pages/auth/login2"));
@@ -31,47 +32,14 @@ const App = () => {
   let subdomain = hostname.split(".")[0];
   // const isAuth = useSelector((state) => state.auth.isAuth);
 
+  const { fcmToken, removeFcmToken } = useFcmToken();
+
   useEffect(() => {
-    if (!isChrome()) return;
-
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        getToken(messaging, { vapidKey: import.meta.env.VITE_FCM_VAPID_KEY })
-          .then((token) => {
-            if (!token) console.log("No registration token available.");
-          })
-          .catch(async (err) => {
-            if (err.response?.data?.detail === "Token not registered") {
-              await removeFcmToken();
-            }
-            console.error("Error retrieving token:", err);
-          });
-      }
-    });
-
-    const unsubscribe = onMessage(messaging, (payload) => {
-      const title = payload.notification?.title;
-      const body = payload.notification?.body;
-
-      if (title && body) {
-        toast.info(`${title} - ${body}`);
-      }
-    });
-
-    const swListener = (event) => {
-      const { title, body } = event.data || {};
-      if (title && body) {
-        toast.info(`${title}: ${body}`);
-      }
-    };
-
-    navigator.serviceWorker.addEventListener("message", swListener);
-
-    return () => {
-      unsubscribe();
-      navigator.serviceWorker.removeEventListener("message", swListener);
-    };
-  }, []);
+    if (fcmToken) {
+      console.log("🎯 FCM Token siap dipakai:", fcmToken);
+      // misalnya init WebSocket di sini
+    }
+  }, [fcmToken]);
 
   // hapus prefix "dev" kalau ada
   if (subdomain.startsWith("dev")) {

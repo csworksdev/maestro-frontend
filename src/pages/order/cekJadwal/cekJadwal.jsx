@@ -542,7 +542,7 @@ const CekJadwal = () => {
 
             return (
               <div
-                key={`${i}-${jIdx}`}
+                key={`${jIdx}-${i}-${jIdx}`}
                 className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
                 {orders.map((slot, k) => {
@@ -557,7 +557,7 @@ const CekJadwal = () => {
 
                 {!hasOtherPool && (
                   <PelatihKosong
-                    key={i}
+                    key={`${i}-${jIdx}`}
                     pool={poolOption[selectedPool]}
                     trainer={item}
                     hari={timeSlot.hari}
