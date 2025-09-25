@@ -50,28 +50,43 @@ const LoginForm = () => {
         // Simpan token di Redux
         dispatch(setUser({ refresh, access, data }));
 
-        // Simpan token ke storage (untuk axios interceptor)
+        // Simpan token ke storage
         localStorage.setItem("access_token", access);
         localStorage.setItem("refresh_token", refresh);
 
-        // Kirim FCM token
-        await requestAndSendToken(async (token) => {
-          await axiosConfig.post(
-            "/api/notifikasi/save-token/",
-            { token, device_type: "web", origin: window.location.hostname },
-            {
-              headers: {
-                Authorization: `Bearer ${access}`,
-              },
-            }
-          );
-        });
-
+        // ✅ Simpan presence default
         localStorage.setItem(
           "presenceSelected",
           DateTime.now().toFormat("c") - 1
         );
 
+        // ✅ Kirim FCM token setelah login berhasil
+        await requestAndSendToken(async (token) => {
+          try {
+            await axiosConfig.post(
+              "/api/notifikasi/save-token/",
+              {
+                token,
+                device_type: "web",
+                origin: window.location.hostname,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${access}`,
+                },
+              }
+            );
+            console.log("✅ FCM token disimpan di server");
+            localStorage.setItem("fcm_token", token);
+          } catch (err) {
+            console.error(
+              "❌ Gagal simpan FCM token:",
+              err.response?.data || err.message
+            );
+          }
+        });
+
+        // ✅ Baru pindah ke dashboard
         navigate("/");
       } else {
         Swal.fire({

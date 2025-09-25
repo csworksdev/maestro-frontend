@@ -42,27 +42,49 @@ const LoginForm = () => {
         password: NewData.password,
       };
       const response = await login(params);
-      const { refresh, access, data } = response.data; // Ensure these fields exist
+      const { refresh, access, data } = response.data;
 
       if (response.data) {
-        dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-        // Panggil ini setelah access token sudah pasti ada
+        // Simpan token di Redux
+        dispatch(setUser({ refresh, access, data }));
+
+        // Simpan token ke storage
+        localStorage.setItem("access_token", access);
+        localStorage.setItem("refresh_token", refresh);
+
+        // ✅ Simpan presence default
+        localStorage.setItem(
+          "presenceSelected",
+          DateTime.now().toFormat("c") - 1
+        );
+
+        // ✅ Kirim FCM token setelah login berhasil
         await requestAndSendToken(async (token) => {
-          await axiosConfig
-            .post(
+          try {
+            await axiosConfig.post(
               "/api/notifikasi/save-token/",
-              { token, device_type: "web", origin: window.location.hostname },
+              {
+                token,
+                device_type: "web",
+                origin: window.location.hostname,
+              },
               {
                 headers: {
                   Authorization: `Bearer ${access}`,
                 },
               }
-            )
-            .then((res) => console.log(res));
+            );
+            console.log("✅ FCM token disimpan di server");
+            localStorage.setItem("fcm_token", token);
+          } catch (err) {
+            console.error(
+              "❌ Gagal simpan FCM token:",
+              err.response?.data || err.message
+            );
+          }
         });
 
-        Menu(data.roles);
-        localStorage.setItem("access", access);
+        // ✅ Baru pindah ke dashboard
         navigate("/");
       } else {
         Swal.fire({
