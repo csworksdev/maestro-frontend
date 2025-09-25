@@ -406,6 +406,172 @@ const CekJadwal = () => {
 
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
 
+  const GridKolamDetail = React.memo(({ item, pool }) => {
+    const selectedDay = daysOfWeek[selectedIndex]?.name;
+
+    const filteredDataHari =
+      item.datahari?.filter((x) => x.hari === selectedDay) || [];
+
+    return (
+      <>
+        {filteredDataHari.flatMap((timeSlot, i) =>
+          timeSlot.data.map((slotObj, jIdx) => {
+            const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
+
+            // Jika free langsung render PelatihLibur
+            if (orders[0]?.is_free) {
+              return (
+                <div className="flex flex-col gap-4">
+                  <PelatihLibur key={jIdx} />
+                  <PelatihKosong
+                    key={i}
+                    pool={poolOption[selectedPool]}
+                    trainer={item}
+                    hari={timeSlot.hari}
+                    jam={slotObj.jam}
+                  />
+                </div>
+              );
+            }
+
+            // Cek apakah ada slot di pool lain
+            const hasOtherPool = orders.some(
+              (slot) =>
+                slot.order_id &&
+                slot.pool_name !== pool.label &&
+                slot.p.every((item) => item.tgl === null)
+            );
+
+            // Fungsi bantu: tentukan warna card
+            const getCardColor = (slot) => {
+              let cardColor =
+                "bg-white border-2 border-green-500 shadow-md shadow-lime-200/50";
+
+              const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
+              if (pLastRaw) {
+                const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
+                const diff = DateTime.now().diff(pLast, "days").days;
+
+                if (diff > 2)
+                  cardColor = "bg-red-200 shadow-md shadow-red-500/50";
+                else if (diff > 0)
+                  cardColor = "bg-yellow-500 shadow-md shadow-lime-500/50";
+              }
+
+              return cardColor;
+            };
+
+            // Fungsi bantu: render slot untuk pool yang sama
+            const renderSamePoolSlot = (slot, key) => {
+              const cardColor = getCardColor(slot);
+
+              if (checked) {
+                return (
+                  <div
+                    key={key}
+                    className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center gap-3`}
+                  >
+                    {slot.student?.map((x, idx) => (
+                      <div key={idx} className="text-[clamp(8px,0.7vw,10px)]">
+                        {x.split(" ")[0]}
+                      </div>
+                    ))}
+                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={key}
+                  className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
+                >
+                  <>
+                    <AdminBadge admin={slot.admin} />
+                    <PaymentStatusBadge status={slot.is_paid} />
+                    <Badge
+                      label={checkProduct(slot.product)}
+                      className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
+                    />
+                    {/* copy order id */}
+                    {user_id === "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" && (
+                      <button
+                        onClick={() => {
+                          const text = `order_id = '${slot.order_id}'`;
+                          navigator.clipboard.writeText(text);
+                        }}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <Icons
+                          icon="heroicons-outline:clipboard-copy"
+                          className="w-5 h-5"
+                        />
+                      </button>
+                    )}
+                    <div className="flex justify-between">
+                      <Tooltip content={slot.student?.join(", ") || ""}>
+                        <span>{iconProduct(slot.product)}</span>
+                      </Tooltip>
+                      {slot?.is_paid !== "pending" && (
+                        <Tooltip
+                          content={
+                            slot.p?.length
+                              ? slot.p.map((pItem, idx) => (
+                                  <div key={idx}>
+                                    <strong>P{pItem.meet}</strong>:{" "}
+                                    {pItem.tgl || "-"}
+                                  </div>
+                                ))
+                              : "Tidak ada pertemuan"
+                          }
+                        >
+                          <span>{iconProduct("p")}</span>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
+                  </>
+                </div>
+              );
+            };
+
+            // Fungsi bantu: render slot pool lain
+            const renderOtherPoolSlot = (slot, key) => (
+              <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
+            );
+
+            return (
+              <div
+                key={`${i}-${jIdx}`}
+                className="flex flex-col gap-2 min-h-[70px] justify-center"
+              >
+                {orders.map((slot, k) => {
+                  if (!slot.order_id) return null; // skip slot kosong
+
+                  const key = `${i}-${jIdx}-${k}`;
+                  if (slot.pool_name === pool.label) {
+                    return renderSamePoolSlot(slot, key);
+                  }
+                  return renderOtherPoolSlot(slot, key);
+                })}
+
+                {!hasOtherPool && (
+                  <PelatihKosong
+                    key={i}
+                    pool={poolOption[selectedPool]}
+                    trainer={item}
+                    hari={timeSlot.hari}
+                    jam={slotObj.jam}
+                  />
+                )}
+              </div>
+            );
+          })
+        )}
+      </>
+    );
+  });
+
   // const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
 
   // return (
@@ -420,64 +586,6 @@ const CekJadwal = () => {
   //     {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
   //   </>
   // );
-
-  const GridKolamDetail = React.memo(({ item, pool }) => {
-    const selectedDay = daysOfWeek[selectedIndex]?.name;
-
-    {
-      filteredDataHari.flatMap((timeSlot, i) =>
-        timeSlot.data.map((slotObj, jIdx) => {
-          const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
-
-          // Jika free langsung render PelatihLibur
-          if (orders[0]?.is_free) {
-            return (
-              <div key={`free-${i}-${jIdx}`} className="flex flex-col gap-4">
-                <PelatihLibur />
-                <PelatihKosong
-                  pool={poolOption[selectedPool]}
-                  trainer={item}
-                  hari={timeSlot.hari}
-                  jam={slotObj.jam}
-                />
-              </div>
-            );
-          }
-
-          const hasOtherPool = orders.some(
-            (slot) => slot.order_id && slot.pool_name !== pool.label
-          );
-
-          return (
-            <div
-              key={`slotgroup-${i}-${jIdx}`}
-              className="flex flex-col gap-2 min-h-[70px] justify-center"
-            >
-              {orders.map((slot, k) => {
-                if (!slot.order_id) return null;
-
-                const slotKey = `slot-${i}-${jIdx}-${k}`;
-                if (slot.pool_name === pool.label) {
-                  return renderSamePoolSlot(slot, slotKey);
-                }
-                return renderOtherPoolSlot(slot, slotKey);
-              })}
-
-              {!hasOtherPool && (
-                <PelatihKosong
-                  key={`kosong-${i}-${jIdx}`}
-                  pool={poolOption[selectedPool]}
-                  trainer={item}
-                  hari={timeSlot.hari}
-                  jam={slotObj.jam}
-                />
-              )}
-            </div>
-          );
-        })
-      );
-    }
-  });
 
   const GridKolamHeader = React.memo(({ item, trainers, day }) => {
     let dataJadwal =
@@ -496,7 +604,7 @@ const CekJadwal = () => {
             const jumlahPerJam = item.data[day][header];
             return (
               <div
-                key={`header-${day}-${i}`}
+                key={i}
                 className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center"
               >
                 {header}
@@ -512,9 +620,9 @@ const CekJadwal = () => {
 
         {/* BODY SCROLL */}
         <div className="overflow-auto ">
-          {dataJadwal.map((de, idx) => (
+          {dataJadwal.map((de) => (
             <div
-              key={`trainer-${de.trainer_id}-${idx}`}
+              key={de.trainer_id}
               className="grid grid-cols-15 gap-3 my-2 w-full"
             >
               <div

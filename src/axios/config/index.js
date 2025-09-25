@@ -49,7 +49,7 @@ axiosConfig.interceptors.response.use(
         }
 
         // panggil endpoint refresh
-        const res = await axios.post(`${baseURL}/token/refresh/`, {
+        const res = await axios.post(`${baseURL}/auth/token/refresh/`, {
           refresh,
         });
 
