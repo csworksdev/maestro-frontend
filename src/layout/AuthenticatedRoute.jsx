@@ -1,10 +1,8 @@
-import { setupInterceptors } from "@/axios/config";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 
 // const isAuthenticated = () => !!localStorage.getItem("user");
 const AuthenticatedRoute = ({ children }) => {
-  setupInterceptors();
   const authState = useSelector((state) => state.auth);
 
   if (!authState.isAuth) {

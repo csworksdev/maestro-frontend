@@ -31,7 +31,7 @@ const MobileFooter = () => {
           </div>
         )}
       </NavLink>
-      <NavLink to="/order">
+      <NavLink to="/">
         {({ isActive }) => (
           <div>
             <span

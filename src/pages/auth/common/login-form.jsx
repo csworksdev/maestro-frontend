@@ -38,26 +38,23 @@ const LoginForm = () => {
   });
 
   const onSubmit = async (NewData) => {
-    const hostname = window.location.hostname;
-    const subdomain = hostname.split(".")[0];
-
     try {
       const params = {
         username: NewData.username,
         password: NewData.password,
       };
       const response = await login(params);
-      const { refresh, access, data } = response.data; // Ensure these fields exist
+      const { refresh, access, data } = response.data;
 
       if (response.data) {
-        // if (
-        //   data.roles.toLowerCase().includes(subdomain.toLowerCase()) ||
-        //   data.roles.toLowerCase().includes("superuser") ||
-        //   data.roles.toLowerCase().includes("chief") ||
-        //   data.roles.toLowerCase().includes("chief")
-        // ) {
-        dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-        // Panggil ini setelah access token sudah pasti ada
+        // Simpan token di Redux
+        dispatch(setUser({ refresh, access, data }));
+
+        // Simpan token ke storage (untuk axios interceptor)
+        localStorage.setItem("access_token", access);
+        localStorage.setItem("refresh_token", refresh);
+
+        // Kirim FCM token
         await requestAndSendToken(async (token) => {
           await axiosConfig.post(
             "/api/notifikasi/save-token/",
@@ -70,23 +67,17 @@ const LoginForm = () => {
           );
         });
 
-        // Menu(data.roles);
         localStorage.setItem(
           "presenceSelected",
           DateTime.now().toFormat("c") - 1
         );
-        localStorage.setItem("access", access);
+
         navigate("/");
       } else {
         Swal.fire({
           title: "username or password invalid",
         });
       }
-      // } else {
-      //   Swal.fire({
-      //     title: "username or password invalid",
-      //   });
-      // }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
     }

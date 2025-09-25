@@ -12,7 +12,6 @@ import PublicRoute from "./layout/PublicRoute";
 import { messaging, getToken, onMessage } from "@/firebase/firebase";
 import { removeFcmToken } from "@/utils/fcm";
 import isChrome from "./utils/isChrome";
-import { setupInterceptors } from "./axios/config";
 
 import CoachRoutes from "./layout/routes/coachRoutes";
 import AdminRoutes from "./layout/routes/adminRoutes";
@@ -31,7 +30,6 @@ const App = () => {
   const hostname = window.location.hostname;
   let subdomain = hostname.split(".")[0];
   // const isAuth = useSelector((state) => state.auth.isAuth);
-  setupInterceptors();
 
   useEffect(() => {
     if (!isChrome()) return;

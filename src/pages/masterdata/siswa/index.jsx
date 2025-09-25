@@ -175,9 +175,13 @@ const Siswa = () => {
         return (
           <div className="flex space-x-2 justify-center items-center">
             {(roles === "Admin" ? actionsAdmin : actions).map(
-              (action, index) => (
-                <TableAction action={action} index={index} row={row} />
-              )
+              actions.map((action, index) => (
+                <TableAction
+                  key={action.id || index} // 👈 kasih key DI SINI
+                  action={action}
+                  row={row}
+                />
+              ))
             )}
           </div>
         );
