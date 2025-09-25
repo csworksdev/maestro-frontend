@@ -17,6 +17,7 @@ const CoachEarning = lazy(() => import("@/pages/trainer/earning"));
 const CoachPerformance = lazy(() => import("@/pages/trainer/performance"));
 const CoachSchedule = lazy(() => import("@/pages/trainer/schedule"));
 const CoachPresence = lazy(() => import("@/pages/trainer/presence"));
+const CoachPresence2 = lazy(() => import("@/pages/trainer/presencecopy"));
 const TrainerCourseReminder = lazy(() => import("@/pages/trainer/reminder"));
 const Leave = lazy(() => import("@/pages/trainer/leaves/leave"));
 const LeaveForm = lazy(() => import("@/pages/trainer/leaves/leaveForm"));
@@ -58,7 +59,8 @@ export const CoachRoutes = () => {
         <Route path="earning" element={<CoachEarning />} />
         {/* <Route path="performance" element={<CoachPerformance />} />
           <Route path="schedule" element={<CoachSchedule />} /> */}
-        <Route path="presence" element={<CoachPresence />} />
+        <Route path="presence" element={<CoachPresence2 />} />
+        {/* <Route path="presence2" element={<CoachPresence2 />} /> */}
         {/* <Route path="reminder" element={<TrainerCourseReminder />} /> */}
         <Route path="izin">
           <Route index element={<Leave />} />

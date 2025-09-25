@@ -52,7 +52,7 @@ const sliderSettings = {
   ],
 };
 
-const Presence = () => {
+const PresenceCopy1 = () => {
   const [listData, setListData] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
@@ -992,4 +992,4 @@ const Presence = () => {
   );
 };
 
-export default Presence;
+export default PresenceCopy1;
