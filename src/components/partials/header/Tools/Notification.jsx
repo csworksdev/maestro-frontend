@@ -28,27 +28,12 @@ const Notification = () => {
   const [unread, setUnread] = useState(0);
   const socketRef = useRef(null);
 
-  // fetch awal
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await axiosConfig("/api/notifications/");
-        setNotifications(res.data.notifications || res.data); // tergantung DRF pagination
-        const unreadRes = await axiosConfig("/api/notifications/unread_count/");
-        setUnread(unreadRes.data.unread_count || 0);
-      } catch (err) {
-        console.error("Notif fetch error", err);
-      }
-    }
-    load();
-  }, []);
-
   // buka websocket
   useEffect(() => {
     socketRef.current = new WebSocket(
       `${
         import.meta.env.VITE_API_WS
-      }/ws/notifications/?token=${localStorage.getItem("access")}`
+      }/ws/notifications/?token=${localStorage.getItem("access_token")}`
     );
 
     socketRef.current.onopen = () => {
@@ -61,14 +46,19 @@ const Notification = () => {
         setNotifications((prev) => [n, ...prev]);
         setUnread((u) => u + 1);
       }
+      if (payload.type === "notification.initial") {
+        setNotifications((prev) => [payload.notification, ...prev]);
+        setUnread((u) => u + 1);
+      }
     };
     socketRef.current.onclose = () => {
-      console.log("🔔 WS closed, retry in 5s");
       setTimeout(() => {
         // auto reconnect
         if (socketRef.current?.readyState !== WebSocket.OPEN) {
           socketRef.current = new WebSocket(
-            `${import.meta.env.VITE_API_WS}/ws/notifications/`
+            `${
+              import.meta.env.VITE_API_WS
+            }/ws/notifications/?token=${localStorage.getItem("access_token")}`
           );
         }
       }, 5000);

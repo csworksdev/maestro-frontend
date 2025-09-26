@@ -38,55 +38,61 @@ const LoginForm = () => {
   });
 
   const onSubmit = async (NewData) => {
-    const hostname = window.location.hostname;
-    const subdomain = hostname.split(".")[0];
-
     try {
       const params = {
         username: NewData.username,
         password: NewData.password,
       };
       const response = await login(params);
-      const { refresh, access, data } = response.data; // Ensure these fields exist
+      const { refresh, access, data } = response.data;
 
       if (response.data) {
-        // if (
-        //   data.roles.toLowerCase().includes(subdomain.toLowerCase()) ||
-        //   data.roles.toLowerCase().includes("superuser") ||
-        //   data.roles.toLowerCase().includes("chief") ||
-        //   data.roles.toLowerCase().includes("chief")
-        // ) {
-        dispatch(setUser({ refresh, access, data })); // Ensure payload matches reducer structure
-        // Panggil ini setelah access token sudah pasti ada
-        await requestAndSendToken(async (token) => {
-          await axiosConfig.post(
-            "/api/notifikasi/save-token/",
-            { token, device_type: "web", origin: window.location.hostname },
-            {
-              headers: {
-                Authorization: `Bearer ${access}`,
-              },
-            }
-          );
-        });
+        // Simpan token di Redux
+        dispatch(setUser({ refresh, access, data }));
 
-        // Menu(data.roles);
+        // Simpan token ke storage
+        localStorage.setItem("access_token", access);
+        localStorage.setItem("refresh_token", refresh);
+
+        // ✅ Simpan presence default
         localStorage.setItem(
           "presenceSelected",
           DateTime.now().toFormat("c") - 1
         );
-        localStorage.setItem("access", access);
+
+        // ✅ Kirim FCM token setelah login berhasil
+        await requestAndSendToken(async (token) => {
+          try {
+            await axiosConfig.post(
+              "/api/notifikasi/save-token/",
+              {
+                token,
+                device_type: "web",
+                origin: window.location.hostname,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${access}`,
+                },
+              }
+            );
+            console.log("✅ FCM token disimpan di server");
+            localStorage.setItem("fcm_token", token);
+          } catch (err) {
+            console.error(
+              "❌ Gagal simpan FCM token:",
+              err.response?.data || err.message
+            );
+          }
+        });
+
+        // ✅ Baru pindah ke dashboard
         navigate("/");
       } else {
         Swal.fire({
           title: "username or password invalid",
         });
       }
-      // } else {
-      //   Swal.fire({
-      //     title: "username or password invalid",
-      //   });
-      // }
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
     }

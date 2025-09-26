@@ -10,7 +10,7 @@ const Breadcrumbs = () => {
   const [isHide, setIsHide] = useState(null);
   const [groupTitle, setGroupTitle] = useState("");
 
-  let menuItems = JSON.parse(localStorage.getItem("menuItems"));
+  const menuItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
 
   useEffect(() => {
     const currentMenuItem = menuItems.find(

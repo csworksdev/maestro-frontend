@@ -124,7 +124,11 @@ const Menus = () => {
         return (
           <div className="flex flex-row space-x-2 justify-center items-center">
             {actions.map((action, index) => (
-              <TableAction action={action} index={index} row={row} />
+              <TableAction
+                key={action.id || index} // 👈 kasih key DI SINI
+                action={action}
+                row={row}
+              />
             ))}
           </div>
         );

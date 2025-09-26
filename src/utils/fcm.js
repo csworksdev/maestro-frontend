@@ -58,7 +58,7 @@ export const sendTokenToBackend = async (fcmToken) => {
 // 👇 Fungsi bantu untuk hapus token dari Firebase dan server
 export const removeFcmToken = async () => {
   try {
-    const token = await localStorage.getItem("fcm_token");
+    const token = localStorage.getItem("fcm_token");
 
     if (token) {
       // Hapus dari Firebase

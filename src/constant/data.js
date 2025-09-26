@@ -165,7 +165,7 @@ export const menuTrainer = [
     link: "earning",
   },
   {
-    title: "Absesnsi",
+    title: "Absensi",
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },

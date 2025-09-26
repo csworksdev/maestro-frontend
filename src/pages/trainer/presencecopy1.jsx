@@ -25,6 +25,8 @@ import Icon from "@/components/ui/Icon";
 import { useDispatch } from "react-redux";
 import { setLoading } from "@/redux/slicers/loadingSlice";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
+import Textinput from "@/components/ui/Textinput";
+import { memo } from "react";
 
 const sliderSettings = {
   dots: true,
@@ -50,10 +52,7 @@ const sliderSettings = {
   ],
 };
 
-const Presence = () => {
-  // const [isLoading, setIsLoading] = useSelector(
-  //   (state) => state.loading.isLoading
-  // );
+const PresenceCopy1 = () => {
   const [listData, setListData] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
@@ -67,7 +66,10 @@ const Presence = () => {
   const dispatch = useDispatch();
   useScrollRestoration();
 
-  const pelatihtelat = ["e71496e7-5744-4cff-8cc7-3ea7a30c3f51"];
+  const pelatihtelat = [
+    "a708624f-37a9-4999-94bd-5f842bd765c4",
+    "9c46b123-40d8-41e6-8f8c-391692a2bef2",
+  ];
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -122,21 +124,37 @@ const Presence = () => {
     }
   };
 
-  // const groupedData = listData.reduce((acc, item) => {
-  //   const studentNames = item.students_info
-  //     .map((s) => convertToTitleCase(s.fullname))
-  //     .join(", ");
-  //   if (!acc[item.order]) acc[item.order] = {};
-  //   if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
-  //   acc[item.order][studentNames].push(item);
-  //   return acc;
-  // }, {});
+  const splitPerDay = (orders) => {
+    if (!Array.isArray(orders)) {
+      setTabHari(daysOfWeek.map((hari) => ({ hari, data: [] })));
+      return;
+    }
 
-  const splitPerDay = (data) => {
-    const updatedTabHari = daysOfWeek.map((hari) => ({
-      hari,
-      data: data.filter((item) => item.day === hari),
-    }));
+    const updatedTabHari = daysOfWeek.map((hari) => {
+      // Filter orders sesuai hari
+      const ordersPerHari = orders
+        .filter((order) => order.day === hari)
+        .map((order) => ({
+          order_id: order.order_id,
+          trainer_fullname: order.trainer_fullname,
+          pool_name: order.pool_name,
+          order_date: order.order_date,
+          expire_date: order.expire_date,
+          product: order.product,
+          day: order.day,
+          time: order.time,
+          // details tetap jadi array
+          details: Array.isArray(order.details) ? order.details : [],
+        }))
+        // Urutkan berdasarkan jam
+        .sort((a, b) => a.time.localeCompare(b.time));
+
+      return {
+        hari,
+        data: ordersPerHari,
+      };
+    });
+
     setTabHari(updatedTabHari);
   };
 
@@ -151,7 +169,7 @@ const Presence = () => {
         prevTabHari.map((tab) => ({
           ...tab,
           data: tab.data.filter((item) =>
-            item.students_info.some((student) =>
+            item?.details?.student?.fullname.some((student) =>
               student.fullname.toLowerCase().includes(lowerQuery)
             )
           ),
@@ -214,17 +232,6 @@ const Presence = () => {
 
   const handleUpdate = async (order_id, updatedData) => {
     try {
-      // if (!updatedData.real_date || !updatedData.real_time) {
-      //   await Swal.fire({
-      //     title: "Oops!",
-      //     text: "Silahkan isi tanggal dan jam kehadiran.",
-      //     icon: "error",
-      //     confirmButtonText: "OK",
-      //   });
-      //   handleHadir(updatedData.order_detail_id);
-      //   return;
-      // }
-
       const confirmation = await Swal.fire({
         title: "Apakah anda yakin ingin absen siswa berikut?",
         icon: "warning",
@@ -270,12 +277,6 @@ const Presence = () => {
 
       const updateRes = await UpdatePresenceById(order_id, params);
       if (!updateRes) throw new Error("Failed to update presence");
-
-      // const updateOrder = checkProduct(updatedData);
-      // if (updateOrder && updateOrder.is_finish) {
-      //   const editRes = await EditOrder(updateOrder.order_id, updateOrder);
-      //   if (!editRes?.status) throw new Error("Failed to edit order");
-      // }
 
       await Swal.fire({
         title: `Siswa "${updatedData.students_info[0].fullname}"`,
@@ -382,7 +383,7 @@ const Presence = () => {
     return `https://wa.me/${countryCode}${phone}/?text=hi, ${name}`;
   };
 
-  const StudentCard = ({ studentsInfo }) => {
+  const StudentCardold = ({ studentsInfo }) => {
     return (
       <Disclosure as="div">
         <Disclosure.Button className="group flex items-center justify-between bg-zinc-500 p-2  my-2 rounded">
@@ -430,9 +431,59 @@ const Presence = () => {
     );
   };
 
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
+  const StudentCard = ({ studentsInfo }) => {
+    // Ambil siswa unik berdasarkan id
+    const uniqueStudents = Array.from(
+      new Map(studentsInfo.map((s) => [s.id, s])).values()
+    );
+
+    return (
+      <Disclosure as="div" className="my-2">
+        <Disclosure.Button className="group flex items-center justify-between bg-zinc-500 p-2 rounded">
+          <span className="text-sm/6 font-medium text-white group-hover:text-black-50/80">
+            Kontak Siswa
+          </span>
+          <Icon
+            icon="heroicons-outline:chevron-top"
+            color="white"
+            className="size-5 fill-white/60 group-hover:fill-white/50 group-open:rotate-180 transition-transform"
+          />
+        </Disclosure.Button>
+
+        <Disclosure.Panel className="text-gray-500">
+          {uniqueStudents.length === 0 ? (
+            <div className="py-2 text-sm text-center">Belum ada siswa</div>
+          ) : (
+            uniqueStudents.map((student) => (
+              <div
+                key={student.id}
+                className="grid grid-cols-2 gap-2 items-center border-b-2 py-2"
+              >
+                <div>{convertToTitleCase(student.fullname)}</div>
+                <div className="flex justify-center items-center">
+                  {student.phone ? (
+                    <Button
+                      variant="contained"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-success btn-sm"
+                      link={getWhatsAppLink(student.phone, student.fullname)}
+                    >
+                      Chat WA
+                    </Button>
+                  ) : (
+                    <Button className="opacity-40 cursor-not-allowed btn-secondary btn-sm">
+                      X
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </Disclosure.Panel>
+      </Disclosure>
+    );
+  };
 
   const onSubmit = async (formData) => {
     console.log(formData);
@@ -444,61 +495,37 @@ const Presence = () => {
         item.real_time = formData.real_time;
         return item;
       });
-
-    console.log(updatedItem);
-
-    // if (updatedItem) {
-    //   await handleUpdate(order_detail_id, updatedItem);
-    // }
   };
 
-  const PresenceView = ({ item, k }) => (
+  const updateProgresSiswa = (orderId, detailId, newValue) => {
+    setTabHari((prev) =>
+      prev.map((tab) => ({
+        ...tab,
+        data: tab.data.map((order) => {
+          if (order.order_id !== orderId) return order;
+          return {
+            ...order,
+            details: order.details.map((detail) =>
+              detail.order_detail_id === detailId
+                ? { ...detail, progres_siswa: newValue }
+                : detail
+            ),
+          };
+        }),
+      }))
+    );
+  };
+
+  const PresenceViewold = ({ item, k }) => (
     <Card
       key={`${item.order}-${k}`}
       title={`Pertemuan ke ${item.meet}`}
-      subtitle={`${item.day} - ${item.time}`}
+      // subtitle={`${item.day} - ${item.time}`}
     >
-      {/* <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col items-stretch w-full"
-        key={`${item.order}-${k}-${item.order_detail_id}`}
-      > */}
       <div className="flex flex-col w-full">
         <label className="form-label" htmlFor="real_date">
           Tanggal Kehadiran
         </label>
-        {/* {user_id === "a708624f-37a9-4999-94bd-5f842bd765c4" ||
-        user_id === "9c46b123-40d8-41e6-8f8c-391692a2bef2" ? (
-          <Flatpickr
-            id="real_date"
-            name="real_date"
-            value={item.real_date}
-            defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
-            options={{
-              // absen coach sering telat
-              minDate: DateTime.fromFormat("2025-05-21", "yyyy-MM-dd").toFormat(
-                "yyyy-MM-dd"
-              ),
-              maxDate: DateTime.fromFormat("2025-06-20", "yyyy-MM-dd").toFormat(
-                "yyyy-MM-dd"
-              ),
-              // absen normal
-              // minDate: DateTime.fromISO(periode.start_date).toISODate(),
-              // maxDate: DateTime.fromISO(periode.end_date)
-              //   .plus({ days: -1 })
-              //   .toISODate(),
-              disableMobile: true,
-              allowInput: true,
-              altInput: true,
-              altFormat: "d F Y",
-            }}
-            register={register}
-            className="form-control py-2 w-full"
-            onChange={(selectedDate) =>
-              handleChangeDay(item.order_detail_id, selectedDate?.[0])
-            }
-          />
-        ) : ( */}
         <Flatpickr
           id="real_date"
           name="real_date"
@@ -506,12 +533,12 @@ const Presence = () => {
           defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
           options={{
             // absen coach sering telat
-            minDate: DateTime.fromFormat("2025-08-21", "yyyy-MM-dd").toFormat(
-              "yyyy-MM-dd"
-            ),
-            maxDate: DateTime.fromFormat("2025-09-20", "yyyy-MM-dd").toFormat(
-              "yyyy-MM-dd"
-            ),
+            // minDate: DateTime.fromFormat("2025-04-21", "yyyy-MM-dd").toFormat(
+            //   "yyyy-MM-dd"
+            // ),
+            // maxDate: DateTime.fromFormat("2025-05-20", "yyyy-MM-dd").toFormat(
+            //   "yyyy-MM-dd"
+            // ),
             // absen normal
             minDate: DateTime.fromISO(periode.start_date).toISODate(),
             maxDate: DateTime.fromISO(periode.end_date)
@@ -563,108 +590,280 @@ const Presence = () => {
     </Card>
   );
 
-  const DisplayData = (data) => {
-    const groupedData = data.reduce((acc, item) => {
-      const studentNames = item.students_info
-        .map((s) => convertToTitleCase(s.fullname))
-        .join(", ");
-      if (!acc[item.order]) acc[item.order] = {};
-      if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
-      acc[item.order][studentNames].push(item);
-      return acc;
-    }, {});
+  const groupDataByDayAndOrder = (flatData) => {
+    // group per hari
+    const tabHari = daysOfWeek.map((hari) => {
+      const dayData = flatData.filter((item) => item.day === hari);
 
-    // setListData(groupedData);
+      // group per order_id
+      const orders = Object.values(
+        dayData.reduce((acc, item) => {
+          if (!acc[item.order_id]) {
+            acc[item.order_id] = {
+              order_id: item.order_id,
+              trainer_fullname: item.trainer_fullname,
+              pool_name: item.pool_name,
+              order_date: item.order_date,
+              expire_date: item.expire_date,
+              product: item.product,
+              day: item.day,
+              time: item.time,
+              details: [],
+            };
+          }
+          acc[item.order_id].details.push(item);
+          return acc;
+        }, {})
+      );
+
+      // Sort details per order per meet & student
+      orders.forEach((order) => {
+        order.details = order.details
+          .slice() // clone array
+          .sort(
+            (a, b) =>
+              Number(a.meet) - Number(b.meet) ||
+              a.student.fullname.localeCompare(b.student.fullname)
+          );
+      });
+
+      return {
+        hari,
+        orders,
+      };
+    });
+
+    return tabHari;
+  };
+
+  const PresenceView = ({ data_parent, item, k }) => {
+    return (
+      <Card
+        key={`${item.order_id}-${item.meet}-${k}`}
+        title={`Pertemuan ke ${item.meet}`}
+        subtitle={`${data_parent.day} • ${data_parent.time}`}
+        className="shadow-md rounded-2xl border border-gray-200"
+      >
+        <div className="flex flex-col w-full space-y-4">
+          {/* Tanggal Kehadiran */}
+          <div className="flex flex-col">
+            <label
+              className="text-sm font-medium text-gray-700 mb-1"
+              htmlFor={`real_date_${item.meet}`}
+            >
+              Tanggal Kehadiran
+            </label>
+            <Flatpickr
+              id={`real_date_${item.meet}`}
+              key={`real_date_${item.order_detail_id}`}
+              name="real_date"
+              value={item.real_date}
+              defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
+              options={{
+                minDate: DateTime.fromISO(periode.start_date).toISODate(),
+                maxDate: DateTime.fromISO(periode.end_date)
+                  .plus({ days: -1 })
+                  .toISODate(),
+                disableMobile: true,
+                allowInput: true,
+                altInput: true,
+                altFormat: "d F Y",
+              }}
+              register={register}
+              className="form-input w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              onChange={(selectedDate) =>
+                handleChangeDay(item.meet, selectedDate?.[0])
+              }
+            />
+          </div>
+
+          {/* Jam Kehadiran */}
+          <div className="flex flex-col">
+            <label
+              className="text-sm font-medium text-gray-700 mb-1"
+              htmlFor={`real_time_${item.meet}`}
+            >
+              Jam Kehadiran
+            </label>
+            <select
+              id={`real_time_${item.meet}`}
+              key={`real_time_${item.order_detail_id}`}
+              name="real_time"
+              value={item.real_time}
+              onChange={(e) => handleChangeTime(item.meet, e.target.value)}
+              className="form-select w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
+              register={register}
+            >
+              {jam.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Progress Siswa */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">
+              Progres Siswa
+            </h4>
+            <div className="space-y-3">
+              {data_parent.details
+                .filter((detail) => detail.meet === item.meet)
+                .map((detail) => (
+                  <div
+                    key={detail.order_detail_id}
+                    className="flex flex-col md:flex-row md:items-center gap-2"
+                  >
+                    <span className="text-sm font-medium text-gray-700 md:w-1/3">
+                      {detail.student.fullname}
+                    </span>
+                    <input
+                      type="text"
+                      placeholder={`Progres ${detail.student.fullname} (Meet ${item.meet})`}
+                      className="border p-2 rounded w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      // defaultValue={detail.progres_siswa || ""}
+                      required
+                      pattern="^(?!\s*$)(?!-+$)(?!.*\b(asdf|test|123|abc)\b).{3,}$"
+                      title="Isi progres minimal 3 karakter, tidak boleh kosong, strip, atau sembarang ketikan."
+                      onChange={(e) =>
+                        updateProgresSiswa(
+                          item.order_id,
+                          detail.order_detail_id,
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="flex flex-row justify-end mt-6">
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+            type="button"
+            onClick={() => handleHadir(item.meet)}
+          >
+            Hadir
+          </button>
+        </footer>
+      </Card>
+    );
+  };
+
+  const DisplayData = (data) => {
+    if (!Array.isArray(data) || data.length === 0) return <DataNotFound />;
+
     return (
       <>
-        <Search
-          handleSearch={(query) => handleSearch(query)}
-          searchValue={searchQuery} // Bind searchQuery as the value
-          placeholder={`Cari siswa hari ${hari[selectedIndex].value}`}
-        />
+        {/* Search Bar */}
+        <div className="mb-4">
+          <Search
+            handleSearch={(query) => handleSearch(query)}
+            searchValue={searchQuery}
+            placeholder={`Cari siswa hari ${hari[selectedIndex].value}`}
+          />
+        </div>
 
-        <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
-          {Object.keys(groupedData).map((order_id, i) => (
-            <div key={i}>
-              {Object.keys(groupedData[order_id]).map((student_name, j) => {
-                // Assuming that groupedData contains the pool_name in the first item for each student
-                const poolName =
-                  groupedData[order_id][student_name]?.[j]?.pool_name ||
-                  "Pool not specified";
-                const order_date =
-                  groupedData[order_id][student_name]?.[j]?.order_date || "";
-                const expire_date =
-                  groupedData[order_id][student_name]?.[j]?.expire_date ||
-                  DateTime.fromFormat(
-                    groupedData[order_id][student_name]?.[j]?.order_date,
-                    "yyyy-MM-dd"
-                  )
-                    .plus({ days: 120 })
-                    .toFormat("dd MMMM yyyy");
-                const hari =
-                  groupedData[order_id][student_name]?.[j]?.day || "";
-                const product =
-                  groupedData[order_id][student_name]?.[j]?.product || "";
-                return (
-                  <Card
-                    title={student_name.replace(",", ", ")}
-                    subtitle={
-                      <>
-                        <div className="text-sm flex- flex-col gap-2">
-                          {/* <div> Hari : {hari} </div> */}
-                          <div>
-                            Tanggal Order :{" "}
-                            {DateTime.fromFormat(
-                              order_date,
-                              "yyyy-MM-dd"
-                            ).toFormat("dd MMMM yyyy")}
-                          </div>
-                          <div>Tanggal Kadaluarsa : {expire_date} </div>
-                          <div>Kolam : {poolName}</div>
-                          {/* <div>{student_name.replace(",", ", ")}</div> */}
-                        </div>
-                      </>
-                    }
-                    titleClass="text-sm align-top"
-                    key={i + j}
-                    bodyClass="p-4 overflow-x-auto"
-                  >
-                    <div className="flex flex-row gap-4">
-                      {width >= breakpoints.md &&
-                        groupedData[order_id][student_name]
-                          .sort((a, b) => a.meet - b.meet)
-                          .map((item, k) => (
-                            <PresenceView item={item} k={i + j + k} />
-                          ))}
-                      {width <= breakpoints.md && (
-                        // <Slider {...sliderSettings} key={j}>
-                        //   {groupedData[order_id][student_name]
-                        //     .sort((a, b) => a.meet - b.meet)
-                        //     .map((item, k) => (
-                        //       <PresenceView item={item} k={i + j + k} />
-                        //     ))}
-                        // </Slider>
-                        <div className="flex flex-nowrap gap-4 shrink-0 py-2 min-w-full">
-                          {groupedData[order_id][student_name]
-                            .sort((a, b) => a.meet - b.meet)
-                            .map((item, k) => (
-                              <PresenceView item={item} k={i + j + k} />
-                            ))}
-                        </div>
-                      )}
+        {/* Order List */}
+        <div className="space-y-6">
+          {data.map((order) => (
+            <Card
+              key={order.order_id + order.meet}
+              title={
+                <span className="block text-lg font-semibold text-gray-800">
+                  {[
+                    ...new Set(order.details.map((d) => d.student.fullname)),
+                  ].join(", ")}
+                </span>
+              }
+              subtitle={
+                <StudentCard
+                  studentsInfo={Array.from(
+                    new Map(
+                      order.details.map((d) => [d.student.id, d.student])
+                    ).values()
+                  )}
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
+                />
+              }
+              headerslot={
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x p-2 gap-2">
+                  {/* Kolom kiri */}
+                  <div className="p-4 sm:p-3 rounded-lg bg-blue-300">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 underline">
+                      Informasi Tanggal :
+                    </h4>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Order :</span>{" "}
+                        {DateTime.fromFormat(
+                          order.order_date,
+                          "yyyy-MM-dd"
+                        ).toFormat("dd MMMM yyyy")}
+                      </div>
+                      <div>
+                        <span className="font-medium">Expire :</span>{" "}
+                        {order.expire_date
+                          ? order.expire_date
+                          : DateTime.fromFormat(order.order_date, "yyyy-MM-dd")
+                              .plus({ days: 120 })
+                              .toFormat("dd MMMM yyyy")}
+                      </div>
                     </div>
-                    <footer className="flex flex-row justify-start mt-4">
-                      <StudentCard
-                        studentsInfo={
-                          groupedData[order_id][student_name]?.[j]
-                            ?.students_info || []
-                        }
-                      />
-                    </footer>
-                  </Card>
-                );
-              })}
-            </div>
+                  </div>
+
+                  {/* Kolom kanan */}
+                  <div className="p-4 sm:p-3 rounded-lg bg-blue-300">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 underline">
+                      Detail Sesi :
+                    </h4>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Kolam : </span>{" "}
+                        {order.pool_name}
+                      </div>
+                      <div>
+                        <span className="font-medium">Hari : </span> {order.day}
+                      </div>
+                      <div>
+                        <span className="font-medium">Jam :</span> {order.time}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+              titleClass="text-base font-semibold"
+              bodyClass="p-4 sm:p-6"
+            >
+              {/* Presence List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {(order.details || [])
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      a.meet - b.meet ||
+                      a.student.fullname.localeCompare(b.student.fullname)
+                  )
+                  .reduce((acc, curr) => {
+                    if (!acc.some((item) => item.meet === curr.meet)) {
+                      acc.push(curr);
+                    }
+                    return acc;
+                  }, [])
+                  .map((detail) => (
+                    <PresenceView
+                      key={detail.order_detail_id}
+                      item={detail}
+                      data_parent={order}
+                      className="w-full"
+                    />
+                  ))}
+              </div>
+            </Card>
           ))}
         </div>
       </>
@@ -719,15 +918,10 @@ const Presence = () => {
 
   return (
     <>
-      {/* <Search
-            handleSearch={(query) => handleSearch(query)}
-            searchValue={searchQuery}
-            placeholder="Cari siswa hari"
-          /> */}
       {isOld ? (
         <>
           <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
-            {Object.keys(groupedData).map((order_id, i) => (
+            {/* {Object.keys(groupedData).map((order_id, i) => (
               <div key={i}>
                 {Object.keys(groupedData[order_id]).map((student_name, j) => {
                   // Assuming that groupedData contains the pool_name in the first item for each student
@@ -788,7 +982,7 @@ const Presence = () => {
                   );
                 })}
               </div>
-            ))}
+            ))} */}
           </div>
         </>
       ) : (
@@ -798,4 +992,4 @@ const Presence = () => {
   );
 };
 
-export default Presence;
+export default PresenceCopy1;

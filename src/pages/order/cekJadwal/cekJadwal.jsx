@@ -349,28 +349,59 @@ const CekJadwal = () => {
     }
   };
 
-  const handlePerpanjang = (order_id, slot) => {
-    Swal.fire({
-      title: "Perpanjang paket ",
-      text: `Siswa ${slot.student} akan diperpanjang ?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#22c55e",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Perpanjang",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        let res = await PerpanjangOrder(order_id);
-        if (res)
-          loadSchedule(
-            selectedBranch,
-            poolOption[selectedPool].value,
-            selectedDay
-          );
-      }
-    });
+  const handlePerpanjang = async (order_id, slot) => {
+    // Swal.fire({
+    //   title: "Perpanjang paket ",
+    //   text: `Siswa ${slot.student} akan diperpanjang ?`,
+    //   icon: "warning",
+    //   showCancelButton: true,
+    //   confirmButtonColor: "#22c55e",
+    //   cancelButtonColor: "#ef4444",
+    //   confirmButtonText: "Perpanjang",
+    // }).then(async (result) => {
+    //   if (result.isConfirmed) {
+    //     let res = await PerpanjangOrder(order_id);
+    //     if (res)
+    //       loadSchedule(
+    //         selectedBranch,
+    //         poolOption[selectedPool].value,
+    //         selectedDay
+    //       );
+    //   }
+    // });
 
-    // alert("belum release, mohon sabar 😜");
+    const { value: order_date } = await Swal.fire({
+      title: "Perpanjang paket ",
+      text: `Siswa ${slot.student} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
+      input: "date",
+      icon: "question",
+      didOpen: () => {
+        const today = new Date().toISOString();
+        Swal.getInput().max = today.split("T")[0];
+      },
+    });
+    if (order_date) {
+      // console.log(order_date);
+      Swal.fire({
+        title: "Perpanjang paket ",
+        text: `Siswa ${slot.student} akan diperpanjang ke tanggal ${order_date} ?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#22c55e",
+        cancelButtonColor: "#ef4444",
+        confirmButtonText: "Perpanjang",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          let res = await PerpanjangOrder(order_id, order_date);
+          if (res)
+            loadSchedule(
+              selectedBranch,
+              poolOption[selectedPool].value,
+              selectedDay
+            );
+        }
+      });
+    }
   };
 
   const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
@@ -405,7 +436,10 @@ const CekJadwal = () => {
 
             // Cek apakah ada slot di pool lain
             const hasOtherPool = orders.some(
-              (slot) => slot.order_id && slot.pool_name !== pool.label
+              (slot) =>
+                slot.order_id &&
+                slot.pool_name !== pool.label &&
+                slot.p.every((item) => item.tgl === null)
             );
 
             // Fungsi bantu: tentukan warna card
@@ -508,7 +542,7 @@ const CekJadwal = () => {
 
             return (
               <div
-                key={`${i}-${jIdx}`}
+                key={`${jIdx}-${i}-${jIdx}`}
                 className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
                 {orders.map((slot, k) => {
@@ -523,7 +557,7 @@ const CekJadwal = () => {
 
                 {!hasOtherPool && (
                   <PelatihKosong
-                    key={i}
+                    key={`${i}-${jIdx}`}
                     pool={poolOption[selectedPool]}
                     trainer={item}
                     hari={timeSlot.hari}

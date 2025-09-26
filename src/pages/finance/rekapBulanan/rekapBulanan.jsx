@@ -464,7 +464,11 @@ const RekapBulanan = () => {
       Cell: (row) => (
         <div className="flex space-x-2 justify-center items-center">
           {actions.map((action, index) => (
-            <TableAction key={index} action={action} row={row} />
+            <TableAction
+              key={action.id || index} // 👈 kasih key DI SINI
+              action={action}
+              row={row}
+            />
           ))}
         </div>
       ),

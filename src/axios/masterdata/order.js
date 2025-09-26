@@ -81,9 +81,11 @@ export const DeleteOrder = async (id) => {
   }
 };
 
-export const PerpanjangOrder = async (id) => {
+export const PerpanjangOrder = async (id, order_date) => {
   try {
-    const response = await axiosConfig.post(`/api/order/${id}/perpanjang/`);
+    const response = await axiosConfig.post(`/api/order/${id}/perpanjang/`, {
+      order_date: order_date,
+    });
     return response;
   } catch (error) {
     console.error("Error deleting order:", error);

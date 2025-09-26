@@ -3,17 +3,21 @@ import { createSlice } from "@reduxjs/toolkit";
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    refresh: "",
-    access: "",
-    data: {
+    refresh: localStorage.getItem("refresh_token") || "",
+    access: localStorage.getItem("access_token") || "",
+    data: JSON.parse(localStorage.getItem("user_data")) || {
       user_id: "",
       user_name: "",
       roles: "",
     },
-    isAuth: false,
+    isAuth: !!localStorage.getItem("access_token"),
   },
   reducers: {
     setUser: (state, action) => {
+      localStorage.setItem("access_token", action.payload.access);
+      localStorage.setItem("refresh_token", action.payload.refresh);
+      localStorage.setItem("user_data", JSON.stringify(action.payload.data));
+
       return {
         ...state, // Spread the current state
         refresh: action.payload.refresh,
@@ -40,6 +44,8 @@ const authSlice = createSlice({
       localStorage.removeItem("sidebarCollapsed");
       localStorage.removeItem("activeSubmenu");
       localStorage.removeItem("activeMultiMenu");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
     },
   },
 });

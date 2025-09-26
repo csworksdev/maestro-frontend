@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import { getPresenceById } from "@/axios/trainer/presence";
-import Loading from "@/components/Loading";
 import Button from "@/components/ui/Button";
 import Swal from "sweetalert2";
 import { UpdatePresenceById } from "@/axios/trainer/presence";
@@ -9,13 +8,11 @@ import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
 import { useSelector } from "react-redux";
-import Slider from "react-slick";
 import useWidth from "@/hooks/useWidth";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { hari, jam } from "@/constant/jadwal-default";
-import { EditOrder } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import { startCase, toLower } from "lodash";
 
@@ -34,14 +31,14 @@ const sliderSettings = {
   slidesToScroll: 1,
   responsive: [
     {
-      breakpoint: 1024, // Tablet and smaller
+      breakpoint: 1024,
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
       },
     },
     {
-      breakpoint: 768, // Mobile
+      breakpoint: 768,
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
@@ -50,15 +47,12 @@ const sliderSettings = {
   ],
 };
 
-const Presence = () => {
-  // const [isLoading, setIsLoading] = useSelector(
-  //   (state) => state.loading.isLoading
-  // );
+const PresenceCopy = () => {
   const [listData, setListData] = useState([]);
   const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
-  // const { setValue } = useForm();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isOld, setIsOld] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(
@@ -67,7 +61,10 @@ const Presence = () => {
   const dispatch = useDispatch();
   useScrollRestoration();
 
-  const pelatihtelat = ["e71496e7-5744-4cff-8cc7-3ea7a30c3f51"];
+  const pelatihtelat = [
+    "a708624f-37a9-4999-94bd-5f842bd765c4",
+    "9c46b123-40d8-41e6-8f8c-391692a2bef2",
+  ];
 
   const validationSchema = yup.object({
     trainer: yup.string().required("Coach is required"),
@@ -110,7 +107,6 @@ const Presence = () => {
       dispatch(setLoading(true));
       let res = await getPresenceById(user_id);
 
-      // setListData(res.data.data);
       splitPerDay(res.data.data);
 
       const periodeResults = await getPeriodisasiToday();
@@ -122,16 +118,6 @@ const Presence = () => {
     }
   };
 
-  // const groupedData = listData.reduce((acc, item) => {
-  //   const studentNames = item.students_info
-  //     .map((s) => convertToTitleCase(s.fullname))
-  //     .join(", ");
-  //   if (!acc[item.order]) acc[item.order] = {};
-  //   if (!acc[item.order][studentNames]) acc[item.order][studentNames] = [];
-  //   acc[item.order][studentNames].push(item);
-  //   return acc;
-  // }, {});
-
   const splitPerDay = (data) => {
     const updatedTabHari = daysOfWeek.map((hari) => ({
       hari,
@@ -140,11 +126,9 @@ const Presence = () => {
     setTabHari(updatedTabHari);
   };
 
-  // Updated handleSearch
   const handleSearch = (query) => {
-    setSearchQuery(query); // Update only the search query state
+    setSearchQuery(query);
 
-    // Filter tabHari's data based on the search query
     if (query) {
       const lowerQuery = query.toLowerCase();
       setTabHari((prevTabHari) =>
@@ -158,8 +142,7 @@ const Presence = () => {
         }))
       );
     } else {
-      // If search query is empty, retain the original tabHari data
-      fetchData(); // Or restore the unfiltered state if data is cached
+      fetchData();
     }
   };
 
@@ -203,28 +186,15 @@ const Presence = () => {
   const checkMeetThreshold = (updatedData) => {
     const { order_id, meet: threshold } = updatedData;
 
-    // Flatten all data arrays in tabHari and check if any meeting has a meet value less than the threshold
     const hasLessThanThreshold = tabHari
       .flatMap((tab) => tab.data)
       .some((item) => item.order_id === order_id && item.meet < threshold);
 
-    // Return true if no such meeting exists, otherwise false
     return !hasLessThanThreshold;
   };
 
   const handleUpdate = async (order_id, updatedData) => {
     try {
-      // if (!updatedData.real_date || !updatedData.real_time) {
-      //   await Swal.fire({
-      //     title: "Oops!",
-      //     text: "Silahkan isi tanggal dan jam kehadiran.",
-      //     icon: "error",
-      //     confirmButtonText: "OK",
-      //   });
-      //   handleHadir(updatedData.order_detail_id);
-      //   return;
-      // }
-
       const confirmation = await Swal.fire({
         title: "Apakah anda yakin ingin absen siswa berikut?",
         icon: "warning",
@@ -233,16 +203,16 @@ const Presence = () => {
         cancelButtonColor: "#ef4444",
         confirmButtonText: "Hadir",
         html: `
-          <div>
-            <strong>Nama Siswa:</strong><br />
-            ${updatedData.students_info
-              .map((item) => item.fullname)
-              .join("<br />")}<br />
-            <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
-            <strong>Tanggal:</strong> ${updatedData.real_date}<br />
-            <strong>Jam:</strong> ${updatedData.real_time}
-          </div>
-        `,
+        <div>
+          <strong>Nama Siswa:</strong><br />
+          ${updatedData.students_info
+            .map((item) => `${item.fullname} (${item.progres || "-"})`)
+            .join("<br />")}<br />
+          <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
+          <strong>Tanggal:</strong> ${updatedData.real_date}<br />
+          <strong>Jam:</strong> ${updatedData.real_time}
+        </div>
+      `,
       });
 
       if (!confirmation.isConfirmed) return;
@@ -257,29 +227,24 @@ const Presence = () => {
         return;
       }
 
-      const params = [
-        {
-          order: updatedData.order_id,
-          meet: updatedData.meet,
-          is_presence: true,
-          real_date: updatedData.real_date,
-          real_time: updatedData.real_time,
-          presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-        },
-      ];
+      // 🔥 Generate params untuk tiap siswa
+      const params = updatedData.students_info.map((student) => ({
+        order: updatedData.order_id,
+        meet: updatedData.meet,
+        is_presence: true,
+        real_date: updatedData.real_date,
+        real_time: updatedData.real_time,
+        presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+        student_id: student.student_id,
+        progres: student.progres || null,
+      }));
 
       const updateRes = await UpdatePresenceById(order_id, params);
       if (!updateRes) throw new Error("Failed to update presence");
 
-      // const updateOrder = checkProduct(updatedData);
-      // if (updateOrder && updateOrder.is_finish) {
-      //   const editRes = await EditOrder(updateOrder.order_id, updateOrder);
-      //   if (!editRes?.status) throw new Error("Failed to edit order");
-      // }
-
       await Swal.fire({
-        title: `Siswa "${updatedData.students_info[0].fullname}"`,
-        text: `Hari: ${updatedData.real_date}, Jam: ${updatedData.real_time}`,
+        title: "Absensi Berhasil",
+        text: `Total siswa: ${updatedData.students_info.length}`,
         icon: "success",
         confirmButtonText: "OK",
       });
@@ -325,7 +290,6 @@ const Presence = () => {
 
     const formattedDate = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
 
-    // Update both the form value and the state synchronously
     setValue("real_date", formattedDate);
     setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
@@ -346,7 +310,6 @@ const Presence = () => {
   const handleChangeTime = async (id, time) => {
     if (!time || time === "0") return;
 
-    // Update both the form value and the state synchronously
     setValue("real_time", time);
     setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
@@ -376,9 +339,8 @@ const Presence = () => {
     return startCase(toLower(str));
   }
 
-  // WhatsApp link generator function
   const getWhatsAppLink = (phone, name) => {
-    const countryCode = "+62"; // Indonesia country code, modify as per your requirement
+    const countryCode = "+62";
     return `https://wa.me/${countryCode}${phone}/?text=hi, ${name}`;
   };
 
@@ -406,7 +368,6 @@ const Presence = () => {
                 {student.phone ? (
                   <Button
                     variant="contained"
-                    // href={getWhatsAppLink(student.phone)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-success btn-sm"
@@ -430,10 +391,6 @@ const Presence = () => {
     );
   };
 
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
-
   const onSubmit = async (formData) => {
     console.log(formData);
     const updatedItem = tabHari
@@ -446,10 +403,6 @@ const Presence = () => {
       });
 
     console.log(updatedItem);
-
-    // if (updatedItem) {
-    //   await handleUpdate(order_detail_id, updatedItem);
-    // }
   };
 
   const PresenceView = ({ item, k }) => (
@@ -458,61 +411,17 @@ const Presence = () => {
       title={`Pertemuan ke ${item.meet}`}
       subtitle={`${item.day} - ${item.time}`}
     >
-      {/* <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col items-stretch w-full"
-        key={`${item.order}-${k}-${item.order_detail_id}`}
-      > */}
       <div className="flex flex-col w-full">
         <label className="form-label" htmlFor="real_date">
           Tanggal Kehadiran
         </label>
-        {/* {user_id === "a708624f-37a9-4999-94bd-5f842bd765c4" ||
-        user_id === "9c46b123-40d8-41e6-8f8c-391692a2bef2" ? (
-          <Flatpickr
-            id="real_date"
-            name="real_date"
-            value={item.real_date}
-            defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
-            options={{
-              // absen coach sering telat
-              minDate: DateTime.fromFormat("2025-05-21", "yyyy-MM-dd").toFormat(
-                "yyyy-MM-dd"
-              ),
-              maxDate: DateTime.fromFormat("2025-06-20", "yyyy-MM-dd").toFormat(
-                "yyyy-MM-dd"
-              ),
-              // absen normal
-              // minDate: DateTime.fromISO(periode.start_date).toISODate(),
-              // maxDate: DateTime.fromISO(periode.end_date)
-              //   .plus({ days: -1 })
-              //   .toISODate(),
-              disableMobile: true,
-              allowInput: true,
-              altInput: true,
-              altFormat: "d F Y",
-            }}
-            register={register}
-            className="form-control py-2 w-full"
-            onChange={(selectedDate) =>
-              handleChangeDay(item.order_detail_id, selectedDate?.[0])
-            }
-          />
-        ) : ( */}
+
         <Flatpickr
           id="real_date"
           name="real_date"
           value={item.real_date}
           defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
           options={{
-            // absen coach sering telat
-            minDate: DateTime.fromFormat("2025-08-21", "yyyy-MM-dd").toFormat(
-              "yyyy-MM-dd"
-            ),
-            maxDate: DateTime.fromFormat("2025-09-20", "yyyy-MM-dd").toFormat(
-              "yyyy-MM-dd"
-            ),
-            // absen normal
             minDate: DateTime.fromISO(periode.start_date).toISODate(),
             maxDate: DateTime.fromISO(periode.end_date)
               .plus({ days: -1 })
@@ -549,6 +458,19 @@ const Presence = () => {
             ))}
           </select>
         </div>
+        <div className="flex flex-col w-full">
+          <label className="form-label mt-2" htmlFor="real_time">
+            Progres Siswa
+          </label>
+          {item.students_info.map((student) => (
+            <StudentProgressInput
+              key={`${item.order_detail_id}-${student.student_id}`}
+              student={student}
+              item={item}
+              setTabHari={setTabHari}
+            />
+          ))}
+        </div>
       </div>
       <footer className="flex flex-row justify-end mt-4">
         <button
@@ -563,6 +485,48 @@ const Presence = () => {
     </Card>
   );
 
+  const StudentProgressInput = ({ student, item, setTabHari }) => {
+    const [localValue, setLocalValue] = useState(student.progres || "");
+
+    return (
+      <div
+        key={`${item.order_detail_id}-${student.student_id}`}
+        className="flex flex-col mb-2"
+      >
+        <span className="text-sm font-semibold">{student.fullname}</span>
+        <textarea
+          className="form-control w-full"
+          value={localValue}
+          maxLength={100}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onBlur={() => {
+            // sync ke tabHari waktu keluar fokus
+            setTabHari((prevTabHari) =>
+              prevTabHari.map((tab) => ({
+                ...tab,
+                data: tab.data.map((d) =>
+                  d.order_detail_id === item.order_detail_id
+                    ? {
+                        ...d,
+                        students_info: d.students_info.map((s) =>
+                          s.student_id === student.student_id
+                            ? { ...s, progres: localValue }
+                            : s
+                        ),
+                      }
+                    : d
+                ),
+              }))
+            );
+          }}
+        />
+        <div className="text-xs text-gray-500 mt-1">
+          {localValue.length}/100 karakter
+        </div>
+      </div>
+    );
+  };
+
   const DisplayData = (data) => {
     const groupedData = data.reduce((acc, item) => {
       const studentNames = item.students_info
@@ -574,12 +538,11 @@ const Presence = () => {
       return acc;
     }, {});
 
-    // setListData(groupedData);
     return (
       <>
         <Search
           handleSearch={(query) => handleSearch(query)}
-          searchValue={searchQuery} // Bind searchQuery as the value
+          searchValue={searchQuery}
           placeholder={`Cari siswa hari ${hari[selectedIndex].value}`}
         />
 
@@ -587,7 +550,6 @@ const Presence = () => {
           {Object.keys(groupedData).map((order_id, i) => (
             <div key={i}>
               {Object.keys(groupedData[order_id]).map((student_name, j) => {
-                // Assuming that groupedData contains the pool_name in the first item for each student
                 const poolName =
                   groupedData[order_id][student_name]?.[j]?.pool_name ||
                   "Pool not specified";
@@ -605,6 +567,7 @@ const Presence = () => {
                   groupedData[order_id][student_name]?.[j]?.day || "";
                 const product =
                   groupedData[order_id][student_name]?.[j]?.product || "";
+
                 return (
                   <Card
                     title={student_name.replace(",", ", ")}
@@ -637,13 +600,6 @@ const Presence = () => {
                             <PresenceView item={item} k={i + j + k} />
                           ))}
                       {width <= breakpoints.md && (
-                        // <Slider {...sliderSettings} key={j}>
-                        //   {groupedData[order_id][student_name]
-                        //     .sort((a, b) => a.meet - b.meet)
-                        //     .map((item, k) => (
-                        //       <PresenceView item={item} k={i + j + k} />
-                        //     ))}
-                        // </Slider>
                         <div className="flex flex-nowrap gap-4 shrink-0 py-2 min-w-full">
                           {groupedData[order_id][student_name]
                             .sort((a, b) => a.meet - b.meet)
@@ -719,83 +675,9 @@ const Presence = () => {
 
   return (
     <>
-      {/* <Search
-            handleSearch={(query) => handleSearch(query)}
-            searchValue={searchQuery}
-            placeholder="Cari siswa hari"
-          /> */}
-      {isOld ? (
-        <>
-          <div className="grid grid-cols-1 justify-end gap-5 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 lg:gap-5">
-            {Object.keys(groupedData).map((order_id, i) => (
-              <div key={i}>
-                {Object.keys(groupedData[order_id]).map((student_name, j) => {
-                  // Assuming that groupedData contains the pool_name in the first item for each student
-                  const poolName =
-                    groupedData[order_id][student_name]?.[j]?.pool_name ||
-                    "Pool not specified";
-                  const order_date =
-                    groupedData[order_id][student_name]?.[j]?.order_date || "";
-                  const expire_date =
-                    groupedData[order_id][student_name]?.[j]?.expire_date ||
-                    "Belum mulai latihan.";
-                  const hari =
-                    groupedData[order_id][student_name]?.[j]?.day || "";
-                  return (
-                    <Card
-                      subtitle={
-                        <>
-                          {student_name.replace(",", ", ")} <br />
-                          Kolam : {poolName} <br /> Tanggal Order : {order_date}
-                          <br /> Tanggal Kadaluarsa : {expire_date}
-                          <br /> Hari : {hari}
-                        </>
-                      }
-                      key={i + j}
-                    >
-                      <div className="grid auto-cols-max grid-flow-col">
-                        <StudentCard
-                          studentsInfo={
-                            groupedData[order_id][student_name]?.[0]
-                              ?.students_info || []
-                          }
-                          key={i + j}
-                        />
-                        {width >= breakpoints.md &&
-                          groupedData[order_id][student_name]
-                            .sort((a, b) => a.meet - b.meet)
-                            .map((item, k) => (
-                              <PresenceView item={item} k={i + j + k} />
-                            ))}
-                        {width <= breakpoints.md && (
-                          // <Slider {...sliderSettings} key={j}>
-                          //   {groupedData[order_id][student_name]
-                          //     .sort((a, b) => a.meet - b.meet)
-                          //     .map((item, k) => (
-                          //       <PresenceView item={item} k={i + j + k} />
-                          //     ))}
-                          // </Slider>
-                          <div className="flex flex-nowrap">
-                            {groupedData[order_id][student_name]
-                              .sort((a, b) => a.meet - b.meet)
-                              .map((item, k) => (
-                                <PresenceView item={item} k={i + j + k} />
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <TabbedVersion />
-      )}
+      <TabbedVersion />
     </>
   );
 };
 
-export default Presence;
+export default PresenceCopy;
