@@ -506,12 +506,12 @@ const Presence = () => {
           defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
           options={{
             // absen coach sering telat
-            minDate: DateTime.fromFormat("2025-08-21", "yyyy-MM-dd").toFormat(
-              "yyyy-MM-dd"
-            ),
-            maxDate: DateTime.fromFormat("2025-09-20", "yyyy-MM-dd").toFormat(
-              "yyyy-MM-dd"
-            ),
+            // minDate: DateTime.fromFormat("2025-08-21", "yyyy-MM-dd").toFormat(
+            //   "yyyy-MM-dd"
+            // ),
+            // maxDate: DateTime.fromFormat("2025-09-20", "yyyy-MM-dd").toFormat(
+            //   "yyyy-MM-dd"
+            // ),
             // absen normal
             minDate: DateTime.fromISO(periode.start_date).toISODate(),
             maxDate: DateTime.fromISO(periode.end_date)
