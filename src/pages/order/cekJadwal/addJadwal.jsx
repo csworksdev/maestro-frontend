@@ -80,7 +80,7 @@ const AddJadwal = ({
   const [parent, setParent] = useState([]);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [isSplitInvoice, setIsSplitInvoice] = useState(false);
-  const [isInvoice, setIsInvoice] = useState(true);
+  const [isInvoice, setIsInvoice] = useState(false);
 
   // fetch old students
   const [defaultStudentOptions, setDefaultStudentOptions] = useState([]);
@@ -909,7 +909,7 @@ const AddJadwal = ({
           }
           headerslot={
             <div className="flex flex-row gap-5 items-start">
-              <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
+              {/* <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
                 <Checkbox
                   name="buatXendit"
                   label={"Buat Xendit"}
@@ -918,7 +918,7 @@ const AddJadwal = ({
                     setIsInvoice(!isInvoice);
                   }}
                 />
-              </div>
+              </div> */}
               <div className="grid grid-cols-[auto_minmax(0,400px)] gap-4 items-center border border-blue-400 p-4 rounded">
                 <label>Siswa Baru</label>
                 <Button
@@ -997,7 +997,6 @@ const AddJadwal = ({
                 selectedProduct,
                 handleQtyChange,
                 handleProductSelectionChange,
-                handleProductDisable,
                 register
               )}
               {/* Siswa Section */}
@@ -1053,7 +1052,6 @@ const ProductSection = (
   selectedProduct,
   handleQtyChange,
   handleProductSelectionChange,
-  handleProductDisable,
   register
 ) => {
   return (
