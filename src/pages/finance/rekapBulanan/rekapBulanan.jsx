@@ -24,6 +24,7 @@ import Modal from "@/components/ui/Modal";
 import DetailOrder from "@/pages/order/active/detail";
 import { DateTime } from "luxon";
 import EditModal from "@/pages/order/active/editModal";
+import { toProperCase } from "@/utils";
 
 const RekapBulanan = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +98,9 @@ const RekapBulanan = () => {
       let trainerOptions = trainerResponse.data.results;
       setListTrainer(trainerOptions);
 
-      const periodeResponse = await getPeriodisasiAll(trainerParams);
+      const periodeResponse = await getPeriodisasiAll({
+        page_size: 6,
+      });
       let periodeOptions = periodeResponse.data.results;
       setListPeriode(periodeOptions);
     } catch (error) {
@@ -287,7 +290,7 @@ const RekapBulanan = () => {
       Header: "Siswa",
       accessor: "student_fullname",
       sticky: "left",
-      Cell: ({ cell }) => <span>{cell?.value}</span>,
+      Cell: ({ cell }) => <span>{toProperCase(cell?.value)}</span>,
     },
     {
       Header: "Produk",
