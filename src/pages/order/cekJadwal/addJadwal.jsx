@@ -80,7 +80,7 @@ const AddJadwal = ({
   const [parent, setParent] = useState([]);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [isSplitInvoice, setIsSplitInvoice] = useState(false);
-  const [isInvoice, setIsInvoice] = useState(false);
+  const [isInvoice, setIsInvoice] = useState(true);
 
   // fetch old students
   const [defaultStudentOptions, setDefaultStudentOptions] = useState([]);
@@ -909,7 +909,7 @@ const AddJadwal = ({
           }
           headerslot={
             <div className="flex flex-row gap-5 items-start">
-              {/* <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
+              <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
                 <Checkbox
                   name="buatXendit"
                   label={"Buat Xendit"}
@@ -918,7 +918,7 @@ const AddJadwal = ({
                     setIsInvoice(!isInvoice);
                   }}
                 />
-              </div> */}
+              </div>
               <div className="grid grid-cols-[auto_minmax(0,400px)] gap-4 items-center border border-blue-400 p-4 rounded">
                 <label>Siswa Baru</label>
                 <Button
@@ -991,384 +991,46 @@ const AddJadwal = ({
             ) : null}
             <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
               {/* Product Section */}
-              <div className="flex flex-col">
-                {/* Header for Product Section */}
-                <div className="grid grid-cols-[1fr_100px] gap-5">
-                  <label className="form-label" htmlFor="product">
-                    Product
-                  </label>
-                  <label className="form-label" htmlFor="jumlah">
-                    Jumlah Paket
-                  </label>
-                </div>
-                {/* Product Rows */}
-                <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
-                  {product.map((option, i) => {
-                    const isDisabled = handleProductDisable(
-                      option.package_name
-                    );
-                    //  ||
-                    // option.package_name.toLowerCase() === "trial";
-
-                    if (isDisabled) return null;
-                    return (
-                      <React.Fragment key={`product-item-${option.product_id}`}>
-                        <Checkbox
-                          name="product"
-                          label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
-                            "id-ID"
-                          ).format(option.sellprice)}`}
-                          value={selectedProduct.some(
-                            (p) => p.product_id === option.product_id
-                          )}
-                          onChange={() => {
-                            // This onChange is for non-trial products.
-                            // Trial product selection is handled automatically by istrial checkboxes.
-                            if (option.package_name.toLowerCase() !== "trial") {
-                              if (
-                                selectedProduct.some(
-                                  (p) => p.product_id === option.product_id
-                                )
-                              )
-                                handleQtyChange(option.product_id, 0);
-                            }
-                            handleProductSelectionChange(option);
-                          }}
-                          disabled={
-                            handleProductDisable(option.package_name) ||
-                            option.package_name.toLowerCase() === "trial"
-                          }
-                        />
-                        <Textinput
-                          isMask
-                          type="text"
-                          id={`qty${i}`}
-                          register={register}
-                          placeholder="0"
-                          className="text-right"
-                          options={{ numeral: true, blocks: [1] }}
-                          value={
-                            selectedProduct
-                              .find((p) => p.product_id === option.product_id)
-                              ?.qty?.toString() || "0"
-                          }
-                          defaultValue={1}
-                          disabled={
-                            !selectedProduct.some(
-                              (p) => p.product_id === option.product_id
-                            )
-                            // || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
-                          }
-                          onChange={(e) => {
-                            let raw = e.target.rawValue || "0";
-                            let val = parseInt(raw, 10);
-
-                            // Batas nilai min dan max
-                            const min = 1;
-                            const max = 10; //formList.length;
-
-                            // Koreksi nilai agar sesuai dengan batasan
-                            if (val < min) val = min;
-                            if (val > max) val = max;
-
-                            handleQtyChange(option.product_id, val.toString());
-                          }}
-                        />
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              </div>
-
+              {ProductSection(
+                product,
+                handleProductDisable,
+                selectedProduct,
+                handleQtyChange,
+                handleProductSelectionChange,
+                handleProductDisable,
+                register
+              )}
               {/* Siswa Section */}
-
-              <div className="flex flex-col space-y-2">
-                {/* Header */}
-                <div className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center">
-                  <span>Nama Siswa</span>
-                  <span>Registrasi</span>
-                  <span className="text-center">Trial</span>
-                  <span>Delete</span>
-                </div>
-
-                {isLoadingCheckDuplicate ? (
-                  <Loading>
-                    <div>Sedang Memeriksa Data Siswa</div>
-                  </Loading>
-                ) : (
-                  <>
-                    {/* Rows */}
-                    {fields.map((item, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
-                      >
-                        <Textinput
-                          type="text"
-                          id={`name3${index}`}
-                          placeholder="Nama Siswa"
-                          register={register}
-                          name={`students[${index}].fullname`}
-                          disabled={item.student_id !== ""}
-                        />
-
-                        <Select
-                          key={item.value}
-                          className="react-select"
-                          // classNamePrefix="select"
-                          defaultValue={item.reg_stat}
-                          disabled={item.student_id !== ""}
-                          name={`students[${index}].reg_stat`}
-                          register={register}
-                          options={allStatus}
-                          onChange={(
-                            selectedOption // react-select passes the selected option object
-                          ) =>
-                            handleRegStatChange(
-                              item.fullname,
-                              "reg_stat",
-                              selectedOption.target.value // Get value from the selected option
-                            )
-                          }
-                          id="hh"
-                        />
-                        <Checkbox
-                          value={
-                            formList.find((x) => x.fullname === item.fullname)
-                              ?.istrial
-                          }
-                          activeClass="ring-primary-500 bg-primary-500"
-                          onChange={(e) =>
-                            handleRegStatChange(
-                              item.fullname,
-                              "istrial",
-                              e.target.checked
-                            )
-                          }
-                          className="mx-auto"
-                        />
-
-                        <button
-                          onClick={() => {
-                            const studentToRemoveFullname =
-                              fields[index].fullname;
-                            remove(index);
-                            setFormList((currentList) =>
-                              currentList.filter(
-                                (s) => s.fullname !== studentToRemoveFullname
-                              )
-                            );
-                            setSelectedProduct([]);
-                            forceUpdate();
-                          }}
-                          type="button"
-                          className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
-                        >
-                          <Icons icon="heroicons-outline:trash" />
-                        </button>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
+              {StudentSection(
+                isLoadingCheckDuplicate,
+                fields,
+                register,
+                allStatus,
+                handleRegStatChange,
+                formList,
+                remove,
+                setFormList,
+                setSelectedProduct,
+                forceUpdate
+              )}
             </div>
           </div>
         </Card>
         {/* summary */}
-        {isInvoice && selectedProduct.length > 0 && (
-          <Card title={"Ringkasan"}>
-            {/* Produk */}
-            <div className="mb-10">
-              <span className="text-xl font-semibold mb-2">Produk</span>
-              <div className="lg:grid-cols-4 md:grid-cols-4 grid-cols-1 grid gap-4 last:mb-10">
-                <>
-                  <span className="col-span-2 font-medium">Nama Produk</span>
-                  <span className="text-left font-medium">Jumlah</span>
-                  <span className="text-left font-medium">Harga</span>
-                </>
-                {/* untuk produk yang dipilih */}
-                {selectedProduct.length > 0 &&
-                  selectedProduct.map((p) => (
-                    <>
-                      <span className="col-span-2">{p.name}</span>
-                      <span className="text-left">{p.qty}</span>
-                      <div className="flex justify-between">
-                        <span>IDR</span>
-                        <span>
-                          {(
-                            p.qty *
-                            (p.package_name === "trial" ? 1 : formList.length) *
-                            p.sellprice
-                          ).toLocaleString()}
-                        </span>
-                      </div>
-                    </>
-                  ))}
-                {/* untuk registrasi */}
-                {Object.entries(grouped)
-                  .filter(([key]) => key !== "extend")
-                  .map(([key, value]) => (
-                    <React.Fragment key={key}>
-                      <span className="col-span-2">Reg. {value.label}</span>
-                      <span className="text-left">{value.count}</span>
-                      <div className="flex justify-between">
-                        <span>IDR</span>
-                        <span>{value.total.toLocaleString()}</span>
-                      </div>
-                    </React.Fragment>
-                  ))}
-
-                {/* Subtotal Section */}
-                <React.Fragment key="subtotal">
-                  {/* Optional: Top border line */}
-                  <div className="col-span-4 border-t-2 border-black mt-2" />
-
-                  <span className="col-span-2 text-right font-bold">
-                    Subtotal
-                  </span>
-                  <span></span>
-                  <div className="flex justify-between font-bold">
-                    <span>IDR</span>
-                    <span>
-                      {(
-                        selectedProduct.reduce(
-                          (sum, p) =>
-                            sum +
-                            p.qty *
-                              (p.package_name === "trial"
-                                ? 1
-                                : formList.length) *
-                              p.sellprice,
-                          0
-                        ) +
-                        Object.values(grouped).reduce(
-                          (sum, value) => sum + value.total,
-                          0
-                        )
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* Optional: Bottom border line */}
-                  <div className="col-span-4 border-b-2 border-black mt-1" />
-                </React.Fragment>
-              </div>
-            </div>
-          </Card>
-        )}
+        {isInvoice &&
+          selectedProduct.length > 0 &&
+          SummarySection(selectedProduct, formList, grouped)}
         {/* Pelanggan Section */}
-        {isInvoice ? (
-          <Card
-            title={"Pelanggan"}
-            headerslot={
-              parent.length > 1 && (
-                <Checkbox
-                  name="splitInvoice"
-                  label={"Split Invoice"}
-                  value={isSplitInvoice}
-                  onChange={() => {
-                    setIsSplitInvoice(!isSplitInvoice);
-                  }}
-                />
-              )
-            }
-          >
-            {/* Pelanggan */}
-            <div className="flex flex-col gap-3">
-              {!isSplitInvoice || parent.length == 1 ? (
-                <>
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="namapelanggan"
-                      className="text-sm font-medium mb-1"
-                    >
-                      Nama
-                    </label>
-                    <select
-                      id="namapelanggan"
-                      {...register("namapelanggan")}
-                      className="border rounded-md p-2"
-                      onChange={(e) => {
-                        const selected = parent.find(
-                          (p) => p.name === e.target.value
-                        );
-                        setValue("namapelanggan", selected?.name || "");
-                        setValue(
-                          "phonepelanggan",
-                          toNormalizePhone(selected?.phone || "")
-                        );
-                      }}
-                    >
-                      <option value="">Pilih Orang Tua</option>
-                      {parent.map((p, index) => (
-                        <option key={index} value={p.name}>
-                          {p.name} - {p.phone}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Textinput
-                    name="phonepelanggan"
-                    label="Nomor Telepon"
-                    type="text"
-                    placeholder="Nomor WA"
-                    register={register}
-                  />
-                  <Textarea
-                    name="keteranganpelanggan"
-                    label="Keterangan"
-                    placeholder="Keterangan"
-                    register={register}
-                  ></Textarea>
-                </>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 w-full">
-                  {parent.map((item, idx) => (
-                    <Card key={idx} className="flex-1 min-w-0">
-                      <div className="space-y-2">
-                        <Textinput
-                          name={`splitCustomers[${idx}].name`}
-                          label="Nama"
-                          type="text"
-                          placeholder="Nama"
-                          register={register}
-                          defaultValue={item.name}
-                          horizontal
-                        />
-                        <InputGroup
-                          name={`splitCustomers[${idx}].tagihan`}
-                          type="text"
-                          label="Tagihan"
-                          prepend="Rp."
-                          register={register}
-                          defaultValue={item.tagihan}
-                          horizontal
-                        />
-                        <Textinput
-                          name={`splitCustomers[${idx}].phone`}
-                          label="Telepon"
-                          type="text"
-                          placeholder="Nomor WA"
-                          register={register}
-                          defaultValue={item.phone}
-                          horizontal
-                        />
-                        <Textarea
-                          name={`splitCustomers[${idx}].keterangan`}
-                          label="Keterangan"
-                          placeholder="Keterangan"
-                          register={register}
-                          defaultValue={keterangan}
-                          horizontal
-                        />
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          </Card>
-        ) : null}
+        {isInvoice
+          ? CustomerSection(
+              isSplitInvoice,
+              setIsSplitInvoice,
+              parent,
+              register,
+              setValue,
+              keterangan
+            )
+          : null}
         <div className="ltr:text-right rtl:text-left space-x-3">
           <div className="btn-group">
             <Button
@@ -1382,6 +1044,410 @@ const AddJadwal = ({
         </div>
       </form>
     </>
+  );
+};
+
+const ProductSection = (
+  product,
+  handleProductDisable,
+  selectedProduct,
+  handleQtyChange,
+  handleProductSelectionChange,
+  handleProductDisable,
+  register
+) => {
+  return (
+    <div className="flex flex-col">
+      {/* Header for Product Section */}
+      <div className="grid grid-cols-[1fr_100px] gap-5">
+        <label className="form-label" htmlFor="product">
+          Product
+        </label>
+        <label className="form-label" htmlFor="jumlah">
+          Jumlah Paket
+        </label>
+      </div>
+      {/* Product Rows */}
+      <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
+        {product.map((option, i) => {
+          const isDisabled = handleProductDisable(option.package_name);
+          //  ||
+          // option.package_name.toLowerCase() === "trial";
+
+          if (isDisabled) return null;
+          return (
+            <React.Fragment key={`product-item-${option.product_id}`}>
+              <Checkbox
+                name="product"
+                label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
+                  "id-ID"
+                ).format(option.sellprice)}`}
+                value={selectedProduct.some(
+                  (p) => p.product_id === option.product_id
+                )}
+                onChange={() => {
+                  // This onChange is for non-trial products.
+                  // Trial product selection is handled automatically by istrial checkboxes.
+                  if (option.package_name.toLowerCase() !== "trial") {
+                    if (
+                      selectedProduct.some(
+                        (p) => p.product_id === option.product_id
+                      )
+                    )
+                      handleQtyChange(option.product_id, 0);
+                  }
+                  handleProductSelectionChange(option);
+                }}
+                disabled={
+                  handleProductDisable(option.package_name) ||
+                  option.package_name.toLowerCase() === "trial"
+                }
+              />
+              <Textinput
+                isMask
+                type="text"
+                id={`qty${i}`}
+                register={register}
+                placeholder="0"
+                className="text-right"
+                options={{ numeral: true, blocks: [1] }}
+                value={
+                  selectedProduct
+                    .find((p) => p.product_id === option.product_id)
+                    ?.qty?.toString() || "0"
+                }
+                defaultValue={1}
+                disabled={
+                  !selectedProduct.some(
+                    (p) => p.product_id === option.product_id
+                  )
+                  // || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
+                }
+                onChange={(e) => {
+                  let raw = e.target.rawValue || "0";
+                  let val = parseInt(raw, 10);
+
+                  // Batas nilai min dan max
+                  const min = 1;
+                  const max = 10; //formList.length;
+
+                  // Koreksi nilai agar sesuai dengan batasan
+                  if (val < min) val = min;
+                  if (val > max) val = max;
+
+                  handleQtyChange(option.product_id, val.toString());
+                }}
+              />
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const StudentSection = (
+  isLoadingCheckDuplicate,
+  fields,
+  register,
+  allStatus,
+  handleRegStatChange,
+  formList,
+  remove,
+  setFormList,
+  setSelectedProduct,
+  forceUpdate
+) => {
+  return (
+    <div className="flex flex-col space-y-2">
+      {/* Header */}
+      <div className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center">
+        <span>Nama Siswa</span>
+        <span>Registrasi</span>
+        <span className="text-center">Trial</span>
+        <span>Delete</span>
+      </div>
+
+      {isLoadingCheckDuplicate ? (
+        <Loading>
+          <div>Sedang Memeriksa Data Siswa</div>
+        </Loading>
+      ) : (
+        <>
+          {/* Rows */}
+          {fields.map((item, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
+            >
+              <Textinput
+                type="text"
+                id={`name3${index}`}
+                placeholder="Nama Siswa"
+                register={register}
+                name={`students[${index}].fullname`}
+                disabled={item.student_id !== ""}
+              />
+
+              <Select
+                key={item.value}
+                className="react-select"
+                // classNamePrefix="select"
+                defaultValue={item.reg_stat}
+                disabled={item.student_id !== ""}
+                name={`students[${index}].reg_stat`}
+                register={register}
+                options={allStatus}
+                onChange={(
+                  selectedOption // react-select passes the selected option object
+                ) =>
+                  handleRegStatChange(
+                    item.fullname,
+                    "reg_stat",
+                    selectedOption.target.value // Get value from the selected option
+                  )
+                }
+                id="hh"
+              />
+              <Checkbox
+                value={
+                  formList.find((x) => x.fullname === item.fullname)?.istrial
+                }
+                activeClass="ring-primary-500 bg-primary-500"
+                onChange={(e) =>
+                  handleRegStatChange(
+                    item.fullname,
+                    "istrial",
+                    e.target.checked
+                  )
+                }
+                className="mx-auto"
+              />
+
+              <button
+                onClick={() => {
+                  const studentToRemoveFullname = fields[index].fullname;
+                  remove(index);
+                  setFormList((currentList) =>
+                    currentList.filter(
+                      (s) => s.fullname !== studentToRemoveFullname
+                    )
+                  );
+                  setSelectedProduct([]);
+                  forceUpdate();
+                }}
+                type="button"
+                className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
+              >
+                <Icons icon="heroicons-outline:trash" />
+              </button>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+};
+
+const SummarySection = (selectedProduct, formList, grouped) => {
+  return (
+    <Card title={"Ringkasan"}>
+      {/* Produk */}
+      <div className="mb-10">
+        <span className="text-xl font-semibold mb-2">Produk</span>
+        <div className="lg:grid-cols-4 md:grid-cols-4 grid-cols-1 grid gap-4 last:mb-10">
+          <>
+            <span className="col-span-2 font-medium">Nama Produk</span>
+            <span className="text-left font-medium">Jumlah</span>
+            <span className="text-left font-medium">Harga</span>
+          </>
+          {/* untuk produk yang dipilih */}
+          {selectedProduct.length > 0 &&
+            selectedProduct.map((p) => (
+              <>
+                <span className="col-span-2">{p.name}</span>
+                <span className="text-left">{p.qty}</span>
+                <div className="flex justify-between">
+                  <span>IDR</span>
+                  <span>
+                    {(
+                      p.qty *
+                      (p.package_name === "trial" ? 1 : formList.length) *
+                      p.sellprice
+                    ).toLocaleString()}
+                  </span>
+                </div>
+              </>
+            ))}
+          {/* untuk registrasi */}
+          {Object.entries(grouped)
+            .filter(([key]) => key !== "extend")
+            .map(([key, value]) => (
+              <React.Fragment key={key}>
+                <span className="col-span-2">Reg. {value.label}</span>
+                <span className="text-left">{value.count}</span>
+                <div className="flex justify-between">
+                  <span>IDR</span>
+                  <span>{value.total.toLocaleString()}</span>
+                </div>
+              </React.Fragment>
+            ))}
+
+          {/* Subtotal Section */}
+          <React.Fragment key="subtotal">
+            {/* Optional: Top border line */}
+            <div className="col-span-4 border-t-2 border-black mt-2" />
+
+            <span className="col-span-2 text-right font-bold">Subtotal</span>
+            <span></span>
+            <div className="flex justify-between font-bold">
+              <span>IDR</span>
+              <span>
+                {(
+                  selectedProduct.reduce(
+                    (sum, p) =>
+                      sum +
+                      p.qty *
+                        (p.package_name === "trial" ? 1 : formList.length) *
+                        p.sellprice,
+                    0
+                  ) +
+                  Object.values(grouped).reduce(
+                    (sum, value) => sum + value.total,
+                    0
+                  )
+                ).toLocaleString()}
+              </span>
+            </div>
+
+            {/* Optional: Bottom border line */}
+            <div className="col-span-4 border-b-2 border-black mt-1" />
+          </React.Fragment>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+const CustomerSection = (
+  isSplitInvoice,
+  setIsSplitInvoice,
+  parent,
+  register,
+  setValue,
+  keterangan
+) => {
+  return (
+    <Card
+      title={"Pelanggan"}
+      // di hide dulu, belum ada kebijakan split bill
+      // headerslot={
+      //   parent.length > 1 && (
+      //     <Checkbox
+      //       name="splitInvoice"
+      //       label={"Split Invoice"}
+      //       value={isSplitInvoice}
+      //       onChange={() => {
+      //         setIsSplitInvoice(!isSplitInvoice);
+      //       }}
+      //     />
+      //   )
+      // }
+    >
+      <div className="flex flex-col gap-3">
+        {!isSplitInvoice || parent.length == 1 ? (
+          <>
+            <div className="flex flex-col">
+              <label
+                htmlFor="namapelanggan"
+                className="text-sm font-medium mb-1"
+              >
+                Nama
+              </label>
+              <select
+                id="namapelanggan"
+                {...register("namapelanggan")}
+                className="border rounded-md p-2"
+                onChange={(e) => {
+                  const selected = parent.find(
+                    (p) => p.name === e.target.value
+                  );
+                  setValue("namapelanggan", selected?.name || "");
+                  setValue(
+                    "phonepelanggan",
+                    toNormalizePhone(selected?.phone || "")
+                  );
+                }}
+              >
+                <option value="">Pilih Orang Tua</option>
+                {parent.map((p, index) => (
+                  <option key={index} value={p.name}>
+                    {p.name} - {p.phone}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Textinput
+              name="phonepelanggan"
+              label="Nomor Telepon"
+              type="text"
+              placeholder="Nomor WA"
+              register={register}
+            />
+            <Textarea
+              name="keteranganpelanggan"
+              label="Keterangan"
+              placeholder="Keterangan"
+              register={register}
+            ></Textarea>
+          </>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 w-full">
+            {parent.map((item, idx) => (
+              <Card key={idx} className="flex-1 min-w-0">
+                <div className="space-y-2">
+                  <Textinput
+                    name={`splitCustomers[${idx}].name`}
+                    label="Nama"
+                    type="text"
+                    placeholder="Nama"
+                    register={register}
+                    defaultValue={item.name}
+                    horizontal
+                  />
+                  <InputGroup
+                    name={`splitCustomers[${idx}].tagihan`}
+                    type="text"
+                    label="Tagihan"
+                    prepend="Rp."
+                    register={register}
+                    defaultValue={item.tagihan}
+                    horizontal
+                  />
+                  <Textinput
+                    name={`splitCustomers[${idx}].phone`}
+                    label="Telepon"
+                    type="text"
+                    placeholder="Nomor WA"
+                    register={register}
+                    defaultValue={item.phone}
+                    horizontal
+                  />
+                  <Textarea
+                    name={`splitCustomers[${idx}].keterangan`}
+                    label="Keterangan"
+                    placeholder="Keterangan"
+                    register={register}
+                    defaultValue={keterangan}
+                    horizontal
+                  />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
 
