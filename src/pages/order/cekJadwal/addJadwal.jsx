@@ -3,7 +3,7 @@ import Textinput from "@/components/ui/Textinput";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Checkbox from "@/components/ui/Checkbox";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Icons from "@/components/ui/Icon";
@@ -67,7 +67,13 @@ const AddJadwal = ({
 }) => {
   // const [loadingError, setLoadingError] = useState(null);
   const FormValidationSchema = yup
-    .object({ order_date: yup.date().required("tanggal is required") })
+    .object({
+      order_date: yup.date().when("$isInvoice", {
+        is: true,
+        then: (schema) => schema.required("tanggal is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+    })
     .required();
   const [inputValue, setInputValue] = useState(params);
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
@@ -310,6 +316,7 @@ const AddJadwal = ({
                 ? newData.students.filter((s) => s.istrial).length
                 : newData.students.length) * product.price,
             create_by: user_id,
+            created_at: DateTime.now(),
             is_finish: false,
             is_paid: isInvoice ? "pending" : "settled",
             start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
@@ -458,6 +465,7 @@ const AddJadwal = ({
   };
 
   const onSubmit = async (newData) => {
+    console.log(newData);
     try {
       const newStudents = await submitNewStudent();
       const allStudents = [...selectedStudents, ...newStudents];
@@ -886,7 +894,12 @@ const AddJadwal = ({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(onSubmit, (errors) =>
+          console.log("Form errors:", errors)
+        )}
+        className="space-y-4"
+      >
         {/* {loadingError && (
           <p className="error-message">{loadingError.message}</p>
         )} */}
@@ -909,16 +922,27 @@ const AddJadwal = ({
           }
           headerslot={
             <div className="flex flex-row gap-5 items-start">
-              {/* <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
+              <div className="flex p-3 border-2 border-green-500 border-solid rounded-md h-auto">
                 <Checkbox
                   name="buatXendit"
                   label={"Buat Xendit"}
                   value={isInvoice}
-                  onChange={() => {
-                    setIsInvoice(!isInvoice);
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsInvoice(checked);
+
+                    if (checked) {
+                      // kalau buat xendit diaktifkan → set tanggal order ke hari ini
+                      setValue("order_date", new Date(), {
+                        shouldValidate: true,
+                      });
+                    } else {
+                      // kalau tidak buat xendit → hapus nilainya supaya nggak divalidasi
+                      setValue("order_date", null, { shouldValidate: true });
+                    }
                   }}
                 />
-              </div> */}
+              </div>
               <div className="grid grid-cols-[auto_minmax(0,400px)] gap-4 items-center border border-blue-400 p-4 rounded">
                 <label>Siswa Baru</label>
                 <Button
@@ -974,62 +998,452 @@ const AddJadwal = ({
                   <label className="form-label basis-1/5" htmlFor="order_date">
                     Tanggal Order
                   </label>
-                  <Flatpickr
-                    // value={DateTime.now().toFormat("yyyy-MM-dd")}
+                  <Controller
                     name="order_date"
-                    options={{
-                      disableMobile: true,
-                      allowInput: true,
-                      altInput: true,
-                      altFormat: "d F Y",
-                    }}
-                    className="form-control py-2 bg-white basis-1/4"
-                    onChange={(date) => setValue("order_date", date[0])}
+                    control={control}
+                    defaultValue={null}
+                    render={({ field }) => (
+                      <Flatpickr
+                        {...field}
+                        options={{
+                          disableMobile: true,
+                          allowInput: true,
+                          altInput: true,
+                          altFormat: "d F Y",
+                        }}
+                        className="form-control py-2 bg-white basis-1/4"
+                        onChange={(date) => field.onChange(date[0])}
+                      />
+                    )}
                   />
                 </div>
               </Card>
             ) : null}
             <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
               {/* Product Section */}
-              {ProductSection(
-                product,
-                handleProductDisable,
-                selectedProduct,
-                handleQtyChange,
-                handleProductSelectionChange,
-                register
+              {product && product.length !== 0 && (
+                // <ProductSection
+                //   product={product}
+                //   handleProductDisable={handleProductDisable}
+                //   selectedProduct={selectedProduct}
+                //   handleQtyChange={handleQtyChange}
+                //   handleProductSelectionChange={handleProductSelectionChange}
+                //   control={control}
+                //   register={register}
+                // />
+                <div className="flex flex-col">
+                  {/* Header for Product Section */}
+                  <div className="grid grid-cols-[1fr_100px] gap-5">
+                    <label className="form-label" htmlFor="product">
+                      Product
+                    </label>
+                    <label className="form-label" htmlFor="jumlah">
+                      Jumlah Paket
+                    </label>
+                  </div>
+                  {/* Product Rows */}
+                  <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
+                    {product.map((option, i) => {
+                      const isDisabled = handleProductDisable(
+                        option.package_name
+                      );
+                      //  ||
+                      // option.package_name.toLowerCase() === "trial";
+
+                      if (isDisabled) return null;
+                      return (
+                        <React.Fragment
+                          key={`product-item-${option.product_id}`}
+                        >
+                          <Checkbox
+                            name="product"
+                            label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
+                              "id-ID"
+                            ).format(option.sellprice)}`}
+                            value={selectedProduct.some(
+                              (p) => p.product_id === option.product_id
+                            )}
+                            onChange={() => {
+                              // This onChange is for non-trial products.
+                              // Trial product selection is handled automatically by istrial checkboxes.
+                              if (
+                                option.package_name.toLowerCase() !== "trial"
+                              ) {
+                                if (
+                                  selectedProduct.some(
+                                    (p) => p.product_id === option.product_id
+                                  )
+                                )
+                                  handleQtyChange(option.product_id, 0);
+                              }
+                              handleProductSelectionChange(option);
+                            }}
+                            disabled={
+                              handleProductDisable(option.package_name) ||
+                              option.package_name.toLowerCase() === "trial"
+                            }
+                          />
+                          <Textinput
+                            isMask
+                            type="text"
+                            id={`qty${i}`}
+                            register={register}
+                            placeholder="0"
+                            className="text-right"
+                            options={{ numeral: true, blocks: [1] }}
+                            value={
+                              selectedProduct
+                                .find((p) => p.product_id === option.product_id)
+                                ?.qty?.toString() || "0"
+                            }
+                            defaultValue={1}
+                            disabled={
+                              !selectedProduct.some(
+                                (p) => p.product_id === option.product_id
+                              )
+                              // || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
+                            }
+                            onChange={(e) => {
+                              let raw = e.target.rawValue || "0";
+                              let val = parseInt(raw, 10);
+
+                              // Batas nilai min dan max
+                              const min = 1;
+                              const max = 10; //formList.length;
+
+                              // Koreksi nilai agar sesuai dengan batasan
+                              if (val < min) val = min;
+                              if (val > max) val = max;
+
+                              handleQtyChange(
+                                option.product_id,
+                                val.toString()
+                              );
+                            }}
+                          />
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
               {/* Siswa Section */}
-              {StudentSection(
-                isLoadingCheckDuplicate,
-                fields,
-                register,
-                allStatus,
-                handleRegStatChange,
-                formList,
-                remove,
-                setFormList,
-                setSelectedProduct,
-                forceUpdate
+              {fields && fields.length !== 0 && (
+                // <StudentSection
+                //   isLoadingCheckDuplicate={isLoadingCheckDuplicate}
+                //   fields={fields}
+                //   control={control}
+                //   register={register}
+                //   allStatus={allStatus}
+                //   handleRegStatChange={handleRegStatChange}
+                //   formList={formList}
+                //   remove={remove}
+                //   setFormList={setFormList}
+                //   setSelectedProduct={setSelectedProduct}
+                //   forceUpdate={forceUpdate}
+                // />
+                <div className="flex flex-col space-y-2">
+                  {/* Header */}
+                  <div className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center">
+                    <span>Nama Siswa</span>
+                    <span>Registrasi</span>
+                    <span className="text-center">Trial</span>
+                    <span>Delete</span>
+                  </div>
+
+                  {isLoadingCheckDuplicate ? (
+                    <Loading>
+                      <div>Sedang Memeriksa Data Siswa</div>
+                    </Loading>
+                  ) : (
+                    <>
+                      {/* Rows */}
+                      {fields.map((item, index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-[2fr_1fr_auto_auto] gap-5 items-center"
+                        >
+                          <Textinput
+                            type="text"
+                            id={`name3${index}`}
+                            placeholder="Nama Siswa"
+                            register={register}
+                            name={`students[${index}].fullname`}
+                            disabled={item.student_id !== ""}
+                          />
+
+                          <Select
+                            key={item.value}
+                            className="react-select"
+                            // classNamePrefix="select"
+                            defaultValue={item.reg_stat}
+                            disabled={item.student_id !== ""}
+                            name={`students[${index}].reg_stat`}
+                            register={register}
+                            options={allStatus}
+                            onChange={(
+                              selectedOption // react-select passes the selected option object
+                            ) =>
+                              handleRegStatChange(
+                                item.fullname,
+                                "reg_stat",
+                                selectedOption.target.value // Get value from the selected option
+                              )
+                            }
+                            id="hh"
+                          />
+                          <Checkbox
+                            value={
+                              formList.find((x) => x.fullname === item.fullname)
+                                ?.istrial
+                            }
+                            activeClass="ring-primary-500 bg-primary-500"
+                            onChange={(e) =>
+                              handleRegStatChange(
+                                item.fullname,
+                                "istrial",
+                                e.target.checked
+                              )
+                            }
+                            className="mx-auto"
+                          />
+
+                          <button
+                            onClick={() => {
+                              const studentToRemoveFullname =
+                                fields[index].fullname;
+                              remove(index);
+                              setFormList((currentList) =>
+                                currentList.filter(
+                                  (s) => s.fullname !== studentToRemoveFullname
+                                )
+                              );
+                              setSelectedProduct([]);
+                              forceUpdate();
+                            }}
+                            type="button"
+                            className="inline-flex items-center justify-center h-10 w-10 bg-danger-500 text-lg border rounded border-danger-500 text-white"
+                          >
+                            <Icons icon="heroicons-outline:trash" />
+                          </button>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </Card>
         {/* summary */}
-        {isInvoice &&
-          selectedProduct.length > 0 &&
-          SummarySection(selectedProduct, formList, grouped)}
+        {isInvoice && selectedProduct.length > 0 && (
+          // <SummarySection
+          //   selectedProduct={selectedProduct}
+          //   formList={formList}
+          //   grouped={grouped}
+          // />
+          <Card title={"Ringkasan"}>
+            {/* Produk */}
+            <div className="mb-10">
+              <span className="text-xl font-semibold mb-2">Produk</span>
+              <div className="lg:grid-cols-4 md:grid-cols-4 grid-cols-1 grid gap-4 last:mb-10">
+                <>
+                  <span className="col-span-2 font-medium">Nama Produk</span>
+                  <span className="text-left font-medium">Jumlah</span>
+                  <span className="text-left font-medium">Harga</span>
+                </>
+                {/* untuk produk yang dipilih */}
+                {selectedProduct.length > 0 &&
+                  selectedProduct.map((p) => (
+                    <>
+                      <span className="col-span-2">{p.name}</span>
+                      <span className="text-left">{p.qty}</span>
+                      <div className="flex justify-between">
+                        <span>IDR</span>
+                        <span>
+                          {(
+                            p.qty *
+                            (p.package_name === "trial" ? 1 : formList.length) *
+                            p.sellprice
+                          ).toLocaleString()}
+                        </span>
+                      </div>
+                    </>
+                  ))}
+                {/* untuk registrasi */}
+                {Object.entries(grouped)
+                  .filter(([key]) => key !== "extend")
+                  .map(([key, value]) => (
+                    <React.Fragment key={key}>
+                      <span className="col-span-2">Reg. {value.label}</span>
+                      <span className="text-left">{value.count}</span>
+                      <div className="flex justify-between">
+                        <span>IDR</span>
+                        <span>{value.total.toLocaleString()}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+
+                {/* Subtotal Section */}
+                <React.Fragment key="subtotal">
+                  {/* Optional: Top border line */}
+                  <div className="col-span-4 border-t-2 border-black mt-2" />
+
+                  <span className="col-span-2 text-right font-bold">
+                    Subtotal
+                  </span>
+                  <span></span>
+                  <div className="flex justify-between font-bold">
+                    <span>IDR</span>
+                    <span>
+                      {(
+                        selectedProduct.reduce(
+                          (sum, p) =>
+                            sum +
+                            p.qty *
+                              (p.package_name === "trial"
+                                ? 1
+                                : formList.length) *
+                              p.sellprice,
+                          0
+                        ) +
+                        Object.values(grouped).reduce(
+                          (sum, value) => sum + value.total,
+                          0
+                        )
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Optional: Bottom border line */}
+                  <div className="col-span-4 border-b-2 border-black mt-1" />
+                </React.Fragment>
+              </div>
+            </div>
+          </Card>
+        )}
         {/* Pelanggan Section */}
-        {isInvoice
-          ? CustomerSection(
-              isSplitInvoice,
-              setIsSplitInvoice,
-              parent,
-              register,
-              setValue,
-              keterangan
-            )
-          : null}
+        {isInvoice && parent ? (
+          // <CustomerSection
+          //   isSplitInvoice={isSplitInvoice}
+          //   setIsSplitInvoice={setIsSplitInvoice}
+          //   parent={parent}
+          //   control={control}
+          //   register={register}
+          //   setValue={setValue}
+          //   keterangan={keterangan}
+          // />
+          <Card
+            title={"Pelanggan"}
+            // di hide dulu, belum ada kebijakan split bill
+            // headerslot={
+            //   parent.length > 1 && (
+            //     <Checkbox
+            //       name="splitInvoice"
+            //       label={"Split Invoice"}
+            //       value={isSplitInvoice}
+            //       onChange={() => {
+            //         setIsSplitInvoice(!isSplitInvoice);
+            //       }}
+            //     />
+            //   )
+            // }
+          >
+            <div className="flex flex-col gap-3">
+              {!isSplitInvoice || parent.length == 1 ? (
+                <>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="namapelanggan"
+                      className="text-sm font-medium mb-1"
+                    >
+                      Nama
+                    </label>
+                    <select
+                      id="namapelanggan"
+                      {...register("namapelanggan")}
+                      className="border rounded-md p-2"
+                      onChange={(e) => {
+                        const selected = parent.find(
+                          (p) => p.name === e.target.value
+                        );
+                        setValue("namapelanggan", selected?.name || "");
+                        setValue(
+                          "phonepelanggan",
+                          toNormalizePhone(selected?.phone || "")
+                        );
+                      }}
+                    >
+                      <option value="">Pilih Orang Tua</option>
+                      {parent.map((p, index) => (
+                        <option key={index} value={p.name}>
+                          {p.name} - {p.phone}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <Textinput
+                    name="phonepelanggan"
+                    label="Nomor Telepon"
+                    type="text"
+                    placeholder="Nomor WA"
+                    register={register}
+                  />
+                  <Textarea
+                    name="keteranganpelanggan"
+                    label="Keterangan"
+                    placeholder="Keterangan"
+                    register={register}
+                  ></Textarea>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 w-full">
+                  {parent.map((item, idx) => (
+                    <Card key={idx} className="flex-1 min-w-0">
+                      <div className="space-y-2">
+                        <Textinput
+                          name={`splitCustomers[${idx}].name`}
+                          label="Nama"
+                          type="text"
+                          placeholder="Nama"
+                          register={register}
+                          defaultValue={item.name}
+                          horizontal
+                        />
+                        <InputGroup
+                          name={`splitCustomers[${idx}].tagihan`}
+                          type="text"
+                          label="Tagihan"
+                          prepend="Rp."
+                          register={register}
+                          defaultValue={item.tagihan}
+                          horizontal
+                        />
+                        <Textinput
+                          name={`splitCustomers[${idx}].phone`}
+                          label="Telepon"
+                          type="text"
+                          placeholder="Nomor WA"
+                          register={register}
+                          defaultValue={item.phone}
+                          horizontal
+                        />
+                        <Textarea
+                          name={`splitCustomers[${idx}].keterangan`}
+                          label="Keterangan"
+                          placeholder="Keterangan"
+                          register={register}
+                          defaultValue={keterangan}
+                          horizontal
+                        />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+        ) : null}
         <div className="ltr:text-right rtl:text-left space-x-3">
           <div className="btn-group">
             <Button
@@ -1046,14 +1460,15 @@ const AddJadwal = ({
   );
 };
 
-const ProductSection = (
+function ProductSection({
   product,
   handleProductDisable,
   selectedProduct,
   handleQtyChange,
   handleProductSelectionChange,
-  register
-) => {
+  control,
+  register,
+}) {
   return (
     <div className="flex flex-col">
       {/* Header for Product Section */}
@@ -1142,11 +1557,12 @@ const ProductSection = (
       </div>
     </div>
   );
-};
+}
 
-const StudentSection = (
+function StudentSection({
   isLoadingCheckDuplicate,
   fields,
+  control,
   register,
   allStatus,
   handleRegStatChange,
@@ -1154,8 +1570,8 @@ const StudentSection = (
   remove,
   setFormList,
   setSelectedProduct,
-  forceUpdate
-) => {
+  forceUpdate,
+}) {
   return (
     <div className="flex flex-col space-y-2">
       {/* Header */}
@@ -1245,9 +1661,9 @@ const StudentSection = (
       )}
     </div>
   );
-};
+}
 
-const SummarySection = (selectedProduct, formList, grouped) => {
+function SummarySection({ selectedProduct, formList, grouped }) {
   return (
     <Card title={"Ringkasan"}>
       {/* Produk */}
@@ -1325,16 +1741,17 @@ const SummarySection = (selectedProduct, formList, grouped) => {
       </div>
     </Card>
   );
-};
+}
 
-const CustomerSection = (
+function CustomerSection({
   isSplitInvoice,
   setIsSplitInvoice,
   parent,
+  control,
   register,
   setValue,
-  keterangan
-) => {
+  keterangan,
+}) {
   return (
     <Card
       title={"Pelanggan"}
@@ -1447,6 +1864,6 @@ const CustomerSection = (
       </div>
     </Card>
   );
-};
+}
 
 export default AddJadwal;

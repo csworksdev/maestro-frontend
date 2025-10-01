@@ -471,6 +471,11 @@ const CekJadwal = () => {
                     key={key}
                     className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center gap-3`}
                   >
+                    <AdminBadge admin={slot.admin} />
+                    <Badge
+                      label={checkProduct(slot.product)}
+                      className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
+                    />
                     {slot.student?.map((x, idx) => (
                       <div key={idx} className="text-[clamp(8px,0.7vw,10px)]">
                         {x.split(" ")[0]}

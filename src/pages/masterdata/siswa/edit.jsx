@@ -37,11 +37,11 @@ const Edit = (closeModal = {}) => {
     .object({
       fullname: yup.string().required("Nama Lengkap is required"),
       // gender: yup.string().required("Jenis Kelamin is required"),
-      // phone: yup.string().required("Telephone is required").max(13),
+      phone: yup.string().required("Telephone is required").max(13),
       // address: yup.string().required("Alamat is required"),
       // pob: yup.string().required("Tempat Lahir is required"),
       // dob: yup.date().required("Tanggal Lahir is required"),
-      branch: yup.string().required("cabang belum dipilih"),
+      //branch: yup.string().required("cabang belum dipilih"),
     })
     .required();
 
@@ -174,7 +174,7 @@ const Edit = (closeModal = {}) => {
       parent: newData.parent,
       phone: newData.phone,
       address: newData.address,
-      dob: newData.dob, //DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
+      dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
       pob: newData.pob,
       branch: newData.branch,
     };
@@ -266,7 +266,7 @@ const Edit = (closeModal = {}) => {
             register={register}
             error={errors.phone?.message}
             defaultValue={isUpdate ? data.phone : ""}
-            value={formData.phone}
+            // value={formData.phone}
             // isMask={true}
             options={{
               blocks: [4, 4, 5],
@@ -297,7 +297,7 @@ const Edit = (closeModal = {}) => {
             </label>
             <Flatpickr
               defaultValue={isUpdate ? data.dob : ""}
-              value={formData.dob}
+              // value={formData.dob}
               name="dob"
               options={{
                 disableMobile: true,

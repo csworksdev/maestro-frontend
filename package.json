@@ -9,7 +9,8 @@
     "build": "vite build --mode production",
     "preview": "vite preview",
     "start-admin": "vite --host admin.localhost --port 3001",
-    "start-coach": "vite --host coach.localhost --port 3002"
+    "start-coach": "vite --host coach.localhost --port 3002",
+    "clean:debug": "rimraf .vscode/chrome || true"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.4",
