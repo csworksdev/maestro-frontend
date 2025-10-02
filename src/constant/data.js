@@ -75,6 +75,11 @@ export const menuFinance = [
     title: "Xendit",
   },
   {
+    title: "Invoice",
+    icon: "heroicons-outline:banknotes",
+    link: "invoices",
+  },
+  {
     title: "Saldo",
     icon: "heroicons-outline:banknotes",
     link: "xendit/balance",

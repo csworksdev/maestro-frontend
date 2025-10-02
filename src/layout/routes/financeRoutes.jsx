@@ -51,6 +51,7 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import Invoice from "@/pages/invoice";
 
 const FinanceRoutes = () => {
   const data = useSelector((state) => state.auth.data); // tetap bisa pakai hook di sini
@@ -95,6 +96,9 @@ const FinanceRoutes = () => {
           <Route index element={<Produk />} />
           <Route path="add" element={<EditProduk />} />
           <Route path="edit" element={<EditProduk />} />
+        </Route>
+        <Route path="invoices">
+          <Route index element={<Invoice />} />
         </Route>
         {/*  */}
         <Route path="order">
