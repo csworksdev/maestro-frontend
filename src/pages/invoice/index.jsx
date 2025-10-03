@@ -5,21 +5,35 @@ import PaginationComponent from "@/components/globals/table/pagination";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { getInvoiceAll, DeleteInvoice } from "@/axios/invoice"; // ✅ ganti axios ke invoice
+import {
+  getInvoiceAll,
+  DeleteInvoice,
+  getInvoiceSummary,
+} from "@/axios/invoice"; // ✅ ganti axios ke invoice
 import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { useSelector } from "react-redux";
 import { DateTime } from "luxon";
 import CopyText from "@/components/custom/copytext";
+import {
+  XenditCreatePaymentLink,
+  XenditRecreatePaymentLink,
+  XenditSyncAllTransaction,
+  XenditSyncTransaction,
+} from "@/axios/xendit";
+import { Tab } from "@headlessui/react";
+import Badge from "@/components/ui/Badge";
 
 // Komponen badge untuk status
 const StatusBadge = ({ status }) => {
   let colorClass = "bg-gray-200 text-gray-700";
-  if (status === "PAID" || status === "SETTLED") {
+  if (status === "SETTLED") {
     colorClass = "bg-green-100 text-green-700 border border-green-400";
-  } else if (status === "PENDING") {
+  } else if (status === "PAID") {
     colorClass = "bg-yellow-100 text-yellow-700 border border-yellow-400";
+  } else if (status === "PENDING") {
+    colorClass = "bg-gray-100 text-gray-700 border border-gray-400";
   } else if (status === "EXPIRED" || status === "FAILED") {
     colorClass = "bg-red-100 text-red-700 border border-red-400";
   }
@@ -37,93 +51,158 @@ const Invoice = () => {
   const navigate = useNavigate();
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [isLoading, setIsLoading] = useState(true);
-
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchText, setSearchText] = useState(""); // khusus input user di box search
+  const [statusFilter, setStatusFilter] = useState("PENDING"); // khusus tab status
 
-  const { roles } = useSelector((state) => state.auth.data);
+  const [tabCounts, setTabCounts] = useState({});
 
-  const actionsAdmin = [
-    {
-      name: "edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
-    },
-  ];
   const actions = [
     {
-      name: "edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
+      name: "cek settlement",
+      icon: "heroicons:eye",
+      onClick: (row) => handleSettlement(row.row.original.external_id),
     },
     {
-      name: "delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
+      name: "Buat Payment Link",
+      icon: "heroicons:plus",
+      onClick: (row) => recreatePaymentLink(row.row.original),
     },
   ];
 
-  const fetchData = async (page, size, query) => {
+  const JenisPembayaran = ["Pending", "Paid", "Settled", "Expired"];
+
+  const fetchData = async (page, size, status, search) => {
     try {
       setIsLoading(true);
       const params = {
         page: page + 1,
         page_size: size,
-        search: query,
+        status: status, // pakai statusFilter
+        search: search, // pakai searchText
       };
       getInvoiceAll(params)
-        .then((res) => {
-          setListData(res.data);
-        })
+        .then((res) => setListData(res.data))
         .finally(() => setIsLoading(false));
     } catch (error) {
       console.error("Error fetching invoice", error);
     }
   };
 
+  const fetchCounts = async () => {
+    try {
+      const res = await getInvoiceSummary();
+      setTabCounts(res.data.counts);
+    } catch (err) {
+      console.error("Error fetching counts", err);
+    }
+  };
+
   useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
+    fetchCounts();
+    fetchData(pageIndex, pageSize, statusFilter, searchText);
+  }, [pageIndex, pageSize, statusFilter, searchText]);
 
   const handlePageChange = (page) => setPageIndex(page);
   const handlePageSizeChange = (size) => setPageSize(size);
 
   const handleSearch = (query) => {
-    setSearchQuery(query);
+    setSearchText(query);
     setPageIndex(0);
   };
 
-  const handleDelete = (e) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "This invoice will be deleted!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#22c55e",
-      cancelButtonColor: "#ef4444",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        DeleteInvoice(e.external_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Invoice deleted successfully.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
+  const recreatePaymentLink = async (data) => {
+    try {
+      const external_id = generateExternalId();
+      // data = invoice row.original
+      let paramxendit = {
+        external_id: external_id, // dari invoice
+        amount: parseInt(data.amount, 10), // ambil dari invoice.amount
+        description: data.description, // langsung pakai description
+        customer_name: data.given_names,
+        customer_phone: data.mobile_number,
+        items: JSON.parse(data.item).map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: parseInt(item.price, 10),
+        })),
+      };
+
+      const res = await XenditRecreatePaymentLink(paramxendit);
+
+      if (res?.data) {
+        Swal.fire({
+          icon: "success",
+          title: "Payment Link Berhasil Dibuat",
+          text: `Payment link untuk ${data.external_id} berhasil direcreate.`,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Membuat Payment Link",
+          text: "Tidak ada response dari server.",
         });
       }
-    });
+    } catch (error) {
+      console.error("Error recreate payment link:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Terjadi kesalahan saat membuat Payment Link.",
+      });
+    }
   };
 
-  const handleEdit = (e) => {
-    navigate("edit", {
-      state: {
-        isupdate: "true",
-        data: e,
-      },
-    });
+  const handleSettlement = async (reference_id) => {
+    try {
+      const data = await XenditSyncTransaction(reference_id);
+
+      if (!data || !data.settlement_status) {
+        Swal.fire({
+          title: "Not Found",
+          text: "Data transaksi tidak ditemukan.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      if (data.settlement_status === "SETTLED") {
+        Swal.fire({
+          title: "Settlement Success",
+          text: `Invoice dengan reference_id ${reference_id} sudah SETTLED.`,
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+
+        // reload data setelah settle
+        fetchCounts();
+        fetchData(0, 10, "PAID"); // atau gunakan page, size, query dari state
+      } else {
+        Swal.fire({
+          title: "Settlement Pending",
+          text: `Status saat ini: ${data.settlement_status}`,
+          icon: "info",
+          confirmButtonText: "OK",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Error",
+        text: "Transaksi tidak ditemukan.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      console.error("Error syncing settlement:", error);
+    }
+  };
+
+  const handleCekAllSettlements = async () => {
+    try {
+      const data = await XenditSyncAllTransaction();
+    } catch (error) {}
   };
 
   const COLUMNS = [
@@ -170,13 +249,38 @@ const Invoice = () => {
       accessor: "action",
       id: "action",
       sticky: "right",
-      Cell: (row) => (
-        <div className="flex space-x-2 justify-center items-center">
-          {(roles === "Admin" ? actionsAdmin : actions).map((action, index) => (
-            <TableAction key={action.id || index} action={action} row={row} />
-          ))}
-        </div>
-      ),
+      Cell: (row) => {
+        const externalId = row?.row?.original?.external_id;
+        console.log(actions[0]);
+        return (
+          <div className="flex space-x-2 justify-center items-center">
+            {(() => {
+              const externalId = row?.row?.original?.external_id;
+              const status = row?.row?.original?.status;
+
+              if (
+                status === "PAID" &&
+                externalId &&
+                !externalId.startsWith("cvmaes")
+              ) {
+                // hanya tampilkan action pertama (index 0)
+                return <TableAction action={actions[0]} row={row} />;
+              }
+
+              if (
+                status === "EXPIRED" &&
+                externalId &&
+                !externalId.startsWith("cvmaes")
+              ) {
+                // hanya tampilkan action kedua (index 1)
+                return <TableAction action={actions[1]} row={row} />;
+              }
+
+              return null; // kalau status lain, kosong
+            })()}
+          </div>
+        );
+      },
     },
   ];
 
@@ -185,10 +289,8 @@ const Invoice = () => {
       <Card
         title="Invoice"
         headerslot={
-          <Button className="btn-primary ">
-            <Link to="add" isupdate="false">
-              Tambah Invoice
-            </Link>
+          <Button className="btn-primary " onClick={handleCekAllSettlements}>
+            Cek Semua Settlement
           </Button>
         }
       >
@@ -196,24 +298,60 @@ const Invoice = () => {
           <SkeletionTable />
         ) : (
           <>
-            <Search searchValue={searchQuery} handleSearch={handleSearch} />
-            <Table
-              listData={listData}
-              listColumn={COLUMNS}
-              searchValue={searchQuery}
-              handleSearch={handleSearch}
-            />
-            <PaginationComponent
-              pageSize={pageSize}
-              pageIndex={pageIndex}
-              pageCount={Math.ceil(listData.count / pageSize)}
-              canPreviousPage={pageIndex > 0}
-              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
-              gotoPage={handlePageChange}
-              previousPage={() => handlePageChange(pageIndex - 1)}
-              nextPage={() => handlePageChange(pageIndex + 1)}
-              setPageSize={handlePageSizeChange}
-            />
+            <Search searchValue={searchText} handleSearch={handleSearch} />
+            <Tab.Group
+              selectedIndex={selectedIndex}
+              onChange={(index) => {
+                setSelectedIndex(index);
+                setStatusFilter(JenisPembayaran[index].toUpperCase()); // tab untuk status
+                setPageIndex(0);
+              }}
+            >
+              {/* Tab List */}
+              <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-4 pb-2">
+                {JenisPembayaran.map((item) => (
+                  <Tab
+                    key={item}
+                    className="px-4 py-2 rounded-lg ui-selected:bg-blue-500 ui-selected:text-white flex items-center gap-2"
+                  >
+                    {item}
+                    <span className="text-sm text-gray-500">
+                      <Badge
+                        label={tabCounts[item.toUpperCase()] ?? 0}
+                        className="bg-primary-500 text-white"
+                      />
+                    </span>
+                  </Tab>
+                ))}
+              </Tab.List>
+
+              {/* Tab Panels */}
+              <Tab.Panels>
+                {JenisPembayaran.map((item, i) => (
+                  <Tab.Panel key={item}>
+                    <Table
+                      listData={listData}
+                      listColumn={COLUMNS}
+                      searchValue={searchText}
+                      handleSearch={handleSearch}
+                    />
+                    <PaginationComponent
+                      pageSize={pageSize}
+                      pageIndex={pageIndex}
+                      pageCount={Math.ceil(listData.count / pageSize)}
+                      canPreviousPage={pageIndex > 0}
+                      canNextPage={
+                        pageIndex < Math.ceil(listData.count / pageSize) - 1
+                      }
+                      gotoPage={handlePageChange}
+                      previousPage={() => handlePageChange(pageIndex - 1)}
+                      nextPage={() => handlePageChange(pageIndex + 1)}
+                      setPageSize={handlePageSizeChange}
+                    />
+                  </Tab.Panel>
+                ))}
+              </Tab.Panels>
+            </Tab.Group>
           </>
         )}
       </Card>

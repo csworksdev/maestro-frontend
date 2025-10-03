@@ -60,11 +60,45 @@ export const XenditCreatePaymentLink = async (params) => {
   }
 };
 
+export const XenditRecreatePaymentLink = async (params) => {
+  try {
+    let response = await axiosConfig.post(
+      "/xendit/recreate-payment-link/",
+      params
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const XenditSyncSaldo = async (params) => {
   try {
     let response = await axiosConfig.post("/xendit/sync-saldo/", params);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
+  }
+};
+
+export const XenditSyncTransaction = async (referenceId) => {
+  try {
+    const response = await axiosConfig.post("/xendit/sync-transaction/", {
+      reference_id: referenceId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error syncing transaction:", error);
+    throw error;
+  }
+};
+
+export const XenditSyncAllTransaction = () => {
+  try {
+    const response = axiosConfig.post("/xendit/sync-all-transactions/");
+    return response.data;
+  } catch (error) {
+    console.error("Error syncing transaction:", error);
+    throw error;
   }
 };
