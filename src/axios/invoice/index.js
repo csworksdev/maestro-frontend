@@ -63,3 +63,13 @@ export const DeleteInvoice = async (id) => {
     console.error("Error deleting invoice:", error);
   }
 };
+
+// ✅ Get invoice by ID
+export const getInvoiceSummary = async () => {
+  try {
+    let response = await axiosConfig.get(`/api/invoice/summary/`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching invoice:", error);
+  }
+};
