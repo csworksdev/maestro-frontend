@@ -79,7 +79,7 @@ const AddJadwal = ({
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
   const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const { user_id, roles } = useSelector((state) => state.auth.data);
+  const { user_id, roles, user_name } = useSelector((state) => state.auth.data);
   const [keterangan, setKeterangan] = useState(
     "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
   );
@@ -392,13 +392,18 @@ const AddJadwal = ({
                 amount:
                   selectedProduct.reduce(
                     (sum, p) =>
-                      sum + p.qty * selectedStudents?.length * p.sellprice,
+                      sum +
+                      p.qty *
+                        (p.package_name === "trial" ? 1 : formList.length) *
+                        p.sellprice,
                     0
                   ) +
                   Object.values(grouped).reduce(
                     (sum, value) => sum + value.total,
                     0
                   ),
+                admin: user_name,
+                // order_id: res2.data.order_id,
                 description: newData.keteranganpelanggan,
                 customer_name: newData.namapelanggan,
                 customer_phone: newData.phonepelanggan,
@@ -465,7 +470,6 @@ const AddJadwal = ({
   };
 
   const onSubmit = async (newData) => {
-    console.log(newData);
     try {
       const newStudents = await submitNewStudent();
       const allStudents = [...selectedStudents, ...newStudents];
