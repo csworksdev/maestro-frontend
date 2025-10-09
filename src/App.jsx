@@ -1,17 +1,9 @@
 import React, { lazy, Suspense, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
+import { Routes, Route } from "react-router-dom";
 
-import Layout from "./layout/Layout";
 import AuthLayout from "./layout/AuthLayout";
 import Loading from "@/components/Loading";
-import AuthenticatedRoute from "./layout/AuthenticatedRoute";
 import PublicRoute from "./layout/PublicRoute";
-
-import { messaging, getToken, onMessage } from "@/firebase/firebase";
-import { removeFcmToken } from "@/utils/fcm";
-import isChrome from "./utils/isChrome";
 
 import CoachRoutes from "./layout/routes/coachRoutes";
 import AdminRoutes from "./layout/routes/adminRoutes";

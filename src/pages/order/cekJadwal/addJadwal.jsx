@@ -197,7 +197,7 @@ const AddJadwal = ({
       const uniqueParentsMap = new Map();
       parsedRows.forEach((item) => {
         const parentName =
-          item.parent && (item.parent !== "-" || item.parent !== "")
+          item.parent && item.parent !== "-" && item.parent !== ""
             ? item.parent
             : item.fullname;
 
@@ -267,7 +267,7 @@ const AddJadwal = ({
         const datasiswa = {
           fullname: item.fullname,
           nickname: item.nickname,
-          gender: item.gender ?? isGender,
+          gender: item.gender ?? "",
           parent: item.parent,
           phone: item.phone,
           address: item.address ?? "-",
@@ -292,13 +292,18 @@ const AddJadwal = ({
     return await Promise.all(promises);
   };
 
-  const createInvoice = async (newData, students) => {
+  const createInvoice = async (newData) => {
     try {
-      const external_id = generateExternalId();
-      var is_finish = 0;
+      const invoiceExternalId = generateExternalId();
+      const totalOrdersToCreate = selectedProduct.reduce(
+        (sum, product) => sum + (parseInt(product.qty, 10) || 0),
+        0
+      );
+      let completedOrders = 0;
 
       for (const product of selectedProduct) {
-        for (let index = 0; index < product.qty; index++) {
+        const quantity = parseInt(product.qty, 10) || 0;
+        for (let index = 0; index < quantity; index++) {
           const updatedData = {
             package: product.package,
             price: product.price,
@@ -333,7 +338,7 @@ const AddJadwal = ({
                 : newData.updatedStudents.map((student) => ({
                     student_id: student.student_id,
                   })),
-            invoice_id: external_id,
+            invoice_id: invoiceExternalId,
           };
 
           const res = await AddOrder(updatedData);
@@ -379,88 +384,79 @@ const AddJadwal = ({
             };
             let data = await AddOrderScheduleV2(params);
             if (data.data.status === "success") {
-              is_finish += 1;
-            }
-          }
-        }
-
-        if (isInvoice) {
-          if (is_finish === selectedProduct.length) {
-            if (!isSplitInvoice) {
-              let paramxendit = {
-                external_id: external_id,
-                amount:
-                  selectedProduct.reduce(
-                    (sum, p) =>
-                      sum +
-                      p.qty *
-                        (p.package_name === "trial" ? 1 : formList.length) *
-                        p.sellprice,
-                    0
-                  ) +
-                  Object.values(grouped).reduce(
-                    (sum, value) => sum + value.total,
-                    0
-                  ),
-                admin: user_name,
-                // order_id: res2.data.order_id,
-                description: newData.keteranganpelanggan,
-                customer_name: newData.namapelanggan,
-                customer_phone: newData.phonepelanggan,
-                items: [
-                  ...selectedProduct.map((p) => ({
-                    name: p.name,
-                    quantity: p.qty,
-                    price: parseInt(p.sellprice, 10),
-                  })),
-                  ...Object.entries(grouped)
-                    .filter(([key]) => key !== "extend")
-                    .map(([key, value]) => ({
-                      name: "Registrasi " + value.count,
-                      quantity: value.count,
-                      price: parseInt(value.total, 10),
-                    })),
-                ],
-              };
-              await XenditCreatePaymentLink(paramxendit).then((res) =>
-                reloadDataMaster()
-              );
-            } else {
-              await Promise.all(
-                parent.map(async (item, idx) => {
-                  let paramxendit = {
-                    external_id: external_id,
-                    amount: parseInt(newData.splitCustomers[idx].tagihan),
-                    description: newData.splitCustomers[idx].keterangan,
-                    customer_name: newData.splitCustomers[idx].name,
-                    customer_phone: newData.splitCustomers[idx].phone, // fix typo
-                    items: [
-                      ...selectedProduct.map((p) => ({
-                        name: p.name,
-                        quantity: p.qty,
-                        price: parseInt(p.sellprice, 10),
-                      })),
-                      ...Object.entries(grouped)
-                        .filter(([key]) => key !== "extend")
-                        .map(([key, value]) => ({
-                          name: "Registrasi " + value.count,
-                          quantity: value.count,
-                          price: parseInt(value.total, 10),
-                        })),
-                    ],
-                  };
-
-                  await XenditCreatePaymentLink(paramxendit);
-                })
-              );
-
-              reloadDataMaster(); // dipanggil setelah semua XenditCreatePaymentLink selesai
+              completedOrders += 1;
             }
           }
         }
         // else {
 
         // }
+      }
+
+      if (isInvoice && completedOrders === totalOrdersToCreate) {
+        const totalProductAmount = selectedProduct.reduce(
+          (sum, p) =>
+            sum +
+            (parseInt(p.qty, 10) || 0) *
+              (p.package_name === "trial" ? 1 : formList.length) *
+              p.sellprice,
+          0
+        );
+        const registrationAmount = Object.values(grouped).reduce(
+          (sum, value) => sum + value.total,
+          0
+        );
+        const invoiceItems = [
+          ...selectedProduct.map((p) => ({
+            name: p.name,
+            quantity: parseInt(p.qty, 10) || 0,
+            price: parseInt(p.sellprice, 10),
+          })),
+          ...Object.entries(grouped)
+            .filter(([key]) => key !== "extend")
+            .map(([key, value]) => ({
+              name: "Registrasi " + value.count,
+              quantity: value.count,
+              price: parseInt(value.total, 10),
+            })),
+        ].filter((item) => item.quantity > 0);
+        const invoiceAmount = totalProductAmount + registrationAmount;
+
+        if (invoiceItems.length === 0) {
+          return;
+        }
+
+        if (!isSplitInvoice) {
+          let paramxendit = {
+            external_id: invoiceExternalId,
+            amount: invoiceAmount,
+            admin: user_name,
+            // order_id: res2.data.order_id,
+            description: newData.keteranganpelanggan,
+            customer_name: newData.namapelanggan,
+            customer_phone: newData.phonepelanggan,
+            items: invoiceItems,
+          };
+          await XenditCreatePaymentLink(paramxendit);
+        } else {
+          const splitCustomers = newData.splitCustomers || [];
+          await Promise.all(
+            parent.map(async (item, idx) => {
+              const customer = splitCustomers[idx];
+              if (!customer) return;
+              let paramxendit = {
+                external_id: `${invoiceExternalId}-${idx + 1}`,
+                amount: parseInt(customer.tagihan, 10) || 0,
+                description: customer.keterangan,
+                customer_name: customer.name,
+                customer_phone: customer.phone, // fix typo
+                items: invoiceItems,
+              };
+
+              await XenditCreatePaymentLink(paramxendit);
+            })
+          );
+        }
       }
     } catch (error) {
       console.error(error);
@@ -742,7 +738,7 @@ const AddJadwal = ({
 
     formList.forEach((item) => {
       const parentName =
-        item.parent && (item.parent !== "-" || item.parent !== "")
+        item.parent && item.parent !== "-" && item.parent !== ""
           ? item.parent
           : item.fullname;
 
