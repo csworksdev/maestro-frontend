@@ -9,7 +9,7 @@ import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncSelect from "react-select/async";
 import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
@@ -597,57 +597,89 @@ const CekJadwal = () => {
       filteredPelatih !== ""
         ? jadwal.filter((x) => x.trainer_id === filteredPelatih)
         : jadwal;
+    const scrollContainerRef = useRef(null);
+    const [scrollHeight, setScrollHeight] = useState(null);
+
+    const updateScrollHeight = useCallback(() => {
+      if (!scrollContainerRef.current) return;
+      const { top } = scrollContainerRef.current.getBoundingClientRect();
+      const paddingBottom = 24;
+      const calculatedHeight = window.innerHeight - top - paddingBottom;
+      if (calculatedHeight > 0) {
+        setScrollHeight(Math.max(calculatedHeight, 200));
+      }
+    }, []);
+
+    useEffect(() => {
+      updateScrollHeight();
+      window.addEventListener("resize", updateScrollHeight);
+      return () => window.removeEventListener("resize", updateScrollHeight);
+    }, [updateScrollHeight]);
+
+    useEffect(() => {
+      updateScrollHeight();
+    }, [dataJadwal, updateScrollHeight]);
 
     return (
       <div className="w-full">
-        {/* HEADER FIX */}
-        <div className="grid grid-cols-15 gap-2 w-full">
-          <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky left-0 bg-white z-10">
-            Pelatih
-          </div>
-          {columnHeader.slice(1).map((header, i) => {
-            const jumlahPerJam = item.data[day][header];
-            return (
-              <div
-                key={i}
-                className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center"
-              >
-                {header}
-                {jumlahPerJam && (
-                  <>
-                    <br />({jumlahPerJam})
-                  </>
-                )}
+        <div className="overflow-x-auto">
+          <div className="min-w-[1200px]">
+            <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-white">
+              <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky left-0 top-0 bg-white z-30">
+                Pelatih
               </div>
-            );
-          })}
-        </div>
-
-        {/* BODY SCROLL */}
-        <div className="overflow-auto ">
-          {dataJadwal.map((de) => (
-            <div
-              key={de.trainer_id}
-              className="grid grid-cols-15 gap-3 my-2 w-full"
-            >
-              <div
-                className={`p-1 min-h-[80px] flex flex-col rounded-xl shadow sticky left-0 z-10 align-middle justify-center animation-ping gap-1 ${
-                  de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
-                }`}
-              >
-                <span className="text-[clamp(8px,0.7vw,14px)] p-1 font-semibold">
-                  {de.nickname && (
-                    <>
-                      {toProperCase(de.nickname)}
-                      <br />({de.total_order})
-                    </>
-                  )}
-                </span>
-              </div>
-
-              <GridKolamDetail item={de} pool={item} />
+              {columnHeader.slice(1).map((header, i) => {
+                const jumlahPerJam = item.data[day][header];
+                return (
+                  <div
+                    key={i}
+                    className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky top-0 bg-white z-20"
+                  >
+                    {header}
+                    {jumlahPerJam && (
+                      <>
+                        <br />({jumlahPerJam})
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
+
+            <div
+              ref={scrollContainerRef}
+              className="overflow-y-auto"
+              style={
+                scrollHeight
+                  ? { maxHeight: `${scrollHeight}px` }
+                  : undefined
+              }
+            >
+              {dataJadwal.map((de) => (
+                <div
+                  key={de.trainer_id}
+                  className="grid grid-cols-15 gap-3 my-2 w-full"
+                >
+                  <div
+                    className={`p-1 min-h-[80px] flex flex-col rounded-xl shadow sticky left-0 z-20 align-middle justify-center animation-ping gap-1 ${
+                      de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
+                    }`}
+                  >
+                    <span className="text-[clamp(8px,0.7vw,14px)] p-1 font-semibold">
+                      {de.nickname && (
+                        <>
+                          {toProperCase(de.nickname)}
+                          <br />({de.total_order})
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <GridKolamDetail item={de} pool={item} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -855,7 +887,7 @@ const CekJadwal = () => {
               {tabHari.map((item, index) => {
                 return (
                   <Tab.Panel key={index}>
-                    <div className="max-h-[600px] ">{gridKolam(item.name)}</div>
+                    <div>{gridKolam(item.name)}</div>
                   </Tab.Panel>
                 );
               })}
