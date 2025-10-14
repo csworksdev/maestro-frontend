@@ -56,6 +56,8 @@ const Invoice = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState(""); // khusus input user di box search
   const [statusFilter, setStatusFilter] = useState("PENDING"); // khusus tab status
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [tabCounts, setTabCounts] = useState({});
 
@@ -74,7 +76,14 @@ const Invoice = () => {
 
   const JenisPembayaran = ["Pending", "Paid", "Settled", "Expired"];
 
-  const fetchData = async (page, size, status, search) => {
+  const fetchData = async ({
+    page = pageIndex,
+    size = pageSize,
+    status = statusFilter,
+    search = searchText,
+    start = startDate,
+    end = endDate,
+  } = {}) => {
     try {
       setIsLoading(true);
       const params = {
@@ -83,6 +92,12 @@ const Invoice = () => {
         status: status, // pakai statusFilter
         search: search, // pakai searchText
       };
+      if (start) {
+        params.start_date = start;
+      }
+      if (end) {
+        params.end_date = end;
+      }
       getInvoiceAll(params)
         .then((res) => setListData(res.data))
         .finally(() => setIsLoading(false));
@@ -102,14 +117,20 @@ const Invoice = () => {
 
   useEffect(() => {
     fetchCounts();
-    fetchData(pageIndex, pageSize, statusFilter, searchText);
-  }, [pageIndex, pageSize, statusFilter, searchText]);
+    fetchData();
+  }, [pageIndex, pageSize, statusFilter, searchText, startDate, endDate]);
 
   const handlePageChange = (page) => setPageIndex(page);
   const handlePageSizeChange = (size) => setPageSize(size);
 
   const handleSearch = (query) => {
     setSearchText(query);
+    setPageIndex(0);
+  };
+
+  const handleClearDateFilters = () => {
+    setStartDate("");
+    setEndDate("");
     setPageIndex(0);
   };
 
@@ -179,7 +200,7 @@ const Invoice = () => {
 
         // reload data setelah settle
         fetchCounts();
-        fetchData(0, 10, "PAID"); // atau gunakan page, size, query dari state
+        fetchData({ page: 0, size: 10, status: "PAID" }); // atau gunakan page, size, query dari state
       } else {
         Swal.fire({
           title: "Settlement Pending",
@@ -299,6 +320,55 @@ const Invoice = () => {
         ) : (
           <>
             <Search searchValue={searchText} handleSearch={handleSearch} />
+            <div className="flex flex-wrap items-end gap-4 mb-5">
+              <div>
+                <label
+                  htmlFor="start-date-filter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Start Date
+                </label>
+                <input
+                  id="start-date-filter"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setPageIndex(0);
+                  }}
+                  max={endDate || undefined}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="end-date-filter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  End Date
+                </label>
+                <input
+                  id="end-date-filter"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setPageIndex(0);
+                  }}
+                  min={startDate || undefined}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="btn-outline-primary h-[42px]"
+                  onClick={handleClearDateFilters}
+                  disabled={!startDate && !endDate}
+                >
+                  Reset
+                </Button>
+              </div>
+            </div>
             <Tab.Group
               selectedIndex={selectedIndex}
               onChange={(index) => {
