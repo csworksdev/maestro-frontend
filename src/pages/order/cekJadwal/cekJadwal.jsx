@@ -9,7 +9,13 @@ import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import AsyncSelect from "react-select/async";
 import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
@@ -650,9 +656,7 @@ const CekJadwal = () => {
               ref={scrollContainerRef}
               className="overflow-y-auto"
               style={
-                scrollHeight
-                  ? { maxHeight: `${scrollHeight}px` }
-                  : undefined
+                scrollHeight ? { maxHeight: `${scrollHeight}px` } : undefined
               }
             >
               {dataJadwal.map((de) => (
@@ -799,7 +803,7 @@ const CekJadwal = () => {
               defaultOptions={memoizedBranchOptions}
               loadOptions={branchOption}
               onChange={handleBranchChange}
-              className="grow z-20"
+              className="grow z-50"
             />
           </div>
         </div>
