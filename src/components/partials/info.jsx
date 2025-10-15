@@ -5,7 +5,7 @@ import vectorImage2 from "@/assets/images/svg/widgetvector2.svg";
 import Button from "../ui/Button";
 
 const Info = () => {
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
 
   const getWhatsAppLink = () => {
     const countryCode = "+6281220450240"; // Indonesia country code, modify as per your requirement
@@ -22,7 +22,7 @@ const Info = () => {
       <div className="flex-1">
         <div className="text-xl font-medium text-white dark:text-slate-800 mb-2 ">
           <span className="block font-normal">
-            Halo kak {user_name.replace(/^./, user_name[0].toUpperCase())},
+            Halo kak {username.replace(/^./, username[0].toUpperCase())},
           </span>
         </div>
         <div className="text-sm text-wgite text-white dark:text-slate-800 font-semibold flex flex-row gap-3 items-center">

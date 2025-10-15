@@ -123,7 +123,7 @@ const CekJadwal = () => {
     },
   ];
 
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [tabHari, setTabHari] = useState(daysOfWeek);
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);

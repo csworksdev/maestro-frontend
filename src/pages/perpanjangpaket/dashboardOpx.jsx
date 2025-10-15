@@ -8,7 +8,7 @@ import Loading from "@/components/Loading";
 import Table from "@/components/globals/table/table";
 
 const DashboardPerpanjangOpx = () => {
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
 

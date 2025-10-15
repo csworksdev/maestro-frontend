@@ -5,7 +5,7 @@ import DashboardPerpanjangOpx from "./dashboardOpx";
 import DashboardPerpanjangAdmin from "./dashboardAdmin";
 
 const FolloupPerpanjang = () => {
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
 
   const dashboard = {
     Coach: <DashboardPerpanjangTrainer />,

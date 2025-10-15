@@ -19,7 +19,7 @@ import { useLeaveSocket } from "@/hooks/useLeaveSocket";
 import LoaderCircle from "@/components/Loader-circle";
 
 const Leave = () => {
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
   const { data, isLoading } = useLeaveSocket(user_id, roles, selectStatus);

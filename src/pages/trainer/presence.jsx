@@ -55,7 +55,7 @@ const Presence = () => {
   //   (state) => state.loading.isLoading
   // );
   const [listData, setListData] = useState([]);
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
   // const { setValue } = useForm();

@@ -26,7 +26,7 @@ const MobileFooter = () => {
           }
           `}
             >
-              Pendapatan
+              Rekapan
             </span>
           </div>
         )}
@@ -53,7 +53,7 @@ const MobileFooter = () => {
           </div>
         )}
       </NavLink> */}
-      <NavLink
+      {/* <NavLink
         to="profile"
         className="relative bg-white bg-no-repeat backdrop-filter backdrop-blur-[40px] rounded-full footer-bg dark:bg-slate-700 h-[65px] w-[65px] z-[-1] -mt-[40px] flex justify-center items-center"
       >
@@ -72,7 +72,7 @@ const MobileFooter = () => {
             />
           </div>
         )}
-      </NavLink>
+      </NavLink> */}
       <NavLink to="presence">
         {({ isActive }) => (
           <div>
@@ -92,6 +92,29 @@ const MobileFooter = () => {
         `}
             >
               Absensi
+            </span>
+          </div>
+        )}
+      </NavLink>
+      <NavLink to="jadwal">
+        {({ isActive }) => (
+          <div>
+            <span
+              className={` relative cursor-pointer rounded-full text-[20px] flex flex-col items-center justify-center mb-1
+      ${isActive ? "text-primary-500" : "dark:text-white text-slate-900"}
+          `}
+            >
+              <Icon icon="heroicons-outline:calendar" />
+              {/* <span className="absolute right-[17px] lg:top-0 -top-2 h-4 w-4 bg-red-500 text-[8px] font-semibold flex flex-col items-center justify-center rounded-full text-white z-[99]">
+                2
+              </span> */}
+            </span>
+            <span
+              className={` block text-[11px]
+         ${isActive ? "text-primary-500" : "text-slate-600 dark:text-slate-300"}
+        `}
+            >
+              Jadwal
             </span>
           </div>
         )}

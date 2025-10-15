@@ -16,7 +16,7 @@ const Leave = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("pending");
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
   const { data, isLoading } = useLeaveSocket(user_id, roles, selectStatus);

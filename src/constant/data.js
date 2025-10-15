@@ -174,6 +174,11 @@ export const menuTrainer = [
     icon: "heroicons-outline:queue-list",
     link: "presence",
   },
+  {
+    title: "Jadwal",
+    icon: "heroicons-outline:queue-list",
+    link: "jadwal",
+  },
   // {
   //   title: "Follow Up Perpanjang",
   //   icon: "heroicons-outline:globe-americas",
