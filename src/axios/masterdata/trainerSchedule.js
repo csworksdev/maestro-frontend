@@ -10,6 +10,18 @@ export const getTrainerScheduleAll = async () => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const getTrainerScheduleOwn = async (user_id) => {
+  try {
+    let response = await axiosConfig.get(
+      "/api/trainer-schedule/own/" + user_id + "/"
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 export const getTrainerScheduleByTrainer = async (id) => {
   try {
     let response = await axiosConfig.get("/api/trainer-schedule/" + id + "/");
