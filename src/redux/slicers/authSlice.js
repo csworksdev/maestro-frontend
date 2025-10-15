@@ -1,3 +1,4 @@
+import { logout } from "@/axios/auth/auth";
 import { createSlice } from "@reduxjs/toolkit";
 
 const authSlice = createSlice({
@@ -26,26 +27,28 @@ const authSlice = createSlice({
         isAuth: true,
       };
     },
-    logOut: (state) => {
-      state.refresh = "";
-      state.access = "";
-      state.data = {
-        user_id: "",
-        user_name: "",
-        roles: "",
-      };
-      state.isAuth = false;
-      localStorage.removeItem("darkMode");
-      localStorage.removeItem("menuItems");
-      localStorage.removeItem("mobileMenu");
-      localStorage.removeItem("persist:auth");
-      localStorage.removeItem("persist:layout");
-      localStorage.removeItem("persist:root");
-      localStorage.removeItem("sidebarCollapsed");
-      localStorage.removeItem("activeSubmenu");
-      localStorage.removeItem("activeMultiMenu");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+    logOut: async (state) => {
+      await logout().then(() => {
+        state.refresh = "";
+        state.access = "";
+        state.data = {
+          user_id: "",
+          user_name: "",
+          roles: "",
+        };
+        state.isAuth = false;
+        localStorage.removeItem("darkMode");
+        localStorage.removeItem("menuItems");
+        localStorage.removeItem("mobileMenu");
+        localStorage.removeItem("persist:auth");
+        localStorage.removeItem("persist:layout");
+        localStorage.removeItem("persist:root");
+        localStorage.removeItem("sidebarCollapsed");
+        localStorage.removeItem("activeSubmenu");
+        localStorage.removeItem("activeMultiMenu");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+      });
     },
   },
 });

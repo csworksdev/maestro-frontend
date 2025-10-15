@@ -15,7 +15,7 @@ import Search from "@/components/globals/table/search";
 import { DateTime } from "luxon";
 
 const DashboardPerpanjangAdmin = () => {
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [listData, setListData] = useState({ count: 0, results: [] });

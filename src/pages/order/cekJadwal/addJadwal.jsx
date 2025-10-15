@@ -79,7 +79,7 @@ const AddJadwal = ({
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
   const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const { user_id, roles, user_name } = useSelector((state) => state.auth.data);
+  const { user_id, roles, username } = useSelector((state) => state.auth.data);
   const [keterangan, setKeterangan] = useState(
     "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
   );
@@ -430,7 +430,7 @@ const AddJadwal = ({
           let paramxendit = {
             external_id: invoiceExternalId,
             amount: invoiceAmount,
-            admin: user_name,
+            admin: username,
             // order_id: res2.data.order_id,
             description: newData.keteranganpelanggan,
             customer_name: newData.namapelanggan,

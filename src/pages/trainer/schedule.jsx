@@ -14,7 +14,7 @@ const Schedule = () => {
   const calendarComponentRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
 
   const transformDataForCalendar = (events) => {
     return events.map((event) => ({

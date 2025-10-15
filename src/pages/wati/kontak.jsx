@@ -32,7 +32,7 @@ const Kontak = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);

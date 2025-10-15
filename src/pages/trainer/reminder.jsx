@@ -32,7 +32,7 @@ const Reminder = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
 
   const fetchData = async (page, size, query) => {
     try {

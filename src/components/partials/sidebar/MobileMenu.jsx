@@ -52,7 +52,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
   const [skin] = useSkin();
   const [isDark] = useDarkMode();
   const [mobileMenu, setMobileMenu] = useMobileMenu();
-  const { user_id, user_name, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
   return (
     <div
       className={`${className} fixed  top-0 bg-white dark:bg-slate-800 shadow-lg  h-full   w-[248px]`}
@@ -69,7 +69,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
             </div>
             <div>
               <span className="text-l font-semibold text-slate-900 dark:text-slate-100">
-                hi, {user_name}
+                hi, {username}
               </span>
             </div>
           </div>
