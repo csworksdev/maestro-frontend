@@ -407,7 +407,8 @@ const OwnSchedule = () => {
                             <p className="text-sm text-slate-500 dark:text-slate-400">
                               {meta.description}
                             </p>
-                            {meta.remainingMeetCount !== null &&
+                            {meta.students?.length > 0 &&
+                              meta.remainingMeetCount !== null &&
                               meta.remainingMeetCount !== undefined && (
                                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                                   Sisa pertemuan:{" "}
