@@ -1,79 +1,53 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import LoginForm from "./common/login-coach";
-import Social from "./common/social";
-import { ToastContainer } from "react-toastify";
-import useDarkMode from "@/hooks/useDarkMode";
-// image import
-import LogoWhite from "@/assets/images/logo/logo-white.svg";
-import Logo from "@/assets/images/logo/logo.svg";
-import bgImage from "@/assets/images/all-img/login-bg.png";
+import Logo from "@/assets/images/logo/logo.png";
 
-const login2 = () => {
-  const [isDark] = useDarkMode();
+const LoginCoach = () => {
+  const currentYear = new Date().getFullYear();
+  const hubLabel = useMemo(() => {
+    if (typeof window === "undefined") return "Maestro Hub";
+    const hostname = window.location.hostname;
+    const candidate = hostname.includes(".")
+      ? hostname.split(".")[0]
+      : hostname;
+    const base =
+      candidate && candidate !== "localhost" ? candidate : "maestro";
+    const formatted = base
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+    return `${formatted || "Maestro"} Hub`;
+  }, []);
+
   return (
-    <div className="loginwrapper">
-      <div className="lg-inner-column">
-        <div className="right-column relative">
-          <div className="inner-content h-full flex flex-col bg-white dark:bg-slate-800">
-            <div className="auth-box h-full flex flex-col justify-center">
-              <div className="mobile-logo text-center mb-6 lg:hidden block">
-                <Link to="/">
-                  <img src={Logo} alt="" className="mx-auto" />
-                </Link>
-              </div>
-              <div className="text-center 2xl:mb-10 mb-4">
-                <h4 className="font-medium">Login to Maestro Connect</h4>
-                <div className="text-slate-500 dark:text-slate-400 text-base">
-                  Sign in to your account
-                </div>
-              </div>
-              <LoginForm />
-              {/* <div className=" relative border-b-[#9AA2AF] border-opacity-[16%] border-b pt-6">
-                <div className=" absolute inline-block  bg-white dark:bg-slate-800 left-1/2 top-1/2 transform -translate-x-1/2 px-4 min-w-max text-sm  text-slate-500  dark:text-slate-400font-normal ">
-                  Or continue with
-                </div>
-              </div>
-              <div className="max-w-[242px] mx-auto mt-8 w-full">
-                <Social />
-              </div> */}
-              {/* <div className="md:max-w-[345px] mt-6 mx-auto font-normal text-slate-500 dark:text-slate-400mt-12 uppercase text-sm">
-                Don’t have an account?{" "}
-                <Link
-                  to="/register"
-                  className="text-slate-900 dark:text-white font-medium hover:underline"
-                >
-                  Sign up
-                </Link>
-              </div> */}
-            </div>
-            <div className="auth-footer text-center">
-              Copyright 2024, CV. Maestro Bisa
-            </div>
-          </div>
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1f2937]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(14,165,233,0.15),_transparent_55%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_rgba(236,72,153,0.12),_transparent_55%)]" />
+      <div className="absolute top-24 left-16 h-32 w-32 rounded-full bg-primary-400/20 blur-3xl" />
+      <div className="absolute bottom-24 right-10 h-28 w-28 rounded-full bg-slate-300/10 blur-3xl" />
+
+      <div className="relative z-10 flex w-full max-w-[420px] flex-col items-center px-6 pb-10 pt-16 sm:px-8">
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <Link to="/" className="inline-flex items-center justify-center">
+            <img
+              src={Logo}
+              alt="Maestro"
+              className="h-32 w-auto drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+            />
+          </Link>
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-slate-200/80">
+            {hubLabel}
+          </p>
         </div>
-        <div
-          className="left-column bg-cover bg-no-repeat bg-center "
-          style={{
-            backgroundImage: `url(${bgImage})`,
-          }}
-        >
-          <div className="flex flex-col h-full justify-center">
-            <div className="flex-1 flex flex-col justify-center items-center">
-              <Link to="/">
-                <img src={Logo} alt="" className="mb-10" />
-              </Link>
-            </div>
-            <div>
-              <div className="black-500-title max-w-[525px] mx-auto pb-20 text-center">
-                Maestro Swim Coach Hub
-              </div>
-            </div>
-          </div>
-        </div>
+        <LoginForm />
+        <p className="mt-10 text-xs font-medium tracking-wide text-slate-500">
+          © {currentYear} CV. Maestro Bisa
+        </p>
       </div>
     </div>
   );
 };
 
-export default login2;
+export default LoginCoach;
