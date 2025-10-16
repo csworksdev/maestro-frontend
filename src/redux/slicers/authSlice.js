@@ -1,40 +1,69 @@
 import { createSlice } from "@reduxjs/toolkit";
+import {
+  clearAuthCookies,
+  getAuthCookies,
+  getRememberMeCookie,
+  setAuthCookies,
+  setRememberMeCookie,
+} from "@/utils/authCookies";
+
+const defaultUserData = {
+  user_id: "",
+  user_name: "",
+  roles: "",
+};
+
+const { access: initialAccess, refresh: initialRefresh, data: initialData } =
+  getAuthCookies();
+const initialRememberMe =
+  getRememberMeCookie() ?? (initialAccess ? true : false);
 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    refresh: localStorage.getItem("refresh_token") || "",
-    access: localStorage.getItem("access_token") || "",
-    data: JSON.parse(localStorage.getItem("user_data")) || {
-      user_id: "",
-      user_name: "",
-      roles: "",
-    },
-    isAuth: !!localStorage.getItem("access_token"),
+    refresh: initialRefresh,
+    access: initialAccess,
+    data: initialData || { ...defaultUserData },
+    isAuth: !!initialAccess,
+    rememberMe: initialRememberMe,
   },
   reducers: {
     setUser: (state, action) => {
-      localStorage.setItem("access_token", action.payload.access);
-      localStorage.setItem("refresh_token", action.payload.refresh);
-      localStorage.setItem("user_data", JSON.stringify(action.payload.data));
+      const rememberPreference =
+        action.payload.rememberMe ?? state.rememberMe ?? true;
+
+      if (
+        action.payload.access ||
+        action.payload.refresh ||
+        action.payload.data
+      ) {
+        setAuthCookies(
+          {
+            access: action.payload.access,
+            refresh: action.payload.refresh,
+            data: action.payload.data,
+          },
+          rememberPreference ? {} : { days: null }
+        );
+        setRememberMeCookie(rememberPreference);
+      }
 
       return {
         ...state, // Spread the current state
         refresh: action.payload.refresh,
         access: action.payload.access,
-        data: action.payload.data,
+        data: action.payload.data || state.data,
         isAuth: true,
+        rememberMe: rememberPreference,
       };
     },
     logOut: (state) => {
       state.refresh = "";
       state.access = "";
-      state.data = {
-        user_id: "",
-        user_name: "",
-        roles: "",
-      };
+      state.data = { ...defaultUserData };
       state.isAuth = false;
+      state.rememberMe = false;
+      clearAuthCookies();
       localStorage.removeItem("darkMode");
       localStorage.removeItem("menuItems");
       localStorage.removeItem("mobileMenu");
@@ -44,8 +73,6 @@ const authSlice = createSlice({
       localStorage.removeItem("sidebarCollapsed");
       localStorage.removeItem("activeSubmenu");
       localStorage.removeItem("activeMultiMenu");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
     },
   },
 });

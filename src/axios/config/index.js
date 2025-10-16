@@ -1,6 +1,11 @@
 // axios/config.js
 import axios from "axios";
 import store from "@/redux/store"; // pastikan ini import store redux kamu
+import {
+  AUTH_COOKIE_KEYS,
+  getCookie,
+} from "@/utils/authCookies";
+import { setUser } from "@/redux/slicers/authSlice";
 
 const baseURL = import.meta.env.VITE_API_URL;
 
@@ -9,12 +14,12 @@ const getToken = () => {
   const state = store.getState();
   const access = state.auth?.access;
   if (access) return access;
-  return localStorage.getItem("access_token"); // fallback
+  return getCookie(AUTH_COOKIE_KEYS.access);
 };
 
 const getRefreshToken = () => {
   const state = store.getState();
-  return state.auth?.refresh || localStorage.getItem("refresh_token");
+  return state.auth?.refresh || getCookie(AUTH_COOKIE_KEYS.refresh);
 };
 
 let refreshPromise = null;
@@ -38,14 +43,14 @@ export const refreshAccessToken = async () => {
     })
     .then((res) => {
       const newAccess = res.data.access;
-      store.dispatch({
-        type: "auth/setUser",
-        payload: {
+      store.dispatch(
+        setUser({
           refresh,
           access: newAccess,
           data: state.auth?.data,
-        },
-      });
+          rememberMe: state.auth?.rememberMe,
+        })
+      );
       return newAccess;
     })
     .catch((err) => {

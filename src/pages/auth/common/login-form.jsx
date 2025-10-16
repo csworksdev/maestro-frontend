@@ -51,11 +51,9 @@ const LoginForm = () => {
 
       if (response.data) {
         // Simpan token di Redux
-        dispatch(setUser({ refresh, access, data }));
-
-        // Simpan token ke storage
-        localStorage.setItem("access_token", access);
-        localStorage.setItem("refresh_token", refresh);
+        dispatch(
+          setUser({ refresh, access, data, rememberMe: NewData.rememberMe })
+        );
 
         // ✅ Simpan presence default
         localStorage.setItem(
@@ -80,7 +78,6 @@ const LoginForm = () => {
               }
             );
             console.log("✅ FCM token disimpan di server");
-            localStorage.setItem("fcm_token", token);
           } catch (err) {
             console.error(
               "❌ Gagal simpan FCM token:",

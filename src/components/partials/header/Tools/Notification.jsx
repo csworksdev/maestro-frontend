@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Menu } from "@headlessui/react";
 import { axiosConfig } from "@/axios/config";
 import { formatDistanceToNow } from "date-fns";
+import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
 
 // helper untuk badge
 const NotifyLabel = ({ unread }) => {
@@ -30,10 +31,14 @@ const Notification = () => {
 
   // buka websocket
   useEffect(() => {
+    const getTokenFromCookie = () => getCookie(AUTH_COOKIE_KEYS.access);
+    const token = getTokenFromCookie();
+    if (!token) {
+      return undefined;
+    }
+
     socketRef.current = new WebSocket(
-      `${
-        import.meta.env.VITE_API_WS
-      }/ws/notifications/?token=${localStorage.getItem("access_token")}`
+      `${import.meta.env.VITE_API_WS}/ws/notifications/?token=${token}`
     );
 
     socketRef.current.onopen = () => {
@@ -55,11 +60,12 @@ const Notification = () => {
       setTimeout(() => {
         // auto reconnect
         if (socketRef.current?.readyState !== WebSocket.OPEN) {
-          socketRef.current = new WebSocket(
-            `${
-              import.meta.env.VITE_API_WS
-            }/ws/notifications/?token=${localStorage.getItem("access_token")}`
-          );
+          const latestToken = getTokenFromCookie();
+          if (latestToken) {
+            socketRef.current = new WebSocket(
+              `${import.meta.env.VITE_API_WS}/ws/notifications/?token=${latestToken}`
+            );
+          }
         }
       }, 5000);
     };

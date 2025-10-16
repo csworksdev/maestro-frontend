@@ -10,6 +10,7 @@ import notificationsReducer from "@/redux/slicers/notificationsSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
+  blacklist: ["access", "refresh", "data", "rememberMe", "isAuth"],
 };
 
 const layoutPersistConfig = {

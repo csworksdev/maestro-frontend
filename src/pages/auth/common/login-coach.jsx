@@ -16,19 +16,6 @@ import { axiosConfig } from "@/axios/config";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 
-const COOKIE_LIFETIME_DAYS = 30;
-
-const setCookie = (name, value, days = COOKIE_LIFETIME_DAYS) => {
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
-};
-
-const deleteCookie = (name) => {
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
-};
-
 const schema = yup.object({
   username: yup.string().required("Username is required"),
   password: yup.string().required("Password is required"),
@@ -64,21 +51,9 @@ const LoginForm = () => {
 
       if (response.data) {
         // Simpan token di Redux
-        dispatch(setUser({ refresh, access, data }));
-
-        // Simpan token ke storage
-        localStorage.setItem("access_token", access);
-        localStorage.setItem("refresh_token", refresh);
-
-        if (NewData.rememberMe) {
-          setCookie("access_token", access);
-          setCookie("refresh_token", refresh);
-          setCookie("maestro_user", JSON.stringify(data));
-        } else {
-          deleteCookie("access_token");
-          deleteCookie("refresh_token");
-          deleteCookie("maestro_user");
-        }
+        dispatch(
+          setUser({ refresh, access, data, rememberMe: NewData.rememberMe })
+        );
 
         // ✅ Simpan presence default
         localStorage.setItem(
@@ -103,7 +78,6 @@ const LoginForm = () => {
               }
             );
             console.log("✅ FCM token disimpan di server");
-            localStorage.setItem("fcm_token", token);
           } catch (err) {
             console.error(
               "❌ Gagal simpan FCM token:",
