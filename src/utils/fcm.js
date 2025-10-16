@@ -1,18 +1,13 @@
-import {
-  getMessaging,
-  getToken,
-  onMessage,
-  deleteToken,
-} from "firebase/messaging";
-import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, deleteToken } from "firebase/messaging";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { firebaseConfig } from "../../src/firebase/firebase";
 import { axiosConfig } from "@/axios/config";
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 // ✅ Cek permission dulu
-export const requestAndSendToken = async () => {
+export const requestAndSendToken = async (onTokenSaved) => {
   const permission = await Notification.requestPermission();
 
   if (permission === "granted") {
@@ -22,13 +17,20 @@ export const requestAndSendToken = async () => {
       });
 
       if (currentToken) {
-        // console.log("🎯 Token berhasil:", currentToken);
-        // Kirim ke backend di sini
-        if (localStorage.getItem("fcm_token") !== currentToken) {
-          sendTokenToBackend(currentToken);
+        const tokenHandler =
+          typeof onTokenSaved === "function"
+            ? onTokenSaved
+            : async (tokenValue) => {
+                await sendTokenToBackend(tokenValue);
+              };
+
+        const existingToken = localStorage.getItem("fcm_token");
+        if (existingToken !== currentToken) {
           localStorage.setItem("fcm_token", currentToken);
         }
-        sendTokenToBackend(currentToken);
+
+        await tokenHandler(currentToken);
+        return currentToken;
       } else {
         console.warn("⚠️ Tidak ada token.");
       }
@@ -38,6 +40,8 @@ export const requestAndSendToken = async () => {
   } else {
     console.warn("🚫 Permission not granted:", permission);
   }
+
+  return null;
 };
 
 export const sendTokenToBackend = async (fcmToken) => {
@@ -57,23 +61,30 @@ export const sendTokenToBackend = async (fcmToken) => {
 
 // 👇 Fungsi bantu untuk hapus token dari Firebase dan server
 export const removeFcmToken = async () => {
-  try {
-    const token = localStorage.getItem("fcm_token");
+  const token = localStorage.getItem("fcm_token");
 
-    if (token) {
-      // Hapus dari Firebase
-      await deleteToken(messaging);
-      console.log("🗑️ Token FCM berhasil dihapus dari Firebase");
-
-      // Hapus dari backend
-      await axiosConfig.post("/api/notifikasi/remove-token/", {
-        token,
-      });
-      console.log("✅ Token FCM berhasil dihapus dari server");
-
-      localStorage.removeItem("fcm_token");
-    }
-  } catch (error) {
-    console.error("❌ Gagal hapus FCM token:", error);
+  if (!token) {
+    return false;
   }
+
+  try {
+    await deleteToken(messaging);
+  } catch (firebaseError) {
+    console.error("❌ Gagal hapus token dari Firebase:", firebaseError);
+  }
+
+  // try {
+  //   await axiosConfig.delete("/api/notifikasi/remove-token/", {
+  //     data: { token },
+  //     headers: { "Content-Type": "application/json" },
+  //   });
+  // } catch (backendError) {
+  //   console.error(
+  //     "❌ Gagal hapus token FCM di backend:",
+  //     backendError.response?.data || backendError.message
+  //   );
+  // }
+
+  localStorage.removeItem("fcm_token");
+  return true;
 };

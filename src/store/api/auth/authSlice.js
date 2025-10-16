@@ -1,3 +1,4 @@
+import { logout } from "@/axios/auth/auth";
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 
@@ -14,9 +15,10 @@ export const authSlice = createSlice({
       state.user = action.payload;
       state.isAuth = true;
     },
-    logOut: (state, action) => {
+    logOut: async (state, action) => {
       state.user = null;
       state.isAuth = false;
+      await logout();
     },
   },
 });

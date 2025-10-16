@@ -92,22 +92,42 @@ const extractStudents = (slot) => {
     .filter(Boolean);
 };
 
+const getRemainingMeetCount = (slot) => {
+  if (!slot) return null;
+  const value =
+    slot.remaining_meet_count ??
+    slot.remainingMeetCount ??
+    slot.remainingMeet ??
+    null;
+  if (value === null || value === undefined) return null;
+  const numeric = Number(value);
+  return Number.isNaN(numeric) ? value : numeric;
+};
+
 const buildSlotMeta = (slot) => {
   const students = extractStudents(slot);
+  const remainingMeetCount = getRemainingMeetCount(slot);
   if (!slot?.is_avail) {
-    return { ...STATUS_STYLES.off, description: "Waktu istirahat", students };
+    return {
+      ...STATUS_STYLES.off,
+      description: "Waktu istirahat",
+      students,
+      remainingMeetCount,
+    };
   }
   if (students.length > 0) {
     return {
       ...STATUS_STYLES.booked,
       description: `${students.length} siswa terdaftar`,
       students,
+      remainingMeetCount,
     };
   }
   return {
     ...STATUS_STYLES.available,
     description: "Belum ada jadwal",
     students,
+    remainingMeetCount,
   };
 };
 
@@ -387,6 +407,15 @@ const OwnSchedule = () => {
                             <p className="text-sm text-slate-500 dark:text-slate-400">
                               {meta.description}
                             </p>
+                            {meta.remainingMeetCount !== null &&
+                              meta.remainingMeetCount !== undefined && (
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                  Sisa pertemuan:{" "}
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                    {meta.remainingMeetCount}
+                                  </span>
+                                </p>
+                              )}
                             {slot?.pool && (
                               <p className="text-xs font-medium uppercase tracking-wide text-primary-600 dark:text-primary-300">
                                 Kolam: {slot.pool}

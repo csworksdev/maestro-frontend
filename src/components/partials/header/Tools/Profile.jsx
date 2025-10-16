@@ -4,8 +4,7 @@ import Icon from "@/components/ui/Icon";
 import { Menu, Transition } from "@headlessui/react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logOut } from "@/store/api/auth/authSlice";
-import { removeFcmToken } from "@/utils/fcm";
+import { performLogout } from "@/redux/slicers/authSlice";
 
 import UserAvatar from "@/assets/images/all-img/user.png";
 
@@ -38,21 +37,9 @@ const profileLabel = () => {
 const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const handleLogout = async () => {
-    // Clear user data from local storage
-    // localStorage.removeItem("user");
-    // localStorage.removeItem("refresh");
-    // localStorage.removeItem("action");
-    // localStorage.removeItem("menuItems");
-    // localStorage.removeItem("roles");
-    // localStorage.removeItem("user");
-    // localStorage.removeItem("userid");
-    // localStorage.removeItem("username");
-    navigate(0);
-    // await removeFcmToken();
-    removeFcmToken();
-    dispatch(logOut());
+    await dispatch(performLogout());
+    navigate("/auth/login", { replace: true });
   };
 
   const ProfileMenu = [
@@ -110,7 +97,7 @@ const Profile = () => {
       label: "Logout",
       icon: "heroicons-outline:login",
       action: () => {
-        dispatch(handleLogout);
+        handleLogout();
       },
     },
   ];

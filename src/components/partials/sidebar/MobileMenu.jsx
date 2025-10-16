@@ -14,9 +14,8 @@ import Icon from "@/components/ui/Icon";
 import MobileLogo from "@/assets/images/logo/logo.png";
 import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
 import svgRabitImage from "@/assets/images/svg/rabit.svg";
-import { useDispatch } from "react-redux";
-import { logOut } from "@/redux/slicers/authSlice";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { performLogout } from "@/redux/slicers/authSlice";
 import Menu from "@/constant/menu";
 
 const MobileMenu = ({ className = "custom-class" }) => {
@@ -104,7 +103,11 @@ const MobileMenu = ({ className = "custom-class" }) => {
       >
         {menuItems.length > 0 && <Navmenu menus={menuItems} />}
         <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
-          <button onClick={() => dispatch(logOut())}>
+          <button
+            onClick={() => {
+              dispatch(performLogout());
+            }}
+          >
             <span>Logout</span>
           </button>
         </div>
