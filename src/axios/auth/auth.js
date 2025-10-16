@@ -12,10 +12,28 @@ export const login = async (data) => {
   }
 };
 
-export const logout = async (data) => {
+export const logout = async () => {
   try {
-    let response = await axiosConfig.post("/auth/users/logout/", data);
-    removeFcmToken();
+    let response = await axiosConfig.post("/auth/users/logout/", {
+      request: localStorage.removeItem("refresh_token"),
+    });
+    if (response) {
+      try {
+        await removeFcmToken();
+      } catch (tokenError) {
+        console.error("Failed to remove FCM token during logout:", tokenError);
+      }
+      // Clear user data from local storage
+      localStorage.removeItem("user_data");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("presenceSelected");
+      localStorage.removeItem("persist:notification");
+      localStorage.removeItem("persist:loading");
+      localStorage.removeItem("persist:layout");
+      localStorage.removeItem("persist:auth");
+      localStorage.removeItem("menuItems");
+      localStorage.removeItem("access_token");
+    }
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

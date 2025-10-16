@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { PersistGate } from "redux-persist/integration/react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { initializeTokenRefreshScheduler } from "@/axios/config";
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -24,6 +25,8 @@ if ("serviceWorker" in navigator) {
       console.error("Service Worker registration failed:", err);
     });
 }
+
+initializeTokenRefreshScheduler();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>

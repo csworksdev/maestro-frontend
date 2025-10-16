@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 
 import Navmenu from "./Navmenu";
 // import { menuItems } from "@/constant/data";
@@ -14,9 +14,8 @@ import Icon from "@/components/ui/Icon";
 import MobileLogo from "@/assets/images/logo/logo.png";
 import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
 import svgRabitImage from "@/assets/images/svg/rabit.svg";
-import { useDispatch } from "react-redux";
-import { logOut } from "@/redux/slicers/authSlice";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { performLogout } from "@/redux/slicers/authSlice";
 import Menu from "@/constant/menu";
 
 const MobileMenu = ({ className = "custom-class" }) => {
@@ -24,17 +23,27 @@ const MobileMenu = ({ className = "custom-class" }) => {
   const [scroll, setScroll] = useState(false);
   const dispatch = useDispatch();
 
-  const [menuItems, setMenuItems] = useState([]);
-  // let menuItems = JSON.parse(localStorage.getItem("menuItems"));
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
 
-  const data = useSelector((state) => state.auth.data); // ✅ DI SINI BENAR
+  // const roles = data?.roles;
+  const roleSignature = Array.isArray(roles)
+    ? roles.join("|")
+    : roles?.toString?.() || "";
+
+  const menuItems = useMemo(() => {
+    if (!roleSignature) {
+      return [];
+    }
+    return Menu(roles);
+  }, [Menu, roleSignature, roles]);
 
   useEffect(() => {
-    if (data?.roles?.length) {
-      const generatedMenu = Menu(data.roles);
-      setMenuItems(generatedMenu);
+    if (menuItems.length) {
+      localStorage.setItem("menuItems", JSON.stringify(menuItems));
+    } else {
+      localStorage.removeItem("menuItems");
     }
-  }, [data]);
+  }, [menuItems]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +61,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
   const [skin] = useSkin();
   const [isDark] = useDarkMode();
   const [mobileMenu, setMobileMenu] = useMobileMenu();
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  // const { user_id, username, roles } = useSelector((state) => state.auth.data);
   return (
     <div
       className={`${className} fixed  top-0 bg-white dark:bg-slate-800 shadow-lg  h-full   w-[248px]`}
@@ -94,7 +103,11 @@ const MobileMenu = ({ className = "custom-class" }) => {
       >
         {menuItems.length > 0 && <Navmenu menus={menuItems} />}
         <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
-          <button onClick={() => dispatch(logOut())}>
+          <button
+            onClick={() => {
+              dispatch(performLogout());
+            }}
+          >
             <span>Logout</span>
           </button>
         </div>

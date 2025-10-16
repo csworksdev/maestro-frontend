@@ -1,11 +1,13 @@
-// hooks/useFcmToken.js
 import { useEffect, useState } from "react";
-import { getMessaging, getToken, deleteToken } from "firebase/messaging";
-import { initializeApp } from "firebase/app";
+import { getMessaging, getToken } from "firebase/messaging";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { firebaseConfig } from "@/firebase/firebase";
-import { axiosConfig } from "@/axios/config";
+import {
+  sendTokenToBackend,
+  removeFcmToken as removeFcmTokenUtil,
+} from "@/utils/fcm";
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 export const useFcmToken = () => {
@@ -26,10 +28,13 @@ export const useFcmToken = () => {
         });
 
         if (currentToken) {
-          if (currentToken !== localStorage.getItem("fcm_token")) {
+          const storedToken = localStorage.getItem("fcm_token");
+          if (currentToken !== storedToken) {
             localStorage.setItem("fcm_token", currentToken);
             setFcmToken(currentToken);
             await sendTokenToBackend(currentToken);
+          } else {
+            setFcmToken(currentToken);
           }
         } else {
           console.warn("⚠️ Tidak ada token FCM");
@@ -44,11 +49,8 @@ export const useFcmToken = () => {
 
   const removeFcmToken = async () => {
     try {
-      const token = localStorage.getItem("fcm_token");
-      if (token) {
-        await deleteToken(messaging);
-        await axiosConfig.post("/api/notifikasi/remove-token/", { token });
-        localStorage.removeItem("fcm_token");
+      const removed = await removeFcmTokenUtil();
+      if (removed) {
         setFcmToken(null);
         console.log("🗑️ Token FCM berhasil dihapus");
       }
@@ -58,20 +60,4 @@ export const useFcmToken = () => {
   };
 
   return { fcmToken, removeFcmToken };
-};
-
-// helper kirim token
-const sendTokenToBackend = async (token) => {
-  try {
-    await axiosConfig.post("/api/notifikasi/save-token/", {
-      token,
-      device_type: "web",
-    });
-    console.log("✅ Token FCM dikirim ke backend");
-  } catch (err) {
-    console.error(
-      "❌ Gagal kirim token ke backend:",
-      err.response?.data || err.message
-    );
-  }
 };

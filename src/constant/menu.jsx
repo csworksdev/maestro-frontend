@@ -1,49 +1,42 @@
-import React from "react";
 import {
-  menuAdmin,
   menuAdminNew,
   menuFinance,
-  //   menuItems,
   menuChief,
   menuSuperUser,
   menuTrainer,
   menuOpx,
 } from "./data";
 
-const Menu = (role = "") => {
-  let menuItems = [];
+const getMenuByRole = (role = "") => {
   switch (role) {
     case "Admin":
-      menuItems = [...menuAdminNew];
-      break;
+      return [...menuAdminNew];
     case "Finance":
-      menuItems = [...menuFinance];
-      break;
+      return [...menuFinance];
     case "Coach":
     case "Trainer":
-      menuItems = [...menuTrainer];
-      break;
+      return [...menuTrainer];
     case "Opx":
-      menuItems = [...menuOpx];
-      break;
+      return [...menuOpx];
     case "Chief":
-      menuItems = [...menuChief];
-      break;
+      return [...menuChief];
     default:
-      menuItems = [
+      return [
         ...menuChief,
         ...menuSuperUser,
         ...menuOpx,
         ...menuAdminNew,
         ...menuFinance,
-        // ...menuTrainer,
       ];
-      break;
+  }
+};
+
+const Menu = (role = "") => {
+  if (Array.isArray(role)) {
+    return role.flatMap((item) => getMenuByRole(item));
   }
 
-  localStorage.setItem("menuItems", JSON.stringify(menuItems));
-
-  return menuItems;
+  return getMenuByRole(role);
 };
 
 export default Menu;
