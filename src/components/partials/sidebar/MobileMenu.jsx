@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 
 import Navmenu from "./Navmenu";
 // import { menuItems } from "@/constant/data";
@@ -24,17 +24,27 @@ const MobileMenu = ({ className = "custom-class" }) => {
   const [scroll, setScroll] = useState(false);
   const dispatch = useDispatch();
 
-  const [menuItems, setMenuItems] = useState([]);
-  // let menuItems = JSON.parse(localStorage.getItem("menuItems"));
+  const { user_id, username, roles } = useSelector((state) => state.auth.data);
 
-  const data = useSelector((state) => state.auth.data); // ✅ DI SINI BENAR
+  // const roles = data?.roles;
+  const roleSignature = Array.isArray(roles)
+    ? roles.join("|")
+    : roles?.toString?.() || "";
+
+  const menuItems = useMemo(() => {
+    if (!roleSignature) {
+      return [];
+    }
+    return Menu(roles);
+  }, [Menu, roleSignature, roles]);
 
   useEffect(() => {
-    if (data?.roles?.length) {
-      const generatedMenu = Menu(data.roles);
-      setMenuItems(generatedMenu);
+    if (menuItems.length) {
+      localStorage.setItem("menuItems", JSON.stringify(menuItems));
+    } else {
+      localStorage.removeItem("menuItems");
     }
-  }, [data]);
+  }, [menuItems]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +62,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
   const [skin] = useSkin();
   const [isDark] = useDarkMode();
   const [mobileMenu, setMobileMenu] = useMobileMenu();
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  // const { user_id, username, roles } = useSelector((state) => state.auth.data);
   return (
     <div
       className={`${className} fixed  top-0 bg-white dark:bg-slate-800 shadow-lg  h-full   w-[248px]`}

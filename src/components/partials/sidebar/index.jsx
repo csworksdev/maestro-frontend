@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import SidebarLogo from "./Logo";
 import Navmenu from "./Navmenu";
 // import { menuItems } from "@/constant/data";
@@ -12,17 +12,28 @@ import Menu from "@/constant/menu";
 const Sidebar = () => {
   const scrollableNodeRef = useRef(null);
   const [scroll, setScroll] = useState(false);
-  const [menuItems, setMenuItems] = useState([]);
-  // let menuItems = JSON.parse(localStorage.getItem("menuItems"));
 
   const data = useSelector((state) => state.auth.data); // ✅ DI SINI BENAR
 
-  useEffect(() => {
-    if (data?.roles?.length) {
-      const generatedMenu = Menu(data.roles);
-      setMenuItems(generatedMenu);
+  const roles = data?.roles;
+  const roleSignature = Array.isArray(roles)
+    ? roles.join("|")
+    : roles?.toString?.() || "";
+
+  const menuItems = useMemo(() => {
+    if (!roleSignature) {
+      return [];
     }
-  }, [data]);
+    return Menu(roles);
+  }, [Menu, roleSignature, roles]);
+
+  useEffect(() => {
+    if (menuItems.length) {
+      localStorage.setItem("menuItems", JSON.stringify(menuItems));
+    } else {
+      localStorage.removeItem("menuItems");
+    }
+  }, [menuItems]);
 
   useEffect(() => {
     const handleScroll = () => {
