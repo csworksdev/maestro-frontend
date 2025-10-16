@@ -6,12 +6,16 @@ import {
   sendTokenToBackend,
   removeFcmToken as removeFcmTokenUtil,
 } from "@/utils/fcm";
+import {
+  getFcmTokenCookie,
+  setFcmTokenCookie,
+} from "@/utils/authCookies";
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 export const useFcmToken = () => {
-  const [fcmToken, setFcmToken] = useState(localStorage.getItem("fcm_token"));
+  const [fcmToken, setFcmToken] = useState(getFcmTokenCookie());
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -28,12 +32,14 @@ export const useFcmToken = () => {
         });
 
         if (currentToken) {
-          const storedToken = localStorage.getItem("fcm_token");
+          const storedToken = getFcmTokenCookie();
           if (currentToken !== storedToken) {
-            localStorage.setItem("fcm_token", currentToken);
+            setFcmTokenCookie(currentToken);
             setFcmToken(currentToken);
             await sendTokenToBackend(currentToken);
           } else {
+            // refresh cookie expiry
+            setFcmTokenCookie(currentToken);
             setFcmToken(currentToken);
           }
         } else {

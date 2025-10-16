@@ -2,6 +2,11 @@ import { getMessaging, getToken, deleteToken } from "firebase/messaging";
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { firebaseConfig } from "../../src/firebase/firebase";
 import { axiosConfig } from "@/axios/config";
+import {
+  deleteFcmTokenCookie,
+  getFcmTokenCookie,
+  setFcmTokenCookie,
+} from "@/utils/authCookies";
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
@@ -24,9 +29,12 @@ export const requestAndSendToken = async (onTokenSaved) => {
                 await sendTokenToBackend(tokenValue);
               };
 
-        const existingToken = localStorage.getItem("fcm_token");
+        const existingToken = getFcmTokenCookie();
         if (existingToken !== currentToken) {
-          localStorage.setItem("fcm_token", currentToken);
+          setFcmTokenCookie(currentToken);
+        } else {
+          // refresh cookie expiry
+          setFcmTokenCookie(currentToken);
         }
 
         await tokenHandler(currentToken);
@@ -61,7 +69,7 @@ export const sendTokenToBackend = async (fcmToken) => {
 
 // 👇 Fungsi bantu untuk hapus token dari Firebase dan server
 export const removeFcmToken = async () => {
-  const token = localStorage.getItem("fcm_token");
+  const token = getFcmTokenCookie();
 
   if (!token) {
     return false;
@@ -85,6 +93,6 @@ export const removeFcmToken = async () => {
   //   );
   // }
 
-  localStorage.removeItem("fcm_token");
+  deleteFcmTokenCookie();
   return true;
 };

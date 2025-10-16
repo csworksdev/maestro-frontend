@@ -4,15 +4,14 @@ import LoginForm from "./common/login-form";
 import Logo from "@/assets/images/logo/logo.png";
 
 const Login = () => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = 2024;
   const hubLabel = useMemo(() => {
     if (typeof window === "undefined") return "Maestro Hub";
     const hostname = window.location.hostname;
     const candidate = hostname.includes(".")
       ? hostname.split(".")[0]
       : hostname;
-    const base =
-      candidate && candidate !== "localhost" ? candidate : "maestro";
+    const base = candidate && candidate !== "localhost" ? candidate : "maestro";
     const formatted = base
       .split(/[-_]/)
       .filter(Boolean)
