@@ -378,7 +378,9 @@ const CekJadwal = () => {
 
     const { value: order_date } = await Swal.fire({
       title: "Perpanjang paket ",
-      text: `Siswa ${slot.student} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
+      text: `Siswa ${toProperCase(
+        slot.student
+      )} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
       input: "date",
       icon: "question",
       didOpen: () => {
@@ -390,7 +392,9 @@ const CekJadwal = () => {
       // console.log(order_date);
       Swal.fire({
         title: "Perpanjang paket ",
-        text: `Siswa ${slot.student} akan diperpanjang ke tanggal ${order_date} ?`,
+        text: `Siswa ${toProperCase(
+          slot.student
+        )} akan diperpanjang ke tanggal ${order_date} ?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#22c55e",
@@ -484,7 +488,8 @@ const CekJadwal = () => {
                     />
                     {slot.student?.map((x, idx) => (
                       <div key={idx} className="text-[clamp(8px,0.7vw,10px)]">
-                        {x.split(" ")[0]}
+                        {/* {toProperCase(x.split(" ")[0])} */}
+                        {toProperCase(x)}
                       </div>
                     ))}
                     <PerpanjangPaket order_id={slot.order_id} slot={slot} />
@@ -520,7 +525,9 @@ const CekJadwal = () => {
                       </button>
                     )}
                     <div className="flex justify-between">
-                      <Tooltip content={slot.student?.join(", ") || ""}>
+                      <Tooltip
+                        content={toProperCase(slot.student?.join(", ") || "")}
+                      >
                         <span>{iconProduct(slot.product)}</span>
                       </Tooltip>
                       {slot?.is_paid !== "pending" && (
@@ -959,7 +966,9 @@ const AdaJadwal = React.memo((timeSlot, i) => (
     <div className="text-sm whitespace-pre-line">
       {timeSlot.student.length === 1
         ? timeSlot.student[0]
-        : timeSlot.student.map((name, idx) => <div key={idx}>{name}</div>)}
+        : timeSlot.student.map((name, idx) => (
+            <div key={idx}>{toProperCase(name)}</div>
+          ))}
     </div>
   </div>
 ));
