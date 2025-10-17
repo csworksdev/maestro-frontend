@@ -72,7 +72,7 @@ const LoginForm = () => {
                 },
               }
             );
-            console.log("✅ FCM token disimpan di server");
+            // console.log("✅ FCM token disimpan di server");
           } catch (err) {
             console.error(
               "❌ Gagal simpan FCM token:",

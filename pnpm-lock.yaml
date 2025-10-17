@@ -47,6 +47,9 @@ importers:
       '@svg-maps/world':
         specifier: ^1.0.1
         version: 1.0.1
+      '@tanstack/react-query':
+        specifier: ^5.90.5
+        version: 5.90.5(react@18.3.1)
       '@tippyjs/react':
         specifier: ^4.2.6
         version: 4.2.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -895,6 +898,14 @@ packages:
 
   '@svg-maps/world@1.0.1':
     resolution: {integrity: sha512-Mawh/jEYBBHnug9S17PyePLYKJ+Xd0Bbh96mCePebpbvcbJu5YKpfKhpyMeLFmmdWPrSFxl0f0MTsJfXU0gSaQ==}
+
+  '@tanstack/query-core@5.90.5':
+    resolution: {integrity: sha512-wLamYp7FaDq6ZnNehypKI5fNvxHPfTYylE0m/ZpuuzJfJqhR5Pxg9gvGBHZx4n7J+V5Rg5mZxHHTlv25Zt5u+w==}
+
+  '@tanstack/react-query@5.90.5':
+    resolution: {integrity: sha512-pN+8UWpxZkEJ/Rnnj2v2Sxpx1WFlaa9L6a4UO89p6tTQbeo+m0MS8oYDjbggrR8QcTyjKoYWKS3xJQGr3ExT8Q==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@tanstack/react-virtual@3.13.12':
     resolution: {integrity: sha512-Gd13QdxPSukP8ZrkbgS2RwoZseTTbQPLnQEn7HY/rqtM+8Zt95f7xKC7N0EsKs7aoz0WzZ+fditZux+F8EzYxA==}
@@ -3472,6 +3483,13 @@ snapshots:
       react: 18.3.1
 
   '@svg-maps/world@1.0.1': {}
+
+  '@tanstack/query-core@5.90.5': {}
+
+  '@tanstack/react-query@5.90.5(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-core': 5.90.5
+      react: 18.3.1
 
   '@tanstack/react-virtual@3.13.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
