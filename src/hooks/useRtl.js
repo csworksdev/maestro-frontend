@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { handleRtl } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useRtl = () => {
-  const dispatch = useDispatch();
-  const isRtl = useSelector((state) => state.layout.isRTL);
+  const isRtl = useLayoutStore((state) => state.isRTL);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
-  const setRtl = (val) => dispatch(handleRtl(val));
+  const setRtl = (val) =>
+    setSetting({ key: "isRTL", value: val, storageKey: "direction" });
 
   useEffect(() => {
     const element = document.getElementsByTagName("html")[0];

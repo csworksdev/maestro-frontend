@@ -14,9 +14,9 @@ import Edit from "./edit";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
 import { DateTime } from "luxon";
-import { useSelector } from "react-redux";
 import { toProperCase } from "@/utils";
 import EditModal from "./editModal";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const OrderActive = ({ is_finished }) => {
   const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  const { roles } = useSelector((state) => state.auth.data);
+  const { roles } = useAuthStore((state) => state.data);
 
   const actionsAdmin = [
     {

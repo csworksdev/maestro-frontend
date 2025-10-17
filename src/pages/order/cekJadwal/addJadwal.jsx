@@ -17,7 +17,6 @@ import {
   searchSiswa,
 } from "@/axios/masterdata/siswa";
 import Loading from "@/components/Loading";
-import { useSelector } from "react-redux";
 import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
 import { AddOrderScheduleV2 } from "@/axios/schedule/orderSchedule";
 import { AddOrder } from "@/axios/masterdata/order";
@@ -28,6 +27,7 @@ import InputGroup from "@/components/ui/InputGroup";
 import Flatpickr from "react-flatpickr";
 import AsyncSelect from "react-select/async";
 import Swal from "sweetalert2";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 // status registrasi
 const allStatus = [
@@ -79,7 +79,7 @@ const AddJadwal = ({
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
   const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const { user_id, roles, username } = useSelector((state) => state.auth.data);
+  const { user_id, roles, username } = useAuthStore((state) => state.data);
   const [keterangan, setKeterangan] = useState(
     "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
   );
@@ -1274,7 +1274,7 @@ const AddJadwal = ({
                 {Object.entries(grouped)
                   .filter(([key]) => key !== "extend")
                   .map(([key, value]) => (
-                    <React.Fragment key={key}>
+            <React.Fragment key={`${key}-${idx}`}>
                       <span className="col-span-2">Reg. {value.label}</span>
                       <span className="text-left">{value.count}</span>
                       <div className="flex justify-between">
@@ -1376,7 +1376,7 @@ const AddJadwal = ({
                     >
                       <option value="">Pilih Orang Tua</option>
                       {parent.map((p, index) => (
-                        <option key={index} value={p.name}>
+                        <option key={`${p.name}-${index}`} value={p.name}>
                           {p.name} - {p.phone}
                         </option>
                       ))}
@@ -1489,7 +1489,7 @@ function ProductSection({
 
           if (isDisabled) return null;
           return (
-            <React.Fragment key={`product-item-${option.product_id}`}>
+            <React.Fragment key={`product-item-${option.product_id}-${idx}`}>
               <Checkbox
                 name="product"
                 label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
@@ -1796,7 +1796,7 @@ function CustomerSection({
               >
                 <option value="">Pilih Orang Tua</option>
                 {parent.map((p, index) => (
-                  <option key={index} value={p.name}>
+                  <option key={`${p.name}-${index}`} value={p.name}>
                     {p.name} - {p.phone}
                   </option>
                 ))}

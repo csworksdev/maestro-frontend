@@ -6,7 +6,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   DeleteProduk,
-  getProdukAll,
   getProdukPool,
 } from "@/axios/masterdata/produk";
 import Search from "@/components/globals/table/search";
@@ -14,25 +13,107 @@ import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { Tab } from "@headlessui/react";
-import AsyncSelect from "react-select/async";
+import Select from "react-select";
 import { getKolamByBranch } from "@/axios/referensi/kolam";
 import { getCabangAll } from "@/axios/referensi/cabang";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+
+const fetchBranchOptions = async () => {
+  const params = {
+    page: 1,
+    page_size: 200,
+    is_active: true,
+  };
+  const response = await getCabangAll(params);
+  return response.data.results
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((item) => ({
+      value: item.branch_id,
+      label: item.name,
+    }));
+};
 
 const Produk = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [branchOption, setBranchOption] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState();
-  const [selectedPool, setSelectedPool] = useState();
-  const [poolOption, setPoolOption] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState();
+  const queryClient = useQueryClient();
 
-  const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBranchOption, setSelectedBranchOption] = useState(null);
+  const [selectedPoolIndex, setSelectedPoolIndex] = useState(0);
+
+  const branchQuery = useQuery({
+    queryKey: ["branches", "options"],
+    queryFn: fetchBranchOptions,
+  });
+
+  const branchOptions = branchQuery.data ?? [];
+
+  // pick first branch when options available
+  useEffect(() => {
+    if (!selectedBranchOption && branchOptions.length > 0) {
+      setSelectedBranchOption(branchOptions[0]);
+    }
+  }, [branchOptions, selectedBranchOption]);
+
+  const selectedBranchId = selectedBranchOption?.value;
+
+  const poolQuery = useQuery({
+    queryKey: ["pools", selectedBranchId],
+    queryFn: async () => {
+      const res = await getKolamByBranch(selectedBranchId);
+      return res.data.results.sort((a, b) => a.name.localeCompare(b.name));
+    },
+    enabled: !!selectedBranchId,
+  });
+
+  const poolOptions = poolQuery.data ?? [];
+
+  useEffect(() => {
+    if (poolOptions.length === 0) {
+      setSelectedPoolIndex(0);
+      return;
+    }
+    setSelectedPoolIndex((prev) =>
+      prev < poolOptions.length ? prev : 0
+    );
+  }, [poolOptions]);
+
+  const selectedPool = poolOptions[selectedPoolIndex] || null;
+  const selectedPoolId = selectedPool?.pool_id;
+
+  const produkQuery = useQuery({
+    queryKey: [
+      "produkPool",
+      { poolId: selectedPoolId, pageIndex, pageSize, searchQuery },
+    ],
+    queryFn: async () => {
+      const params = {
+        page: pageIndex + 1,
+        page_size: pageSize,
+        search: searchQuery,
+      };
+      const response = await getProdukPool(selectedPoolId, params);
+      return response.data;
+    },
+    enabled: !!selectedPoolId,
+    keepPreviousData: true,
+  });
+
+  const listData = produkQuery.data ?? { count: 0, results: [] };
+  const isTableLoading = produkQuery.isLoading || produkQuery.isFetching;
+
+  const deleteMutation = useMutation({
+    mutationFn: (productId) => DeleteProduk(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["produkPool"] });
+    },
+  });
 
   const actions = [
     {
@@ -49,99 +130,7 @@ const Produk = () => {
     },
   ];
 
-  const loadBranch = async () => {
-    try {
-      const params = {
-        page: 1,
-        page_size: 200,
-        is_active: true,
-      };
-      const kolamResponse = await getCabangAll(params);
-
-      const kolamOption = kolamResponse.data.results
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((item) => ({
-          value: item.branch_id,
-          label: item.name,
-        }));
-
-      setBranchOption(kolamOption);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadPool = async (branch_id) => {
-    setLoading(true);
-    try {
-      const res = await getKolamByBranch(branch_id);
-      const sorted = res.data.results.sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
-
-      setPoolOption(sorted);
-
-      if (sorted.length > 0) {
-        setSelectedPool(0); // safe to trigger fetch
-      } else {
-        setSelectedPool(null); // nothing to fetch
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadBranch();
-  }, []);
-
-  const fetchData = async (page = 1, size = 100, query = "") => {
-    const pool = poolOption?.[selectedPool];
-    if (!pool) return;
-
-    try {
-      setIsLoading(true);
-
-      const pool_id = pool.pool_id;
-      const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
-      };
-
-      const response = await getProdukPool(pool_id, params);
-      setListData(response.data);
-    } catch (error) {
-      console.error("Error fetching data", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedPool !== null && poolOption[selectedPool]) {
-      fetchData(pageIndex, pageSize, searchQuery);
-    }
-  }, [selectedPool, poolOption, pageIndex, pageSize, searchQuery]);
-
-  const handlePageChange = (page) => {
-    setPageIndex(page);
-  };
-
-  const handlePageSizeChange = (size) => {
-    setPageSize(size);
-  };
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    setPageIndex(0); // Reset to first page on search
-  };
-
-  const handleDelete = (e) => {
+  const handleDelete = (item) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -152,79 +141,93 @@ const Produk = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteProduk(e.product_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
+        deleteMutation.mutate(item.product_id, {
+          onSuccess: (res) => {
+            if (res?.status) {
+              Swal.fire(
+                "Deleted!",
+                "Produk berhasil dihapus.",
+                "success"
+              );
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to delete product:", error);
+          },
         });
       }
     });
   };
 
-  const handleEdit = (e) => {
+  const handleEdit = (item) => {
     navigate("edit", {
       state: {
         isupdate: "true",
-        data: e,
+        data: item,
       },
     });
   };
 
-  const handleBranchChange = (e) => {
-    setSelectedBranch(e.value);
-    setSelectedPool(null); // reset selectedPool
-    setListData({ count: 0, results: [] }); // reset list
-    loadPool(e.value);
+  const handleBranchChange = (option) => {
+    setSelectedBranchOption(option);
+    setSelectedPoolIndex(0);
+    setPageIndex(0);
   };
 
   const handlePoolChange = (index) => {
-    setSelectedPool(index);
+    setSelectedPoolIndex(index);
+    setPageIndex(0);
   };
+
+  const handlePageChange = (page) => {
+    setPageIndex(page);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPageIndex(0);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setPageIndex(0);
+  };
+
+  const memoizedBranchOptions = useMemo(
+    () => branchOptions,
+    [branchOptions]
+  );
 
   const COLUMNS = [
     {
       Header: "Produk",
       accessor: "name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
+      Cell: (row) => <span>{row?.cell?.value}</span>,
     },
-    // {
-    //   Header: "Kolam",
-    //   accessor: "pool_name",
-    //   Cell: (row) => {
-    //     return <span>{row?.cell?.value}</span>;
-    //   },
-    // },
     {
       Header: "Paket",
       accessor: "package_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
+      Cell: (row) => <span>{row?.cell?.value}</span>,
     },
     {
       Header: "Pertemuan",
       accessor: "meetings",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
+      Cell: (row) => <span>{row?.cell?.value}</span>,
     },
     {
       Header: "Harga Dasar",
       accessor: "price",
       Cell: (row) => {
-        let number = parseFloat(row?.cell?.value);
-        return <span>{number.toLocaleString("IDR")}</span>;
+        const number = Number(row?.cell?.value || 0);
+        return <span>{number.toLocaleString("id-ID")}</span>;
       },
     },
     {
       Header: "Harga Jual",
       accessor: "sellprice",
       Cell: (row) => {
-        let number = parseFloat(row?.cell?.value);
-        return <span>{number.toLocaleString("IDR")}</span>;
+        const number = Number(row?.cell?.value || 0);
+        return <span>{number.toLocaleString("id-ID")}</span>;
       },
     },
     {
@@ -232,84 +235,88 @@ const Produk = () => {
       accessor: "action",
       id: "action",
       sticky: "right",
-      Cell: (row) => {
-        return (
-          <div className="flex space-x-2 justify-center items-center">
-            {actions.map((action, index) => (
-              <TableAction
-                key={action.id || index} // 👈 kasih key DI SINI
-                action={action}
-                row={row}
-              />
-            ))}
-          </div>
-        );
-      },
+      Cell: (row) => (
+        <div className="flex space-x-2 justify-center items-center">
+          {actions.map((action, index) => (
+            <TableAction
+              key={action.id || index}
+              action={action}
+              row={row}
+            />
+          ))}
+        </div>
+      ),
     },
   ];
 
-  const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
-
   return (
-    <>
-      <Card title="Produk">
-        <div>
-          <label className="form-label" htmlFor="kolam">
-            Cabang
-          </label>
-          <div className="flex gap-3">
-            <AsyncSelect
-              name="kolam"
-              label="Kolam"
-              placeholder="Pilih Cabang"
-              defaultOptions={memoizedBranchOptions}
-              loadOptions={branchOption}
-              onChange={handleBranchChange}
-              className="grow z-20"
-            />
-          </div>
+    <Card title="Produk">
+      <div>
+        <label className="form-label" htmlFor="branch">
+          Cabang
+        </label>
+        <div className="flex gap-3">
+          <Select
+            className="grow z-20"
+            classNamePrefix="select"
+            placeholder="Pilih Cabang"
+            isClearable
+            isLoading={branchQuery.isLoading}
+            options={memoizedBranchOptions}
+            value={selectedBranchOption}
+            onChange={handleBranchChange}
+          />
         </div>
-        {selectedBranch ? (
-          <div className="py-4">
-            <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
-              <Tab.List>
-                <>
-                  {poolOption.map((item, i) => (
-                    <Tab key={i}>
-                      {({ selected }) => (
-                        <button
-                          className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0
-                            ${
-                              selected
-                                ? "text-white bg-primary-500"
-                                : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
-                            }`}
-                        >
-                          {`${item.name}`}
-                        </button>
-                      )}
-                    </Tab>
-                  )) ?? null}
-                </>
+      </div>
+
+      {selectedBranchId ? (
+        <div className="py-4">
+          {poolQuery.isLoading ? (
+            <SkeletionTable />
+          ) : poolOptions.length === 0 ? (
+            <p className="text-center text-slate-500">
+              Tidak ada kolam untuk cabang ini.
+            </p>
+          ) : (
+            <Tab.Group
+              selectedIndex={selectedPoolIndex}
+              onChange={handlePoolChange}
+            >
+              <Tab.List className="flex flex-wrap gap-2">
+                {poolOptions.map((item) => (
+                  <Tab key={item.pool_id}>
+                    {({ selected }) => (
+                      <button
+                        className={`text-sm font-medium mb-2 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0 ${
+                          selected
+                            ? "text-white bg-primary-500"
+                            : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {item.name}
+                      </button>
+                    )}
+                  </Tab>
+                ))}
               </Tab.List>
               <Tab.Panels>
-                {poolOption.map((item, index) => (
-                  <Tab.Panel key={index}>
+                {poolOptions.map((item) => (
+                  <Tab.Panel key={item.pool_id}>
                     <div className="pt-4">
-                      {isLoading ? (
+                      {isTableLoading ? (
                         <SkeletionTable />
                       ) : (
                         <>
-                          <div className="grid-cols-2">
-                            <Button className="btn-primary h-auto">
+                          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                            <Button className="btn-primary h-auto w-max">
                               <Link to="add" isupdate="false">
                                 Tambah
                               </Link>
                             </Button>
-                            {/* <Search
-              searchValue={searchQuery}
-              handleSearch={handleSearch}
-            /> */}
+                            <Search
+                              className="w-full md:w-1/3"
+                              onSearch={handleSearch}
+                            />
                           </div>
                           <Table
                             listData={listData}
@@ -320,15 +327,23 @@ const Produk = () => {
                           <PaginationComponent
                             pageSize={pageSize}
                             pageIndex={pageIndex}
-                            pageCount={Math.ceil(listData.count / pageSize)}
+                            pageCount={Math.ceil(
+                              (listData.count || 0) / pageSize
+                            )}
                             canPreviousPage={pageIndex > 0}
                             canNextPage={
                               pageIndex <
-                              Math.ceil(listData.count / pageSize) - 1
+                              Math.ceil(
+                                (listData.count || 0) / pageSize
+                              ) - 1
                             }
                             gotoPage={handlePageChange}
-                            previousPage={() => handlePageChange(pageIndex - 1)}
-                            nextPage={() => handlePageChange(pageIndex + 1)}
+                            previousPage={() =>
+                              handlePageChange(Math.max(pageIndex - 1, 0))
+                            }
+                            nextPage={() =>
+                              handlePageChange(pageIndex + 1)
+                            }
                             setPageSize={handlePageSizeChange}
                           />
                         </>
@@ -338,10 +353,20 @@ const Produk = () => {
                 ))}
               </Tab.Panels>
             </Tab.Group>
-          </div>
-        ) : null}
-      </Card>
-    </>
+          )}
+        </div>
+      ) : (
+        <div className="py-6">
+          {branchQuery.isLoading ? (
+            <SkeletionTable />
+          ) : (
+            <p className="text-center text-slate-500">
+              Pilih cabang untuk melihat daftar produk.
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
   );
 };
 

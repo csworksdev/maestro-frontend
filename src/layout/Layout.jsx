@@ -14,17 +14,17 @@ import useMobileMenu from "@/hooks/useMobileMenu";
 import MobileFooterCoach from "@/components/partials/footer/MobileFooterCoach";
 import MobileFooterAdmin from "@/components/partials/footer/MobileFooterAdmin";
 import { ToastContainer } from "react-toastify";
-import { useSelector } from "react-redux";
 import Loading from "@/components/Loading";
 import { motion } from "framer-motion";
 import Info from "@/components/partials/info";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Layout = () => {
   const { width, breakpoints } = useWidth();
   const [collapsed] = useSidebar();
-  const { isAuth } = useSelector((state) => state.auth);
-  const { user_id, roles } = useSelector((state) => state.auth.data);
+  const isAuth = useAuthStore((state) => state.isAuth);
+  const { user_id, roles } = useAuthStore((state) => state.data);
   const navigate = useNavigate();
 
   useScrollRestoration();

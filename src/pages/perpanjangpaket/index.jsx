@@ -1,11 +1,11 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import DashboardPerpanjangTrainer from "./dashboardTrainer";
 import DashboardPerpanjangOpx from "./dashboardOpx";
 import DashboardPerpanjangAdmin from "./dashboardAdmin";
 
 const FolloupPerpanjang = () => {
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
 
   const dashboard = {
     Coach: <DashboardPerpanjangTrainer />,

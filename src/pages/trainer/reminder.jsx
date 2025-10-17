@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import { getReminderById } from "@/axios/course/reminder";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const actions = [
   // {
@@ -32,7 +32,7 @@ const Reminder = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
 
   const fetchData = async (page, size, query) => {
     try {

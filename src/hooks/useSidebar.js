@@ -1,14 +1,12 @@
-import { useSelector, useDispatch } from "react-redux";
-import { handleSetting } from "@/redux/slicers/layoutSlice";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useSidebar = () => {
-  const dispatch = useDispatch();
-  const collapsed = useSelector((state) => state.layout.isCollapsed);
+  const collapsed = useLayoutStore((state) => state.isCollapsed);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
   // ** Toggles Menu Collapsed
-  // const setMenuCollapsed = (val) => dispatch(handleSidebarCollapsed(val));
   const setMenuCollapsed = (val) =>
-    dispatch(handleSetting({ key: "isCollapsed", value: val }));
+    setSetting({ key: "isCollapsed", value: val });
 
   return [collapsed, setMenuCollapsed];
 };

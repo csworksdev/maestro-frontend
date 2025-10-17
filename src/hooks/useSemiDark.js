@@ -1,11 +1,11 @@
-import { handleSemiDarkMode } from "@/store/layout";
-import { useSelector, useDispatch } from "react-redux";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useSemiDark = () => {
-  const dispatch = useDispatch();
-  const isSemiDark = useSelector((state) => state.layout.semiDarkMode);
+  const isSemiDark = useLayoutStore((state) => state.semiDarkMode);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
-  const setSemiDark = (val) => dispatch(handleSemiDarkMode(val));
+  const setSemiDark = (val) =>
+    setSetting({ key: "semiDarkMode", value: val, storageKey: "semiDarkMode" });
 
   return [isSemiDark, setSemiDark];
 };

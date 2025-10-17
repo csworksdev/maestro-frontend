@@ -1,12 +1,11 @@
-import { useSelector, useDispatch } from "react-redux";
-import { handleType } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useMenuLayout = () => {
-  const dispatch = useDispatch();
-  const menuType = useSelector((state) => state.layout.type);
+  const menuType = useLayoutStore((state) => state.type);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
   const setMenuLayout = (value) => {
-    dispatch(handleType(value));
+    setSetting({ key: "type", value });
   };
 
   return [menuType, setMenuLayout];

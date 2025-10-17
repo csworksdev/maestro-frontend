@@ -1,12 +1,11 @@
-import { useSelector, useDispatch } from "react-redux";
-import { handleMenuHidden } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useMenuHidden = () => {
-  const dispatch = useDispatch();
-  const menuHidden = useSelector((state) => state.layout.menuHidden);
+  const menuHidden = useLayoutStore((state) => state.menuHidden);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
   const setMenuHidden = (value) => {
-    dispatch(handleMenuHidden(value));
+    setSetting({ key: "menuHidden", value, persist: false });
   };
 
   return [menuHidden, setMenuHidden];

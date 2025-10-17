@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -10,19 +10,21 @@ import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 const Siswa = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
-  const { roles } = useSelector((state) => state.auth.data);
+  const { roles } = useAuthStore((state) => state.data);
   const actionsAdmin = [
     {
       name: "edit",
@@ -45,27 +47,21 @@ const Siswa = () => {
     },
   ];
 
-  const fetchData = async (page, size, query) => {
-    try {
-      setIsLoading(true);
+  const siswaQuery = useQuery({
+    queryKey: ["siswa", { pageIndex, pageSize, searchQuery }],
+    queryFn: async () => {
       const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
+        page: pageIndex + 1,
+        page_size: pageSize,
+        search: searchQuery,
       };
-      getSiswaAll(params)
-        .then((res) => {
-          setListData(res.data);
-        })
-        .finally(() => setIsLoading(false));
-    } catch (error) {
-      console.error("Error fetching data", error);
-    }
-  };
+      const res = await getSiswaAll(params);
+      return res.data;
+    },
+    keepPreviousData: true,
+  });
 
-  useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
+  const listData = siswaQuery.data ?? { count: 0, results: [] };
 
   const handlePageChange = (page) => {
     setPageIndex(page);
@@ -80,18 +76,12 @@ const Siswa = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // const loadData = () => {
-  //   setIsLoading(true);
-  //   getSiswaAll()
-  //     .then((res) => {
-  //       setData(res.data);
-  //     })
-  //     .finally(() => setIsLoading(false));
-  // };
-
-  // useEffect(() => {
-  //   fetchData(pageIndex, pageSize, searchQuery);
-  // }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => DeleteSiswa(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["siswa"] });
+    },
+  });
 
   const handleDelete = (e) => {
     Swal.fire({
@@ -104,11 +94,19 @@ const Siswa = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteSiswa(e.student_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
+        deleteMutation.mutate(e.student_id, {
+          onSuccess: (res) => {
+            if (res?.status) {
+              Swal.fire(
+                "Deleted!",
+                "Your file has been deleted.",
+                "success"
+              );
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to delete student:", error);
+          },
         });
       }
     });
@@ -201,28 +199,30 @@ const Siswa = () => {
           </Button>
         }
       >
-        {isLoading ? (
+        {siswaQuery.isLoading ? (
           <SkeletionTable />
         ) : (
           <>
-            <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            <div className="md:flex items-center justify-between mb-4">
+              <Search className="w-full md:w-1/3" onSearch={handleSearch} />
+            </div>
+
             <Table
-              listData={listData}
-              listColumn={COLUMNS}
-              searchValue={searchQuery}
-              handleSearch={handleSearch}
-            />
-            <PaginationComponent
+              columns={COLUMNS}
+              data={listData.results}
+              isLoading={siswaQuery.isFetching}
               pageSize={pageSize}
-              pageIndex={pageIndex}
-              pageCount={Math.ceil(listData.count / pageSize)}
-              canPreviousPage={pageIndex > 0}
-              canNextPage={pageIndex < Math.ceil(listData.count / pageSize) - 1}
-              gotoPage={handlePageChange}
-              previousPage={() => handlePageChange(pageIndex - 1)}
-              nextPage={() => handlePageChange(pageIndex + 1)}
-              setPageSize={handlePageSizeChange}
             />
+
+            <div className="mt-4">
+              <PaginationComponent
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+                totalItems={listData.count}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </div>
           </>
         )}
       </Card>

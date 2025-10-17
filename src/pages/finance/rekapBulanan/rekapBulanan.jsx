@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
 import { useNavigate } from "react-router-dom";
@@ -25,11 +25,10 @@ import DetailOrder from "@/pages/order/active/detail";
 import { DateTime } from "luxon";
 import EditModal from "@/pages/order/active/editModal";
 import { toProperCase } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
 
 const RekapBulanan = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [listTrainer, setListTrainer] = useState([]);
-  const [listPeriode, setListPeriode] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [listData, setListData] = useState({ results: [] });
   const [searchQuery, setSearchQuery] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -38,8 +37,8 @@ const RekapBulanan = () => {
   const [modalData, setModalData] = useState(null);
   const [isDownload, setIsDownload] = useState(false);
   const [unpaidList, setUnpaidList] = useState({});
-  const [selectedTrainer, setSelectedTrainer] = useState("");
-  const [selectedPeriode, setSelectedPeriode] = useState("");
+  const [selectedTrainer, setSelectedTrainer] = useState(null);
+  const [selectedPeriode, setSelectedPeriode] = useState(null);
   const [summary, setSummary] = useState({
     prevCount: 0,
     prevPrice: 0,
@@ -89,26 +88,53 @@ const RekapBulanan = () => {
     },
   ];
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const trainerParams = { page: 1, page_size: 100, search: searchQuery };
+  const trainerQuery = useQuery({
+    queryKey: ["rekap", "trainers", { searchQuery }],
+    queryFn: async () => {
+      const params = { page: 1, page_size: 100, search: searchQuery };
+      const res = await getTrainerAll(params);
+      return res.data.results;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const trainerResponse = await getTrainerAll(trainerParams);
-      let trainerOptions = trainerResponse.data.results;
-      setListTrainer(trainerOptions);
-
-      const periodeResponse = await getPeriodisasiAll({
+  const periodeQuery = useQuery({
+    queryKey: ["rekap", "periodisasi"],
+    queryFn: async () => {
+      const res = await getPeriodisasiAll({
         page_size: 6,
       });
-      let periodeOptions = periodeResponse.data.results;
-      setListPeriode(periodeOptions);
-    } catch (error) {
-      console.error("Error fetching data", error);
-    } finally {
-      setIsLoading(false);
+      return res.data.results;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const listTrainer = trainerQuery.data ?? [];
+  const listPeriode = useMemo(
+    () =>
+      (periodeQuery.data ?? []).sort(
+        (a, b) => new Date(b.start_date) - new Date(a.start_date)
+      ),
+    [periodeQuery.data]
+  );
+
+  const filtersLoading = trainerQuery.isLoading || periodeQuery.isLoading;
+
+  useEffect(() => {
+    if (!selectedTrainer && listTrainer.length > 0) {
+      const defaultTrainer = listTrainer[0];
+      setSelectedTrainer(defaultTrainer);
+      setValue("trainer", defaultTrainer.trainer_id);
     }
-  };
+  }, [listTrainer, selectedTrainer, setValue]);
+
+  useEffect(() => {
+    if (!selectedPeriode && listPeriode.length > 0) {
+      const defaultPeriode = listPeriode[0];
+      setSelectedPeriode(defaultPeriode);
+      setValue("periode", defaultPeriode.name);
+    }
+  }, [listPeriode, selectedPeriode, setValue]);
 
   const fetchRekapData = async () => {
     try {
@@ -116,15 +142,20 @@ const RekapBulanan = () => {
       setSummary({
         prevCount: 0,
         prevPrice: 0,
-        currCount: 0,
-        currPrice: 0,
+        currCountPaid: 0,
+        currPricePaid: 0,
+        currCountUnpaid: 0,
+        currPriceUnpaid: 0,
         nextCount: 0,
         nextPrice: 0,
       });
 
+      if (!selectedPeriode || !selectedTrainer) {
+        return;
+      }
       const response = await getRekapByTrainer(
-        selectedPeriode[0].name,
-        selectedTrainer[0].trainer_id
+        selectedPeriode.name,
+        selectedTrainer.trainer_id
       );
       setListData(response.data);
       reSummarize();
@@ -137,6 +168,9 @@ const RekapBulanan = () => {
 
   const reSummarize = async () => {
     try {
+      if (!selectedPeriode) {
+        return;
+      }
       setSummary({
         prevCount: 0,
         prevPrice: 0,
@@ -149,7 +183,7 @@ const RekapBulanan = () => {
       });
       let unpaidOrderId = [];
 
-      listData.results.map((item) => {
+      listData.results.forEach((item) => {
         for (let index = 1; index <= 8; index++) {
           var objDate = "p" + index;
           var objNamePaid = "p" + index + "_paid";
@@ -159,9 +193,9 @@ const RekapBulanan = () => {
             if (
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <
                 DateTime.fromFormat(
-                  selectedPeriode[0].start_date,
-                  "yyyy-MM-dd"
-                ) &&
+                selectedPeriode?.start_date,
+                "yyyy-MM-dd"
+              ) &&
               item[objNamePaid] &&
               item[objNameOrderID] !== ""
             ) {
@@ -173,12 +207,12 @@ const RekapBulanan = () => {
             } else if (
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >=
                 DateTime.fromFormat(
-                  selectedPeriode[0].start_date,
+                  selectedPeriode?.start_date,
                   "yyyy-MM-dd"
                 ) &&
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <=
                 DateTime.fromFormat(
-                  selectedPeriode[0].end_date,
+                  selectedPeriode?.end_date,
                   "yyyy-MM-dd"
                 ).plus({ days: -1 }) &&
               item[objNameOrderID] !== ""
@@ -201,12 +235,12 @@ const RekapBulanan = () => {
             } else if (
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >
                 DateTime.fromFormat(
-                  selectedPeriode[0].end_date,
-                  "yyyy-MM-dd"
-                ).plus({ days: -1 }) &&
-              !item[objNamePaid] &&
-              item[objNameOrderID] !== ""
-            ) {
+                selectedPeriode?.end_date,
+                "yyyy-MM-dd"
+              ).plus({ days: -1 }) &&
+            !item[objNamePaid] &&
+            item[objNameOrderID] !== ""
+          ) {
               setSummary((prev) => ({
                 ...prev,
                 nextCount: prev.nextCount + 1,
@@ -227,11 +261,7 @@ const RekapBulanan = () => {
 
   useEffect(() => {
     reSummarize();
-  }, [listData]);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  }, [listData, selectedPeriode]);
 
   useEffect(() => {
     if (!editModalVisible && isEdited) {
@@ -481,41 +511,36 @@ const RekapBulanan = () => {
   const CellDetail = ({ tanggal, status, order_detail_id }) => {
     let bgColor = "";
 
+    if (!tanggal || !selectedPeriode) {
+      return (
+        <div className="flex flex-col items-center">
+          <span>{tanggal || "-"}</span>
+        </div>
+      );
+    }
+
+    const tanggalValue = DateTime.fromFormat(tanggal, "dd/MM/yyyy");
+    const periodeStart = DateTime.fromFormat(
+      selectedPeriode.start_date,
+      "yyyy-MM-dd"
+    );
+    const periodeEnd = DateTime.fromFormat(
+      selectedPeriode.end_date,
+      "yyyy-MM-dd"
+    ).plus({ days: -1 });
+
     let periode = "next";
-    if (
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <
-      DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
-    )
-      periode = "prev";
-    else if (
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
-        DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd").plus({
-          days: -1,
-        }) &&
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") >=
-        DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
-    )
+    if (tanggalValue < periodeStart) periode = "prev";
+    else if (tanggalValue <= periodeEnd && tanggalValue >= periodeStart)
       periode = "curr";
-    else if (
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") >
-      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd").plus({
-        days: -1,
-      })
-    )
-      periode = "next";
+    else if (tanggalValue > periodeEnd) periode = "next";
     else periode = "";
 
-    let currentPeriode =
-      DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
-      DateTime.fromFormat(selectedPeriode[0].end_date, "yyyy-MM-dd").plus({
-        days: -1,
-      })
-        ? true
-        : false;
+    const currentPeriode = tanggalValue <= periodeEnd;
 
     // let prevPeriode =
     //   DateTime.fromFormat(tanggal, "dd/MM/yyyy") <=
-    //   DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+    //   DateTime.fromFormat(selectedPeriode.start_date, "yyyy-MM-dd")
     //     ? true
     //     : false;
 
@@ -813,42 +838,49 @@ const RekapBulanan = () => {
 
   const handleBayarPerOrder = (e) => {
     try {
-      // setUnpaidList([]);
-      // let x = listPeriode.filter((a) => a.name === selectedPeriode);
-      // let data = e;
+      if (!selectedPeriode) return;
       console.log(e.order_id);
-      // console.log(listData.results.filter((x) => (x.order_id = e.order_id)));
-      let filteredData = listData.results.filter(
+
+      const periodeStart = DateTime.fromFormat(
+        selectedPeriode.start_date,
+        "yyyy-MM-dd"
+      );
+      const periodeEnd = DateTime.fromFormat(
+        selectedPeriode.end_date,
+        "yyyy-MM-dd"
+      ).plus({ days: -1 });
+
+      const filteredData = listData.results.filter(
         (x) => x.order_id === e.order_id
       );
 
-      let unpaidOrderId = [];
+      const unpaidOrderId = [];
       filteredData.forEach((element) => {
         for (let index = 1; index <= 8; index++) {
-          var objDate = "p" + index;
-          var objNamePaid = "p" + index + "_paid";
-          var objNameOrderID = "p" + index + "_order_detail_id";
+          const objDate = "p" + index;
+          const objNamePaid = "p" + index + "_paid";
+          const objNameOrderID = "p" + index + "_order_detail_id";
 
           if (
             !element[objNamePaid] &&
             element[objNameOrderID] !== "" &&
-            element[objDate] !== "" &&
-            DateTime.fromFormat(element[objDate], "dd/MM/yyyy") <=
-              DateTime.fromFormat(
-                selectedPeriode[0].end_date,
-                "yyyy-MM-dd"
-              ).plus({ days: -1 }) &&
-            DateTime.fromFormat(element[objDate], "dd/MM/yyyy") >=
-              DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+            element[objDate] !== ""
           ) {
-            unpaidOrderId.push(element[objNameOrderID]);
+            const pertemuanDate = DateTime.fromFormat(
+              element[objDate],
+              "dd/MM/yyyy"
+            );
+            if (
+              pertemuanDate <= periodeEnd &&
+              pertemuanDate >= periodeStart
+            ) {
+              unpaidOrderId.push(element[objNameOrderID]);
+            }
           }
         }
       });
 
-      // setUnpaidList(unpaidOrderId);
       handlePayAll(unpaidOrderId);
-      // alert(JSON.stringify(unpaidOrderId));
       console.log(unpaidOrderId);
     } catch (error) {
       console.log(error);
@@ -857,37 +889,44 @@ const RekapBulanan = () => {
 
   const handleBayarSemua = () => {
     try {
-      // setUnpaidList([]);
-      // let x = listPeriode.filter((a) => a.name === selectedPeriode);
-      // let data = e;
+      if (!selectedPeriode) return;
 
-      let unpaidOrderId = [];
-      listData.results.map((item) => {
+      const periodeStart = DateTime.fromFormat(
+        selectedPeriode.start_date,
+        "yyyy-MM-dd"
+      );
+      const periodeEnd = DateTime.fromFormat(
+        selectedPeriode.end_date,
+        "yyyy-MM-dd"
+      ).plus({ days: -1 });
+
+      const unpaidOrderId = [];
+      listData.results.forEach((item) => {
         for (let index = 1; index <= 8; index++) {
-          var objDate = "p" + index;
-          var objNamePaid = "p" + index + "_paid";
-          var objNameOrderID = "p" + index + "_order_detail_id";
+          const objDate = "p" + index;
+          const objNamePaid = "p" + index + "_paid";
+          const objNameOrderID = "p" + index + "_order_detail_id";
 
           if (
             !item[objNamePaid] &&
             item[objNameOrderID] !== "" &&
-            item[objDate] !== "" &&
-            DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <=
-              DateTime.fromFormat(
-                selectedPeriode[0].end_date,
-                "yyyy-MM-dd"
-              ).plus({ days: -1 }) &&
-            DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >=
-              DateTime.fromFormat(selectedPeriode[0].start_date, "yyyy-MM-dd")
+            item[objDate] !== ""
           ) {
-            unpaidOrderId.push(item[objNameOrderID]);
+            const pertemuanDate = DateTime.fromFormat(
+              item[objDate],
+              "dd/MM/yyyy"
+            );
+            if (
+              pertemuanDate <= periodeEnd &&
+              pertemuanDate >= periodeStart
+            ) {
+              unpaidOrderId.push(item[objNameOrderID]);
+            }
           }
         }
       });
-      // console.log(unpaidOrderId);
-      // setUnpaidList(unpaidOrderId);
+
       handlePayAll(unpaidOrderId.sort());
-      // alert(JSON.stringify(unpaidOrderId));
     } catch (error) {
       console.log(error);
     }
@@ -896,7 +935,8 @@ const RekapBulanan = () => {
   const downloadExcelFile = async () => {
     try {
       setIsDownload(true);
-      let response = await ExportRekapBulanan(selectedPeriode[0].name);
+      if (!selectedPeriode) return;
+      let response = await ExportRekapBulanan(selectedPeriode.name);
       // Create a Blob from the response
       const blob = new Blob([response], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -929,11 +969,13 @@ const RekapBulanan = () => {
                 }))
                 .sort((a, b) => a.label.localeCompare(b.label))}
               // defaultValue={listTrainer[0]?.value || ""}
-              onChange={(e) =>
+              onChange={(e) => {
+                setValue("trainer", e.target.value);
                 setSelectedTrainer(
-                  listTrainer.filter((a) => a.trainer_id === e.target.value)
-                )
-              }
+                  listTrainer.find((a) => a.trainer_id === e.target.value) ||
+                    null
+                );
+              }}
             />
             <Select
               name="periode"
@@ -941,18 +983,17 @@ const RekapBulanan = () => {
               placeholder="Pilih Periode"
               register={register}
               error={errors.periode?.message}
-              options={listPeriode
-                .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
-                .map((item) => ({
-                  value: item.name,
-                  label: item.name,
-                }))}
+              options={listPeriode.map((item) => ({
+                value: item.name,
+                label: item.name,
+              }))}
               // defaultValue={listPeriode[0]?.value || ""}
-              onChange={(e) =>
+              onChange={(e) => {
+                setValue("periode", e.target.value);
                 setSelectedPeriode(
-                  listPeriode.filter((a) => a.name === e.target.value)
-                )
-              }
+                  listPeriode.find((a) => a.name === e.target.value) || null
+                );
+              }}
             />
             <div className="flex gap-2 mb:py-5 pl-4 gap-3 items-center">
               <button
@@ -1012,7 +1053,7 @@ const RekapBulanan = () => {
               </div>
             ) : null}
           </form>
-          {isLoading ? (
+          {filtersLoading || isLoading ? (
             <SkeletionTable />
           ) : listData.results.length > 0 ? (
             <>

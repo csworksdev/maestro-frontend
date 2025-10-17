@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import * as yup from "yup";
 
@@ -23,8 +22,6 @@ const schema = yup.object({
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
   const {
     register,
     handleSubmit,
@@ -50,10 +47,8 @@ const LoginForm = () => {
       const { refresh, access, data } = response.data;
 
       if (response.data) {
-        // Simpan token di Redux
-        dispatch(
-          setUser({ refresh, access, data, rememberMe: NewData.rememberMe })
-        );
+        // Simpan token ke store global
+        setUser({ refresh, access, data, rememberMe: NewData.rememberMe });
 
         // ✅ Simpan presence default
         localStorage.setItem(
@@ -77,7 +72,7 @@ const LoginForm = () => {
                 },
               }
             );
-            console.log("✅ FCM token disimpan di server");
+            // console.log("✅ FCM token disimpan di server");
           } catch (err) {
             console.error(
               "❌ Gagal simpan FCM token:",

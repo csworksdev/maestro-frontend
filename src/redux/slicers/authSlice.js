@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { create } from "zustand";
 import {
   clearAuthCookies,
   getAuthCookies,
@@ -13,73 +13,91 @@ const defaultUserData = {
   roles: "",
 };
 
-const { access: initialAccess, refresh: initialRefresh, data: initialData } =
-  getAuthCookies();
-const initialRememberMe =
-  getRememberMeCookie() ?? (initialAccess ? true : false);
+const loadInitialState = () => {
+  const { access = "", refresh = "", data } = getAuthCookies();
+  const rememberFromCookie = getRememberMeCookie();
 
-const authSlice = createSlice({
-  name: "auth",
-  initialState: {
-    refresh: initialRefresh,
-    access: initialAccess,
-    data: initialData || { ...defaultUserData },
-    isAuth: !!initialAccess,
-    rememberMe: initialRememberMe,
+  return {
+    access,
+    refresh,
+    data: data || { ...defaultUserData },
+    isAuth: !!access,
+    rememberMe: rememberFromCookie ?? (!!access || false),
+  };
+};
+
+const clearClientStorage = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const keysToRemove = [
+    "darkMode",
+    "menuItems",
+    "mobileMenu",
+    "persist:auth",
+    "persist:layout",
+    "persist:root",
+    "sidebarCollapsed",
+    "activeSubmenu",
+    "activeMultiMenu",
+  ];
+
+  keysToRemove.forEach((key) => {
+    window.localStorage.removeItem(key);
+  });
+};
+
+export const useAuthStore = create((set, get) => ({
+  ...loadInitialState(),
+  setUser: (payload = {}) => {
+    const rememberPreference =
+      payload.rememberMe ?? get().rememberMe ?? true;
+
+    if (payload.access || payload.refresh || payload.data) {
+      setAuthCookies(
+        {
+          access: payload.access,
+          refresh: payload.refresh,
+          data: payload.data,
+        },
+        rememberPreference ? {} : { days: null }
+      );
+      setRememberMeCookie(rememberPreference);
+    }
+
+    set((state) => ({
+      ...state,
+      refresh: payload.refresh,
+      access: payload.access,
+      data: payload.data || state.data,
+      isAuth: true,
+      rememberMe: rememberPreference,
+    }));
   },
-  reducers: {
-    setUser: (state, action) => {
-      const rememberPreference =
-        action.payload.rememberMe ?? state.rememberMe ?? true;
+  logOut: () => {
+    clearAuthCookies();
+    clearClientStorage();
 
-      if (
-        action.payload.access ||
-        action.payload.refresh ||
-        action.payload.data
-      ) {
-        setAuthCookies(
-          {
-            access: action.payload.access,
-            refresh: action.payload.refresh,
-            data: action.payload.data,
-          },
-          rememberPreference ? {} : { days: null }
-        );
-        setRememberMeCookie(rememberPreference);
-      }
-
-      return {
-        ...state, // Spread the current state
-        refresh: action.payload.refresh,
-        access: action.payload.access,
-        data: action.payload.data || state.data,
-        isAuth: true,
-        rememberMe: rememberPreference,
-      };
-    },
-    logOut: (state) => {
-      state.refresh = "";
-      state.access = "";
-      state.data = { ...defaultUserData };
-      state.isAuth = false;
-      state.rememberMe = false;
-      clearAuthCookies();
-      localStorage.removeItem("darkMode");
-      localStorage.removeItem("menuItems");
-      localStorage.removeItem("mobileMenu");
-      localStorage.removeItem("persist:auth");
-      localStorage.removeItem("persist:layout");
-      localStorage.removeItem("persist:root");
-      localStorage.removeItem("sidebarCollapsed");
-      localStorage.removeItem("activeSubmenu");
-      localStorage.removeItem("activeMultiMenu");
-    },
+    set({
+      refresh: "",
+      access: "",
+      data: { ...defaultUserData },
+      isAuth: false,
+      rememberMe: false,
+    });
   },
-});
+}));
 
-export const { setUser, logOut } = authSlice.actions;
+export const setUser = (payload) => {
+  useAuthStore.getState().setUser(payload);
+};
 
-export const performLogout = () => async (dispatch) => {
+export const logOut = () => {
+  useAuthStore.getState().logOut();
+};
+
+export const performLogout = async () => {
   let logout;
   try {
     ({ logout } = await import("@/axios/auth/auth"));
@@ -87,8 +105,12 @@ export const performLogout = () => async (dispatch) => {
   } catch (error) {
     console.error("Failed to logout:", error);
   } finally {
-    dispatch(logOut());
+    useAuthStore.getState().logOut();
   }
 };
 
-export default authSlice.reducer;
+export const useAuthData = () =>
+  useAuthStore((state) => state.data);
+
+export const useIsAuthenticated = () =>
+  useAuthStore((state) => state.isAuth);

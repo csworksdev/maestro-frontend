@@ -1,15 +1,13 @@
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { handleSetting } from "@/redux/slicers/layoutSlice";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useDarkmode = () => {
-  const dispatch = useDispatch();
-  const isDark = useSelector((state) => state.layout.darkMode);
+  const isDark = useLayoutStore((state) => state.darkMode);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
   // ** Return a wrapped version of useState's setter function
   const setDarkMode = (mode) => {
-    // dispatch(handleDarkMode(mode));
-    dispatch(handleSetting({ key: "darkMode", value: mode }));
+    setSetting({ key: "darkMode", value: mode });
   };
 
   useEffect(() => {

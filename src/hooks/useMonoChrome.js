@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { handleMonoChrome } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useMonoChrome = () => {
-  const dispatch = useDispatch();
-  const isMonoChrome = useSelector((state) => state.layout.isMonochrome);
+  const isMonoChrome = useLayoutStore((state) => state.isMonochrome);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
-  const setMonoChrome = (val) => dispatch(handleMonoChrome(val));
+  const setMonoChrome = (val) =>
+    setSetting({ key: "isMonochrome", value: val, storageKey: "monochrome" });
 
   useEffect(() => {
     const element = document.getElementsByTagName("html")[0];

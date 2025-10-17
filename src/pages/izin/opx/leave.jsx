@@ -5,18 +5,18 @@ import Button from "@/components/ui/Button";
 import { Link } from "react-router-dom";
 import PaginationComponent from "@/components/globals/table/pagination";
 import { approveTrainerLeave, getAllTrainerLeaves } from "@/axios/cuti";
-import { useSelector } from "react-redux";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import { Icon } from "@iconify/react";
 import { useLeaveSocket } from "@/hooks/useLeaveSocket";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Leave = () => {
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("pending");
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
   const { data, isLoading } = useLeaveSocket(user_id, roles, selectStatus);

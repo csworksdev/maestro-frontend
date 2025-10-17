@@ -3,14 +3,14 @@ import Dropdown from "@/components/ui/Dropdown";
 import Icon from "@/components/ui/Icon";
 import { Menu, Transition } from "@headlessui/react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { performLogout } from "@/redux/slicers/authSlice";
+import {
+  performLogout,
+  useAuthStore,
+} from "@/redux/slicers/authSlice";
 
 import UserAvatar from "@/assets/images/all-img/user.png";
 
-const profileLabel = () => {
-  // const profileName = localStorage.getItem("username");
-  const { username } = useSelector((state) => state.auth.data);
+const profileLabel = (username) => {
   return (
     <div className="flex items-center">
       <div className="flex-1 ltr:mr-[10px] rtl:ml-[10px]">
@@ -36,9 +36,9 @@ const profileLabel = () => {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const username = useAuthStore((state) => state.data.username);
   const handleLogout = async () => {
-    await dispatch(performLogout());
+    await performLogout();
     navigate("/auth/login", { replace: true });
   };
 
@@ -103,7 +103,7 @@ const Profile = () => {
   ];
 
   return (
-    <Dropdown label={profileLabel()} classMenuItems="w-[180px] top-[58px]">
+    <Dropdown label={profileLabel(username)} classMenuItems="w-[180px] top-[58px]">
       {ProfileMenu.map((item, index) => (
         <Menu.Item key={index}>
           {({ active }) => (

@@ -93,7 +93,6 @@ const KontakWati = lazy(() => import("@/pages/wati/kontak"));
 // Fallback
 const ErrorPage = lazy(() => import("@/pages/404"));
 
-import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import ChatTest from "@/pages/utility/chattest";
@@ -104,8 +103,6 @@ const EditPromo = lazy(() => import("@/pages/masterdata/promo/edit"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 
 const AdminRoutes = () => {
-  const roles = useSelector((state) => state.auth); // tetap bisa pakai hook di sini
-
   return (
     <Routes>
       {/* Authenticated Routes for Admin */}

@@ -10,7 +10,7 @@ import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
 import { getTrainerLeave } from "@/axios/cuti";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import Radio from "@/components/ui/Radio";
@@ -21,7 +21,7 @@ import LoaderCircle from "@/components/Loader-circle";
 
 const Leave = () => {
   const navigate = useNavigate();
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const status = ["pending", "approved", "rejected"];
   const [selectStatus, setSelectStatus] = useState("pending");
 

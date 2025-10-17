@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { handleSkin } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useSkin = () => {
-  const dispatch = useDispatch();
-  const skin = useSelector((state) => state.layout.skin);
+  const skin = useLayoutStore((state) => state.skin);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
-  const setSkin = (mod) => dispatch(handleSkin(mod));
+  const setSkin = (mod) => setSetting({ key: "skin", value: mod });
 
   useEffect(() => {
     const body = window.document.body;

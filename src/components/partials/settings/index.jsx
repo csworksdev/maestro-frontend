@@ -1,8 +1,6 @@
 import React, { Fragment } from "react";
 import Icon from "@/components/ui/Icon";
-import { useSelector, useDispatch } from "react-redux";
 import { Transition } from "@headlessui/react";
-import { handleCustomizer } from "@/store/layout";
 import SimpleBar from "simplebar-react";
 import Semidark from "./Tools/Semidark";
 import RtlSwicth from "./Tools/Rtl";
@@ -15,12 +13,16 @@ import MenuHidden from "./Tools/MenuHidden";
 import NavbarType from "./Tools/NavbarType";
 import FooType from "./Tools/FooterType";
 import useWidth from "@/hooks/useWidth";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const Setings = () => {
-  const isOpen = useSelector((state) => state.layout.customizer);
-  const dispatch = useDispatch();
-  // ** Toggles  Customizer Open
-  const setCustomizer = (val) => dispatch(handleCustomizer(val));
+  const [isOpen, setCustomizerSetting] = useLayoutStore((state) => [
+    state.customizer,
+    state.setSetting,
+  ]);
+  // ** Toggles Customizer Open
+  const setCustomizer = (val) =>
+    setCustomizerSetting({ key: "customizer", value: val, persist: false });
 
   const { width, breakpoints } = useWidth();
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useLoadingStore } from "@/redux/slicers/loadingSlice";
 
 const useScrollRestoration = () => {
   const location = useLocation();
-  const isLoading = useSelector((state) => state.loading.isLoading); // Global loading state
+  const isLoading = useLoadingStore((state) => state.isLoading); // Global loading state
   const [isRestored, setIsRestored] = useState(false);
 
   useEffect(() => {

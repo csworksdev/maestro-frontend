@@ -14,16 +14,13 @@ import Icon from "@/components/ui/Icon";
 import MobileLogo from "@/assets/images/logo/logo.png";
 import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
 import svgRabitImage from "@/assets/images/svg/rabit.svg";
-import { useDispatch, useSelector } from "react-redux";
-import { performLogout } from "@/redux/slicers/authSlice";
+import { performLogout, useAuthStore } from "@/redux/slicers/authSlice";
 import Menu from "@/constant/menu";
 
 const MobileMenu = ({ className = "custom-class" }) => {
   const scrollableNodeRef = useRef();
   const [scroll, setScroll] = useState(false);
-  const dispatch = useDispatch();
-
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
 
   // const roles = data?.roles;
   const roleSignature = Array.isArray(roles)
@@ -105,7 +102,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
         <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
           <button
             onClick={() => {
-              dispatch(performLogout());
+              performLogout();
             }}
           >
             <span>Logout</span>

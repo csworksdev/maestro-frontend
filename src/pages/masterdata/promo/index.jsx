@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -10,37 +10,34 @@ import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { DateTime } from "luxon";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 const Promo = () => {
   const navigate = useNavigate();
-  const [listData, setListData] = useState({ count: 0, results: [] });
-  const [isLoading, setIsLoading] = useState(true);
-
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
-  const fetchData = async (page, size, query) => {
-    try {
-      setIsLoading(true);
+  const promoQuery = useQuery({
+    queryKey: ["promo", { pageIndex, pageSize, searchQuery }],
+    queryFn: async () => {
       const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
+        page: pageIndex + 1,
+        page_size: pageSize,
+        search: searchQuery,
       };
-      getPromoAll(params)
-        .then((res) => {
-          setListData(res.data);
-        })
-        .finally(() => setIsLoading(false));
-    } catch (error) {
-      console.error("Error fetching promo data", error);
-    }
-  };
+      const res = await getPromoAll(params);
+      return res.data;
+    },
+    keepPreviousData: true,
+  });
 
-  useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
+  const listData = promoQuery.data ?? { count: 0, results: [] };
 
   const handlePageChange = (page) => {
     setPageIndex(page);
@@ -55,6 +52,13 @@ const Promo = () => {
     setPageIndex(0);
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deletePromo(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promo"] });
+    },
+  });
+
   const handleDelete = (row) => {
     Swal.fire({
       title: "Yakin hapus promo?",
@@ -66,11 +70,15 @@ const Promo = () => {
       confirmButtonText: "Ya, hapus!",
     }).then((result) => {
       if (result.isConfirmed) {
-        deletePromo(row.id).then((res) => {
-          if (res.status === 204) {
-            Swal.fire("Deleted!", "Promo berhasil dihapus.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
+        deleteMutation.mutate(row.id, {
+          onSuccess: (res) => {
+            if (res?.status === 204) {
+              Swal.fire("Deleted!", "Promo berhasil dihapus.", "success");
+            }
+          },
+          onError: (error) => {
+            console.error("Gagal menghapus promo:", error);
+          },
         });
       }
     });
@@ -154,7 +162,7 @@ const Promo = () => {
           </Button>
         }
       >
-        {isLoading ? (
+        {promoQuery.isLoading ? (
           <SkeletionTable />
         ) : (
           <>

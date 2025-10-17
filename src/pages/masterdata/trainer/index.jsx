@@ -11,16 +11,22 @@ import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { toProperCase } from "@/utils";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  setLoading,
+  useLoadingStore,
+} from "@/redux/slicers/loadingSlice";
 
 const Trainer = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const actions = [
     {
@@ -37,27 +43,26 @@ const Trainer = () => {
     },
   ];
 
-  const fetchData = async (page, size, query) => {
-    try {
-      setIsLoading(true);
+  const trainerQuery = useQuery({
+    queryKey: ["trainer", { pageIndex, pageSize, searchQuery }],
+    queryFn: async () => {
       const params = {
-        page: page + 1,
-        page_size: size,
-        search: query,
+        page: pageIndex + 1,
+        page_size: pageSize,
+        search: searchQuery,
       };
-      getTrainerAll(params)
-        .then((res) => {
-          setListData(res.data);
-        })
-        .finally(() => setIsLoading(false));
-    } catch (error) {
-      console.error("Error fetching data", error);
-    }
-  };
+      const res = await getTrainerAll(params);
+      return res.data;
+    },
+    keepPreviousData: true,
+  });
+
+  const listData = trainerQuery.data ?? { count: 0, results: [] };
+  const isLoading = useLoadingStore((state) => state.isLoading);
 
   useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
+    setLoading(trainerQuery.isFetching);
+  }, [trainerQuery.isFetching]);
 
   const handlePageChange = (page) => {
     setPageIndex(page);
@@ -72,18 +77,12 @@ const Trainer = () => {
     setPageIndex(0); // Reset to first page on search
   };
 
-  // const loadData = () => {
-  //   setIsLoading(true);
-  //   getTrainerAll()
-  //     .then((res) => {
-  //       setData(res.data.results);
-  //     })
-  //     .finally(() => setIsLoading(false));
-  // };
-
-  // useEffect(() => {
-  //   fetchData(pageIndex, pageSize, searchQuery);
-  // }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => DeleteTrainer(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trainer"] });
+    },
+  });
 
   const handleDelete = (e) => {
     Swal.fire({
@@ -96,11 +95,15 @@ const Trainer = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteTrainer(e.trainer_id).then((res) => {
-          if (res.status) {
-            Swal.fire("Deleted!", "Your file has been deleted.", "success");
-            fetchData(pageIndex, pageSize, searchQuery);
-          }
+        deleteMutation.mutate(e.trainer_id, {
+          onSuccess: (res) => {
+            if (res?.status) {
+              Swal.fire("Deleted!", "Your file has been deleted.", "success");
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to delete trainer:", error);
+          },
         });
       }
     });
@@ -198,7 +201,7 @@ const Trainer = () => {
         }
       >
         <Search searchValue={searchQuery} handleSearch={handleSearch} />
-        {isLoading ? (
+        {trainerQuery.isLoading ? (
           <SkeletionTable />
         ) : (
           <>

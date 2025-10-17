@@ -1,12 +1,12 @@
-import { useSelector, useDispatch } from "react-redux";
-import { handleContentWidth } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useContentWidth = () => {
-  const dispatch = useDispatch();
-  const contentWidth = useSelector((state) => state.layout.contentWidth);
+  const contentWidth = useLayoutStore((state) => state.contentWidth);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
   // ** Toggles Content Width
-  const setContentWidth = (val) => dispatch(handleContentWidth(val));
+  const setContentWidth = (val) =>
+    setSetting({ key: "contentWidth", value: val, persist: false });
 
   return [contentWidth, setContentWidth];
 };

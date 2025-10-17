@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import Icon from "@/components/ui/Icon";
 import { getFollowupSummary } from "@/axios/perpanjangpaket/perpanjangpaket";
 import { toProperCase } from "@/utils";
@@ -8,7 +8,7 @@ import Loading from "@/components/Loading";
 import Table from "@/components/globals/table/table";
 
 const DashboardPerpanjangOpx = () => {
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
 

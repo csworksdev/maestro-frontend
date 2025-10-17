@@ -6,14 +6,14 @@ import SimpleBar from "simplebar-react";
 import useSidebar from "@/hooks/useSidebar";
 import useSemiDark from "@/hooks/useSemiDark";
 import useSkin from "@/hooks/useSkin";
-import { useSelector } from "react-redux";
 import Menu from "@/constant/menu";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Sidebar = () => {
   const scrollableNodeRef = useRef(null);
   const [scroll, setScroll] = useState(false);
 
-  const data = useSelector((state) => state.auth.data); // ✅ DI SINI BENAR
+  const data = useAuthStore((state) => state.data); // ✅ DI SINI BENAR
 
   const roles = data?.roles;
   const roleSignature = Array.isArray(roles)

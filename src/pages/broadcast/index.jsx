@@ -4,11 +4,11 @@ import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
 import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
-import { useSelector } from "react-redux";
 import { BroadcastExport, getBroadcast } from "@/axios/broadcast/broadcast";
 import { Icon } from "@iconify/react";
 import AsyncSelect from "react-select/async";
 import { getCabangAll } from "@/axios/referensi/cabang";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Broadcast = () => {
   const [data, setData] = useState([]);
@@ -21,7 +21,7 @@ const Broadcast = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBranch, setSelectedBranch] = useState(null); // Default as null
 
-  const { roles } = useSelector((state) => state.auth.data);
+  const { roles } = useAuthStore((state) => state.data);
 
   const actionsAdmin = [
     {
