@@ -24,11 +24,11 @@ import Swal from "sweetalert2";
 import Dropdown from "@/components/ui/Dropdown";
 import WhatsAppButton from "@/components/custom/sendwhatsapp";
 import Icons from "@/components/ui/Icon";
-import { useSelector } from "react-redux";
 import Select from "react-select";
 import Switch from "@/components/ui/Switch";
 import { toProperCase } from "@/utils";
 import { PerpanjangOrder } from "@/axios/masterdata/order";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const columnHeader = [
   "Pelatih",
@@ -123,7 +123,7 @@ const CekJadwal = () => {
     },
   ];
 
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [tabHari, setTabHari] = useState(daysOfWeek);
   const [branchOption, setBranchOption] = useState([]);
   const [poolOption, setPoolOption] = useState([]);

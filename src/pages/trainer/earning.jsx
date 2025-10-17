@@ -6,7 +6,7 @@ import {
   getEarningListById,
 } from "@/axios/trainer/earning";
 import Loading from "@/components/Loading";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import Search from "@/components/globals/table/search";
 
 const Earning = () => {
@@ -14,7 +14,7 @@ const Earning = () => {
   const [listData, setListData] = useState([]);
   const [listDataDashboard, setListDataDashboard] = useState([]);
   const [groupedData, setGroupedData] = useState({});
-  const { user_id, roles } = useSelector((state) => state.auth.data);
+  const { user_id, roles } = useAuthStore((state) => state.data);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchData = async () => {

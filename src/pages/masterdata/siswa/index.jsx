@@ -10,7 +10,7 @@ import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Siswa = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const Siswa = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { roles } = useSelector((state) => state.auth.data);
+  const { roles } = useAuthStore((state) => state.data);
   const actionsAdmin = [
     {
       name: "edit",

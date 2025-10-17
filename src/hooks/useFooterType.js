@@ -1,10 +1,10 @@
-import { useSelector, useDispatch } from "react-redux";
-import { handleFooterType } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useFooterType = () => {
-  const dispatch = useDispatch();
-  const footerType = useSelector((state) => state.layout.footerType);
-  const setFooterType = (val) => dispatch(handleFooterType(val));
+  const footerType = useLayoutStore((state) => state.footerType);
+  const setSetting = useLayoutStore((state) => state.setSetting);
+  const setFooterType = (val) =>
+    setSetting({ key: "footerType", value: val, persist: false });
   return [footerType, setFooterType];
 };
 

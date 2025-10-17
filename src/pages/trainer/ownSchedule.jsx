@@ -3,7 +3,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Loading from "@/components/Loading";
 import { getTrainerScheduleOwn } from "@/axios/masterdata/trainerSchedule";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import { Tab } from "@headlessui/react";
 import Icon from "@/components/ui/Icon";
 
@@ -141,7 +141,7 @@ const SummaryItem = ({ label, value, toneClass }) => (
 );
 
 const OwnSchedule = () => {
-  const { user_id: userId, username } = useSelector((state) => state.auth.data);
+  const { user_id: userId, username } = useAuthStore((state) => state.data);
   const [scheduleData, setScheduleData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);

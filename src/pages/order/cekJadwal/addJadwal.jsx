@@ -17,7 +17,6 @@ import {
   searchSiswa,
 } from "@/axios/masterdata/siswa";
 import Loading from "@/components/Loading";
-import { useSelector } from "react-redux";
 import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
 import { AddOrderScheduleV2 } from "@/axios/schedule/orderSchedule";
 import { AddOrder } from "@/axios/masterdata/order";
@@ -28,6 +27,7 @@ import InputGroup from "@/components/ui/InputGroup";
 import Flatpickr from "react-flatpickr";
 import AsyncSelect from "react-select/async";
 import Swal from "sweetalert2";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 // status registrasi
 const allStatus = [
@@ -79,7 +79,7 @@ const AddJadwal = ({
   const [selectedProduct, setSelectedProduct] = useState([]); // Initialize as an empty array for product objects
   const [isLoadingCheckDuplicate, setIsLoadingCheckDuplicate] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const { user_id, roles, username } = useSelector((state) => state.auth.data);
+  const { user_id, roles, username } = useAuthStore((state) => state.data);
   const [keterangan, setKeterangan] = useState(
     "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
   );

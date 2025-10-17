@@ -1,10 +1,10 @@
-import { useSelector, useDispatch } from "react-redux";
-import { handleNavBarType } from "@/store/layout";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useNavbarType = () => {
-  const dispatch = useDispatch();
-  const navbarType = useSelector((state) => state.layout.navBarType);
-  const setNavbarType = (val) => dispatch(handleNavBarType(val));
+  const navbarType = useLayoutStore((state) => state.navBarType);
+  const setSetting = useLayoutStore((state) => state.setSetting);
+  const setNavbarType = (val) =>
+    setSetting({ key: "navBarType", value: val, persist: false });
   return [navbarType, setNavbarType];
 };
 

@@ -7,14 +7,14 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Schedule = () => {
   const [events, setEvents] = useState([]);
   const calendarComponentRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
 
   const transformDataForCalendar = (events) => {
     return events.map((event) => ({

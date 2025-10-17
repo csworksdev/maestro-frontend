@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import Icon from "@/components/ui/Icon";
 import {
   getFollowupSummary,
@@ -15,7 +15,7 @@ import Search from "@/components/globals/table/search";
 import { DateTime } from "luxon";
 
 const DashboardPerpanjangAdmin = () => {
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [listData, setListData] = useState({ count: 0, results: [] });

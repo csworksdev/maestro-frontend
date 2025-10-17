@@ -11,8 +11,8 @@ import Select from "react-select";
 import Textinput from "@/components/ui/Textinput";
 import { Icon } from "@iconify/react";
 import { DateTime } from "luxon";
-import { useSelector } from "react-redux";
 import { useCallback } from "react";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const furits = [
   { value: "80106972-bbe5-4802-ad4b-0176a618b7b3", label: "Della" },
@@ -32,7 +32,7 @@ const Kontak = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);

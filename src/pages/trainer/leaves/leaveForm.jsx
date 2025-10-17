@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -17,6 +16,7 @@ import { jam } from "@/constant/jadwal-default";
 import { createTrainerLeave, getImpactedStudent } from "@/axios/cuti";
 import { getOrderAll } from "@/axios/masterdata/order";
 import { axiosConfig } from "@/axios/config";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 // =====================
 // VALIDATION SCHEMA
@@ -28,7 +28,7 @@ const schema = yup.object({
 const LeaveForm = () => {
   const navigate = useNavigate();
   const today = new Date();
-  const { user_id } = useSelector((state) => state.auth.data);
+  const { user_id } = useAuthStore((state) => state.data);
 
   const [picker3, setPicker3] = useState([today, today]);
   const [leaveRange, setLeaveRange] = useState(0);

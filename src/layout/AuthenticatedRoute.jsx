@@ -1,11 +1,11 @@
-import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { useIsAuthenticated } from "@/redux/slicers/authSlice";
 
 // const isAuthenticated = () => !!localStorage.getItem("user");
 const AuthenticatedRoute = ({ children }) => {
-  const authState = useSelector((state) => state.auth);
+  const isAuth = useIsAuthenticated();
 
-  if (!authState.isAuth) {
+  if (!isAuth) {
     return <Navigate to="/auth/login" replace />;
   }
 

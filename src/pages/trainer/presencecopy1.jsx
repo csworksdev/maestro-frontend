@@ -8,7 +8,6 @@ import { UpdatePresenceById } from "@/axios/trainer/presence";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 import { getPeriodisasiToday } from "@/axios/referensi/periodisasi";
-import { useSelector } from "react-redux";
 import Slider from "react-slick";
 import useWidth from "@/hooks/useWidth";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -22,11 +21,11 @@ import { startCase, toLower } from "lodash";
 import Notfound from "@/assets/images/svg/notfound.svg";
 import { Disclosure, Tab } from "@headlessui/react";
 import Icon from "@/components/ui/Icon";
-import { useDispatch } from "react-redux";
 import { setLoading } from "@/redux/slicers/loadingSlice";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
 import Textinput from "@/components/ui/Textinput";
 import { memo } from "react";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const sliderSettings = {
   dots: true,
@@ -54,7 +53,7 @@ const sliderSettings = {
 
 const PresenceCopy1 = () => {
   const [listData, setListData] = useState([]);
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [periode, setPeriode] = useState([]);
   const { width, breakpoints } = useWidth();
   // const { setValue } = useForm();
@@ -63,7 +62,6 @@ const PresenceCopy1 = () => {
   const [selectedIndex, setSelectedIndex] = useState(
     localStorage.getItem("presenceSelected") || 0
   );
-  const dispatch = useDispatch();
   useScrollRestoration();
 
   const pelatihtelat = [
@@ -109,7 +107,7 @@ const PresenceCopy1 = () => {
 
   const fetchData = async () => {
     try {
-      dispatch(setLoading(true));
+      setLoading(true);
       let res = await getPresenceById(user_id);
 
       // setListData(res.data.data);
@@ -120,7 +118,7 @@ const PresenceCopy1 = () => {
     } catch (error) {
       console.error("Error fetching data", error);
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
     }
   };
 

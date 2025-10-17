@@ -1,25 +1,23 @@
-// axios/config.js
 import axios from "axios";
-import store from "@/redux/store"; // pastikan ini import store redux kamu
+import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
 import {
-  AUTH_COOKIE_KEYS,
-  getCookie,
-} from "@/utils/authCookies";
-import { setUser } from "@/redux/slicers/authSlice";
+  logOut,
+  setUser,
+  useAuthStore,
+} from "@/redux/slicers/authSlice";
 
 const baseURL = import.meta.env.VITE_API_URL;
 
 // Helper ambil token
 const getToken = () => {
-  const state = store.getState();
-  const access = state.auth?.access;
+  const { access } = useAuthStore.getState();
   if (access) return access;
   return getCookie(AUTH_COOKIE_KEYS.access);
 };
 
 const getRefreshToken = () => {
-  const state = store.getState();
-  return state.auth?.refresh || getCookie(AUTH_COOKIE_KEYS.refresh);
+  const { refresh } = useAuthStore.getState();
+  return refresh || getCookie(AUTH_COOKIE_KEYS.refresh);
 };
 
 let refreshPromise = null;
@@ -29,11 +27,10 @@ export const refreshAccessToken = async () => {
     return refreshPromise;
   }
 
-  const state = store.getState();
   const refresh = getRefreshToken();
 
   if (!refresh) {
-    store.dispatch({ type: "auth/logOut" });
+    logOut();
     return Promise.reject(new Error("Missing refresh token"));
   }
 
@@ -43,18 +40,17 @@ export const refreshAccessToken = async () => {
     })
     .then((res) => {
       const newAccess = res.data.access;
-      store.dispatch(
-        setUser({
-          refresh,
-          access: newAccess,
-          data: state.auth?.data,
-          rememberMe: state.auth?.rememberMe,
-        })
-      );
+      const state = useAuthStore.getState();
+      setUser({
+        refresh,
+        access: newAccess,
+        data: state.data,
+        rememberMe: state.rememberMe,
+      });
       return newAccess;
     })
     .catch((err) => {
-      store.dispatch({ type: "auth/logOut" });
+      logOut();
       throw err;
     })
     .finally(() => {
@@ -206,20 +202,16 @@ const ensureStoreSubscription = () => {
     return;
   }
 
-  let previousAccess = store.getState().auth?.access;
-  let previousRefresh = store.getState().auth?.refresh;
-
-  unsubscribeFromStore = store.subscribe(() => {
-    const nextState = store.getState();
-    const nextAccess = nextState.auth?.access;
-    const nextRefresh = nextState.auth?.refresh;
-
-    if (nextAccess !== previousAccess || nextRefresh !== previousRefresh) {
-      previousAccess = nextAccess;
-      previousRefresh = nextRefresh;
-      scheduleAutoRefresh();
+  unsubscribeFromStore = useAuthStore.subscribe(
+    (nextState, previousState) => {
+      if (
+        nextState.access !== previousState.access ||
+        nextState.refresh !== previousState.refresh
+      ) {
+        scheduleAutoRefresh();
+      }
     }
-  });
+  );
 };
 
 export const initializeTokenRefreshScheduler = () => {
@@ -264,7 +256,7 @@ axiosConfig.interceptors.response.use(
 
         return axiosConfig(originalRequest);
       } catch (err) {
-        store.dispatch({ type: "auth/logOut" });
+        logOut();
         return Promise.reject(err);
       }
     }

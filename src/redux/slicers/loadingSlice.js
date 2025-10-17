@@ -1,18 +1,10 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { create } from "zustand";
 
-const initialState = {
+export const useLoadingStore = create((set) => ({
   isLoading: false,
+  setLoading: (value) => set({ isLoading: Boolean(value) }),
+}));
+
+export const setLoading = (value) => {
+  useLoadingStore.getState().setLoading(value);
 };
-
-const loadingSlice = createSlice({
-  name: "loading",
-  initialState,
-  reducers: {
-    setLoading: (state, action) => {
-      state.isLoading = action.payload;
-    },
-  },
-});
-
-export const { setLoading } = loadingSlice.actions;
-export default loadingSlice.reducer;

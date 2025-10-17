@@ -8,9 +8,7 @@ import "../src/assets/scss/app.css";
 import { BrowserRouter } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { Provider } from "react-redux";
-import store, { persistor } from "@/redux/store";
-import "react-toastify/dist/ReactToastify.css";
-import { PersistGate } from "redux-persist/integration/react";
+import store from "@/redux/store";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { initializeTokenRefreshScheduler } from "@/axios/config";
@@ -30,10 +28,8 @@ initializeTokenRefreshScheduler();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
-      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-        <App />
-      </BrowserRouter>
-    </PersistGate>
+    <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+      <App />
+    </BrowserRouter>
   </Provider>
 );

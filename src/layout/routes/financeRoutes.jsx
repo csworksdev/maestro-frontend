@@ -48,13 +48,11 @@ const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 // Fallback
 const ErrorPage = lazy(() => import("@/pages/404"));
 
-import { useSelector } from "react-redux";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Invoice from "@/pages/invoice";
 
 const FinanceRoutes = () => {
-  const data = useSelector((state) => state.auth.data); // tetap bisa pakai hook di sini
   //   console.log(data.roles);
   return (
     <Routes>

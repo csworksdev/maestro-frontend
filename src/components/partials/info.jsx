@@ -1,11 +1,11 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import wbg6 from "@/assets/images/all-img/widget-bg-5.png";
 import vectorImage2 from "@/assets/images/svg/widgetvector2.svg";
 import Button from "../ui/Button";
 
 const Info = () => {
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
 
   const getWhatsAppLink = () => {
     const countryCode = "+6281220450240"; // Indonesia country code, modify as per your requirement

@@ -9,7 +9,6 @@ import {
   getAllTrainerLeaves,
   submitObjection,
 } from "@/axios/cuti";
-import { useSelector } from "react-redux";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import { Icon } from "@iconify/react";
@@ -17,9 +16,10 @@ import { useForm } from "react-hook-form";
 import Textinput from "@/components/ui/Textinput";
 import { useLeaveSocket } from "@/hooks/useLeaveSocket";
 import LoaderCircle from "@/components/Loader-circle";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Leave = () => {
-  const { user_id, username, roles } = useSelector((state) => state.auth.data);
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [selectStatus, setSelectStatus] = useState("pending");
   const status = ["pending", "approved", "rejected"];
   const { data, isLoading } = useLeaveSocket(user_id, roles, selectStatus);

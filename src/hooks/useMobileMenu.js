@@ -1,17 +1,12 @@
-import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-// import { handleMobileMenu } from "@/store/layout";
-import { handleSetting } from "@/redux/slicers/layoutSlice";
-import { useLocation } from "react-router-dom";
+import { useLayoutStore } from "@/redux/slicers/layoutSlice";
 
 const useMobileMenu = () => {
-  const dispatch = useDispatch();
-  const mobileMenu = useSelector((state) => state.layout.mobileMenu);
-  const location = useLocation();
+  const mobileMenu = useLayoutStore((state) => state.mobileMenu);
+  const setSetting = useLayoutStore((state) => state.setSetting);
 
   // ** Toggles Mobile Menu
   const setMobileMenu = (val) => {
-    dispatch(handleSetting({ key: "mobileMenu", value: val }));
+    setSetting({ key: "mobileMenu", value: val });
   };
 
   return [mobileMenu, setMobileMenu];
