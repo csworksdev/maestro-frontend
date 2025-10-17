@@ -29,6 +29,7 @@ import Switch from "@/components/ui/Switch";
 import { toProperCase } from "@/utils";
 import { PerpanjangOrder } from "@/axios/masterdata/order";
 import { useAuthStore } from "@/redux/slicers/authSlice";
+import { useQuery } from "@tanstack/react-query";
 
 const columnHeader = [
   "Pelatih",
@@ -124,13 +125,13 @@ const CekJadwal = () => {
   ];
 
   const { user_id, username, roles } = useAuthStore((state) => state.data);
-  const [tabHari, setTabHari] = useState(daysOfWeek);
-  const [branchOption, setBranchOption] = useState([]);
+  const [tabHari, setTabHari] = useState(() =>
+    daysOfWeek.map((day) => ({ ...day }))
+  );
   const [poolOption, setPoolOption] = useState([]);
-  const [selectedPool, setSelectedPool] = useState();
-  const [loading, setLoading] = useState(true);
+  const [selectedPool, setSelectedPool] = useState(-1);
   const [selectedIndex, setSelectedIndex] = useState();
-  const [selectedBranch, setSelectedBranch] = useState();
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedDay, setSelectedDay] = useState();
   const [jumlahSiswaPerKolam, setJumlahSiswaPerKolam] = useState([]);
   const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
@@ -169,40 +170,44 @@ const CekJadwal = () => {
     setSelectedIndex(parseInt(storedIndex, 10) || 0);
   }, []);
 
-  const loadBranch = async () => {
-    try {
+  const branchQuery = useQuery({
+    queryKey: ["cekJadwal", "branches"],
+    queryFn: async () => {
       const params = {
         page: 1,
         page_size: 200,
         is_active: true,
       };
-      const kolamResponse = await getCabangAll(params);
-
-      const kolamOption = kolamResponse.data.results
+      const response = await getCabangAll(params);
+      return response.data.results
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((item) => ({
           value: item.branch_id,
           label: item.name,
         }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-      setBranchOption(kolamOption);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+  const memoizedBranchOptions = useMemo(
+    () => branchQuery.data ?? [],
+    [branchQuery.data]
+  );
+
+  useEffect(() => {
+    if (!selectedBranch && memoizedBranchOptions.length > 0) {
+      setSelectedBranch(memoizedBranchOptions[0].value);
     }
-  };
+  }, [memoizedBranchOptions, selectedBranch]);
 
-  const loadPool = async (branch_id) => {
-    try {
-      const params = {
-        page: 1,
-        page_size: 200,
-        is_active: true,
-      };
-      const kolamResponse = await CJGetPool(branch_id);
-
-      const kolamOption = kolamResponse.data
+  const poolQuery = useQuery({
+    queryKey: ["cekJadwal", "pools", selectedBranch],
+    queryFn: async () => {
+      if (!selectedBranch) {
+        return [];
+      }
+      const response = await CJGetPool(selectedBranch);
+      return response.data
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((item) => ({
           value: item.pool_id,
@@ -211,16 +216,64 @@ const CekJadwal = () => {
           filled: item.total,
           data: item.days,
         }));
+    },
+    enabled: !!selectedBranch,
+  });
 
-      setPoolOption(kolamOption);
-      setSelectedPool(0);
-      setSelectedIndex(0);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!poolQuery.data) {
+      return;
     }
-  };
+
+    const pools = poolQuery.data;
+    setPoolOption(pools);
+
+    if (pools.length === 0) {
+      setSelectedPool(-1);
+      setTabHari(daysOfWeek.map((day) => ({ ...day })));
+      return;
+    }
+
+    const defaultPool = pools[0];
+    setSelectedPool(0);
+    setSelectedIndex(0);
+    setSelectedDay(daysOfWeek[0]?.name);
+
+    const updatedTabHari = daysOfWeek.map((day) => {
+      const dayData = defaultPool.data?.[day.name] ?? {
+        total: 0,
+        data: {},
+      };
+      return {
+        ...day,
+        data: dayData,
+        total: dayData.total ?? 0,
+      };
+    });
+
+    setTabHari(updatedTabHari);
+
+    if (selectedBranch) {
+      const defaultDay = daysOfWeek[0]?.name;
+      if (defaultDay) {
+        loadSchedule(selectedBranch, defaultPool.value, defaultDay);
+      }
+      loadProduct(defaultPool.value);
+    }
+  }, [poolQuery.data, selectedBranch]);
+
+  const loadBranchOptions = useCallback(
+    (inputValue) => {
+      if (!memoizedBranchOptions.length) {
+        return Promise.resolve([]);
+      }
+      const filtered = memoizedBranchOptions.filter((option) =>
+        option.label.toLowerCase().includes((inputValue ?? "").toLowerCase())
+      );
+      return Promise.resolve(filtered);
+    },
+    [memoizedBranchOptions]
+  );
 
   const loadProduct = async (poolName) => {
     try {
@@ -229,8 +282,6 @@ const CekJadwal = () => {
       setProductList(res.data.results);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -290,14 +341,8 @@ const CekJadwal = () => {
       setJadwal([...data]);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadBranch();
-  }, []);
 
   useEffect(() => {
     if (reloadDone) {
@@ -312,32 +357,58 @@ const CekJadwal = () => {
     setFilteredPelatih("");
   }, [selectedIndex]);
 
-  const handleBranchChange = (e) => {
-    setSelectedBranch(e.value);
-    loadPool(e.value);
+  const handleBranchChange = (option) => {
+    if (!option) {
+      setSelectedBranch(null);
+      setPoolOption([]);
+      setSelectedPool(-1);
+      setTabHari(daysOfWeek.map((day) => ({ ...day })));
+      setFilterPelatih([]);
+      setFilteredPelatih("");
+      setSelectedDay(undefined);
+      return;
+    }
+
+    setSelectedBranch(option.value);
+    setSelectedIndex(0);
+    setPoolOption([]);
+    setSelectedPool(-1);
+    setTabHari(daysOfWeek.map((day) => ({ ...day })));
+    setSelectedDay(undefined);
     setFilterPelatih([]);
+    setFilteredPelatih("");
   };
 
   const handlePoolChange = (index) => {
     try {
+      const pool = poolOption[index];
+      if (!pool) {
+        return;
+      }
+
       setSelectedPool(index);
 
-      const updatedTabHari = tabHari.map((item) => {
-        const newData = poolOption[index].data[item.name];
+      const updatedTabHari = daysOfWeek.map((item) => {
+        const newData = pool.data?.[item.name] ?? { data: {}, total: 0 };
         return {
           ...item,
           data: newData,
-          total: newData.total,
+          total: newData.total ?? 0,
         };
       });
 
       setTabHari(updatedTabHari);
 
-      const poolName = poolOption[index].value;
-      const dayName = daysOfWeek[selectedIndex].name;
+      const poolName = pool.value;
+      const dayName = daysOfWeek[selectedIndex]?.name;
 
-      loadSchedule(selectedBranch, poolName, dayName);
-      loadProduct(poolName);
+      if (selectedBranch && poolName && dayName) {
+        loadSchedule(selectedBranch, poolName, dayName);
+      }
+
+      if (poolName) {
+        loadProduct(poolName);
+      }
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
     }
@@ -346,10 +417,14 @@ const CekJadwal = () => {
   const handleChangeTab = (index) => {
     setSelectedIndex(index);
     try {
-      let poolName = poolOption[selectedPool].value;
-      let dayName = daysOfWeek[index].name;
-      setSelectedDay(daysOfWeek[index].name);
-      loadSchedule(selectedBranch, poolName, dayName);
+      const pool = poolOption[selectedPool];
+      if (!pool) return;
+      const poolName = pool.value;
+      const dayName = daysOfWeek[index]?.name;
+      setSelectedDay(dayName);
+      if (selectedBranch && poolName && dayName) {
+        loadSchedule(selectedBranch, poolName, dayName);
+      }
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
     }
@@ -403,18 +478,16 @@ const CekJadwal = () => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           let res = await PerpanjangOrder(order_id, order_date);
-          if (res)
-            loadSchedule(
-              selectedBranch,
-              poolOption[selectedPool].value,
-              selectedDay
-            );
+          if (res) {
+            const currentPool = poolOption[selectedPool];
+            if (currentPool && selectedDay) {
+              loadSchedule(selectedBranch, currentPool.value, selectedDay);
+            }
+          }
         }
       });
     }
   };
-
-  const memoizedBranchOptions = useMemo(() => branchOption, [branchOption]);
 
   const GridKolamDetail = React.memo(({ item, pool }) => {
     const selectedDay = daysOfWeek[selectedIndex]?.name;
@@ -435,7 +508,7 @@ const CekJadwal = () => {
                   <PelatihLibur key={jIdx} />
                   <PelatihKosong
                     key={i}
-                    pool={poolOption[selectedPool]}
+                    pool={pool}
                     trainer={item}
                     hari={timeSlot.hari}
                     jam={slotObj.jam}
@@ -576,7 +649,7 @@ const CekJadwal = () => {
                 {!hasOtherPool && (
                   <PelatihKosong
                     key={`${i}-${jIdx}`}
-                    pool={poolOption[selectedPool]}
+                    pool={pool}
                     trainer={item}
                     hari={timeSlot.hari}
                     jam={slotObj.jam}
@@ -697,15 +770,17 @@ const CekJadwal = () => {
   });
 
   const gridKolam = (hari) => {
-    const selectedPoolItem = poolOption[selectedPool];
+  const selectedPoolItem =
+    selectedPool >= 0 ? poolOption[selectedPool] : null;
 
-    const filteredTrainers = useMemo(() => {
-      return jadwal.filter((trainer) =>
-        trainer.kolam.includes(poolOption[selectedPool].value)
-      );
-    }, [jadwal, selectedPool, selectedPoolItem]);
+  const filteredTrainers = useMemo(() => {
+    if (!selectedPoolItem) return [];
+    return jadwal.filter((trainer) =>
+      trainer.kolam.includes(selectedPoolItem.value)
+    );
+  }, [jadwal, selectedPoolItem]);
 
-    if (jadwal && jadwal.length > 0 && poolOption && selectedPool !== null) {
+  if (jadwal && jadwal.length > 0 && selectedPoolItem) {
       return (
         <div className="flex flex-col h-full">
           <Card
@@ -805,12 +880,16 @@ const CekJadwal = () => {
           <div className="flex gap-3 min-w-[400px]">
             <AsyncSelect
               name="kolam"
-              label="Kolam"
               placeholder="Pilih Cabang"
               defaultOptions={memoizedBranchOptions}
-              loadOptions={branchOption}
+              loadOptions={loadBranchOptions}
               onChange={handleBranchChange}
               className="grow z-50"
+              cacheOptions
+              isLoading={branchQuery.isLoading}
+              value={memoizedBranchOptions.find(
+                (option) => option.value === selectedBranch
+              )}
             />
           </div>
         </div>
@@ -869,9 +948,7 @@ const CekJadwal = () => {
                     </Tab>
                   ))}
               </div>
-              {selectedPool != -1 &&
-              filterPelatih &&
-              filterPelatih.length > 0 ? (
+              {filterPelatih && filterPelatih.length > 0 ? (
                 <Select
                   name="filteredPelatih"
                   options={filterPelatih ?? null}
@@ -918,11 +995,11 @@ const CekJadwal = () => {
             product={productList}
             branch={selectedBranch}
             reloadDataMaster={() => {
-              loadSchedule(
-                selectedBranch,
-                poolOption[selectedPool].value,
-                daysOfWeek[selectedIndex].name
-              );
+              const currentPool = poolOption[selectedPool];
+              const dayName = daysOfWeek[selectedIndex]?.name;
+              if (selectedBranch && currentPool && dayName) {
+                loadSchedule(selectedBranch, currentPool.value, dayName);
+              }
               setPoolOption((prev) =>
                 prev.map((item, index) =>
                   index === selectedPool
