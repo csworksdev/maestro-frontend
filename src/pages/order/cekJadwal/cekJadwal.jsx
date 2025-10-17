@@ -463,6 +463,7 @@ const CekJadwal = () => {
         Swal.getInput().max = today.split("T")[0];
       },
     });
+
     if (order_date) {
       // console.log(order_date);
       Swal.fire({
@@ -565,7 +566,12 @@ const CekJadwal = () => {
                         {toProperCase(x)}
                       </div>
                     ))}
-                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
+                    <PerpanjangPaket
+                      order_id={slot.order_id}
+                      slot={slot}
+                      buttonClassName="btn btn-outline-primary"
+                      iconClassName="text-primary-500"
+                    />
                   </div>
                 );
               }
@@ -620,7 +626,9 @@ const CekJadwal = () => {
                         </Tooltip>
                       )}
                     </div>
-                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
+                    <div className="relative">
+                      <PerpanjangPaket order_id={slot.order_id} slot={slot} />
+                    </div>
                   </>
                 </div>
               );
@@ -770,17 +778,17 @@ const CekJadwal = () => {
   });
 
   const gridKolam = (hari) => {
-  const selectedPoolItem =
-    selectedPool >= 0 ? poolOption[selectedPool] : null;
+    const selectedPoolItem =
+      selectedPool >= 0 ? poolOption[selectedPool] : null;
 
-  const filteredTrainers = useMemo(() => {
-    if (!selectedPoolItem) return [];
-    return jadwal.filter((trainer) =>
-      trainer.kolam.includes(selectedPoolItem.value)
-    );
-  }, [jadwal, selectedPoolItem]);
+    const filteredTrainers = useMemo(() => {
+      if (!selectedPoolItem) return [];
+      return jadwal.filter((trainer) =>
+        trainer.kolam.includes(selectedPoolItem.value)
+      );
+    }, [jadwal, selectedPoolItem]);
 
-  if (jadwal && jadwal.length > 0 && selectedPoolItem) {
+    if (jadwal && jadwal.length > 0 && selectedPoolItem) {
       return (
         <div className="flex flex-col h-full">
           <Card
@@ -848,29 +856,33 @@ const CekJadwal = () => {
     );
   });
 
-  const PerpanjangPaket = React.memo(({ order_id, slot }) => {
-    return (
-      <div className="flex justify-center items-center">
-        <Tooltip placement="top" arrow content="Perpanjang Paket">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              handlePerpanjang(order_id, slot);
-            }}
-            className="p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition 
-                     duration-200 ease-in-out transform hover:scale-105 shadow-sm"
-          >
-            <Icon
-              icon="heroicons-outline:heart"
-              width="20"
-              height="20"
-              className="text-pink-600"
-            />
-          </button>
-        </Tooltip>
-      </div>
-    );
-  });
+  const PerpanjangPaket = React.memo(
+    ({ order_id, slot, buttonClassName = "", iconClassName = "" }) => {
+      return (
+        <div className="flex justify-center items-center">
+          <Tooltip placement="top" arrow content="Perpanjang Paket">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                handlePerpanjang(order_id, slot);
+              }}
+              className={
+                buttonClassName ||
+                "p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm"
+              }
+            >
+              <Icon
+                icon="heroicons-outline:heart"
+                width="20"
+                height="20"
+                className={iconClassName || "text-pink-600"}
+              />
+            </button>
+          </Tooltip>
+        </div>
+      );
+    }
+  );
 
   return (
     <>
@@ -1033,22 +1045,6 @@ const CekJadwal = () => {
 };
 
 export default CekJadwal;
-
-const AdaJadwal = React.memo((timeSlot, i) => (
-  <div
-    key={i}
-    className="bg-green-300 shadow shadow-blue-500/50 rounded-xl p-3 flex flex-col w-full min-h-[80px] justify-start"
-  >
-    <Badge label={timeSlot.product} className="bg-primary-500 text-white" />
-    <div className="text-sm whitespace-pre-line">
-      {timeSlot.student.length === 1
-        ? timeSlot.student[0]
-        : timeSlot.student.map((name, idx) => (
-            <div key={idx}>{toProperCase(name)}</div>
-          ))}
-    </div>
-  </div>
-));
 
 const PelatihLibur = React.memo(() => (
   <div className="flex flex-col items-center justify-center space-y-1">

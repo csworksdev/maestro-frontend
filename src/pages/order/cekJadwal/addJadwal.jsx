@@ -1274,7 +1274,7 @@ const AddJadwal = ({
                 {Object.entries(grouped)
                   .filter(([key]) => key !== "extend")
                   .map(([key, value]) => (
-                    <React.Fragment key={key}>
+            <React.Fragment key={`${key}-${idx}`}>
                       <span className="col-span-2">Reg. {value.label}</span>
                       <span className="text-left">{value.count}</span>
                       <div className="flex justify-between">
@@ -1376,7 +1376,7 @@ const AddJadwal = ({
                     >
                       <option value="">Pilih Orang Tua</option>
                       {parent.map((p, index) => (
-                        <option key={index} value={p.name}>
+                        <option key={`${p.name}-${index}`} value={p.name}>
                           {p.name} - {p.phone}
                         </option>
                       ))}
@@ -1489,7 +1489,7 @@ function ProductSection({
 
           if (isDisabled) return null;
           return (
-            <React.Fragment key={`product-item-${option.product_id}`}>
+            <React.Fragment key={`product-item-${option.product_id}-${idx}`}>
               <Checkbox
                 name="product"
                 label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
@@ -1796,7 +1796,7 @@ function CustomerSection({
               >
                 <option value="">Pilih Orang Tua</option>
                 {parent.map((p, index) => (
-                  <option key={index} value={p.name}>
+                  <option key={`${p.name}-${index}`} value={p.name}>
                     {p.name} - {p.phone}
                   </option>
                 ))}
