@@ -27,6 +27,8 @@ import Textinput from "@/components/ui/Textinput";
 import { memo } from "react";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 
+const MIN_PROGRESS_LENGTH = 20;
+
 const sliderSettings = {
   dots: true,
   infinite: false,
@@ -179,6 +181,44 @@ const PresenceCopy1 = () => {
     }
   };
 
+  const normalizeProgress = (value) =>
+    typeof value === "string" ? value.trim() : "";
+
+  const countWords = (value) =>
+    normalizeProgress(value)
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+  const hasExcessiveRepeats = (value) =>
+    /(.)\1{3,}/.test(normalizeProgress(value).replace(/\s+/g, ""));
+
+  const hasEnoughUniqueCharacters = (value) => {
+    const cleaned = normalizeProgress(value).replace(/\s+/g, "").toLowerCase();
+    return new Set(cleaned).size >= 5;
+  };
+
+  const isProgressValid = (value) => {
+    const trimmed = normalizeProgress(value);
+    if (trimmed.length < MIN_PROGRESS_LENGTH) return false;
+    if (countWords(trimmed) < 3) return false;
+    if (!/[a-zA-Z]/.test(trimmed)) return false;
+    if (!/[aiueoAIUEO]/.test(trimmed)) return false;
+    if (/^\d+$/.test(trimmed)) return false;
+    if (hasExcessiveRepeats(trimmed)) return false;
+    if (!hasEnoughUniqueCharacters(trimmed)) return false;
+    return true;
+  };
+
+  const getStudentsMissingProgress = (students = []) =>
+    Array.isArray(students)
+      ? students.filter((student) => !isProgressValid(student.progres))
+      : [];
+
+  const getDetailsMissingProgress = (details = []) =>
+    Array.isArray(details)
+      ? details.filter((detail) => !isProgressValid(detail.progres_siswa))
+      : [];
+
   const checkProduct = (updatedData) => {
     const { product, meet, order_id, order_date } = updatedData;
     let expire_day = 0;
@@ -219,17 +259,53 @@ const PresenceCopy1 = () => {
   const checkMeetThreshold = (updatedData) => {
     const { order_id, meet: threshold } = updatedData;
 
-    // Flatten all data arrays in tabHari and check if any meeting has a meet value less than the threshold
-    const hasLessThanThreshold = tabHari
-      .flatMap((tab) => tab.data)
-      .some((item) => item.order_id === order_id && item.meet < threshold);
+    const allSessions = tabHari.flatMap((tab) =>
+      tab.data.flatMap((entry) => {
+        if (Array.isArray(entry.details) && entry.details.length) {
+          return entry.details;
+        }
+        return typeof entry === "object" && entry !== null && entry.meet !== undefined
+          ? [entry]
+          : [];
+      })
+    );
 
-    // Return true if no such meeting exists, otherwise false
+    const hasLessThanThreshold = allSessions.some(
+      (item) => item.order_id === order_id && item.meet < threshold
+    );
+
     return !hasLessThanThreshold;
   };
 
   const handleUpdate = async (order_id, updatedData) => {
     try {
+      const missingProgress = getStudentsMissingProgress(
+        updatedData?.students_info
+      );
+
+      if (missingProgress.length) {
+        await Swal.fire({
+          title: "Oops!",
+          html: `
+            <div class="text-left">
+              <p class="mb-2">Lengkapi progres minimal ${MIN_PROGRESS_LENGTH} karakter untuk siswa berikut:</p>
+              <ul class="list-disc list-inside">
+                ${missingProgress
+                  .map((student) => {
+                    const progress = normalizeProgress(student.progres);
+                    const words = countWords(progress);
+                    return `<li>${student.fullname || "-"} (${progress.length}/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)</li>`;
+                  })
+                  .join("")}
+              </ul>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
       const confirmation = await Swal.fire({
         title: "Apakah anda yakin ingin absen siswa berikut?",
         icon: "warning",
@@ -241,7 +317,13 @@ const PresenceCopy1 = () => {
           <div>
             <strong>Nama Siswa:</strong><br />
             ${updatedData.students_info
-              .map((item) => item.fullname)
+              .map((item) => {
+                const progress = normalizeProgress(item.progres);
+                const words = countWords(progress);
+                return `${item.fullname} (${progress.length || 0}/${
+                  MIN_PROGRESS_LENGTH
+                } karakter, ${words} kata)`;
+              })
               .join("<br />")}<br />
             <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
             <strong>Tanggal:</strong> ${updatedData.real_date}<br />
@@ -262,22 +344,39 @@ const PresenceCopy1 = () => {
         return;
       }
 
-      const params = [
-        {
-          order: updatedData.order_id,
-          meet: updatedData.meet,
-          is_presence: true,
-          real_date: updatedData.real_date,
-          real_time: updatedData.real_time,
-          presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-        },
-      ];
+      const hasStudentsInfo =
+        Array.isArray(updatedData.students_info) &&
+        updatedData.students_info.length > 0;
+
+      const params = hasStudentsInfo
+        ? updatedData.students_info.map((student) => ({
+            order: updatedData.order_id,
+            meet: updatedData.meet,
+            is_presence: true,
+            real_date: updatedData.real_date,
+            real_time: updatedData.real_time,
+            presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+            student_id: student.student_id || student.id,
+            progres: normalizeProgress(student.progres),
+          }))
+        : [
+            {
+              order: updatedData.order_id,
+              meet: updatedData.meet,
+              is_presence: true,
+              real_date: updatedData.real_date,
+              real_time: updatedData.real_time,
+              presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+            },
+          ];
 
       const updateRes = await UpdatePresenceById(order_id, params);
       if (!updateRes) throw new Error("Failed to update presence");
 
       await Swal.fire({
-        title: `Siswa "${updatedData.students_info[0].fullname}"`,
+        title: hasStudentsInfo
+          ? `Absensi ${updatedData.students_info.length} siswa`
+          : `Siswa "${updatedData.students_info?.[0]?.fullname ?? "-"}"`,
         text: `Hari: ${updatedData.real_date}, Jam: ${updatedData.real_time}`,
         icon: "success",
         confirmButtonText: "OK",
@@ -294,29 +393,144 @@ const PresenceCopy1 = () => {
     }
   };
 
-  const handleHadir = async (order_detail_id) => {
-    const updatedItem = tabHari
-      .flatMap((tab) => tab.data)
-      .find((item) => item.order_detail_id === order_detail_id);
+  const handleHadir = async (identifier, meet = null) => {
+    if (meet !== null) {
+      const orders = tabHari.flatMap((tab) => tab.data);
+      const targetOrder = orders.find((order) => order.order_id === identifier);
 
-    if (updatedItem && (!updatedItem.real_date || !updatedItem.real_time)) {
-      if (!updatedItem.real_date || !updatedItem.real_time) {
+      if (!targetOrder) {
         await Swal.fire({
           title: "Oops!",
-          text: "Silahkan isi tanggal atau jam kehadiran.",
+          text: "Data order tidak ditemukan.",
           icon: "error",
           confirmButtonText: "OK",
         });
         return;
       }
+
+      const meetDetails = (targetOrder.details || []).filter(
+        (detail) => detail.meet === meet
+      );
+
+      if (!meetDetails.length) {
+        await Swal.fire({
+          title: "Oops!",
+          text: "Detail siswa untuk pertemuan ini tidak ditemukan.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      const missingDate = meetDetails.some((detail) => !detail.real_date);
+      const missingTime = meetDetails.some((detail) => !detail.real_time);
+
+      if (missingDate || missingTime) {
+        await Swal.fire({
+          title: "Oops!",
+          text: "Silahkan isi tanggal dan jam kehadiran terlebih dahulu.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      const missingProgress = getDetailsMissingProgress(meetDetails);
+      if (missingProgress.length) {
+        await Swal.fire({
+          title: "Oops!",
+          html: `
+            <div class="text-left">
+              <p class="mb-2">Lengkapi progres minimal ${MIN_PROGRESS_LENGTH} karakter untuk siswa berikut:</p>
+              <ul class="list-disc list-inside">
+                ${missingProgress
+                  .map((detail) => {
+                    const progress = normalizeProgress(detail.progres_siswa);
+                    const words = countWords(progress);
+                    return `<li>${detail.student?.fullname || detail.fullname || "-"} (${progress.length}/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)</li>`;
+                  })
+                  .join("")}
+              </ul>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      const studentsInfo = meetDetails.map((detail) => ({
+        fullname: detail.student?.fullname || detail.fullname || "-",
+        progres: normalizeProgress(detail.progres_siswa),
+        student_id: detail.student?.id || detail.student_id,
+      }));
+
+      const targetOrderDetailId = meetDetails[0].order_detail_id;
+
+      const payload = {
+        order_id: targetOrder.order_id,
+        meet,
+        real_date: meetDetails[0].real_date,
+        real_time: meetDetails[0].real_time,
+        students_info: studentsInfo,
+      };
+
+      await handleUpdate(targetOrderDetailId, payload);
+      return;
+    }
+
+    const allDetails = tabHari.flatMap((tab) =>
+      tab.data.flatMap((item) => {
+        if (Array.isArray(item.details) && item.details.length) {
+          return item.details;
+        }
+        return item;
+      })
+    );
+
+    const updatedItem = allDetails.find(
+      (item) => item?.order_detail_id === identifier
+    );
+
+    if (
+      updatedItem &&
+      (!updatedItem.real_date || !updatedItem.real_time)
+    ) {
+      await Swal.fire({
+        title: "Oops!",
+        text: "Silahkan isi tanggal atau jam kehadiran.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      return;
     }
 
     if (updatedItem) {
-      await handleUpdate(order_detail_id, updatedItem);
+      const studentsInfo = Array.isArray(updatedItem.students_info)
+        ? updatedItem.students_info.map((student) => ({
+            ...student,
+            progres: normalizeProgress(student.progres),
+          }))
+        : updatedItem.student
+        ? [
+            {
+              fullname: updatedItem.student.fullname,
+              progres: normalizeProgress(updatedItem.progres_siswa),
+              student_id: updatedItem.student.id,
+            },
+          ]
+        : [];
+
+      const payload = {
+        ...updatedItem,
+        students_info: studentsInfo,
+      };
+
+      await handleUpdate(identifier, payload);
     }
   };
 
-  const handleChangeDay = async (id, date) => {
+  const handleChangeDay = async (id, date, meet = null) => {
     if (!date) {
       console.error("Invalid date:", date);
       return;
@@ -329,20 +543,59 @@ const PresenceCopy1 = () => {
     setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
-        data: tab.data.map((item) =>
-          item.order_detail_id === id
-            ? {
-                ...item,
-                real_date: formattedDate,
-                presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-              }
-            : item
-        ),
+        data: tab.data.map((item) => {
+          // New struktur - update semua detail berdasarkan order & meet
+          if (
+            meet !== null &&
+            item.order_id === id &&
+            Array.isArray(item.details)
+          ) {
+            return {
+              ...item,
+              details: item.details.map((detail) =>
+                detail.meet === meet
+                  ? {
+                      ...detail,
+                      real_date: formattedDate,
+                      presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+                    }
+                  : detail
+              ),
+            };
+          }
+
+          // Struktur lama - langsung pada detail tunggal
+          if (item.order_detail_id === id) {
+            return {
+              ...item,
+              real_date: formattedDate,
+              presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+            };
+          }
+
+          // Jaga-jaga jika detail tersimpan di dalam array
+          if (Array.isArray(item.details)) {
+            return {
+              ...item,
+              details: item.details.map((detail) =>
+                detail.order_detail_id === id
+                  ? {
+                      ...detail,
+                      real_date: formattedDate,
+                      presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+                    }
+                  : detail
+              ),
+            };
+          }
+
+          return item;
+        }),
       }))
     );
   };
 
-  const handleChangeTime = async (id, time) => {
+  const handleChangeTime = async (id, time, meet = null) => {
     if (!time || time === "0") return;
 
     // Update both the form value and the state synchronously
@@ -350,14 +603,48 @@ const PresenceCopy1 = () => {
     setTabHari((prevTabHari) =>
       prevTabHari.map((tab) => ({
         ...tab,
-        data: tab.data.map((item) =>
-          item.order_detail_id === id
-            ? {
-                ...item,
-                real_time: time,
-              }
-            : item
-        ),
+        data: tab.data.map((item) => {
+          if (
+            meet !== null &&
+            item.order_id === id &&
+            Array.isArray(item.details)
+          ) {
+            return {
+              ...item,
+              details: item.details.map((detail) =>
+                detail.meet === meet
+                  ? {
+                      ...detail,
+                      real_time: time,
+                    }
+                  : detail
+              ),
+            };
+          }
+
+          if (item.order_detail_id === id) {
+            return {
+              ...item,
+              real_time: time,
+            };
+          }
+
+          if (Array.isArray(item.details)) {
+            return {
+              ...item,
+              details: item.details.map((detail) =>
+                detail.order_detail_id === id
+                  ? {
+                      ...detail,
+                      real_time: time,
+                    }
+                  : detail
+              ),
+            };
+          }
+
+          return item;
+        }),
       }))
     );
   };
@@ -497,20 +784,26 @@ const PresenceCopy1 = () => {
 
   const updateProgresSiswa = (orderId, detailId, newValue) => {
     setTabHari((prev) =>
-      prev.map((tab) => ({
-        ...tab,
-        data: tab.data.map((order) => {
+      prev.map((tab) => {
+        let tabChanged = false;
+
+        const updatedData = tab.data.map((order) => {
           if (order.order_id !== orderId) return order;
-          return {
-            ...order,
-            details: order.details.map((detail) =>
-              detail.order_detail_id === detailId
-                ? { ...detail, progres_siswa: newValue }
-                : detail
-            ),
-          };
-        }),
-      }))
+
+          let orderChanged = false;
+          const updatedDetails = order.details.map((detail) => {
+            if (detail.order_detail_id !== detailId) return detail;
+            orderChanged = true;
+            return { ...detail, progres_siswa: newValue };
+          });
+
+          if (!orderChanged) return order;
+          tabChanged = true;
+          return { ...order, details: updatedDetails };
+        });
+
+        return tabChanged ? { ...tab, data: updatedData } : tab;
+      })
     );
   };
 
@@ -635,9 +928,20 @@ const PresenceCopy1 = () => {
   };
 
   const PresenceView = ({ data_parent, item, k }) => {
+    const meetDetails = (data_parent.details || []).filter(
+      (detail) => detail.meet === item.meet
+    );
+    const scheduleCompleted = meetDetails.every(
+      (detail) => detail.real_date && detail.real_time
+    );
+    const progressCompleted = meetDetails.every((detail) =>
+      isProgressValid(detail.progres_siswa)
+    );
+    const isReadyToSubmit = scheduleCompleted && progressCompleted;
+
     return (
       <Card
-        key={`${item.order_id}-${item.meet}-${k}`}
+        key={`${data_parent.order_id}-${item.meet}-${k}`}
         title={`Pertemuan ke ${item.meet}`}
         subtitle={`${data_parent.day} • ${data_parent.time}`}
         className="shadow-md rounded-2xl border border-gray-200"
@@ -670,7 +974,11 @@ const PresenceCopy1 = () => {
               register={register}
               className="form-input w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
               onChange={(selectedDate) =>
-                handleChangeDay(item.meet, selectedDate?.[0])
+                handleChangeDay(
+                  data_parent.order_id,
+                  selectedDate?.[0],
+                  item.meet
+                )
               }
             />
           </div>
@@ -688,7 +996,13 @@ const PresenceCopy1 = () => {
               key={`real_time_${item.order_detail_id}`}
               name="real_time"
               value={item.real_time}
-              onChange={(e) => handleChangeTime(item.meet, e.target.value)}
+              onChange={(e) =>
+                handleChangeTime(
+                  data_parent.order_id,
+                  e.target.value,
+                  item.meet
+                )
+              }
               className="form-select w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
               register={register}
             >
@@ -706,34 +1020,49 @@ const PresenceCopy1 = () => {
               Progres Siswa
             </h4>
             <div className="space-y-3">
-              {data_parent.details
-                .filter((detail) => detail.meet === item.meet)
-                .map((detail) => (
+              {meetDetails.map((detail) => {
+                const trimmed = normalizeProgress(detail.progres_siswa);
+                const words = countWords(detail.progres_siswa);
+                const isMeaningful = isProgressValid(detail.progres_siswa);
+
+                return (
                   <div
                     key={detail.order_detail_id}
-                    className="flex flex-col md:flex-row md:items-center gap-2"
+                    className="flex flex-col gap-2"
                   >
-                    <span className="text-sm font-medium text-gray-700 md:w-1/3">
-                      {detail.student.fullname}
-                    </span>
-                    <input
-                      type="text"
-                      placeholder={`Progres ${detail.student.fullname} (Meet ${item.meet})`}
-                      className="border p-2 rounded w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      // defaultValue={detail.progres_siswa || ""}
-                      required
-                      pattern="^(?!\s*$)(?!-+$)(?!.*\b(asdf|test|123|abc)\b).{3,}$"
-                      title="Isi progres minimal 3 karakter, tidak boleh kosong, strip, atau sembarang ketikan."
-                      onChange={(e) =>
-                        updateProgresSiswa(
-                          item.order_id,
-                          detail.order_detail_id,
-                          e.target.value
-                        )
-                      }
-                    />
+                    <div className="flex flex-col md:flex-row md:items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700 md:w-1/3">
+                        {detail.student.fullname}
+                      </span>
+                      <input
+                        type="text"
+                        placeholder={`Progres ${detail.student.fullname} (Meet ${item.meet})`}
+                        className="border p-2 rounded w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={detail.progres_siswa || ""}
+                        maxLength={120}
+                        minLength={MIN_PROGRESS_LENGTH}
+                        required
+                        onChange={(e) =>
+                          updateProgresSiswa(
+                            data_parent.order_id,
+                            detail.order_detail_id,
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {trimmed.length}/120 karakter • {words} kata
+                      {!isMeaningful && (
+                        <span className="text-red-500 ml-1">
+                          (Minimal {MIN_PROGRESS_LENGTH} karakter, 3 kata, dan
+                          hindari karakter acak)
+                        </span>
+                      )}
+                    </div>
                   </div>
-                ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -741,9 +1070,14 @@ const PresenceCopy1 = () => {
         {/* Footer */}
         <footer className="flex flex-row justify-end mt-6">
           <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              isReadyToSubmit
+                ? "bg-green-500 hover:bg-green-600 text-white"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}
             type="button"
-            onClick={() => handleHadir(item.meet)}
+            onClick={() => handleHadir(data_parent.order_id, item.meet)}
+            disabled={!isReadyToSubmit}
           >
             Hadir
           </button>

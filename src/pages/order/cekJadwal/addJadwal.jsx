@@ -107,22 +107,7 @@ const AddJadwal = ({
     resolver: yupResolver(FormValidationSchema),
     mode: "all",
     defaultValues: {
-      students: [
-        {
-          student_id: "",
-          fullname: "",
-          nickname: "",
-          gender: "",
-          parent: "",
-          phone: "",
-          address: "-",
-          pob: "",
-          dob: "",
-          branch: branch,
-          reg_stat: "",
-          istrial: false,
-        },
-      ],
+      students: [],
     },
   });
 
@@ -1274,7 +1259,7 @@ const AddJadwal = ({
                 {Object.entries(grouped)
                   .filter(([key]) => key !== "extend")
                   .map(([key, value]) => (
-            <React.Fragment key={`${key}-${idx}`}>
+                    <React.Fragment key={`reg-${key}`}>
                       <span className="col-span-2">Reg. {value.label}</span>
                       <span className="text-left">{value.count}</span>
                       <div className="flex justify-between">

@@ -22,6 +22,8 @@ import { setLoading } from "@/redux/slicers/loadingSlice";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 
+const MIN_PROGRESS_LENGTH = 20;
+
 const sliderSettings = {
   dots: true,
   infinite: false,
@@ -144,6 +146,39 @@ const PresenceCopy = () => {
     }
   };
 
+  const normalizeProgress = (value) =>
+    typeof value === "string" ? value.trim() : "";
+
+  const countWords = (value) =>
+    normalizeProgress(value)
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+  const hasExcessiveRepeats = (value) =>
+    /(.)\1{3,}/.test(normalizeProgress(value).replace(/\s+/g, ""));
+
+  const hasEnoughUniqueCharacters = (value) => {
+    const cleaned = normalizeProgress(value).replace(/\s+/g, "").toLowerCase();
+    return new Set(cleaned).size >= 5;
+  };
+
+  const isProgressValid = (value) => {
+    const trimmed = normalizeProgress(value);
+    if (trimmed.length < MIN_PROGRESS_LENGTH) return false;
+    if (countWords(trimmed) < 3) return false;
+    if (!/[a-zA-Z]/.test(trimmed)) return false;
+    if (!/[aiueoAIUEO]/.test(trimmed)) return false;
+    if (/^\d+$/.test(trimmed)) return false;
+    if (hasExcessiveRepeats(trimmed)) return false;
+    if (!hasEnoughUniqueCharacters(trimmed)) return false;
+    return true;
+  };
+
+  const getStudentsMissingProgress = (students = []) =>
+    Array.isArray(students)
+      ? students.filter((student) => !isProgressValid(student.progres))
+      : [];
+
   const checkProduct = (updatedData) => {
     const { product, meet, order_id, order_date } = updatedData;
     let expire_day = 0;
@@ -193,6 +228,33 @@ const PresenceCopy = () => {
 
   const handleUpdate = async (order_id, updatedData) => {
     try {
+      const missingProgress = getStudentsMissingProgress(
+        updatedData?.students_info
+      );
+
+      if (missingProgress.length) {
+        await Swal.fire({
+          title: "Oops!",
+          html: `
+            <div class="text-left">
+              <p class="mb-2">Lengkapi progres minimal ${MIN_PROGRESS_LENGTH} karakter untuk siswa berikut:</p>
+              <ul class="list-disc list-inside">
+                ${missingProgress
+                  .map((student) => {
+                    const progress = normalizeProgress(student.progres);
+                    const words = countWords(progress);
+                    return `<li>${student.fullname || "-"} (${progress.length}/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)</li>`;
+                  })
+                  .join("")}
+              </ul>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
       const confirmation = await Swal.fire({
         title: "Apakah anda yakin ingin absen siswa berikut?",
         icon: "warning",
@@ -204,7 +266,13 @@ const PresenceCopy = () => {
         <div>
           <strong>Nama Siswa:</strong><br />
           ${updatedData.students_info
-            .map((item) => `${item.fullname} (${item.progres || "-"})`)
+            .map((item) => {
+              const progress = normalizeProgress(item.progres);
+              const words = countWords(progress);
+              return `${item.fullname} (${progress.length || 0}/${
+                MIN_PROGRESS_LENGTH
+              } karakter, ${words} kata)`;
+            })
             .join("<br />")}<br />
           <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
           <strong>Tanggal:</strong> ${updatedData.real_date}<br />
@@ -233,8 +301,8 @@ const PresenceCopy = () => {
         real_date: updatedData.real_date,
         real_time: updatedData.real_time,
         presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-        student_id: student.student_id,
-        progres: student.progres || null,
+        student_id: student.student_id || student.id,
+        progres: normalizeProgress(student.progres),
       }));
 
       const updateRes = await UpdatePresenceById(order_id, params);
@@ -403,88 +471,104 @@ const PresenceCopy = () => {
     console.log(updatedItem);
   };
 
-  const PresenceView = ({ item, k }) => (
-    <Card
-      key={`${item.order}-${k}`}
-      title={`Pertemuan ke ${item.meet}`}
-      subtitle={`${item.day} - ${item.time}`}
-    >
-      <div className="flex flex-col w-full">
-        <label className="form-label" htmlFor="real_date">
-          Tanggal Kehadiran
-        </label>
+  const PresenceView = ({ item, k }) => {
+    const students = Array.isArray(item.students_info)
+      ? item.students_info
+      : [];
+    const progressCompleted = students.every((student) =>
+      isProgressValid(student.progres)
+    );
 
-        <Flatpickr
-          id="real_date"
-          name="real_date"
-          value={item.real_date}
-          defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
-          options={{
-            minDate: DateTime.fromISO(periode.start_date).toISODate(),
-            maxDate: DateTime.fromISO(periode.end_date)
-              .plus({ days: -1 })
-              .toISODate(),
-            disableMobile: true,
-            allowInput: true,
-            altInput: true,
-            altFormat: "d F Y",
-          }}
-          register={register}
-          className="form-control py-2 w-full"
-          onChange={(selectedDate) =>
-            handleChangeDay(item.order_detail_id, selectedDate?.[0])
-          }
-        />
-        {/* )} */}
+    return (
+      <Card
+        key={`${item.order}-${k}`}
+        title={`Pertemuan ke ${item.meet}`}
+        subtitle={`${item.day} - ${item.time}`}
+      >
         <div className="flex flex-col w-full">
-          <label className="form-label mt-2" htmlFor="real_time">
-            Jam kehadiran
+          <label className="form-label" htmlFor="real_date">
+            Tanggal Kehadiran
           </label>
-          <select
-            name="real_time"
-            value={item.real_time}
-            onChange={(e) =>
-              handleChangeTime(item.order_detail_id, e.target.value)
-            }
-            className="form-select w-full"
+
+          <Flatpickr
+            id="real_date"
+            name="real_date"
+            value={item.real_date}
+            defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
+            options={{
+              minDate: DateTime.fromISO(periode.start_date).toISODate(),
+              maxDate: DateTime.fromISO(periode.end_date)
+                .plus({ days: -1 })
+                .toISODate(),
+              disableMobile: true,
+              allowInput: true,
+              altInput: true,
+              altFormat: "d F Y",
+            }}
             register={register}
-          >
-            {jam.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
+            className="form-control py-2 w-full"
+            onChange={(selectedDate) =>
+              handleChangeDay(item.order_detail_id, selectedDate?.[0])
+            }
+          />
+
+          <div className="flex flex-col w-full">
+            <label className="form-label mt-2" htmlFor="real_time">
+              Jam kehadiran
+            </label>
+            <select
+              name="real_time"
+              value={item.real_time}
+              onChange={(e) =>
+                handleChangeTime(item.order_detail_id, e.target.value)
+              }
+              className="form-select w-full"
+              register={register}
+            >
+              {jam.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col w-full">
+            <label className="form-label mt-2" htmlFor="real_time">
+              Progres Siswa
+            </label>
+            {item.students_info.map((student) => (
+              <StudentProgressInput
+                key={`${item.order_detail_id}-${student.student_id}`}
+                student={student}
+                item={item}
+                setTabHari={setTabHari}
+              />
             ))}
-          </select>
+          </div>
         </div>
-        <div className="flex flex-col w-full">
-          <label className="form-label mt-2" htmlFor="real_time">
-            Progres Siswa
-          </label>
-          {item.students_info.map((student) => (
-            <StudentProgressInput
-              key={`${item.order_detail_id}-${student.student_id}`}
-              student={student}
-              item={item}
-              setTabHari={setTabHari}
-            />
-          ))}
-        </div>
-      </div>
-      <footer className="flex flex-row justify-end mt-4">
-        <button
-          className="btn-success p-2 rounded text-md w-24"
-          type="button"
-          onClick={() => handleHadir(item.order_detail_id)}
-        >
-          Hadir
-        </button>
-      </footer>
-      {/* </form> */}
-    </Card>
-  );
+        <footer className="flex flex-row justify-end mt-4">
+          <button
+            className={`btn-success p-2 rounded text-md w-24 ${
+              !progressCompleted ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+            type="button"
+            onClick={() => handleHadir(item.order_detail_id)}
+            disabled={!progressCompleted}
+          >
+            Hadir
+          </button>
+        </footer>
+        {/* </form> */}
+      </Card>
+    );
+  };
 
   const StudentProgressInput = ({ student, item, setTabHari }) => {
     const [localValue, setLocalValue] = useState(student.progres || "");
+
+    const trimmedLength = normalizeProgress(localValue).length;
+    const wordCount = countWords(localValue);
+    const isMeaningful = isProgressValid(localValue);
 
     return (
       <div
@@ -496,30 +580,40 @@ const PresenceCopy = () => {
           className="form-control w-full"
           value={localValue}
           maxLength={100}
-          onChange={(e) => setLocalValue(e.target.value)}
-          onBlur={() => {
-            // sync ke tabHari waktu keluar fokus
+          minLength={MIN_PROGRESS_LENGTH}
+          required
+          onChange={(e) => {
+            const { value } = e.target;
+            setLocalValue(value);
             setTabHari((prevTabHari) =>
-              prevTabHari.map((tab) => ({
-                ...tab,
-                data: tab.data.map((d) =>
-                  d.order_detail_id === item.order_detail_id
-                    ? {
-                        ...d,
-                        students_info: d.students_info.map((s) =>
-                          s.student_id === student.student_id
-                            ? { ...s, progres: localValue }
-                            : s
-                        ),
-                      }
-                    : d
-                ),
-              }))
+              prevTabHari.map((tab) => {
+                let tabChanged = false;
+                const updatedData = tab.data.map((d) => {
+                  if (d.order_detail_id !== item.order_detail_id) return d;
+                  tabChanged = true;
+                  return {
+                    ...d,
+                    students_info: d.students_info.map((s) =>
+                      s.student_id === student.student_id
+                        ? { ...s, progres: value }
+                        : s
+                    ),
+                  };
+                });
+
+                return tabChanged ? { ...tab, data: updatedData } : tab;
+              })
             );
           }}
         />
         <div className="text-xs text-gray-500 mt-1">
-          {localValue.length}/100 karakter
+          {trimmedLength}/100 karakter • {wordCount} kata
+          {!isMeaningful && (
+            <span className="text-red-500 ml-1">
+              (Minimal {MIN_PROGRESS_LENGTH} karakter, 3 kata, tidak boleh
+              karakter acak)
+            </span>
+          )}
         </div>
       </div>
     );
