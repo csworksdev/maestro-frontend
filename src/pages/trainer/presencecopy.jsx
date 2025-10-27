@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import Card from "@/components/ui/Card";
 import { getPresenceById } from "@/axios/trainer/presence";
 import Button from "@/components/ui/Button";
@@ -94,6 +94,88 @@ const PresenceCopy = () => {
   const [tabHari, setTabHari] = useState(
     daysOfWeek.map((hari) => ({ hari, data: [] }))
   );
+  const draftProgressRef = useRef(new Map());
+
+  const getDraftKey = (orderDetailId, studentId) =>
+    `${orderDetailId}:${studentId}`;
+
+  const getDraftProgress = (orderDetailId, studentId) =>
+    draftProgressRef.current.get(getDraftKey(orderDetailId, studentId));
+
+  const setDraftProgress = (orderDetailId, studentId, value) => {
+    draftProgressRef.current.set(getDraftKey(orderDetailId, studentId), value);
+  };
+
+  const clearDraftProgress = (orderDetailId, studentId = null) => {
+    const prefix = `${orderDetailId}:`;
+    if (studentId === null) {
+      Array.from(draftProgressRef.current.keys()).forEach((key) => {
+        if (key.startsWith(prefix)) draftProgressRef.current.delete(key);
+      });
+      return;
+    }
+    draftProgressRef.current.delete(getDraftKey(orderDetailId, studentId));
+  };
+
+  const commitDraftProgress = (orderDetailId, studentId = null) => {
+    const entries = Array.from(draftProgressRef.current.entries()).filter(
+      ([key]) => {
+        if (!key.startsWith(`${orderDetailId}:`)) return false;
+        if (studentId === null) return true;
+        return key === getDraftKey(orderDetailId, studentId);
+      }
+    );
+
+    if (!entries.length) return;
+
+    const draftMap = new Map(
+      entries.map(([key, value]) => [key.split(":")[1], value])
+    );
+
+    setTabHari((prevTabHari) =>
+      prevTabHari.map((tab) => ({
+        ...tab,
+        data: tab.data.map((item) => {
+          if (item.order_detail_id !== orderDetailId) return item;
+
+          const studentsInfo = Array.isArray(item.students_info)
+            ? item.students_info
+            : [];
+
+          const updatedStudents = studentsInfo.map((student, index) => {
+            const studentId =
+              student?.student_id ??
+              student?.id ??
+              student?.studentId ??
+              student?.student?.id ??
+              index;
+            const draftValue = draftMap.has(String(studentId))
+              ? draftMap.get(String(studentId))
+              : undefined;
+            if (draftValue === undefined) return student;
+            return {
+              ...student,
+              progres: draftValue,
+              ...(student?.progres_siswa !== undefined && {
+                progres_siswa: draftValue,
+              }),
+            };
+          });
+
+          return {
+            ...item,
+            students_info: updatedStudents,
+          };
+        }),
+      }))
+    );
+
+    if (studentId === null) {
+      clearDraftProgress(orderDetailId);
+    } else {
+      clearDraftProgress(orderDetailId, studentId);
+    }
+  };
 
   useEffect(() => {
     if (tabHari.length && tabHari[selectedIndex]?.data) {
@@ -114,6 +196,7 @@ const PresenceCopy = () => {
     } catch (error) {
       console.error("Error fetching data", error);
     } finally {
+      draftProgressRef.current.clear();
       setLoading(false);
     }
   };
@@ -176,8 +259,14 @@ const PresenceCopy = () => {
 
   const getStudentsMissingProgress = (students = []) =>
     Array.isArray(students)
-      ? students.filter((student) => !isProgressValid(student.progres))
+      ? students.filter((student) => !isProgressValid(getProgressValue(student)))
       : [];
+
+  const getProgressValue = (student = {}) => {
+    if (typeof student?.progres === "string") return student.progres;
+    if (typeof student?.progres_siswa === "string") return student.progres_siswa;
+    return "";
+  };
 
   const checkProduct = (updatedData) => {
     const { product, meet, order_id, order_date } = updatedData;
@@ -241,7 +330,9 @@ const PresenceCopy = () => {
               <ul class="list-disc list-inside">
                 ${missingProgress
                   .map((student) => {
-                    const progress = normalizeProgress(student.progres);
+                    const progress = normalizeProgress(
+                      getProgressValue(student)
+                    );
                     const words = countWords(progress);
                     return `<li>${student.fullname || "-"} (${progress.length}/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)</li>`;
                   })
@@ -267,11 +358,11 @@ const PresenceCopy = () => {
           <strong>Nama Siswa:</strong><br />
           ${updatedData.students_info
             .map((item) => {
-              const progress = normalizeProgress(item.progres);
+              const progress = normalizeProgress(getProgressValue(item));
               const words = countWords(progress);
-              return `${item.fullname} (${progress.length || 0}/${
-                MIN_PROGRESS_LENGTH
-              } karakter, ${words} kata)`;
+              return `${item.fullname} (${
+                progress.length || 0
+              }/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)`;
             })
             .join("<br />")}<br />
           <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
@@ -294,16 +385,24 @@ const PresenceCopy = () => {
       }
 
       // 🔥 Generate params untuk tiap siswa
-      const params = updatedData.students_info.map((student) => ({
-        order: updatedData.order_id,
-        meet: updatedData.meet,
-        is_presence: true,
-        real_date: updatedData.real_date,
-        real_time: updatedData.real_time,
-        presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
-        student_id: student.student_id || student.id,
-        progres: normalizeProgress(student.progres),
-      }));
+      const params = updatedData.students_info.map((student, index) => {
+        const studentId =
+          student?.student_id ??
+          student?.id ??
+          student?.studentId ??
+          student?.student?.id ??
+          index;
+        return {
+          order: updatedData.order_id,
+          meet: updatedData.meet,
+          is_presence: true,
+          real_date: updatedData.real_date,
+          real_time: updatedData.real_time,
+          presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
+          student_id: studentId,
+          progres: normalizeProgress(getProgressValue(student)),
+        };
+      });
 
       const updateRes = await UpdatePresenceById(order_id, params);
       if (!updateRes) throw new Error("Failed to update presence");
@@ -327,6 +426,7 @@ const PresenceCopy = () => {
   };
 
   const handleHadir = async (order_detail_id) => {
+    commitDraftProgress(order_detail_id);
     const updatedItem = tabHari
       .flatMap((tab) => tab.data)
       .find((item) => item.order_detail_id === order_detail_id);
@@ -472,16 +572,31 @@ const PresenceCopy = () => {
   };
 
   const PresenceView = ({ item, k }) => {
+    const [, forceDraftRecalc] = useReducer((x) => x + 1, 0);
     const students = Array.isArray(item.students_info)
       ? item.students_info
       : [];
-    const progressCompleted = students.every((student) =>
-      isProgressValid(student.progres)
-    );
+    const progressCompleted = students.every((student, index) => {
+      const studentId =
+        student?.student_id ??
+        student?.id ??
+        student?.studentId ??
+        student?.student?.id ??
+        index;
+      const draftValue = getDraftProgress(item.order_detail_id, studentId);
+      const progress = draftValue ?? getProgressValue(student);
+      return isProgressValid(progress);
+    });
 
     return (
       <Card
-        key={`${item.order}-${k}`}
+        key={
+          item?.order_detail_id
+            ? `${item.order_detail_id}`
+            : item?.order_id
+            ? `${item.order_id}-${item.meet}`
+            : `${k}`
+        }
         title={`Pertemuan ke ${item.meet}`}
         subtitle={`${item.day} - ${item.time}`}
       >
@@ -536,14 +651,26 @@ const PresenceCopy = () => {
             <label className="form-label mt-2" htmlFor="real_time">
               Progres Siswa
             </label>
-            {item.students_info.map((student) => (
-              <StudentProgressInput
-                key={`${item.order_detail_id}-${student.student_id}`}
-                student={student}
-                item={item}
-                setTabHari={setTabHari}
-              />
-            ))}
+            {item.students_info.map((student, index) => {
+              const studentId =
+                student?.student_id ??
+                student?.id ??
+                student?.studentId ??
+                student?.student?.id ??
+                index;
+              return (
+                <StudentProgressInput
+                  key={`${item.order_detail_id}-${studentId}`}
+                  student={student}
+                  item={item}
+                  studentId={studentId}
+                  setDraftProgress={setDraftProgress}
+                  commitDraftProgress={commitDraftProgress}
+                  getDraftProgress={getDraftProgress}
+                  notifyDraftChange={forceDraftRecalc}
+                />
+              );
+            })}
           </div>
         </div>
         <footer className="flex flex-row justify-end mt-4">
@@ -563,18 +690,32 @@ const PresenceCopy = () => {
     );
   };
 
-  const StudentProgressInput = ({ student, item, setTabHari }) => {
-    const [localValue, setLocalValue] = useState(student.progres || "");
+  const StudentProgressInput = ({
+    student,
+    studentId,
+    item,
+    setDraftProgress,
+    commitDraftProgress,
+    getDraftProgress,
+    notifyDraftChange,
+  }) => {
+    const [localValue, setLocalValue] = useState(
+      getDraftProgress(item.order_detail_id, studentId) ||
+        getProgressValue(student)
+    );
+
+    useEffect(() => {
+      const draft = getDraftProgress(item.order_detail_id, studentId);
+      const progress = draft ?? getProgressValue(student);
+      setLocalValue((prev) => (prev === progress ? prev : progress));
+    }, [student.progres, student.progres_siswa, studentId, item.order_detail_id]);
 
     const trimmedLength = normalizeProgress(localValue).length;
     const wordCount = countWords(localValue);
     const isMeaningful = isProgressValid(localValue);
 
     return (
-      <div
-        key={`${item.order_detail_id}-${student.student_id}`}
-        className="flex flex-col mb-2"
-      >
+      <div className="flex flex-col mb-2">
         <span className="text-sm font-semibold">{student.fullname}</span>
         <textarea
           className="form-control w-full"
@@ -585,25 +726,12 @@ const PresenceCopy = () => {
           onChange={(e) => {
             const { value } = e.target;
             setLocalValue(value);
-            setTabHari((prevTabHari) =>
-              prevTabHari.map((tab) => {
-                let tabChanged = false;
-                const updatedData = tab.data.map((d) => {
-                  if (d.order_detail_id !== item.order_detail_id) return d;
-                  tabChanged = true;
-                  return {
-                    ...d,
-                    students_info: d.students_info.map((s) =>
-                      s.student_id === student.student_id
-                        ? { ...s, progres: value }
-                        : s
-                    ),
-                  };
-                });
-
-                return tabChanged ? { ...tab, data: updatedData } : tab;
-              })
-            );
+            setDraftProgress(item.order_detail_id, studentId, value);
+            notifyDraftChange();
+          }}
+          onBlur={() => {
+            commitDraftProgress(item.order_detail_id, studentId);
+            notifyDraftChange();
           }}
         />
         <div className="text-xs text-gray-500 mt-1">
