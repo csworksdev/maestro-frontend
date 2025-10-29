@@ -9,7 +9,7 @@ import {
 export const login = async (data) => {
   try {
     let response = await axiosConfig.post("/auth/users/login/", data, {
-      withCredentials: true,
+      withCredentials: false,
     });
     return response;
   } catch (error) {

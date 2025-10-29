@@ -1,10 +1,6 @@
 import axios from "axios";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
-import {
-  logOut,
-  setUser,
-  useAuthStore,
-} from "@/redux/slicers/authSlice";
+import { logOut, setUser, useAuthStore } from "@/redux/slicers/authSlice";
 
 const baseURL = import.meta.env.VITE_API_URL;
 
@@ -202,16 +198,14 @@ const ensureStoreSubscription = () => {
     return;
   }
 
-  unsubscribeFromStore = useAuthStore.subscribe(
-    (nextState, previousState) => {
-      if (
-        nextState.access !== previousState.access ||
-        nextState.refresh !== previousState.refresh
-      ) {
-        scheduleAutoRefresh();
-      }
+  unsubscribeFromStore = useAuthStore.subscribe((nextState, previousState) => {
+    if (
+      nextState.access !== previousState.access ||
+      nextState.refresh !== previousState.refresh
+    ) {
+      scheduleAutoRefresh();
     }
-  );
+  });
 };
 
 export const initializeTokenRefreshScheduler = () => {
@@ -225,6 +219,7 @@ export const initializeTokenRefreshScheduler = () => {
 
 export const axiosConfig = axios.create({
   baseURL,
+  withCredentials: false, // penting: karena pakai JWT, bukan cookie
 });
 
 // Request interceptor → inject token
