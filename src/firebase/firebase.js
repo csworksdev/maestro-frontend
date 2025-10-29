@@ -1,16 +1,38 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-// 🔐 Ambil dari Firebase Console > Project Settings
-export const firebaseConfig = {
-  apiKey: "AIzaSyAxA0Mm6WnMnUGaZuMUprFDzMJv_V63Gck",
-  authDomain: "maestro-front.firebaseapp.com",
-  projectId: "maestro-front",
-  storageBucket: "maestro-front.appspot.com",
-  messagingSenderId: "988318550591",
-  appId: "1:988318550591:web:c266ba0a71387fe5de468a",
+// Gunakan env vars supaya kredensial mudah diputar dan tidak hard-coded.
+const resolveConfigValue = (key, fallback = "") => {
+  const envKey = `VITE_FIREBASE_${key}`;
+  const value = import.meta.env?.[envKey];
+  if (value && typeof value === "string" && value.trim().length > 0) {
+    return value;
+  }
+  return fallback;
 };
+
+export const firebaseConfig = {
+  apiKey: resolveConfigValue("API_KEY"),
+  authDomain: resolveConfigValue("AUTH_DOMAIN"),
+  projectId: resolveConfigValue("PROJECT_ID"),
+  storageBucket: resolveConfigValue("STORAGE_BUCKET"),
+  messagingSenderId: resolveConfigValue("MESSAGING_SENDER_ID"),
+  appId: resolveConfigValue("APP_ID"),
+};
+
+if (import.meta.env?.DEV) {
+  const missingKeys = Object.entries(firebaseConfig)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missingKeys.length) {
+    console.warn(
+      `Firebase config is missing values for: ${missingKeys.join(
+        ", "
+      )}. Please provide VITE_FIREBASE_* entries in your environment.`
+    );
+  }
+}
 
 const firebaseApp = initializeApp(firebaseConfig);
 

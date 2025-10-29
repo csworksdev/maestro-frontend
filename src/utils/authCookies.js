@@ -1,16 +1,28 @@
 const COOKIE_LIFETIME_DAYS = 30;
 
 const isBrowser = () => typeof document !== "undefined";
+const isSecureContext = () =>
+  typeof window !== "undefined" && window.location.protocol === "https:";
+
+const buildCookieAttributes = (days) => {
+  const attributes = ["path=/", "SameSite=Strict"];
+
+  if (typeof days === "number") {
+    attributes.push(`expires=${new Date(Date.now() + days * 864e5).toUTCString()}`);
+  }
+
+  if (isSecureContext()) {
+    attributes.push("Secure");
+  }
+
+  return attributes.map((attr) => `;${attr}`).join("");
+};
 
 export const setCookie = (name, value, days = COOKIE_LIFETIME_DAYS) => {
   if (!isBrowser()) return;
-  const expires =
-    typeof days === "number"
-      ? `;expires=${new Date(Date.now() + days * 864e5).toUTCString()}`
-      : "";
   document.cookie = `${name}=${encodeURIComponent(
     value
-  )}${expires};path=/;SameSite=Lax`;
+  )}${buildCookieAttributes(days)}`;
 };
 
 export const getCookie = (name) => {
@@ -23,7 +35,7 @@ export const getCookie = (name) => {
 
 export const deleteCookie = (name) => {
   if (!isBrowser()) return;
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT${buildCookieAttributes()}`;
 };
 
 export const AUTH_COOKIE_KEYS = {
@@ -86,7 +98,7 @@ export const clearAllCookies = () => {
   cookies.forEach((cookie) => {
     const [name] = cookie.split("=");
     if (!name) return;
-    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT${buildCookieAttributes()}`;
   });
 };
 
