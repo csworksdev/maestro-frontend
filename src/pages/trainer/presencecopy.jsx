@@ -233,9 +233,7 @@ const PresenceCopy = () => {
     typeof value === "string" ? value.trim() : "";
 
   const countWords = (value) =>
-    normalizeProgress(value)
-      .split(/\s+/)
-      .filter(Boolean).length;
+    normalizeProgress(value).split(/\s+/).filter(Boolean).length;
 
   const hasExcessiveRepeats = (value) =>
     /(.)\1{3,}/.test(normalizeProgress(value).replace(/\s+/g, ""));
@@ -259,12 +257,15 @@ const PresenceCopy = () => {
 
   const getStudentsMissingProgress = (students = []) =>
     Array.isArray(students)
-      ? students.filter((student) => !isProgressValid(getProgressValue(student)))
+      ? students.filter(
+          (student) => !isProgressValid(getProgressValue(student))
+        )
       : [];
 
   const getProgressValue = (student = {}) => {
     if (typeof student?.progres === "string") return student.progres;
-    if (typeof student?.progres_siswa === "string") return student.progres_siswa;
+    if (typeof student?.progres_siswa === "string")
+      return student.progres_siswa;
     return "";
   };
 
@@ -334,7 +335,9 @@ const PresenceCopy = () => {
                       getProgressValue(student)
                     );
                     const words = countWords(progress);
-                    return `<li>${student.fullname || "-"} (${progress.length}/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)</li>`;
+                    return `<li>${student.fullname || "-"} (${
+                      progress.length
+                    }/${MIN_PROGRESS_LENGTH} karakter, ${words} kata)</li>`;
                   })
                   .join("")}
               </ul>
@@ -367,9 +370,9 @@ const PresenceCopy = () => {
             .join("<br />")}<br />
           <strong>Pertemuan ke:</strong> ${updatedData.meet}<br />
           <strong>Tanggal:</strong> ${updatedData.real_date}<br />
-          <strong>Jam:</strong> ${updatedData.real_time}
-        </div>
-      `,
+          </div>
+          `,
+        // <strong>Jam:</strong> ${updatedData.real_time}
       });
 
       if (!confirmation.isConfirmed) return;
@@ -397,7 +400,7 @@ const PresenceCopy = () => {
           meet: updatedData.meet,
           is_presence: true,
           real_date: updatedData.real_date,
-          real_time: updatedData.real_time,
+          real_time: updatedData.time,
           presence_day: DateTime.now().toFormat("yyyy-MM-dd"),
           student_id: studentId,
           progres: normalizeProgress(getProgressValue(student)),
@@ -431,8 +434,8 @@ const PresenceCopy = () => {
       .flatMap((tab) => tab.data)
       .find((item) => item.order_detail_id === order_detail_id);
 
-    if (updatedItem && (!updatedItem.real_date || !updatedItem.real_time)) {
-      if (!updatedItem.real_date || !updatedItem.real_time) {
+    if (updatedItem && !updatedItem.real_date /* || !updatedItem.real_time*/) {
+      if (!updatedItem.real_date /* || !updatedItem.real_time*/) {
         await Swal.fire({
           title: "Oops!",
           text: "Silahkan isi tanggal atau jam kehadiran.",
@@ -627,6 +630,8 @@ const PresenceCopy = () => {
             }
           />
 
+          {/* jam dikomen dulu */}
+          {/*
           <div className="flex flex-col w-full">
             <label className="form-label mt-2" htmlFor="real_time">
               Jam kehadiran
@@ -647,6 +652,7 @@ const PresenceCopy = () => {
               ))}
             </select>
           </div>
+           */}
           <div className="flex flex-col w-full">
             <label className="form-label mt-2" htmlFor="real_time">
               Progres Siswa
@@ -708,7 +714,12 @@ const PresenceCopy = () => {
       const draft = getDraftProgress(item.order_detail_id, studentId);
       const progress = draft ?? getProgressValue(student);
       setLocalValue((prev) => (prev === progress ? prev : progress));
-    }, [student.progres, student.progres_siswa, studentId, item.order_detail_id]);
+    }, [
+      student.progres,
+      student.progres_siswa,
+      studentId,
+      item.order_detail_id,
+    ]);
 
     const trimmedLength = normalizeProgress(localValue).length;
     const wordCount = countWords(localValue);
