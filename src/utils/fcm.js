@@ -1,6 +1,6 @@
 import { getMessaging, getToken, deleteToken } from "firebase/messaging";
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { firebaseConfig } from "../../src/firebase/firebase";
+import { firebaseConfig } from "@/firebase/firebase";
 import { axiosConfig } from "@/axios/config";
 import {
   deleteFcmTokenCookie,

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Dropdown from "@/components/ui/Dropdown";
 import Icon from "@/components/ui/Icon";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu } from "@headlessui/react";
 import { axiosConfig } from "@/axios/config";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +28,25 @@ const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
   const socketRef = useRef(null);
+  const navigate = useNavigate();
+
+  const resolveInternalRoute = (targetUrl) => {
+    if (!targetUrl || typeof window === "undefined") {
+      return null;
+    }
+
+    try {
+      const candidate = new URL(targetUrl, window.location.origin);
+      if (candidate.origin !== window.location.origin) {
+        return null;
+      }
+
+      return `${candidate.pathname}${candidate.search}${candidate.hash}`;
+    } catch (error) {
+      console.warn("Ignored malformed notification target URL:", targetUrl);
+      return null;
+    }
+  };
 
   // buka websocket
   useEffect(() => {
@@ -82,7 +101,12 @@ const Notification = () => {
     );
     setUnread((u) => (u > 0 ? u - 1 : 0));
     if (targetUrl) {
-      window.location.href = targetUrl; // atau navigate() kalau pakai react-router
+      const internalRoute = resolveInternalRoute(targetUrl);
+      if (internalRoute) {
+        navigate(internalRoute);
+      } else {
+        console.warn("Blocked navigation to external notification target:", targetUrl);
+      }
     }
   };
 
