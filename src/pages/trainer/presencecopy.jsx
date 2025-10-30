@@ -21,6 +21,9 @@ import Icon from "@/components/ui/Icon";
 import { setLoading } from "@/redux/slicers/loadingSlice";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
 import { useAuthStore } from "@/redux/slicers/authSlice";
+import Badge from "@/components/ui/Badge";
+import Tooltip from "@/components/ui/Tooltip";
+import Icons from "@/components/ui/Icon";
 
 const MIN_PROGRESS_LENGTH = 20;
 
@@ -822,6 +825,21 @@ const PresenceCopy = () => {
                     titleClass="text-sm align-top"
                     key={i + j}
                     bodyClass="p-4 overflow-x-auto"
+                    headerslot={
+                      <Tooltip
+                        placement="top"
+                        arrow
+                        content={"Sudah bisa dicairkan 🥳🥳🥳"}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <Icons
+                            icon="heroicons-outline:currency-dollar"
+                            className={`h-8 w-8 text-green-700`}
+                          />
+                          <span className="text-green-700">Settled</span>
+                        </div>
+                      </Tooltip>
+                    }
                   >
                     <div className="flex flex-row gap-4">
                       {width >= breakpoints.md &&
