@@ -197,6 +197,11 @@ export const menuAdminNew = [
     title: "Administrasi",
   },
   {
+    title: "Dashboard Penjualan",
+    icon: "heroicons-outline:chart-bar",
+    link: "dashboard/sales",
+  },
+  {
     title: "Order",
     icon: "heroicons-outline:shopping-bag",
     link: "order",

@@ -13,6 +13,7 @@ const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 
 // Dashboard
 const Dashboard = lazy(() => import("@/pages/dashboard"));
+const DashboardSales = lazy(() => import("@/pages/dashboard/sales"));
 const DashboardRevenue = lazy(() => import("@/pages/newDashboard/revenue"));
 const DashboardOkupansi = lazy(() =>
   import("@/pages/newDashboard/operasional/okupansi")
@@ -118,6 +119,7 @@ const AdminRoutes = () => {
         <Route path="dashboard">
           //#region Dashboar operasional
           <Route element={<Dashboard />} />
+          <Route path="sales" element={<DashboardSales />} />
           <Route path="operasional">
             <Route path="okupansi">
               <Route index element={<DashboardOkupansi />} />
