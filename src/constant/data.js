@@ -34,6 +34,15 @@ export const menuSuperUser = [
 export const menuFinance = [
   {
     isHeadr: true,
+    title: "Dashboard",
+  },
+  {
+    title: "Dashboard Keuangan",
+    icon: "heroicons-outline:chart-bar-square",
+    link: "dashboard/finance",
+  },
+  {
+    isHeadr: true,
     title: "Database",
   },
   {
@@ -202,6 +211,11 @@ export const menuAdminNew = [
     link: "dashboard/sales",
   },
   {
+    title: "Dashboard Operasional",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard/operational",
+  },
+  {
     title: "Order",
     icon: "heroicons-outline:shopping-bag",
     link: "order",
@@ -252,6 +266,11 @@ export const menuOpx = [
   {
     isHeadr: true,
     title: "Operasional",
+  },
+  {
+    title: "Dashboard Operasional",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard/operational",
   },
   // {
   //   title: "Okupansi",

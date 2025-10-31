@@ -31,6 +31,7 @@ const DetailOrder = lazy(() => import("@/pages/order/active/detail"));
 const RekapBulanan = lazy(() =>
   import("@/pages/finance/rekapBulanan/rekapBulanan")
 );
+const FinanceDashboard = lazy(() => import("@/pages/dashboard/finance"));
 
 // Siswa
 const Siswa = lazy(() => import("@/pages/masterdata/siswa"));
@@ -99,6 +100,9 @@ const FinanceRoutes = () => {
           <Route index element={<Invoice />} />
         </Route>
         {/*  */}
+        <Route path="dashboard">
+          <Route path="finance" element={<FinanceDashboard />} />
+        </Route>
         <Route path="order">
           <Route index element={<Order />} />
           {/* <Route path="add" element={<AddOrder />} />
