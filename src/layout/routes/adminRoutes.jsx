@@ -13,10 +13,8 @@ const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 
 // Dashboard
 const Dashboard = lazy(() => import("@/pages/dashboard"));
-const DashboardSales = lazy(() => import("@/pages/dashboard/sales"));
-const DashboardOperational = lazy(() =>
-  import("@/pages/dashboard/operational")
-);
+const DashboardSales = lazy(() => import("@/pages/newDashboard/sales"));
+
 const DashboardRevenue = lazy(() => import("@/pages/newDashboard/revenue"));
 const DashboardOkupansi = lazy(() =>
   import("@/pages/newDashboard/operasional/okupansi")
@@ -121,10 +119,10 @@ const AdminRoutes = () => {
         <Route index element={<Navigate to="order" replace />} />
         <Route path="dashboard">
           //#region Dashboar operasional
-          <Route element={<Dashboard />} />
-          <Route path="sales" element={<DashboardSales />} />
-          <Route path="operational" element={<DashboardOperational />} />
-          <Route path="operasional">
+          {/* <Route element={<Dashboard />} /> */}
+          <Route index element={<DashboardSales />} />
+          {/* <Route path="operational" element={<DashboardOperational />} /> */}
+          {/* <Route path="operasional">
             <Route path="okupansi">
               <Route index element={<DashboardOkupansi />} />
               <Route path="branch">
@@ -132,7 +130,7 @@ const AdminRoutes = () => {
                 <Route path="pool" element={<OkupansiPool />} />
               </Route>
             </Route>
-          </Route>
+          </Route> */}
           //#endregion Finance
         </Route>
         //#region referensi

@@ -101,7 +101,7 @@ const FinanceRoutes = () => {
         </Route>
         {/*  */}
         <Route path="dashboard">
-          <Route path="finance" element={<FinanceDashboard />} />
+          <Route index element={<FinanceDashboard />} />
         </Route>
         <Route path="order">
           <Route index element={<Order />} />

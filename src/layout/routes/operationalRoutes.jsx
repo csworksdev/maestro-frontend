@@ -93,13 +93,16 @@ const KontakWati = lazy(() => import("@/pages/wati/kontak"));
 // Fallback
 const ErrorPage = lazy(() => import("@/pages/404"));
 
+const DashboardOperational = lazy(() =>
+  import("@/pages/newDashboard/operational")
+);
+
 import { Routes } from "react-router-dom";
 const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 
 const OpxRoutes = () => {
-
   return (
     <Routes>
       {/* Public Routes for Admin */}
@@ -126,10 +129,7 @@ const OpxRoutes = () => {
         }
       >
         <Route path="dashboard">
-          {/* <Route
-            index
-            element={roles === "Admin" ? <Dashboard /> : <DashboardRevenue />}
-          /> */}
+          <Route index element={<DashboardOperational />} />
           <Route path="operasional">
             <Route path="okupansi">
               <Route index element={<DashboardOkupansi />} />
