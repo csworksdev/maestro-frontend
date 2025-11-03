@@ -11,6 +11,7 @@ const RegisterAdmin = lazy(() => import("@/pages/auth/register"));
 const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 
 const CEODashboard = lazy(() => import("@/pages/newDashboard/ceo"));
+const CFODashboard = lazy(() => import("@/pages/newDashboard/cfo"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 const ErrorPage = lazy(() => import("@/pages/404"));
 
@@ -40,7 +41,8 @@ const ChiefRoutes = () => {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard">
-          <Route index element={<CEODashboard />} />
+        <Route index element={<CEODashboard />} />
+        <Route path="cfo" element={<CFODashboard />} />
         </Route>
         <Route index path="notifications" element={<NotificationPage />} />
         <Route path="*" element={<ErrorPage />} />

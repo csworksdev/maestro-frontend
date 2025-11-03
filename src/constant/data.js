@@ -111,6 +111,16 @@ export const menuChief = [
     title: "Dashboard",
   },
   {
+    title: "Dashboard CEO",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard",
+  },
+  {
+    title: "Dashboard CFO",
+    icon: "heroicons-outline:banknotes",
+    link: "dashboard/cfo",
+  },
+  {
     title: "Finance",
     icon: "heroicons-outline:document-chart-bar",
     isOpen: true,
@@ -209,11 +219,6 @@ export const menuAdminNew = [
     title: "Dashboard Penjualan",
     icon: "heroicons-outline:chart-bar",
     link: "dashboard/sales",
-  },
-  {
-    title: "Dashboard Operasional",
-    icon: "heroicons-outline:chart-pie",
-    link: "dashboard/operational",
   },
   {
     title: "Order",
