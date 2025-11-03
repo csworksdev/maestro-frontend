@@ -34,6 +34,15 @@ export const menuSuperUser = [
 export const menuFinance = [
   {
     isHeadr: true,
+    title: "Dashboard",
+  },
+  {
+    title: "Dashboard Keuangan",
+    icon: "heroicons-outline:chart-bar-square",
+    link: "dashboard/finance",
+  },
+  {
+    isHeadr: true,
     title: "Database",
   },
   {
@@ -100,6 +109,16 @@ export const menuChief = [
   {
     isHeadr: true,
     title: "Dashboard",
+  },
+  {
+    title: "Dashboard CEO",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard",
+  },
+  {
+    title: "Dashboard CFO",
+    icon: "heroicons-outline:banknotes",
+    link: "dashboard/cfo",
   },
   {
     title: "Finance",
@@ -197,6 +216,11 @@ export const menuAdminNew = [
     title: "Administrasi",
   },
   {
+    title: "Dashboard Penjualan",
+    icon: "heroicons-outline:chart-bar",
+    link: "dashboard/sales",
+  },
+  {
     title: "Order",
     icon: "heroicons-outline:shopping-bag",
     link: "order",
@@ -247,6 +271,11 @@ export const menuOpx = [
   {
     isHeadr: true,
     title: "Operasional",
+  },
+  {
+    title: "Dashboard Operasional",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard/operational",
   },
   // {
   //   title: "Okupansi",

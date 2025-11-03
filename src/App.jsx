@@ -5,8 +5,9 @@ import AuthLayout from "./layout/AuthLayout";
 import Loading from "@/components/Loading";
 import PublicRoute from "./layout/PublicRoute";
 
-import CoachRoutes from "./layout/routes/coachRoutes";
 import AdminRoutes from "./layout/routes/adminRoutes";
+import ChiefRoutes from "./layout/routes/chiefRoutes";
+import CoachRoutes from "./layout/routes/coachRoutes";
 import FinanceRoutes from "./layout/routes/financeRoutes";
 import OpxRoutes from "./layout/routes/operationalRoutes";
 import { useFcmToken } from "./hooks/useFCMToken";
@@ -40,6 +41,7 @@ const App = () => {
 
   const routesMap = {
     admin: <AdminRoutes />,
+    chief: <ChiefRoutes />,
     coach: <CoachRoutes />,
     finance: <FinanceRoutes />,
     opx: <OpxRoutes />,
