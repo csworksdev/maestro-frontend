@@ -33,7 +33,7 @@ jobs:
       # Build project
       - name: Build project
         env:
-            VITE_API_URL1: ${{ secrets.VITE_API_URL1 }}
+            VITE_API_URL: ${{ secrets.VITE_API_URL1 }}
             VITE_API_WS: ${{ secrets.VITE_API_WS }}
             VITE_WATI_TOKEN: ${{ secrets.VITE_WATI_TOKEN }}
             VITE_WATI_ENDPOINT: ${{ secrets.VITE_WATI_ENDPOINT }}
