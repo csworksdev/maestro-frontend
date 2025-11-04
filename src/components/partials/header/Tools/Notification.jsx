@@ -6,6 +6,7 @@ import { Menu } from "@headlessui/react";
 import { axiosConfig } from "@/axios/config";
 import { formatDistanceToNow } from "date-fns";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
+import { buildWsUrl } from "@/utils/wsUrl";
 
 // helper untuk badge
 const NotifyLabel = ({ unread }) => {
@@ -56,9 +57,19 @@ const Notification = () => {
       return undefined;
     }
 
-    socketRef.current = new WebSocket(
-      `${import.meta.env.VITE_API_WS}/ws/notifications/?token=${token}`
-    );
+    const openSocket = (tokenValue) => {
+      const url = buildWsUrl(`/ws/notifications/?token=${tokenValue}`);
+      if (!url) {
+        console.error("Unable to resolve WebSocket URL for notifications");
+        return null;
+      }
+      return new WebSocket(url);
+    };
+
+    socketRef.current = openSocket(token);
+    if (!socketRef.current) {
+      return undefined;
+    }
 
     socketRef.current.onopen = () => {
       console.log("🔔 WS connected");
@@ -81,9 +92,7 @@ const Notification = () => {
         if (socketRef.current?.readyState !== WebSocket.OPEN) {
           const latestToken = getTokenFromCookie();
           if (latestToken) {
-            socketRef.current = new WebSocket(
-              `${import.meta.env.VITE_API_WS}/ws/notifications/?token=${latestToken}`
-            );
+            socketRef.current = openSocket(latestToken);
           }
         }
       }, 5000);

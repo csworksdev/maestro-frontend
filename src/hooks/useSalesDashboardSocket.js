@@ -1,40 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { buildWsUrl } from "@/utils/wsUrl";
 
 const WS_CLOSE_CODE_NORMAL = 1000;
 const RECONNECT_DELAY = 3000;
-
-const isAbsoluteWsUrl = (value = "") =>
-  value.startsWith("ws://") || value.startsWith("wss://");
-
-const resolveBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_WS;
-  if (envUrl && envUrl.trim().length) {
-    return envUrl.replace(/\/$/, "");
-  }
-  if (typeof window !== "undefined" && window.location) {
-    const { protocol, host } = window.location;
-    const wsProtocol = protocol === "https:" ? "wss" : "ws";
-    return `${wsProtocol}://${host}`;
-  }
-  return null;
-};
-
-const buildWsUrl = (endpoint = "") => {
-  if (!endpoint) {
-    return null;
-  }
-  if (isAbsoluteWsUrl(endpoint)) {
-    return endpoint;
-  }
-
-  const baseUrl = resolveBaseUrl();
-  if (!baseUrl) {
-    return null;
-  }
-
-  const normalizedPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  return `${baseUrl}${normalizedPath}`;
-};
 
 export const SOCKET_READY_STATE = {
   CONNECTING: "connecting",

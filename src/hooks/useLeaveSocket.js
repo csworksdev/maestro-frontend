@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { buildWsUrl } from "@/utils/wsUrl";
 
 export const useLeaveSocket = (trainer_id, role, selectStatus) => {
   const socketRef = useRef(null);
@@ -6,9 +7,14 @@ export const useLeaveSocket = (trainer_id, role, selectStatus) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const connect = () => {
-    const ws = new WebSocket(
-      `${import.meta.env.VITE_API_WS}/ws/leave/${trainer_id}/`
-    );
+    const url = buildWsUrl(`/ws/leave/${trainer_id}/`);
+    if (!url) {
+      console.error("Unable to resolve leave WebSocket URL");
+      setIsLoading(false);
+      return;
+    }
+
+    const ws = new WebSocket(url);
     socketRef.current = ws;
 
     ws.onopen = () => {
