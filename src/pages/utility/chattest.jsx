@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { buildWsUrl } from "@/utils/wsUrl";
 
 export default function ChatTest() {
   const [messages, setMessages] = useState([]);
@@ -6,7 +7,13 @@ export default function ChatTest() {
   const socketRef = useRef(null); // ✅ simpan di ref, bukan state
 
   useEffect(() => {
-    const ws = new WebSocket(`${import.meta.env.VITE_API_WS}/ws/chat/test/`);
+    const url = buildWsUrl("/ws/chat/test/");
+    if (!url) {
+      console.error("Unable to resolve chat test WebSocket URL");
+      return undefined;
+    }
+
+    const ws = new WebSocket(url);
     socketRef.current = ws;
 
     ws.onopen = () => console.log("✅ Connected to WebSocket");
