@@ -4,7 +4,11 @@ import Loading from "@/components/Loading";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { DeleteOrder, getOrderAll } from "@/axios/masterdata/order";
+import {
+  DeleteOrder,
+  getOrderAll,
+  PerpanjangOrder,
+} from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
@@ -35,9 +39,9 @@ const OrderActive = ({ is_finished }) => {
 
   const actionsAdmin = [
     {
-      name: "edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
+      name: "Perpanjang Paket",
+      icon: "heroicons:heart",
+      onClick: (row) => handlePerpanjang(row.row.original),
     },
   ];
 
@@ -53,6 +57,15 @@ const OrderActive = ({ is_finished }) => {
       name: "edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
+      className:
+        "bg-info-500 text-black bg-opacity-30 hover:bg-opacity-100 hover:text-black",
+    },
+    {
+      name: "Perpanjang Paket",
+      icon: "heroicons:heart",
+      onClick: (row) => handlePerpanjang(row.row.original),
+      className:
+        "bg-pink-500 text-pink-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
     },
     {
       name: "delete",
@@ -153,6 +166,43 @@ const OrderActive = ({ is_finished }) => {
     setModalData(e); // Pass data to the modal
   };
 
+  const handlePerpanjang = async (e) => {
+    const { value: order_date } = await Swal.fire({
+      title: "Perpanjang paket ",
+      text: `Siswa ${toProperCase(
+        e.listname
+      )} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
+      input: "date",
+      icon: "question",
+      didOpen: () => {
+        const today = new Date().toISOString();
+        Swal.getInput().max = today.split("T")[0];
+      },
+    });
+
+    if (order_date) {
+      // console.log(order_date);
+      Swal.fire({
+        title: "Perpanjang paket ",
+        text: `Siswa ${toProperCase(
+          e.listname
+        )} akan diperpanjang ke tanggal ${order_date} ?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#22c55e",
+        cancelButtonColor: "#ef4444",
+        confirmButtonText: "Perpanjang",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          let res = await PerpanjangOrder(e.order_id, order_date);
+          if (res) {
+            fetchData(pageIndex, pageSize, searchQuery);
+          }
+        }
+      });
+    }
+  };
+
   const COLUMNS = [
     {
       Header: "Admin",
@@ -190,6 +240,14 @@ const OrderActive = ({ is_finished }) => {
             })}
           </div>
         );
+      },
+    },
+    {
+      Header: "Kolam",
+      accessor: "pool_name",
+      id: "pool_name",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
       },
     },
     {
