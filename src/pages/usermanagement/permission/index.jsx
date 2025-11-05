@@ -118,7 +118,7 @@ const Permissions = () => {
       sticky: "right",
       Cell: (row) => {
         return (
-          <div className="flex flex-row space-x-2 justify-center items-center">
+          <div className="flex flex-wrap gap-2 justify-center items-center">
             {actions.map((action, index) => (
               <TableAction
                 key={action.id || index} // 👈 kasih key DI SINI
