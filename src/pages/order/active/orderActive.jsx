@@ -193,6 +193,14 @@ const OrderActive = ({ is_finished }) => {
       },
     },
     {
+      Header: "Kolam",
+      accessor: "pool_name",
+      id: "pool_name",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
       Header: "Produk",
       accessor: "product_name",
       id: "product_name",
