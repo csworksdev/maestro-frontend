@@ -9,18 +9,22 @@ const TableAction = ({ action, row }) => {
 
   return (
     <Tooltip placement="top" arrow content={action.name}>
-      <div
+      <button
+        type="button"
+        aria-label={action.name}
+        onClick={(event) => {
+          event.stopPropagation();
+          action.onClick?.(row);
+        }}
         className={`
+          flex h-10 w-10 items-center justify-center rounded-md border border-transparent bg-transparent text-slate-600 transition-colors
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2
+          dark:text-slate-300 dark:ring-offset-slate-800
           ${getClassName(action)}
-          w-full border-b border-b-gray-500 border-opacity-10 text-sm last:mb-0 cursor-pointer 
-          first:rounded-t last:rounded-b flex gap-2 items-center rtl:space-x-reverse
         `}
-        onClick={(e) => action.onClick && action.onClick(row)}
       >
-        <span className="text-base">
-          <Icon icon={action.icon} width={18} />
-        </span>
-      </div>
+        <Icon icon={action.icon} width={18} height={18} />
+      </button>
     </Tooltip>
   );
 };

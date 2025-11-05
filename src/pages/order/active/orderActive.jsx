@@ -14,13 +14,31 @@ import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
 import Modal from "@/components/ui/Modal";
 import DetailOrder from "./detail";
-import Edit from "./edit";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
 import { DateTime } from "luxon";
 import { toProperCase } from "@/utils";
 import EditModal from "./editModal";
 import { useAuthStore } from "@/redux/slicers/authSlice";
+import MutasiSiswaModal from "./mutasiSiswa";
+
+const ACTION_SHARED_CLASS = "shadow-sm transition-colors";
+
+const ACTION_INTENTS = {
+  success:
+    "bg-success-500/15 text-success-600 hover:bg-success-500 hover:text-white dark:bg-success-500/20 dark:text-success-200",
+  info: "bg-info-500/15 text-info-600 hover:bg-info-500 hover:text-white dark:bg-info-500/20 dark:text-info-200",
+  warning:
+    "bg-warning-500/15 text-warning-600 hover:bg-warning-500 hover:text-white dark:bg-warning-500/20 dark:text-warning-200",
+  pink: "bg-pink-500/15 text-pink-600 hover:bg-pink-500 hover:text-white dark:bg-pink-500/20 dark:text-pink-200",
+  danger:
+    "bg-danger-500/15 text-danger-600 hover:bg-danger-500 hover:text-white dark:bg-danger-500/20 dark:text-danger-200",
+  neutral:
+    "bg-slate-200 text-slate-600 hover:bg-slate-500 hover:text-white dark:bg-slate-600/60 dark:text-slate-200",
+};
+
+const composeActionClass = (intent = "neutral") =>
+  `${ACTION_SHARED_CLASS} ${ACTION_INTENTS[intent] || ACTION_INTENTS.neutral}`;
 
 const OrderActive = ({ is_finished }) => {
   const navigate = useNavigate();
@@ -32,49 +50,11 @@ const OrderActive = ({ is_finished }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [mutasiModalVisible, setMutasiModalVisible] = useState(false);
   const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
 
   const { roles } = useAuthStore((state) => state.data);
-
-  const actionsAdmin = [
-    {
-      name: "Perpanjang Paket",
-      icon: "heroicons:heart",
-      onClick: (row) => handlePerpanjang(row.row.original),
-    },
-  ];
-
-  const actions = [
-    {
-      name: "detail",
-      icon: "heroicons-outline:eye",
-      onClick: (row) => handleDetail(row.row.original),
-      className:
-        "bg-success-500 text-success-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
-    {
-      name: "edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
-      className:
-        "bg-info-500 text-black bg-opacity-30 hover:bg-opacity-100 hover:text-black",
-    },
-    {
-      name: "Perpanjang Paket",
-      icon: "heroicons:heart",
-      onClick: (row) => handlePerpanjang(row.row.original),
-      className:
-        "bg-pink-500 text-pink-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
-    {
-      name: "delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
-  ];
 
   const fetchData = async (page = 1, size = 10, query) => {
     try {
@@ -166,6 +146,11 @@ const OrderActive = ({ is_finished }) => {
     setModalData(e); // Pass data to the modal
   };
 
+  const handleMutasi = (e) => {
+    setMutasiModalVisible(true); // Open the modal
+    setModalData(e); // Pass data to the modal
+  };
+
   const handlePerpanjang = async (e) => {
     const { value: order_date } = await Swal.fire({
       title: "Perpanjang paket ",
@@ -202,6 +187,48 @@ const OrderActive = ({ is_finished }) => {
       });
     }
   };
+
+  const actionBlueprints = [
+    {
+      name: "detail",
+      icon: "heroicons-outline:eye",
+      intent: "success",
+      handler: handleDetail,
+    },
+    {
+      name: "edit",
+      icon: "heroicons:pencil-square",
+      intent: "info",
+      handler: handleEdit,
+    },
+    {
+      name: "Mutasi Siswa",
+      icon: "heroicons:arrow-right",
+      intent: "warning",
+      handler: handleMutasi,
+    },
+    {
+      name: "Perpanjang Paket",
+      icon: "heroicons:heart",
+      intent: "pink",
+      handler: handlePerpanjang,
+    },
+    {
+      name: "delete",
+      icon: "heroicons-outline:trash",
+      intent: "danger",
+      handler: handleDelete,
+    },
+  ];
+
+  const actions = actionBlueprints.map((action) => ({
+    name: action.name,
+    icon: action.icon,
+    onClick: (row) => action.handler(row.row.original),
+    className: composeActionClass(action.intent),
+  }));
+
+  const actionsAdmin = actions;
 
   const COLUMNS = [
     {
@@ -399,15 +426,16 @@ const OrderActive = ({ is_finished }) => {
       sticky: "right",
       Cell: (row) => {
         return (
-          <div className="flex flex-row space-x-2 justify-center items-center">
-            {roles !== "Admin" &&
-              actions.map((action, index) => (
+          <div className="flex flex-wrap gap-2 justify-center items-center">
+            {(roles == "Admin" ? actionsAdmin : actions).map(
+              (action, index) => (
                 <TableAction
                   key={action.id || index} // 👈 kasih key DI SINI
                   action={action}
                   row={row}
                 />
-              ))}
+              )
+            )}
           </div>
         );
       },
@@ -499,10 +527,20 @@ const OrderActive = ({ is_finished }) => {
                 onClose={() => setEditModalVisible(false)}
                 isEdit={(e) => setisEdited(e)}
               />
-              {/* <Edit
-                state={{ data: modalData }}
-                onClose={() => setEditModalVisible(false)}
-              /> */}
+            </Modal>
+          )}
+          {mutasiModalVisible && (
+            <Modal
+              title="Mutasi siswa ke pelatih baru"
+              activeModal={mutasiModalVisible} // Tie to modalVisible state
+              onClose={() => setMutasiModalVisible(false)} // Close modal when needed
+              className="max-w-5xl"
+            >
+              <MutasiSiswaModal
+                defaultOrder={modalData}
+                onClose={() => setMutasiModalVisible(false)}
+                isEdit={(e) => setisEdited(e)}
+              />
             </Modal>
           )}
         </>

@@ -1,4 +1,11 @@
-import React, { memo, useMemo, useRef, useEffect } from "react";
+import React, {
+  memo,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import Card from "@/components/ui/Card";
 import {
   useTable,
@@ -113,6 +120,8 @@ const Table = ({
     selectedFlatRows,
   } = tableInstance;
 
+  const scrollableHeaderRowsRef = useRef([]);
+  const fixedHeaderRowsRef = useRef([]);
   const scrollableRowsRef = useRef([]);
   const fixedRowsRef = useRef([]);
   const prevRowsRef = useRef([]);
@@ -133,49 +142,91 @@ const Table = ({
   }, [selectedFlatRows, onSelectionChange]);
 
   // 🔄 Sync row + header heights
-  const synchronizeHeights = () => {
-    requestAnimationFrame(() => {
-      const scrollableHeader = document.querySelector(
-        ".scrollable-body thead tr"
-      );
-      const fixedHeader = document.querySelector(".fixed-body thead tr");
+  const synchronizeHeights = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
 
-      if (scrollableHeader && fixedHeader) {
-        const headerHeight = scrollableHeader.offsetHeight;
-        fixedHeader.style.height = `${headerHeight - 1}px`;
-        scrollableHeader.style.height = `${headerHeight}px`;
-      }
+    const scrollableHeaders = scrollableHeaderRowsRef.current.filter(Boolean);
+    const fixedHeaders = fixedHeaderRowsRef.current.filter(Boolean);
+    const scrollableRows = scrollableRowsRef.current.filter(Boolean);
+    const fixedRows = fixedRowsRef.current.filter(Boolean);
 
-      page.forEach((_, idx) => {
-        const sRow = scrollableRowsRef.current[idx];
-        const fRow = fixedRowsRef.current[idx];
-        if (sRow && fRow) {
-          const height = sRow.offsetHeight;
-          fRow.style.height = `${height}px`;
-          sRow.style.height = `${height - 4}px`;
+    const resetHeights = (elements) => {
+      elements.forEach((element) => {
+        if (element) {
+          element.style.height = "auto";
         }
       });
-    });
-  };
+    };
 
-  useEffect(() => {
+    resetHeights(scrollableHeaders);
+    resetHeights(fixedHeaders);
+    resetHeights(scrollableRows);
+    resetHeights(fixedRows);
+
+    window.requestAnimationFrame(() => {
+      scrollableHeaders.forEach((header, idx) => {
+        const partner = fixedHeaders[idx];
+        if (!header || !partner) return;
+        const height = Math.max(header.offsetHeight, partner.offsetHeight);
+        header.style.height = `${height}px`;
+        partner.style.height = `${height}px`;
+      });
+
+      scrollableRows.forEach((row, idx) => {
+        const partner = fixedRows[idx];
+        if (!row || !partner) return;
+        const height = Math.max(row.offsetHeight, partner.offsetHeight);
+        row.style.height = `${height}px`;
+        partner.style.height = `${height}px`;
+      });
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     synchronizeHeights();
-    const observer = new ResizeObserver(synchronizeHeights);
-    [...scrollableRowsRef.current, ...fixedRowsRef.current]
-      .filter(Boolean)
-      .forEach((row) => observer.observe(row));
-    return () => observer.disconnect();
-  }, [page, listData]);
+
+    const elements = [
+      ...scrollableHeaderRowsRef.current,
+      ...fixedHeaderRowsRef.current,
+      ...scrollableRowsRef.current,
+      ...fixedRowsRef.current,
+    ].filter(Boolean);
+
+    let observer = null;
+
+    if ("ResizeObserver" in window) {
+      observer = new ResizeObserver(() => synchronizeHeights());
+      elements.forEach((element) => observer.observe(element));
+    }
+
+    const handleResize = () => synchronizeHeights();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [page, listData, synchronizeHeights]);
 
   // ✅ Render Header
   const renderHeader = (headerGroup, idx, fixed = false) => (
     <tr
       {...headerGroup.getHeaderGroupProps()}
-      ref={(el) =>
-        fixed
-          ? (fixedRowsRef.current[idx] = el)
-          : (scrollableRowsRef.current[idx] = el)
-      }
+      ref={(el) => {
+        if (fixed) {
+          fixedHeaderRowsRef.current[idx] = el;
+        } else {
+          scrollableHeaderRowsRef.current[idx] = el;
+        }
+      }}
       key={idx}
     >
       {fixed ? (
@@ -260,8 +311,8 @@ const Table = ({
 
         {/* Fixed Actions */}
         {isAction && (
-          <div className="w-[100px] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
-            <table className="table table-fixed w-[100px]">
+          <div className="w-36 min-w-[9rem] bg-white border-t border-slate-100 dark:border-slate-800 fixed-body">
+            <table className="table table-fixed w-36 min-w-[9rem]">
               <thead className="border-t border-slate-100 dark:border-slate-800">
                 {headerGroups.map((hg, idx) => renderHeader(hg, idx, true))}
               </thead>

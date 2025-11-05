@@ -124,7 +124,7 @@ const Promo = () => {
       id: "action",
       sticky: "right",
       Cell: (row) => (
-        <div className="flex space-x-2 justify-center items-center">
+        <div className="flex flex-wrap gap-2 justify-center items-center">
           <TableAction
             action={{
               name: "edit",

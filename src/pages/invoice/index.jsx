@@ -274,7 +274,7 @@ const Invoice = () => {
         const externalId = row?.row?.original?.external_id;
         console.log(actions[0]);
         return (
-          <div className="flex space-x-2 justify-center items-center">
+          <div className="flex flex-wrap gap-2 justify-center items-center">
             {(() => {
               const externalId = row?.row?.original?.external_id;
               const status = row?.row?.original?.status;
