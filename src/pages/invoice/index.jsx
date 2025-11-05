@@ -239,7 +239,7 @@ const Invoice = () => {
     },
     {
       Header: "Amount",
-      accessor: "amount",
+      accessor: "grand_total",
       Cell: (row) => (
         <span className="whitespace-nowrap truncate">
           Rp {parseInt(row?.cell?.value).toLocaleString()}
@@ -253,7 +253,7 @@ const Invoice = () => {
     },
     {
       Header: "Paid At",
-      accessor: "paid_at",
+      accessor: "pay_at",
       Cell: (row) => {
         return row?.cell?.value
           ? DateTime.fromISO(row?.cell?.value).toFormat("dd LLLL yyyy")

@@ -95,7 +95,7 @@ export const XenditSyncTransaction = async (referenceId) => {
 
 export const XenditSyncAllTransaction = () => {
   try {
-    const response = axiosConfig.post("/xendit/sync-all-transactions/");
+    const response = axiosConfig.post("/xendit/sync-all-transaction/");
     return response.data;
   } catch (error) {
     console.error("Error syncing transaction:", error);

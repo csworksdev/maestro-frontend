@@ -78,7 +78,7 @@ const XenditInvoiceHistory = () => {
     },
     {
       Header: "Tanggal Pembayaran",
-      accessor: "paid_at",
+      accessor: "pay_at",
       Cell: (row) => {
         const date = DateTime.fromISO(row?.cell?.value);
         return (
