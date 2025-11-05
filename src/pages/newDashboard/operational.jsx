@@ -235,8 +235,8 @@ const DashboardOperational = () => {
             Dashboard Operasional
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-300">
-            Insight realtime untuk okupansi kelas, performa pelatih, dan
-            utilisasi kolam.
+            Insight realtime untuk okupansi kelas, distribusi siswa ke pelatih,
+            dan utilisasi kolam.
           </p>
         </div>
       </div>
@@ -335,7 +335,7 @@ const DashboardOperational = () => {
 
         <div className="col-span-12 xl:col-span-8">
           <Card
-            title="Performa Pelatih"
+            title="Distribusi Siswa ke Pelatih"
             headerslot={
               <HeaderActions
                 readyState={performanceSocket.readyState}
@@ -407,7 +407,9 @@ const DashboardOperational = () => {
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
                             {formatPercent(item.retention_rate)} retention |
-                            {` ${formatNumber(item.sessions_per_week || 0)} sesi`}
+                            {` ${formatNumber(
+                              item.sessions_per_week || 0
+                            )} sesi`}
                           </p>
                         </div>
                         <div className="text-right">
@@ -484,7 +486,8 @@ const DashboardOperational = () => {
                             {item.trainer_name || "Tanpa Nama"}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {formatNumber(item.scheduled_sessions)} sesi dijadwalkan
+                            {formatNumber(item.scheduled_sessions)} sesi
+                            dijadwalkan
                           </div>
                         </td>
                         <td className="px-3 py-2 text-slate-900 dark:text-slate-200">
@@ -569,7 +572,10 @@ const DashboardOperational = () => {
                           {pool.poolName || "Tanpa Nama"}
                         </td>
                         {heatmapMatrix.hours.map((hour) => (
-                          <td key={`${pool.poolId}-${hour}`} className="px-2 py-2">
+                          <td
+                            key={`${pool.poolId}-${hour}`}
+                            className="px-2 py-2"
+                          >
                             <HeatmapCell
                               value={pool.hourMap.get(hour)}
                               maxValue={heatmapMatrix.maxSessions}
@@ -644,9 +650,7 @@ const DashboardOperational = () => {
               <p className="mt-3 text-xs text-slate-400">Memuat data...</p>
             ) : null}
             {poolSocket.error ? (
-              <p className="mt-3 text-xs text-rose-500">
-                {poolSocket.error}
-              </p>
+              <p className="mt-3 text-xs text-rose-500">{poolSocket.error}</p>
             ) : null}
           </Card>
         </div>
