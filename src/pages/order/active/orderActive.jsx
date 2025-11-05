@@ -243,8 +243,46 @@ const OrderActive = ({ is_finished }) => {
       Header: "Pelatih",
       accessor: "trainer_name",
       id: "trainer_name",
-      Cell: (row) => {
-        return <span>{toProperCase(row?.cell?.value)}</span>;
+      Cell: ({ cell, row }) => {
+        const originalTrainer = toProperCase(cell?.value || "-");
+        const changedTrainerRaw = row?.original?.change_trainer_name;
+        const changedTrainer = changedTrainerRaw
+          ? toProperCase(changedTrainerRaw)
+          : "";
+        const hasChange =
+          Boolean(changedTrainer) &&
+          changedTrainer.toLowerCase() !== originalTrainer.toLowerCase();
+
+        return (
+          <div className="flex flex-col gap-2 text-left">
+            <div className="flex items-center gap-2 text-slate-700">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                <Icon icon="heroicons-outline:user" width={18} />
+              </span>
+              <div className="flex flex-col">
+                <span className="font-semibold">{originalTrainer}</span>
+                {hasChange && (
+                  <span className="text-xs font-medium uppercase tracking-wide text-amber-500">
+                    sebelumnya
+                  </span>
+                )}
+              </div>
+            </div>
+            {hasChange && (
+              <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20">
+                  <Icon icon="heroicons-outline:arrow-right" width={18} />
+                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold uppercase tracking-wide">
+                    Mutasi ke
+                  </span>
+                  <span className="text-sm font-semibold">{changedTrainer}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
       },
     },
     {
