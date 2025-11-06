@@ -516,6 +516,40 @@ const PresenceCopy = () => {
     return `https://wa.me/${countryCode}${phone}/?text=hi, ${name}`;
   };
 
+  const parseMutasiStatus = (value) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value === 1;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "ya", "yes", "mutasi"].includes(normalized))
+        return true;
+      if (["false", "0", "tidak", "no", "reguler"].includes(normalized))
+        return false;
+    }
+    return false;
+  };
+
+  const normalizeName = (value) =>
+    typeof value === "string" ? value.trim().toLowerCase() : "";
+
+  const pickNameSource = (values = [], exclude = []) => {
+    const excludes = Array.isArray(exclude) ? exclude : [exclude];
+    const excludeSet = new Set(
+      excludes.map((item) => normalizeName(item)).filter(Boolean)
+    );
+
+    for (const value of values) {
+      if (typeof value !== "string") continue;
+      const trimmed = value.trim();
+      if (!trimmed) continue;
+      const normalized = trimmed.toLowerCase();
+      if (excludeSet.has(normalized)) continue;
+      return trimmed;
+    }
+
+    return "";
+  };
+
   const StudentCard = ({ studentsInfo }) => {
     return (
       <Disclosure as="div">
@@ -784,23 +818,99 @@ const PresenceCopy = () => {
           {Object.keys(groupedData).map((order_id, i) => (
             <div key={i}>
               {Object.keys(groupedData[order_id]).map((student_name, j) => {
-                const poolName =
-                  groupedData[order_id][student_name]?.[j]?.pool_name ||
-                  "Pool not specified";
-                const order_date =
-                  groupedData[order_id][student_name]?.[j]?.order_date || "";
+                const currentItem =
+                  groupedData[order_id][student_name]?.[j] || {};
+                const poolName = currentItem?.pool_name || "Pool not specified";
+                const order_date = currentItem?.order_date || "";
                 const expire_date =
-                  groupedData[order_id][student_name]?.[j]?.expire_date ||
-                  DateTime.fromFormat(
-                    groupedData[order_id][student_name]?.[j]?.order_date,
-                    "yyyy-MM-dd"
-                  )
+                  currentItem?.expire_date ||
+                  DateTime.fromFormat(order_date, "yyyy-MM-dd")
                     .plus({ days: 120 })
                     .toFormat("dd MMMM yyyy");
-                const hari =
-                  groupedData[order_id][student_name]?.[j]?.day || "";
-                const product =
-                  groupedData[order_id][student_name]?.[j]?.product || "";
+                const hari = currentItem?.day || "";
+                const product = currentItem?.product || "";
+                const studentsInfo = Array.isArray(currentItem?.students_info)
+                  ? currentItem.students_info
+                  : [];
+                const primaryStudent = studentsInfo[0] || {};
+                const mutasiSource =
+                  currentItem?.is_mutasi ?? primaryStudent?.is_mutasi;
+                const isMutasi = parseMutasiStatus(mutasiSource);
+
+                const previousTrainerSource = pickNameSource([
+                  currentItem?.previous_trainer_nickname,
+                  primaryStudent?.previous_trainer_nickname,
+                  currentItem?.previous_trainer_name,
+                  primaryStudent?.previous_trainer_name,
+                  currentItem?.previous_trainer_fullname,
+                  primaryStudent?.previous_trainer_fullname,
+                ]);
+                const previousTrainerName = previousTrainerSource
+                  ? convertToTitleCase(previousTrainerSource)
+                  : "";
+                const previousTrainerNormalized =
+                  normalizeName(previousTrainerSource);
+
+                const assignedTrainerSource = pickNameSource(
+                  [
+                    currentItem?.trainer_nickname,
+                    currentItem?.current_trainer_nickname,
+                    primaryStudent?.current_trainer_nickname,
+                    primaryStudent?.trainer_nickname,
+                    currentItem?.trainer_fullname,
+                    currentItem?.trainer_name,
+                    currentItem?.current_trainer_fullname,
+                    currentItem?.current_trainer_name,
+                    primaryStudent?.current_trainer_fullname,
+                    primaryStudent?.trainer_fullname,
+                    primaryStudent?.trainer_name,
+                  ],
+                  previousTrainerSource
+                );
+                const assignedTrainerNormalized =
+                  normalizeName(assignedTrainerSource);
+
+                const mutatedTrainerSource = pickNameSource(
+                  [
+                    currentItem?.mutated_trainer_nickname,
+                    currentItem?.mutasi_trainer_nickname,
+                    currentItem?.mutasi_to_trainer_nickname,
+                    currentItem?.change_trainer_nickname,
+                    currentItem?.new_trainer_nickname,
+                    primaryStudent?.mutated_trainer_nickname,
+                    primaryStudent?.mutasi_trainer_nickname,
+                    primaryStudent?.mutasi_to_trainer_nickname,
+                    currentItem?.mutated_trainer_fullname,
+                    currentItem?.mutasi_trainer_fullname,
+                    currentItem?.mutasi_to_trainer_fullname,
+                    currentItem?.change_trainer_fullname,
+                    currentItem?.new_trainer_fullname,
+                    currentItem?.trainer_mutation_fullname,
+                    currentItem?.mutated_trainer_name,
+                    currentItem?.mutasi_trainer_name,
+                    currentItem?.mutasi_to_trainer_name,
+                    currentItem?.change_trainer_name,
+                    currentItem?.new_trainer_name,
+                    primaryStudent?.mutated_trainer_fullname,
+                    primaryStudent?.mutasi_trainer_fullname,
+                    primaryStudent?.mutasi_to_trainer_fullname,
+                    primaryStudent?.mutated_trainer_name,
+                    primaryStudent?.mutasi_trainer_name,
+                    primaryStudent?.mutasi_to_trainer_name,
+                  ],
+                  [previousTrainerSource, assignedTrainerSource].filter(Boolean)
+                );
+
+                const showMutasiFrom = previousTrainerName;
+                const showMutasiToSource =
+                  mutatedTrainerSource ||
+                  (assignedTrainerNormalized &&
+                  assignedTrainerNormalized !== previousTrainerNormalized
+                    ? assignedTrainerSource
+                    : "");
+                const showMutasiTo = showMutasiToSource
+                  ? convertToTitleCase(showMutasiToSource)
+                  : "";
 
                 return (
                   <Card
@@ -826,19 +936,52 @@ const PresenceCopy = () => {
                     key={i + j}
                     bodyClass="p-4 overflow-x-auto"
                     headerslot={
-                      <Tooltip
-                        placement="top"
-                        arrow
-                        content={"Sudah bisa dicairkan 🥳🥳🥳"}
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <Icons
-                            icon="heroicons-outline:currency-dollar"
-                            className={`h-8 w-8 text-green-700`}
-                          />
-                          <span className="text-green-700">Settled</span>
-                        </div>
-                      </Tooltip>
+                      <div className="flex items-center gap-3">
+                        <Tooltip
+                          placement="top"
+                          arrow
+                          content={"Sudah bisa dicairkan 🥳🥳🥳"}
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            <Icons
+                              icon="heroicons-outline:currency-dollar"
+                              className="h-8 w-8 text-green-700"
+                            />
+                            <span className="text-green-700">Settled</span>
+                          </div>
+                        </Tooltip>
+                        {isMutasi && (showMutasiFrom || showMutasiTo) && (
+                          <div className="flex flex-col items-center gap-1 text-xs text-slate-600">
+                            <Badge
+                              label="Mutasi"
+                              className="bg-amber-500 text-white text-[11px]"
+                            />
+                            <div className="flex items-center gap-1 font-medium text-slate-600">
+                              <span className="text-center">
+                                {showMutasiFrom || "-"}
+                              </span>
+                              {showMutasiFrom && showMutasiTo && (
+                                <Icons
+                                  icon="heroicons-outline:arrow-right"
+                                  className="h-4 w-4 text-slate-400"
+                                />
+                              )}
+                              {showMutasiTo && (
+                                <span className="text-center">
+                                  {showMutasiTo}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] uppercase tracking-wide text-slate-400">
+                              {showMutasiFrom && showMutasiTo
+                                ? "Perpindahan Pelatih"
+                                : showMutasiFrom
+                                ? "Mutasi Dari"
+                                : "Mutasi Ke"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     }
                   >
                     <div className="flex flex-row gap-4">

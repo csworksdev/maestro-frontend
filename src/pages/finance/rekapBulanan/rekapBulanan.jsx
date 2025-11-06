@@ -26,6 +26,19 @@ import { DateTime } from "luxon";
 import EditModal from "@/pages/order/active/editModal";
 import { toProperCase } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
+import Badge from "@/components/ui/Badge";
+
+const parseMutasiStatus = (value) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "ya", "yes", "mutasi"].includes(normalized)) return true;
+    if (["false", "0", "tidak", "no", "reguler"].includes(normalized))
+      return false;
+  }
+  return false;
+};
 
 const RekapBulanan = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -193,9 +206,9 @@ const RekapBulanan = () => {
             if (
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <
                 DateTime.fromFormat(
-                selectedPeriode?.start_date,
-                "yyyy-MM-dd"
-              ) &&
+                  selectedPeriode?.start_date,
+                  "yyyy-MM-dd"
+                ) &&
               item[objNamePaid] &&
               item[objNameOrderID] !== ""
             ) {
@@ -235,12 +248,12 @@ const RekapBulanan = () => {
             } else if (
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >
                 DateTime.fromFormat(
-                selectedPeriode?.end_date,
-                "yyyy-MM-dd"
-              ).plus({ days: -1 }) &&
-            !item[objNamePaid] &&
-            item[objNameOrderID] !== ""
-          ) {
+                  selectedPeriode?.end_date,
+                  "yyyy-MM-dd"
+                ).plus({ days: -1 }) &&
+              !item[objNamePaid] &&
+              item[objNameOrderID] !== ""
+            ) {
               setSummary((prev) => ({
                 ...prev,
                 nextCount: prev.nextCount + 1,
@@ -320,7 +333,14 @@ const RekapBulanan = () => {
       Header: "Siswa",
       accessor: "student_fullname",
       sticky: "left",
-      Cell: ({ cell }) => <span>{toProperCase(cell?.value)}</span>,
+      Cell: ({ row, cell }) => (
+        <StudentCell
+          name={cell?.value}
+          isMutasi={row.original.is_mutasi}
+          mutasiBadgeLabel={row.original.mutasi_badge_label}
+          mutasiDirection={row.original.mutasi_direction}
+        />
+      ),
     },
     {
       Header: "Produk",
@@ -488,7 +508,6 @@ const RekapBulanan = () => {
         );
       },
     },
-
     {
       Header: "Action",
       accessor: "action",
@@ -507,6 +526,38 @@ const RekapBulanan = () => {
       ),
     },
   ];
+
+  const StudentCell = ({
+    name,
+    isMutasi,
+    mutasiBadgeLabel,
+    mutasiDirection,
+  }) => {
+    const displayName = toProperCase(name);
+    const mutasi = parseMutasiStatus(isMutasi);
+    const badgeLabel =
+      typeof mutasiBadgeLabel === "string" ? mutasiBadgeLabel.trim() : "";
+    const direction =
+      typeof mutasiDirection === "string"
+        ? mutasiDirection.trim().toLowerCase()
+        : "";
+    const hasBadge = mutasi && badgeLabel.length > 0;
+    const badgeClass =
+      direction === "mutasi_ke"
+        ? "bg-sky-100 text-sky-700"
+        : "bg-amber-100 text-amber-700";
+
+    return (
+      <div className="flex flex-col gap-1">
+        <span>{displayName}</span>
+        {hasBadge && (
+          <div className="flex items-center gap-2 text-[11px] text-amber-600">
+            <Badge label={badgeLabel} className={`${badgeClass} text-[10px]`} />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const CellDetail = ({ tanggal, status, order_detail_id }) => {
     let bgColor = "";
@@ -870,10 +921,7 @@ const RekapBulanan = () => {
               element[objDate],
               "dd/MM/yyyy"
             );
-            if (
-              pertemuanDate <= periodeEnd &&
-              pertemuanDate >= periodeStart
-            ) {
+            if (pertemuanDate <= periodeEnd && pertemuanDate >= periodeStart) {
               unpaidOrderId.push(element[objNameOrderID]);
             }
           }
@@ -916,10 +964,7 @@ const RekapBulanan = () => {
               item[objDate],
               "dd/MM/yyyy"
             );
-            if (
-              pertemuanDate <= periodeEnd &&
-              pertemuanDate >= periodeStart
-            ) {
+            if (pertemuanDate <= periodeEnd && pertemuanDate >= periodeStart) {
               unpaidOrderId.push(item[objNameOrderID]);
             }
           }
