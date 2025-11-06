@@ -54,7 +54,8 @@ const OrderActive = ({ is_finished }) => {
   const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  const { roles } = useAuthStore((state) => state.data);
+  const data = useAuthStore((state) => state.data);
+  const roles = data?.roles;
 
   const fetchData = async (page = 1, size = 10, query) => {
     try {
@@ -221,14 +222,18 @@ const OrderActive = ({ is_finished }) => {
     },
   ];
 
-  const actions = actionBlueprints.map((action) => ({
-    name: action.name,
-    icon: action.icon,
-    onClick: (row) => action.handler(row.row.original),
-    className: composeActionClass(action.intent),
-  }));
+  const buildActions = (blueprints) =>
+    blueprints.map((action) => ({
+      name: action.name,
+      icon: action.icon,
+      onClick: (row) => action.handler(row.row.original),
+      className: composeActionClass(action.intent),
+    }));
 
-  const actionsAdmin = actions;
+  const actions = buildActions(actionBlueprints);
+  const actionsAdmin = buildActions(
+    actionBlueprints.filter((action) => action.name === "Perpanjang Paket")
+  );
 
   const COLUMNS = [
     {
