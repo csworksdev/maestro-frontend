@@ -333,7 +333,14 @@ const RekapBulanan = () => {
       Header: "Siswa",
       accessor: "student_fullname",
       sticky: "left",
-      Cell: ({ cell }) => <span>{toProperCase(cell?.value)}</span>,
+      Cell: ({ row, cell }) => (
+        <StudentCell
+          name={cell?.value}
+          isMutasi={row.original.is_mutasi}
+          mutasiBadgeLabel={row.original.mutasi_badge_label}
+          mutasiDirection={row.original.mutasi_direction}
+        />
+      ),
     },
     {
       Header: "Produk",
@@ -502,17 +509,6 @@ const RekapBulanan = () => {
       },
     },
     {
-      Header: "Mutasi",
-      accessor: "is_mutasi",
-      Cell: ({ row }) => (
-        <MutasiCell
-          isMutasi={row.original.is_mutasi}
-          previousTrainer={row.original.previous_trainer_fullname}
-        />
-      ),
-    },
-
-    {
       Header: "Action",
       accessor: "action",
       id: "action",
@@ -531,34 +527,34 @@ const RekapBulanan = () => {
     },
   ];
 
-  const MutasiCell = ({ isMutasi, previousTrainer }) => {
+  const StudentCell = ({
+    name,
+    isMutasi,
+    mutasiBadgeLabel,
+    mutasiDirection,
+  }) => {
+    const displayName = toProperCase(name);
     const mutasi = parseMutasiStatus(isMutasi);
-    const trainerName =
-      typeof previousTrainer === "string" && previousTrainer.trim().length
-        ? toProperCase(previousTrainer.trim())
-        : "-";
+    const badgeLabel =
+      typeof mutasiBadgeLabel === "string" ? mutasiBadgeLabel.trim() : "";
+    const direction =
+      typeof mutasiDirection === "string"
+        ? mutasiDirection.trim().toLowerCase()
+        : "";
+    const hasBadge = mutasi && badgeLabel.length > 0;
+    const badgeClass =
+      direction === "mutasi_ke"
+        ? "bg-sky-100 text-sky-700"
+        : "bg-amber-100 text-amber-700";
 
     return (
-      <div className="flex flex-col gap-2 items-start">
-        {mutasi ? (
-          <Badge
-            label="Mutasi"
-            className="bg-amber-500 text-white text-[11px]"
-          />
-        ) : (
-          <Badge
-            label="Reguler"
-            className="bg-slate-100 text-slate-600 text-[11px]"
-          />
+      <div className="flex flex-col gap-1">
+        <span>{displayName}</span>
+        {hasBadge && (
+          <div className="flex items-center gap-2 text-[11px] text-amber-600">
+            <Badge label={badgeLabel} className={`${badgeClass} text-[10px]`} />
+          </div>
         )}
-        <div className="flex flex-col">
-          <span className="text-[11px] uppercase tracking-wide text-slate-400">
-            Pelatih Sebelumnya
-          </span>
-          <span className="text-sm font-medium text-slate-600">
-            {trainerName}
-          </span>
-        </div>
       </div>
     );
   };
