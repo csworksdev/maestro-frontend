@@ -529,6 +529,27 @@ const PresenceCopy = () => {
     return false;
   };
 
+  const normalizeName = (value) =>
+    typeof value === "string" ? value.trim().toLowerCase() : "";
+
+  const pickNameSource = (values = [], exclude = []) => {
+    const excludes = Array.isArray(exclude) ? exclude : [exclude];
+    const excludeSet = new Set(
+      excludes.map((item) => normalizeName(item)).filter(Boolean)
+    );
+
+    for (const value of values) {
+      if (typeof value !== "string") continue;
+      const trimmed = value.trim();
+      if (!trimmed) continue;
+      const normalized = trimmed.toLowerCase();
+      if (excludeSet.has(normalized)) continue;
+      return trimmed;
+    }
+
+    return "";
+  };
+
   const StudentCard = ({ studentsInfo }) => {
     return (
       <Disclosure as="div">
@@ -815,16 +836,81 @@ const PresenceCopy = () => {
                 const mutasiSource =
                   currentItem?.is_mutasi ?? primaryStudent?.is_mutasi;
                 const isMutasi = parseMutasiStatus(mutasiSource);
-                const previousTrainerSource =
-                  (typeof currentItem?.previous_trainer_fullname === "string" &&
-                    currentItem.previous_trainer_fullname.trim()) ||
-                  (typeof primaryStudent?.previous_trainer_fullname ===
-                    "string" &&
-                    primaryStudent.previous_trainer_fullname.trim()) ||
-                  "";
+
+                const previousTrainerSource = pickNameSource([
+                  currentItem?.previous_trainer_nickname,
+                  primaryStudent?.previous_trainer_nickname,
+                  currentItem?.previous_trainer_name,
+                  primaryStudent?.previous_trainer_name,
+                  currentItem?.previous_trainer_fullname,
+                  primaryStudent?.previous_trainer_fullname,
+                ]);
                 const previousTrainerName = previousTrainerSource
                   ? convertToTitleCase(previousTrainerSource)
-                  : "-";
+                  : "";
+                const previousTrainerNormalized =
+                  normalizeName(previousTrainerSource);
+
+                const assignedTrainerSource = pickNameSource(
+                  [
+                    currentItem?.trainer_nickname,
+                    currentItem?.current_trainer_nickname,
+                    primaryStudent?.current_trainer_nickname,
+                    primaryStudent?.trainer_nickname,
+                    currentItem?.trainer_fullname,
+                    currentItem?.trainer_name,
+                    currentItem?.current_trainer_fullname,
+                    currentItem?.current_trainer_name,
+                    primaryStudent?.current_trainer_fullname,
+                    primaryStudent?.trainer_fullname,
+                    primaryStudent?.trainer_name,
+                  ],
+                  previousTrainerSource
+                );
+                const assignedTrainerNormalized =
+                  normalizeName(assignedTrainerSource);
+
+                const mutatedTrainerSource = pickNameSource(
+                  [
+                    currentItem?.mutated_trainer_nickname,
+                    currentItem?.mutasi_trainer_nickname,
+                    currentItem?.mutasi_to_trainer_nickname,
+                    currentItem?.change_trainer_nickname,
+                    currentItem?.new_trainer_nickname,
+                    primaryStudent?.mutated_trainer_nickname,
+                    primaryStudent?.mutasi_trainer_nickname,
+                    primaryStudent?.mutasi_to_trainer_nickname,
+                    currentItem?.mutated_trainer_fullname,
+                    currentItem?.mutasi_trainer_fullname,
+                    currentItem?.mutasi_to_trainer_fullname,
+                    currentItem?.change_trainer_fullname,
+                    currentItem?.new_trainer_fullname,
+                    currentItem?.trainer_mutation_fullname,
+                    currentItem?.mutated_trainer_name,
+                    currentItem?.mutasi_trainer_name,
+                    currentItem?.mutasi_to_trainer_name,
+                    currentItem?.change_trainer_name,
+                    currentItem?.new_trainer_name,
+                    primaryStudent?.mutated_trainer_fullname,
+                    primaryStudent?.mutasi_trainer_fullname,
+                    primaryStudent?.mutasi_to_trainer_fullname,
+                    primaryStudent?.mutated_trainer_name,
+                    primaryStudent?.mutasi_trainer_name,
+                    primaryStudent?.mutasi_to_trainer_name,
+                  ],
+                  [previousTrainerSource, assignedTrainerSource].filter(Boolean)
+                );
+
+                const showMutasiFrom = previousTrainerName;
+                const showMutasiToSource =
+                  mutatedTrainerSource ||
+                  (assignedTrainerNormalized &&
+                  assignedTrainerNormalized !== previousTrainerNormalized
+                    ? assignedTrainerSource
+                    : "");
+                const showMutasiTo = showMutasiToSource
+                  ? convertToTitleCase(showMutasiToSource)
+                  : "";
 
                 return (
                   <Card
@@ -864,17 +950,37 @@ const PresenceCopy = () => {
                             <span className="text-green-700">Settled</span>
                           </div>
                         </Tooltip>
-                        <div className="flex items-center gap-2 text-xs text-slate-600">
-                          {isMutasi && (
+                        {isMutasi && (showMutasiFrom || showMutasiTo) && (
+                          <div className="flex flex-col items-center gap-1 text-xs text-slate-600">
                             <Badge
-                              label="Mutasi dari"
+                              label="Mutasi"
                               className="bg-amber-500 text-white text-[11px]"
                             />
-                          )}
-                          <span className="font-medium text-slate-600">
-                            {previousTrainerName}
-                          </span>
-                        </div>
+                            <div className="flex items-center gap-1 font-medium text-slate-600">
+                              <span className="text-center">
+                                {showMutasiFrom || "-"}
+                              </span>
+                              {showMutasiFrom && showMutasiTo && (
+                                <Icons
+                                  icon="heroicons-outline:arrow-right"
+                                  className="h-4 w-4 text-slate-400"
+                                />
+                              )}
+                              {showMutasiTo && (
+                                <span className="text-center">
+                                  {showMutasiTo}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] uppercase tracking-wide text-slate-400">
+                              {showMutasiFrom && showMutasiTo
+                                ? "Perpindahan Pelatih"
+                                : showMutasiFrom
+                                ? "Mutasi Dari"
+                                : "Mutasi Ke"}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     }
                   >
