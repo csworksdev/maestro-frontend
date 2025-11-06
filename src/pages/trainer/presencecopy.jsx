@@ -516,6 +516,19 @@ const PresenceCopy = () => {
     return `https://wa.me/${countryCode}${phone}/?text=hi, ${name}`;
   };
 
+  const parseMutasiStatus = (value) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value === 1;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "ya", "yes", "mutasi"].includes(normalized))
+        return true;
+      if (["false", "0", "tidak", "no", "reguler"].includes(normalized))
+        return false;
+    }
+    return false;
+  };
+
   const StudentCard = ({ studentsInfo }) => {
     return (
       <Disclosure as="div">
@@ -784,23 +797,34 @@ const PresenceCopy = () => {
           {Object.keys(groupedData).map((order_id, i) => (
             <div key={i}>
               {Object.keys(groupedData[order_id]).map((student_name, j) => {
-                const poolName =
-                  groupedData[order_id][student_name]?.[j]?.pool_name ||
-                  "Pool not specified";
-                const order_date =
-                  groupedData[order_id][student_name]?.[j]?.order_date || "";
+                const currentItem =
+                  groupedData[order_id][student_name]?.[j] || {};
+                const poolName = currentItem?.pool_name || "Pool not specified";
+                const order_date = currentItem?.order_date || "";
                 const expire_date =
-                  groupedData[order_id][student_name]?.[j]?.expire_date ||
-                  DateTime.fromFormat(
-                    groupedData[order_id][student_name]?.[j]?.order_date,
-                    "yyyy-MM-dd"
-                  )
+                  currentItem?.expire_date ||
+                  DateTime.fromFormat(order_date, "yyyy-MM-dd")
                     .plus({ days: 120 })
                     .toFormat("dd MMMM yyyy");
-                const hari =
-                  groupedData[order_id][student_name]?.[j]?.day || "";
-                const product =
-                  groupedData[order_id][student_name]?.[j]?.product || "";
+                const hari = currentItem?.day || "";
+                const product = currentItem?.product || "";
+                const studentsInfo = Array.isArray(currentItem?.students_info)
+                  ? currentItem.students_info
+                  : [];
+                const primaryStudent = studentsInfo[0] || {};
+                const mutasiSource =
+                  currentItem?.is_mutasi ?? primaryStudent?.is_mutasi;
+                const isMutasi = parseMutasiStatus(mutasiSource);
+                const previousTrainerSource =
+                  (typeof currentItem?.previous_trainer_fullname === "string" &&
+                    currentItem.previous_trainer_fullname.trim()) ||
+                  (typeof primaryStudent?.previous_trainer_fullname ===
+                    "string" &&
+                    primaryStudent.previous_trainer_fullname.trim()) ||
+                  "";
+                const previousTrainerName = previousTrainerSource
+                  ? convertToTitleCase(previousTrainerSource)
+                  : "-";
 
                 return (
                   <Card
@@ -826,19 +850,32 @@ const PresenceCopy = () => {
                     key={i + j}
                     bodyClass="p-4 overflow-x-auto"
                     headerslot={
-                      <Tooltip
-                        placement="top"
-                        arrow
-                        content={"Sudah bisa dicairkan 🥳🥳🥳"}
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <Icons
-                            icon="heroicons-outline:currency-dollar"
-                            className={`h-8 w-8 text-green-700`}
-                          />
-                          <span className="text-green-700">Settled</span>
+                      <div className="flex items-center gap-3">
+                        <Tooltip
+                          placement="top"
+                          arrow
+                          content={"Sudah bisa dicairkan 🥳🥳🥳"}
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            <Icons
+                              icon="heroicons-outline:currency-dollar"
+                              className="h-8 w-8 text-green-700"
+                            />
+                            <span className="text-green-700">Settled</span>
+                          </div>
+                        </Tooltip>
+                        <div className="flex items-center gap-2 text-xs text-slate-600">
+                          {isMutasi && (
+                            <Badge
+                              label="Mutasi dari"
+                              className="bg-amber-500 text-white text-[11px]"
+                            />
+                          )}
+                          <span className="font-medium text-slate-600">
+                            {previousTrainerName}
+                          </span>
                         </div>
-                      </Tooltip>
+                      </div>
                     }
                   >
                     <div className="flex flex-row gap-4">
