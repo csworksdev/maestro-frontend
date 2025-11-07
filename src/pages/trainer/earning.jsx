@@ -8,6 +8,10 @@ import {
 import Loading from "@/components/Loading";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import Search from "@/components/globals/table/search";
+import dayjs from "dayjs";
+import "dayjs/locale/id";
+
+dayjs.locale("id");
 
 const Earning = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +128,32 @@ const Earning = () => {
   };
 
   const removeNonNumeric = (num) => num.toString().replace(/[^0-9]/g, "");
+  const formatMeetingDate = (dateString) => {
+    if (!dateString) return "";
+    const parsed = dayjs(dateString);
+    return parsed.isValid() ? parsed.format("DD/MM") : "";
+  };
+
+  const formatFullDate = (dateString) => {
+    if (!dateString) return "-";
+    const parsed = dayjs(dateString);
+    return parsed.isValid() ? parsed.format("DD MMMM YYYY") : dateString;
+  };
+
+  const getMutasiDetail = (entry = {}) => {
+    const candidates = [
+      entry?.mutasi_detail,
+      entry?.mutasi_detail_label,
+      entry?.mutasi_badge_label,
+      entry?.mutasi_description,
+      entry?.mutasi_info,
+    ];
+    return (
+      candidates.find(
+        (value) => typeof value === "string" && value.trim().length > 0
+      ) || ""
+    );
+  };
 
   const earningBlock = () => {
     const { total, available, unpaid, potencial } = listDataDashboard;
@@ -187,65 +217,102 @@ const Earning = () => {
           Object.keys(groupedData[order_id]).map((trainer_name, j) =>
             Object.keys(groupedData[order_id][trainer_name]).map(
               (student_name, k) => {
-                const order_date =
-                  groupedData[order_id][trainer_name][student_name]?.[0]
-                    ?.order_date || "";
-                const expire_date =
-                  groupedData[order_id][trainer_name][student_name]?.[0]
-                    ?.expire_date || "";
-                const day =
-                  groupedData[order_id][trainer_name][student_name]?.[0]?.day ||
-                  "";
+                const studentEntries =
+                  groupedData[order_id][trainer_name][student_name] || [];
+                const firstEntry = studentEntries[0] || {};
+                const order_date = firstEntry?.order_date || "";
+                const expire_date = firstEntry?.expire_date || "";
+                const formattedStudentName = student_name
+                  .split(",")
+                  .map((name) => name.trim())
+                  .join(", ");
+                const orderDateDisplay = formatFullDate(order_date);
+                const expireDateDisplay = formatFullDate(expire_date);
+                const totalSessions = studentEntries.length;
+                const mutasiDetail = getMutasiDetail(firstEntry);
+                const hasMutasiDetail = Boolean(mutasiDetail);
 
                 return (
                   <Card
-                    subtitle={
-                      <>
-                        {student_name.replace(",", ", ")} <br />
-                        Kolam:{" "}
-                        {groupedData[order_id][trainer_name][student_name]?.[0]
-                          ?.pool_name || "Pool not specified"}{" "}
-                        <br />
-                        Tanggal Order: {order_date}
-                        <br />
-                        Tanggal Kadaluarsa: {expire_date}
-                        <br />
-                        Hari: {day}
-                      </>
-                    }
                     key={k}
+                    className="border border-slate-100 shadow-none sm:shadow-sm"
+                    bodyClass="p-4 sm:p-6"
+                    headerslot={
+                      <div className="flex flex-col items-end gap-2 text-right">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-900">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          {totalSessions} Sesi
+                        </span>
+                        {hasMutasiDetail && (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                            {mutasiDetail}
+                          </span>
+                        )}
+                      </div>
+                    }
+                    subtitle={
+                      <div className="flex flex-col gap-3 text-sm text-slate-600">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-base font-semibold text-slate-900">
+                            {formattedStudentName}
+                          </p>
+                        </div>
+                        <dl className="grid gap-2 rounded-2xl bg-slate-50/70 p-3 text-xs text-slate-500 sm:grid-cols-2">
+                          <div>
+                            <dt className="uppercase tracking-wide">
+                              Tanggal Order
+                            </dt>
+                            <dd className="font-semibold text-slate-700">
+                              {orderDateDisplay}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="uppercase tracking-wide">
+                              Tanggal Kadaluarsa
+                            </dt>
+                            <dd className="font-semibold text-slate-700">
+                              {expireDateDisplay}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+                    }
                   >
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      {groupedData[order_id][trainer_name][student_name]
+                    <div className="grid grid-cols-4 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
+                      {[
+                        ...(groupedData[order_id][trainer_name][student_name] ||
+                          []),
+                      ]
                         .sort((a, b) => a.meet - b.meet)
-                        .map((item, l) => (
-                          <Card
-                            key={`${item.order_detail_id}-${l}`}
-                            bodyClass="p-3"
-                            tit
-                            className="bg-gradient-to-br from-sky-400 via-sky-400 to-violet-400 p-3 rounded-2xl w-full text-white flex items-center justify-between max-w-2xl mx-auto"
-                          >
-                            <span className="text-sm font-semibold">
-                              Pertemuan ke : {item.meet || "N/A"}
-                            </span>
-                            <br />
-                            <span className="text-sm">
-                              Tanggal: {item.real_date || "N/A"}
-                            </span>
-                            <br />
-                            <span className="text-sm">
-                              Hari: {item.day || "N/A"}
-                            </span>
-                            <br />
-                            <span className="text-sm">
-                              Jam: {item.real_time || "N/A"}
-                            </span>
-                            {/* <br /> */}
-                            {/* <span className="text-sm">
-                              Kolam: {item.pool_name || "N/A"}
-                            </span> */}
-                          </Card>
-                        ))}
+                        .map((item, l) => {
+                          const formattedDate = formatMeetingDate(
+                            item.real_date
+                          );
+                          const hasDate = Boolean(item.real_date);
+                          const displayDate = hasDate
+                            ? formattedDate || item.real_date
+                            : "Belum diisi";
+                          return (
+                            <div
+                              key={`${item.order_detail_id}-${l}`}
+                              className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
+                            >
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div className="flex flex-col">
+                                  {/* <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
+                                    Pertemuan
+                                  </p> */}
+                                  <p className="text-2xl font-semibold leading-tight text-slate-900">
+                                    #{item.meet || "-"}
+                                  </p>
+                                </div>
+                                <span className="inline-flex items-center rounded-xl bg-sky-50 px-1 py-1 text-xs font-semibold text-sky-600">
+                                  {displayDate}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
                     </div>
                   </Card>
                 );
