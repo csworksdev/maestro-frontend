@@ -1,8 +1,13 @@
 const COOKIE_LIFETIME_DAYS = 30;
 
 const isBrowser = () => typeof document !== "undefined";
-const isSecureContext = () =>
-  typeof window !== "undefined" && window.location.protocol === "https:";
+const isSecureContext = () => {
+  if (typeof window === "undefined") return false;
+  if (typeof window.isSecureContext === "boolean") {
+    return window.isSecureContext;
+  }
+  return window.location.protocol === "https:";
+};
 
 const DEFAULT_COOKIE_OPTIONS = {
   path: "/",

@@ -92,3 +92,21 @@ export const PerpanjangOrder = async (id, order_date) => {
     return { status: "error", message: error.message };
   }
 };
+
+export const getOrderFrequency = async (orderId) => {
+  try {
+    return await axiosConfig.get(`/api/order/${orderId}/frequency/`);
+  } catch (error) {
+    console.error("Error fetching order frequency:", error);
+    throw error;
+  }
+};
+
+export const updateOrderFrequency = async (orderId, data) => {
+  try {
+    return await axiosConfig.post(`/api/order/${orderId}/frequency/`, data);
+  } catch (error) {
+    console.error("Error updating order frequency:", error);
+    throw error;
+  }
+};

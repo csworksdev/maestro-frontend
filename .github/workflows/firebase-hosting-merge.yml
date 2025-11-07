@@ -13,9 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ✅ Tambahkan ini untuk install PNPM dulu
-      - name: Install PNPM
-        run: npm install -g pnpm
+      # Pin Node version supaya sesuai dengan requirement project
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # Install pnpm via official action (lebih cepat & konsisten)
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
 
       # ✅ Lanjut install dependencies
       - name: Install dependencies

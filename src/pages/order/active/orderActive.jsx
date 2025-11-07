@@ -21,6 +21,7 @@ import { toProperCase } from "@/utils";
 import EditModal from "./editModal";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import MutasiSiswaModal from "./mutasiSiswa";
+import FrequencyModal from "./frequencyModal";
 
 const ACTION_SHARED_CLASS = "shadow-sm transition-colors";
 
@@ -51,10 +52,12 @@ const OrderActive = ({ is_finished }) => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [mutasiModalVisible, setMutasiModalVisible] = useState(false);
+  const [frequencyModalVisible, setFrequencyModalVisible] = useState(false);
   const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  const { roles } = useAuthStore((state) => state.data);
+  const data = useAuthStore((state) => state.data);
+  const roles = data?.roles;
 
   const fetchData = async (page = 1, size = 10, query) => {
     try {
@@ -151,6 +154,11 @@ const OrderActive = ({ is_finished }) => {
     setModalData(e); // Pass data to the modal
   };
 
+  const handleFrequency = (e) => {
+    setFrequencyModalVisible(true);
+    setModalData(e);
+  };
+
   const handlePerpanjang = async (e) => {
     const { value: order_date } = await Swal.fire({
       title: "Perpanjang paket ",
@@ -208,6 +216,12 @@ const OrderActive = ({ is_finished }) => {
       handler: handleMutasi,
     },
     {
+      name: "Atur Frekuensi",
+      icon: "heroicons-outline:adjustments-horizontal",
+      intent: "info",
+      handler: handleFrequency,
+    },
+    {
       name: "Perpanjang Paket",
       icon: "heroicons:heart",
       intent: "pink",
@@ -221,14 +235,20 @@ const OrderActive = ({ is_finished }) => {
     },
   ];
 
-  const actions = actionBlueprints.map((action) => ({
-    name: action.name,
-    icon: action.icon,
-    onClick: (row) => action.handler(row.row.original),
-    className: composeActionClass(action.intent),
-  }));
+  const buildActions = (blueprints) =>
+    blueprints.map((action) => ({
+      name: action.name,
+      icon: action.icon,
+      onClick: (row) => action.handler(row.row.original),
+      className: composeActionClass(action.intent),
+    }));
 
-  const actionsAdmin = actions;
+  const actions = buildActions(actionBlueprints);
+  const actionsAdmin = buildActions(
+    actionBlueprints.filter((action) =>
+      ["Perpanjang Paket", "Atur Frekuensi"].includes(action.name)
+    )
+  );
 
   const COLUMNS = [
     {
@@ -578,6 +598,20 @@ const OrderActive = ({ is_finished }) => {
                 defaultOrder={modalData}
                 onClose={() => setMutasiModalVisible(false)}
                 isEdit={(e) => setisEdited(e)}
+              />
+            </Modal>
+          )}
+          {frequencyModalVisible && (
+            <Modal
+              title="Atur Frekuensi Latihan"
+              activeModal={frequencyModalVisible}
+              onClose={() => setFrequencyModalVisible(false)}
+              className="max-w-5xl"
+            >
+              <FrequencyModal
+                defaultOrder={modalData}
+                onClose={() => setFrequencyModalVisible(false)}
+                onSuccess={() => fetchData(pageIndex, pageSize, searchQuery)}
               />
             </Modal>
           )}
