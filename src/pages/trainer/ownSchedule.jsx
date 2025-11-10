@@ -104,15 +104,104 @@ const getRemainingMeetCount = (slot) => {
   return Number.isNaN(numeric) ? value : numeric;
 };
 
+const getOrderFrequencies = (slot) => {
+  if (!slot) return null;
+
+  const directFrequency =
+    slot.frequency_per_week ??
+    slot.frequencyPerWeek ??
+    slot.frequency ??
+    slot.order?.frequency_per_week ??
+    slot.order?.frequencyPerWeek ??
+    slot.orderFrequency ??
+    null;
+
+  const structuredFrequency =
+    slot.order_frequencies ??
+    slot.orderFrequencies ??
+    slot.order_frequency ??
+    null;
+
+  const normalizeFrequencyValue = (value) => {
+    if (value === undefined || value === null) return null;
+    const numeric = Number(value);
+    return Number.isNaN(numeric) ? value : numeric;
+  };
+
+  if (Array.isArray(structuredFrequency)) {
+    const normalizedEntries = structuredFrequency
+      .map((entry) => {
+        if (!entry || typeof entry !== "object") return null;
+        const freqValue =
+          normalizeFrequencyValue(entry.frequency_per_week) ??
+          normalizeFrequencyValue(entry.frequencyPerWeek) ??
+          normalizeFrequencyValue(entry.per_week) ??
+          normalizeFrequencyValue(entry.perWeek) ??
+          normalizeFrequencyValue(entry.value);
+        if (freqValue === null) return null;
+        return {
+          ...entry,
+          frequency_per_week: freqValue,
+        };
+      })
+      .filter(Boolean);
+
+    if (normalizedEntries.length === 0) {
+      return directFrequency !== null && directFrequency !== undefined
+        ? { frequency_per_week: normalizeFrequencyValue(directFrequency) }
+        : null;
+    }
+
+    const totalFrequency = normalizedEntries.reduce((acc, entry) => {
+      const freq = Number(entry.frequency_per_week);
+      return Number.isNaN(freq) ? acc : acc + freq;
+    }, 0);
+
+    return {
+      frequency_per_week:
+        totalFrequency > 0
+          ? totalFrequency
+          : normalizedEntries[0].frequency_per_week,
+      entries: normalizedEntries,
+    };
+  }
+
+  if (structuredFrequency && typeof structuredFrequency === "object") {
+    const frequencyValue =
+      normalizeFrequencyValue(structuredFrequency.frequency_per_week) ??
+      normalizeFrequencyValue(structuredFrequency.frequencyPerWeek) ??
+      normalizeFrequencyValue(structuredFrequency.per_week) ??
+      normalizeFrequencyValue(structuredFrequency.perWeek) ??
+      normalizeFrequencyValue(structuredFrequency.value);
+
+    return frequencyValue !== null && frequencyValue !== undefined
+      ? {
+          ...structuredFrequency,
+          frequency_per_week: frequencyValue,
+        }
+      : structuredFrequency;
+  }
+
+  if (directFrequency === null || directFrequency === undefined) {
+    return null;
+  }
+
+  return {
+    frequency_per_week: normalizeFrequencyValue(directFrequency),
+  };
+};
+
 const buildSlotMeta = (slot) => {
   const students = extractStudents(slot);
   const remainingMeetCount = getRemainingMeetCount(slot);
+  const orderFrequencies = getOrderFrequencies(slot);
   if (!slot?.is_avail) {
     return {
       ...STATUS_STYLES.off,
       description: "Waktu istirahat",
       students,
       remainingMeetCount,
+      order_frequencies: orderFrequencies,
     };
   }
   if (students.length > 0) {
@@ -121,6 +210,7 @@ const buildSlotMeta = (slot) => {
       description: `${students.length} siswa terdaftar`,
       students,
       remainingMeetCount,
+      order_frequencies: orderFrequencies,
     };
   }
   return {
@@ -128,6 +218,7 @@ const buildSlotMeta = (slot) => {
     description: "Belum ada jadwal",
     students,
     remainingMeetCount,
+    order_frequencies: orderFrequencies,
   };
 };
 
@@ -417,6 +508,14 @@ const OwnSchedule = () => {
                                   </span>
                                 </p>
                               )}
+                            {meta.order_frequencies?.frequency_per_week > 0 && (
+                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                  {meta.order_frequencies?.frequency_per_week}x
+                                  per minggu
+                                </span>
+                              </p>
+                            )}
                             {slot?.pool && (
                               <p className="text-xs font-medium uppercase tracking-wide text-primary-600 dark:text-primary-300">
                                 Kolam: {slot.pool}

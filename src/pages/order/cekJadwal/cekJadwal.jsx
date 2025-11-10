@@ -566,6 +566,11 @@ const CekJadwal = () => {
                         {toProperCase(x)}
                       </div>
                     ))}
+                    {slot.frequency_per_week > 1 ? (
+                      <span className="text-[clamp(8px,0.7vw,10px)]">
+                        {slot.frequency_per_week}x / minggu
+                      </span>
+                    ) : null}
                     <PerpanjangPaket
                       order_id={slot.order_id}
                       slot={slot}
@@ -609,6 +614,11 @@ const CekJadwal = () => {
                       >
                         <span>{iconProduct(slot.product)}</span>
                       </Tooltip>
+                      {slot.frequency_per_week > 1 ? (
+                        <span className="text-[clamp(8px,0.7vw,10px)]">
+                          {slot.frequency_per_week}x / minggu
+                        </span>
+                      ) : null}
                       {slot?.is_paid !== "pending" && (
                         <Tooltip
                           content={
