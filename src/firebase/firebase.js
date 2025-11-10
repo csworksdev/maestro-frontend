@@ -1,5 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+  isSupported as isMessagingSupported,
+} from "firebase/messaging";
 
 // Gunakan env vars supaya kredensial mudah diputar dan tidak hard-coded.
 const resolveConfigValue = (key, fallback = "") => {
@@ -36,7 +41,31 @@ if (import.meta.env?.DEV) {
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-// Inisialisasi messaging
-const messaging = getMessaging(firebaseApp);
+let messagingPromise;
 
-export { messaging, getToken, onMessage };
+export const getMessagingInstance = () => {
+  if (typeof window === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  if (!messagingPromise) {
+    messagingPromise = isMessagingSupported()
+      .then((supported) => {
+        if (!supported) {
+          console.warn(
+            "[FCM] Browser tidak mendukung Firebase Messaging (misal Safari iOS)."
+          );
+          return null;
+        }
+        return getMessaging(firebaseApp);
+      })
+      .catch((err) => {
+        console.warn("[FCM] Gagal inisialisasi messaging:", err);
+        return null;
+      });
+  }
+
+  return messagingPromise;
+};
+
+export { getToken, onMessage };

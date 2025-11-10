@@ -1,6 +1,5 @@
-import { getMessaging, getToken, deleteToken } from "firebase/messaging";
-import { getApp, getApps, initializeApp } from "firebase/app";
-import { firebaseConfig } from "@/firebase/firebase";
+import { getToken, deleteToken } from "firebase/messaging";
+import { getMessagingInstance } from "@/firebase/firebase";
 import { axiosConfig } from "@/axios/config";
 import {
   deleteFcmTokenCookie,
@@ -8,12 +7,48 @@ import {
   setFcmTokenCookie,
 } from "@/utils/authCookies";
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+const needsUserActivation = () =>
+  typeof navigator !== "undefined" &&
+  !!navigator.userActivation &&
+  navigator.userActivation.isActive === false;
+
+export const requestNotificationPermissionSafely = async () => {
+  if (typeof Notification === "undefined") {
+    console.warn("[FCM] Notification API tidak tersedia di browser.");
+    return "denied";
+  }
+
+  if (Notification.permission === "granted") {
+    return "granted";
+  }
+
+  if (
+    Notification.permission === "default" &&
+    needsUserActivation()
+  ) {
+    console.warn(
+      "[FCM] Browser memerlukan interaksi user (klik/tap) sebelum memunculkan prompt notifikasi."
+    );
+    return "default";
+  }
+
+  try {
+    return await Notification.requestPermission();
+  } catch (err) {
+    console.error("[FCM] Gagal meminta izin notifikasi:", err);
+    return "denied";
+  }
+};
 
 // ✅ Cek permission dulu
 export const requestAndSendToken = async (onTokenSaved) => {
-  const permission = await Notification.requestPermission();
+  const messaging = await getMessagingInstance();
+  if (!messaging) {
+    console.warn("[FCM] Browser ini tidak mendukung push notification web.");
+    return null;
+  }
+
+  const permission = await requestNotificationPermissionSafely();
 
   if (permission === "granted") {
     try {
@@ -76,7 +111,10 @@ export const removeFcmToken = async () => {
   }
 
   try {
-    await deleteToken(messaging);
+    const messaging = await getMessagingInstance();
+    if (messaging) {
+      await deleteToken(messaging);
+    }
   } catch (firebaseError) {
     console.error("❌ Gagal hapus token dari Firebase:", firebaseError);
   }

@@ -1,18 +1,15 @@
 import { useEffect, useState } from "react";
-import { getMessaging, getToken } from "firebase/messaging";
-import { getApp, getApps, initializeApp } from "firebase/app";
-import { firebaseConfig } from "@/firebase/firebase";
+import { getToken } from "firebase/messaging";
+import { getMessagingInstance } from "@/firebase/firebase";
 import {
   sendTokenToBackend,
   removeFcmToken as removeFcmTokenUtil,
+  requestNotificationPermissionSafely,
 } from "@/utils/fcm";
 import {
   getFcmTokenCookie,
   setFcmTokenCookie,
 } from "@/utils/authCookies";
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
 
 export const useFcmToken = () => {
   const [fcmToken, setFcmToken] = useState(getFcmTokenCookie());
@@ -20,7 +17,15 @@ export const useFcmToken = () => {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const permission = await Notification.requestPermission();
+        const messaging = await getMessagingInstance();
+        if (!messaging) {
+          console.warn(
+            "[FCM] Browser ini tidak mendukung push notification web."
+          );
+          return;
+        }
+
+        const permission = await requestNotificationPermissionSafely();
 
         if (permission !== "granted") {
           console.warn("🚫 Notification permission not granted:", permission);
