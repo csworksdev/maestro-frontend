@@ -13,6 +13,7 @@ import {
   updateOrderFrequency,
 } from "@/axios/masterdata/order";
 import { toProperCase } from "@/utils";
+import Icons from "@/components/ui/Icon";
 
 const sanitizeTimeOptions = () =>
   jam.filter((option) => option.value && option.value !== "0");
@@ -43,6 +44,57 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const timeOptions = useMemo(() => sanitizeTimeOptions(), []);
+  const maxFrequency = Math.max(pendingMeets.length || 0, 1);
+  const startMeetNumber = useMemo(() => {
+    const firstMeet = pendingMeets?.[0]?.meet;
+    const parsed = parseInt(firstMeet, 10);
+    if (Number.isFinite(parsed)) return parsed;
+    return 1;
+  }, [pendingMeets]);
+  const dayOrderMap = useMemo(() => {
+    return hari.reduce((acc, option, index) => {
+      acc[option.value] = index;
+      return acc;
+    }, {});
+  }, []);
+  const timeOrderMap = useMemo(() => {
+    return timeOptions.reduce((acc, option, index) => {
+      acc[option.value] = index;
+      return acc;
+    }, {});
+  }, [timeOptions]);
+  const groupedTrainerSlots = useMemo(() => {
+    if (!trainerSlots?.length) return [];
+    const grouped = trainerSlots.reduce((acc, slot) => {
+      const key = slot?.day || "Tidak diketahui";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(slot);
+      return acc;
+    }, {});
+
+    const getDayOrder = (day) =>
+      Number.isFinite(dayOrderMap[day])
+        ? dayOrderMap[day]
+        : Number.MAX_SAFE_INTEGER;
+    const getTimeOrder = (time) =>
+      Number.isFinite(timeOrderMap[time])
+        ? timeOrderMap[time]
+        : Number.MAX_SAFE_INTEGER;
+
+    return Object.entries(grouped)
+      .sort(([dayA], [dayB]) => {
+        const orderDiff = getDayOrder(dayA) - getDayOrder(dayB);
+        return orderDiff !== 0 ? orderDiff : dayA.localeCompare(dayB);
+      })
+      .map(([day, slots]) => ({
+        day,
+        slots: [...slots].sort((a, b) => {
+          const timeDiff = getTimeOrder(a?.time) - getTimeOrder(b?.time);
+          if (timeDiff !== 0) return timeDiff;
+          return (a?.time || "").localeCompare(b?.time || "");
+        }),
+      }));
+  }, [trainerSlots, dayOrderMap, timeOrderMap]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -64,8 +116,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
 
         if (pending.length) {
           const defaultStart =
-            pending[0]?.schedule_date ||
-            DateTime.now().toFormat("yyyy-MM-dd");
+            pending[0]?.schedule_date || DateTime.now().toFormat("yyyy-MM-dd");
           setStartDate(defaultStart);
         } else {
           setStartDate(DateTime.now().toFormat("yyyy-MM-dd"));
@@ -102,11 +153,23 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
     loadFrequencyData();
   }, [orderId]);
 
+  useEffect(() => {
+    setFrequency((prev) => {
+      const normalized = Math.max(prev, 1);
+      const clamped = Math.min(normalized, maxFrequency);
+      if (clamped !== prev) {
+        setSlots((prevSlots) => ensureSlotLength(prevSlots, clamped));
+      }
+      return clamped;
+    });
+  }, [maxFrequency]);
+
   const handleFrequencyChange = (value) => {
     const parsed = parseInt(value, 10);
     const safeValue = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
-    setFrequency(safeValue);
-    setSlots((prev) => ensureSlotLength(prev, safeValue));
+    const clampedValue = Math.min(safeValue, maxFrequency);
+    setFrequency(clampedValue);
+    setSlots((prev) => ensureSlotLength(prev, clampedValue));
   };
 
   const handleSlotChange = (index, field, value) => {
@@ -253,6 +316,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
               label="Frekuensi per Minggu"
               type="number"
               min={1}
+              max={maxFrequency}
               value={frequency}
               onChange={(e) => handleFrequencyChange(e.target.value)}
             />
@@ -285,10 +349,16 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
                 className="grid grid-cols-1 md:grid-cols-2 gap-3"
               >
                 <Select
-                  label={`Slot ${index + 1} - Hari`}
+                  label={`Pertemuan ${
+                    Number.isFinite(startMeetNumber)
+                      ? startMeetNumber + index
+                      : index + 1
+                  } - Hari`}
                   options={hari}
                   value={slot.day}
-                  onChange={(e) => handleSlotChange(index, "day", e.target.value)}
+                  onChange={(e) =>
+                    handleSlotChange(index, "day", e.target.value)
+                  }
                 />
                 <Select
                   label="Jam"
@@ -302,22 +372,43 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
             ))}
           </div>
 
-          {trainerSlots.length > 0 && (
+          {groupedTrainerSlots.length > 0 && (
             <div>
               <p className="form-label">Slot Pelatih</p>
-              <div className="flex flex-wrap gap-2">
-                {trainerSlots.map((slot) => (
-                  <span
-                    key={`${slot.day}-${slot.time}-${slot.ts_id}`}
-                    className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                      slot.is_avail
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-amber-200 bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    {slot.day} • {slot.time}
-                  </span>
-                ))}
+              <div className="overflow-x-auto">
+                <div className="grid min-w-[700px] grid-cols-7 gap-4">
+                  {groupedTrainerSlots.map((group) => (
+                    <div
+                      key={`trainer-slot-group-${group.day}`}
+                      className="flex flex-col gap-2"
+                    >
+                      <p className="text-sm font-semibold text-slate-600">
+                        {group.day}
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {group.slots.map((slot) => (
+                          <span
+                            key={`${slot.day}-${slot.time}-${slot.ts_id}`}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                              slot.is_avail
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                : "border-amber-200 bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            <Icons
+                              className={
+                                slot.is_avail
+                                  ? "heroicons-outline:check-circle"
+                                  : "heroicons-outline:x-mark"
+                              }
+                            />{" "}
+                            {slot.time}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
