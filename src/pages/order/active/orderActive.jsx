@@ -297,7 +297,9 @@ const OrderActive = ({ is_finished }) => {
                   <span className="text-xs font-semibold uppercase tracking-wide">
                     Mutasi ke
                   </span>
-                  <span className="text-sm font-semibold">{changedTrainer}</span>
+                  <span className="text-sm font-semibold">
+                    {changedTrainer}
+                  </span>
                 </div>
               </div>
             )}
@@ -328,17 +330,17 @@ const OrderActive = ({ is_finished }) => {
       },
     },
     {
-      Header: "Kolam",
-      accessor: "pool_name",
-      id: "pool_name",
+      Header: "Produk",
+      accessor: "product_name",
+      id: "product_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
     },
     {
-      Header: "Produk",
-      accessor: "product_name",
-      id: "product_name",
+      Header: "Kolam",
+      accessor: "pool_name",
+      id: "pool_name",
       Cell: (row) => {
         return <span>{row?.cell?.value}</span>;
       },
