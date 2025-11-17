@@ -98,6 +98,7 @@ const ErrorPage = lazy(() => import("@/pages/404"));
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import ChatTest from "@/pages/utility/chattest";
+import ChatPage from "@/pages/app/chat";
 const Promo = lazy(() => import("@/pages/masterdata/promo"));
 const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
@@ -269,6 +270,9 @@ const AdminRoutes = () => {
         </Route>
         <Route path="chattest">
           <Route index element={<ChatTest />} />
+        </Route>
+        <Route path="chat">
+          <Route index element={<ChatPage />} />
         </Route>
         //#endregion
         {/* Followup Perpanjang */}

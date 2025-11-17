@@ -3,9 +3,19 @@ import { useSelector, useDispatch } from "react-redux";
 import { openChat } from "./store";
 
 const Contacts = ({ contact }) => {
-  const { fullName, avatar, status, lastmessage, unredmessage } = contact;
+  const {
+    fullName,
+    avatar,
+    status,
+    phoneNumber,
+    statusTag,
+    lastmessage,
+    unredmessage,
+  } = contact;
 
   const dispatch = useDispatch();
+  const heading = fullName || phoneNumber || "Kontak";
+  const meta = statusTag || lastmessage || "REPLIED";
 
   return (
     <div
@@ -37,15 +47,17 @@ const Contacts = ({ contact }) => {
         <div className="flex-1 text-start flex">
           <div className="flex-1">
             <span className="block text-slate-800 dark:text-slate-300 text-sm font-medium mb-[2px]">
-              {fullName}
+              {heading}
             </span>
-            <span className="block text-slate-600 dark:text-slate-300 text-xs font-normal">
-              {lastmessage.slice(0, 14) + "..."}
-            </span>
+            {phoneNumber && (
+              <span className="block text-slate-600 dark:text-slate-300 text-[11px] font-normal">
+                {phoneNumber}
+              </span>
+            )}
           </div>
           <div className="flex-none ltr:text-right rtl:text-end">
             <span className="block text-xs text-slate-400 dark:text-slate-400 font-normal">
-              12:20 pm
+              {meta}
             </span>
             {unredmessage > 0 && (
               <span className="inline-flex flex-col items-center justify-center text-[10px] font-medium w-4 h-4 bg-[#FFC155] text-white rounded-full">
