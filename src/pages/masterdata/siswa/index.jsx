@@ -204,14 +204,17 @@ const Siswa = () => {
         ) : (
           <>
             <div className="md:flex items-center justify-between mb-4">
-              <Search className="w-full md:w-1/3" onSearch={handleSearch} />
+              <Search
+                searchValue={searchQuery}
+                handleSearch={handleSearch}
+                className="w-full md:w-1/3"
+              />
             </div>
 
             <Table
-              columns={COLUMNS}
-              data={listData.results}
-              isLoading={siswaQuery.isFetching}
-              pageSize={pageSize}
+              listData={listData}
+              listColumn={COLUMNS}
+              handleSearch={handleSearch}
             />
 
             <div className="mt-4">
