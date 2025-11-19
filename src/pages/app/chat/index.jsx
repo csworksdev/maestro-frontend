@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import SimpleBar from "simplebar-react";
 import useWidth from "@/hooks/useWidth";
 import { useSelector, useDispatch } from "react-redux";
@@ -10,16 +10,95 @@ import Chat from "./Chat";
 import Blank from "./Blank";
 import Info from "./Info";
 
-import { toggleMobileChatSidebar, setContactSearch } from "./store";
+import {
+  toggleMobileChatSidebar,
+  setContactSearch,
+  setContacts,
+} from "./store";
+import { toast } from "react-toastify";
+import defaultAvatar from "@/assets/images/users/user-1.jpg";
 const ChatPage = () => {
   const { width, breakpoints } = useWidth();
   const dispatch = useDispatch();
   const { activechat, openinfo, mobileChatSidebar, contacts, searchContact } =
     useSelector((state) => state.chat);
 
-  const searchContacts = contacts?.filter((item) =>
-    item.fullName.toLowerCase().includes(searchContact.toLowerCase())
+  const fileInputRef = useRef(null);
+  const searchContacts = contacts?.filter(
+    (item) =>
+      item.fullName?.toLowerCase().includes(searchContact.toLowerCase()) ||
+      item.phoneNumber?.toLowerCase().includes(searchContact.toLowerCase())
   );
+  const displayContacts = searchContact ? searchContacts : contacts;
+
+  const parseContactsFromCsv = (content) => {
+    const rows = content
+      .split(/\r?\n/)
+      .map((row) => row.trim())
+      .filter(Boolean);
+    if (rows.length <= 1) return [];
+    const headers = rows[0]
+      .split(",")
+      .map((header) => header.replace(/"/g, "").trim().toLowerCase());
+    const phoneIndex = headers.findIndex((header) => header === "phonenumber");
+    const statusIndex = headers.findIndex((header) => header === "status");
+    if (phoneIndex === -1 || statusIndex === -1) return [];
+    const broadcastIndex = headers.findIndex(
+      (header) => header === "broadcastname"
+    );
+    const templateIndex = headers.findIndex(
+      (header) => header === "templatename"
+    );
+    const uniqueNumbers = new Set();
+    const parsedContacts = [];
+    rows.slice(1).forEach((row) => {
+      const values = row.split(",").map((value) => value.trim());
+      const rawStatus = values[statusIndex] || "";
+      if (rawStatus.toUpperCase() !== "REPLIED") return;
+      const phoneValue = values[phoneIndex] || "";
+      const digits = phoneValue.replace(/\D/g, "");
+      if (!digits || digits.length <= 3) return;
+      if (uniqueNumbers.has(digits)) return;
+      uniqueNumbers.add(digits);
+      const nameValue =
+        values[broadcastIndex] || values[templateIndex] || digits;
+      const previewValue =
+        values[templateIndex] || values[broadcastIndex] || rawStatus;
+      parsedContacts.push({
+        id: digits,
+        phoneNumber: digits,
+        fullName: nameValue,
+        avatar: defaultAvatar,
+        status: "active",
+        statusTag: rawStatus,
+        lastmessage: previewValue,
+        unredmessage: 0,
+      });
+    });
+    return parsedContacts;
+  };
+
+  const handleUpload = (event) => {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => {
+      const contactsFromCsv = parseContactsFromCsv(loadEvent.target.result);
+      if (!contactsFromCsv.length) {
+        toast.warning(
+          "File CSV tidak memiliki kontak REPLIED atau nomor yang valid."
+        );
+        return;
+      }
+      dispatch(setContacts(contactsFromCsv));
+      toast.success(`${contactsFromCsv.length} kontak berhasil ditambahkan.`);
+    };
+    reader.onerror = () => {
+      toast.error("Gagal membaca file. Silakan coba ulang.");
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  };
 
   return (
     <div className="flex lg:space-x-5 chat-height overflow-hidden relative rtl:space-x-reverse">
@@ -55,10 +134,34 @@ const ChatPage = () => {
                 className="w-full flex-1 block bg-transparent placeholder:font-normal placeholder:text-slate-400 py-2 focus:ring-0 focus:outline-none dark:text-slate-200 dark:placeholder:text-slate-400"
               />
             </div>
+            <div className="px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs uppercase tracking-widest font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded"
+                >
+                  Upload CSV
+                </button>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  hanya REPLIED & nomor lengkap
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                {contacts?.length ?? 0} kontak siap pakai
+              </span>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleUpload}
+            />
           </div>
           <SimpleBar className="contact-height">
-            {searchContacts?.map((contact, i) => (
-              <Contacts key={i} contact={contact} />
+            {displayContacts?.map((contact, i) => (
+              <Contacts key={contact.id ?? i} contact={contact} />
             ))}
           </SimpleBar>
         </Card>
@@ -74,7 +177,16 @@ const ChatPage = () => {
       )}
 
       {/* mai  chat box*/}
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col">
+        {/* <div className="flex justify-end px-5 py-2 border-b border-slate-100 dark:border-slate-700">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-xs uppercase tracking-widest font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded"
+          >
+            Upload CSV
+          </button>
+        </div> */}
         <div className="parent flex space-x-5 h-full rtl:space-x-reverse">
           {/* main message body*/}
           <div className="flex-1">

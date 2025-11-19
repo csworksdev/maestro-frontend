@@ -29,7 +29,7 @@ const App = () => {
 
   useEffect(() => {
     if (fcmToken) {
-      console.log("🎯 FCM Token siap dipakai:", fcmToken);
+      // console.log("🎯 FCM Token siap dipakai:", fcmToken);
       // misalnya init WebSocket di sini
     }
   }, [fcmToken]);

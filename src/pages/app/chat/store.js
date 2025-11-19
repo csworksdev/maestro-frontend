@@ -213,11 +213,6 @@ export const appChatSlice = createSlice({
       state.activechat = action.payload.activechat;
       state.mobileChatSidebar = !state.mobileChatSidebar;
       state.user = action.payload.contact;
-      state.chats.map((item) => {
-        if (item.userId === action.payload.contact.id) {
-          state.messFeed = item.messages;
-        }
-      });
     },
     // toggole mobile chat sidebar
     toggleMobileChatSidebar: (state, action) => {
@@ -238,6 +233,9 @@ export const appChatSlice = createSlice({
     toggleActiveChat: (state, action) => {
       state.activechat = action.payload;
     },
+    setContacts: (state, action) => {
+      state.contacts = action.payload;
+    },
   },
 });
 
@@ -249,5 +247,6 @@ export const {
   toggleProfile,
   setContactSearch,
   toggleActiveChat,
+  setContacts,
 } = appChatSlice.actions;
 export default appChatSlice.reducer;

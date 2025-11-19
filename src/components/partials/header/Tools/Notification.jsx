@@ -72,7 +72,7 @@ const Notification = () => {
     }
 
     socketRef.current.onopen = () => {
-      console.log("🔔 WS connected");
+      // console.log("🔔 WS connected");
     };
     socketRef.current.onmessage = (event) => {
       const payload = JSON.parse(event.data);
@@ -114,7 +114,10 @@ const Notification = () => {
       if (internalRoute) {
         navigate(internalRoute);
       } else {
-        console.warn("Blocked navigation to external notification target:", targetUrl);
+        console.warn(
+          "Blocked navigation to external notification target:",
+          targetUrl
+        );
       }
     }
   };
