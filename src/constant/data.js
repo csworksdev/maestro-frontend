@@ -39,7 +39,7 @@ export const menuFinance = [
   {
     title: "Dashboard Keuangan",
     icon: "heroicons-outline:chart-bar-square",
-    link: "dashboard/finance",
+    link: "dashboard",
   },
   {
     isHeadr: true,
@@ -218,7 +218,7 @@ export const menuAdminNew = [
   {
     title: "Dashboard Penjualan",
     icon: "heroicons-outline:chart-bar",
-    link: "dashboard/sales",
+    link: "dashboard",
   },
   {
     title: "Order",
@@ -275,7 +275,7 @@ export const menuOpx = [
   {
     title: "Dashboard Operasional",
     icon: "heroicons-outline:chart-pie",
-    link: "dashboard/operational",
+    link: "dashboard",
   },
   // {
   //   title: "Okupansi",
