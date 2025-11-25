@@ -1,22 +1,19 @@
 import React from "react";
 import Icon from "@/components/ui/Icon";
 
-const statistics = [
+const defaultStatistics = [
   {
     title: "Total Task",
     count: "64",
     bg: "bg-info-500",
     text: "text-info-500",
-    percent: "25.67% ",
     icon: "heroicons-outline:menu-alt-1",
   },
   {
-    title: "Completed ",
+    title: "Completed",
     count: "45",
-
     bg: "bg-warning-500",
     text: "text-warning-500",
-    percent: "8.67%",
     icon: "heroicons-outline:chart-pie",
   },
   {
@@ -24,7 +21,6 @@ const statistics = [
     count: "190",
     bg: "bg-primary-500",
     text: "text-primary-500",
-    percent: "1.67%  ",
     icon: "heroicons-outline:clock",
   },
   {
@@ -32,14 +28,15 @@ const statistics = [
     count: "$3,564",
     bg: "bg-success-500",
     text: "text-success-500",
-    percent: "11.67%  ",
     icon: "heroicons-outline:calculator",
   },
 ];
-const GroupChart4 = () => {
+
+const GroupChart4 = ({ stats = defaultStatistics }) => {
+  const items = stats.length ? stats : defaultStatistics;
   return (
     <>
-      {statistics.map((item, i) => (
+      {items.map((item, i) => (
         <div
           key={i}
           className={`${item.bg} rounded-md p-4 bg-opacity-[0.15] dark:bg-opacity-50 text-center`}

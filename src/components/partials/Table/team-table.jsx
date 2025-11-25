@@ -253,28 +253,32 @@ const TeamTable = () => {
                 {...getTableProps}
               >
                 <thead className=" bg-slate-100 dark:bg-slate-700">
-                  {headerGroups.map((headerGroup) => (
-                    <tr {...headerGroup.getHeaderGroupProps()}>
-                      {headerGroup.headers.map((column) => (
-                        <th
-                          {...column.getHeaderProps(
+                  {headerGroups.map((headerGroup) => {
+                    const { key: headerKey, ...headerRest } =
+                      headerGroup.getHeaderGroupProps() || {};
+                    return (
+                      <tr key={headerKey} {...headerRest}>
+                        {headerGroup.headers.map((column) => {
+                          const headerProps = column.getHeaderProps(
                             column.getSortByToggleProps()
-                          )}
-                          scope="col"
-                          className=" table-th "
-                        >
-                          {column.render("Header")}
-                          <span>
-                            {column.isSorted
-                              ? column.isSortedDesc
-                                ? " 🔽"
-                                : " 🔼"
-                              : ""}
-                          </span>
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
+                          );
+                          const { key, ...rest } = headerProps || {};
+                          return (
+                            <th key={key} {...rest} scope="col" className=" table-th ">
+                              {column.render("Header")}
+                              <span>
+                                {column.isSorted
+                                  ? column.isSortedDesc
+                                    ? " 🔽"
+                                    : " 🔼"
+                                  : ""}
+                              </span>
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
                 </thead>
                 <tbody
                   className="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700"
@@ -282,14 +286,14 @@ const TeamTable = () => {
                 >
                   {page.map((row) => {
                     prepareRow(row);
+                    const { key: rowKey, ...rowRest } = row.getRowProps() || {};
                     return (
-                      <tr {...row.getRowProps()}>
+                      <tr key={rowKey} {...rowRest}>
                         {row.cells.map((cell) => {
+                          const { key: cellKey, ...cellRest } =
+                            cell.getCellProps() || {};
                           return (
-                            <td
-                              {...cell.getCellProps()}
-                              className="table-td py-2"
-                            >
+                            <td {...cellRest} key={cellKey} className="table-td py-2">
                               {cell.render("Cell")}
                             </td>
                           );

@@ -99,6 +99,7 @@ import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import ChatTest from "@/pages/utility/chattest";
 import ChatPage from "@/pages/app/chat";
+import SalesDashboard from "@/pages/newDashboard/sales";
 const Promo = lazy(() => import("@/pages/masterdata/promo"));
 const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
@@ -251,10 +252,10 @@ const AdminRoutes = () => {
         //#endregion
         {/*  */}
         //#region Finance
-        <Route path="rekap-bulanan">
+        {/* <Route path="rekap-bulanan">
           <Route index element={<RekapBulanan />} />
           <Route path="detailorderpelatih" element={<DetailOrder />} />
-        </Route>
+        </Route> */}
         //#endregion Finance
         {/*  */}
         {/*  */}

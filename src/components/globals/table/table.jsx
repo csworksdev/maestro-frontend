@@ -118,6 +118,7 @@ const Table = ({
     page,
     prepareRow,
     selectedFlatRows,
+    setPageSize,
   } = tableInstance;
 
   const scrollableHeaderRowsRef = useRef([]);
@@ -215,6 +216,13 @@ const Table = ({
       }
     };
   }, [page, listData, synchronizeHeights]);
+
+  // 🚫 pagination dimatikan → tampilkan semua baris yang ada
+  useEffect(() => {
+    if (!isPagination) {
+      setPageSize(data.length || 10);
+    }
+  }, [isPagination, data.length, setPageSize]);
 
   // ✅ Render Header
   const renderHeader = (headerGroup, idx, fixed = false) => (
