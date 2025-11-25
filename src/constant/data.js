@@ -270,12 +270,21 @@ export const menuAdminNew = [
 export const menuOpx = [
   {
     isHeadr: true,
-    title: "Operasional",
+    title: "Dashboard",
   },
   {
-    title: "Dashboard Operasional",
+    title: "Operasional",
     icon: "heroicons-outline:chart-pie",
     link: "dashboard",
+  },
+  {
+    title: "Daily",
+    icon: "heroicons-outline:chart-pie",
+    link: "daily",
+  },
+  {
+    isHeadr: true,
+    title: "Operasional",
   },
   // {
   //   title: "Okupansi",
