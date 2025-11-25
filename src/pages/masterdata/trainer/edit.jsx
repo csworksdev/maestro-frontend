@@ -7,6 +7,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Jadwal from "./jadwal";
 import JadwalBaru from "./jadwal-baru";
 import Button from "@/components/ui/Button";
+import SpecializationList from "@/pages/referensi/trainerSpesialisasi/index";
+import SpecializationForm from "@/pages/referensi/trainerSpesialisasi/edit";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -21,10 +23,46 @@ const Edit = () => {
       title: "Jadwal",
       icon: "heroicons-outline:queue-list",
     },
+    {
+      title: "Spesialisasi",
+      icon: "heroicons-outline:puzzle-piece",
+    },
   ];
   const [selectedData, setSelectedData] = useState(data);
+  const [specMode, setSpecMode] = useState("list"); // list | form
+  const [specData, setSpecData] = useState({});
+  const [specIsUpdate, setSpecIsUpdate] = useState(false);
+  const [specRefreshKey, setSpecRefreshKey] = useState(0);
+  const [specSelectedList, setSpecSelectedList] = useState([]);
   const updateData = (params) => {
     setSelectedData(params);
+  };
+
+  const handleSpecializationAdd = (payload) => {
+    setSpecIsUpdate(false);
+    setSpecData(payload.data || {});
+    setSpecSelectedList(payload.current_specializations || []);
+    setSpecMode("form");
+  };
+
+  const handleSpecializationEdit = (payload) => {
+    setSpecIsUpdate(true);
+    setSpecData(payload.data || {});
+    setSpecSelectedList(payload.current_specializations || []);
+    setSpecMode("form");
+  };
+
+  const handleSpecializationSaved = () => {
+    setSpecMode("list");
+    setSpecData({});
+    setSpecSelectedList([]);
+    setSpecRefreshKey((prev) => prev + 1);
+  };
+
+  const handleSpecializationCancel = () => {
+    setSpecMode("list");
+    setSpecData({});
+    setSpecSelectedList([]);
   };
   return (
     <>
@@ -77,6 +115,26 @@ const Edit = () => {
               <Tab.Panel>
                 {/* <Jadwal data={data} /> */}
                 <JadwalBaru data={selectedData} />
+              </Tab.Panel>
+              <Tab.Panel>
+                {specMode === "list" ? (
+                  <SpecializationList
+                    trainerId={selectedData.trainer_id}
+                    onAdd={handleSpecializationAdd}
+                    onEdit={handleSpecializationEdit}
+                    refreshKey={specRefreshKey}
+                    title="Spesialisasi Trainer"
+                  />
+                ) : (
+                  <SpecializationForm
+                    trainerId={selectedData.trainer_id}
+                    data={specData}
+                    isupdate={specIsUpdate ? "true" : "false"}
+                    selectedSpecializations={specSelectedList}
+                    onSaved={handleSpecializationSaved}
+                    onCancel={handleSpecializationCancel}
+                  />
+                )}
               </Tab.Panel>
             </Tab.Panels>
           </Tab.Group>
