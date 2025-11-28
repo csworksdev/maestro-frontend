@@ -12,6 +12,8 @@ import {
 import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
 import useDarkMode from "@/hooks/useDarkMode";
+import Icon from "@/components/ui/Icon";
+import { toProperCase } from "@/utils";
 
 const fallbackChartData = [
   {
@@ -80,6 +82,8 @@ const DashboardDaily = () => {
   const [branchLoading, setBranchLoading] = useState(false);
   const [branchError, setBranchError] = useState(null);
   const [branchPage, setBranchPage] = useState(1);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [selectedPool, setSelectedPool] = useState(null);
   const [scheduleList, setScheduleList] = useState({ results: [], count: 0 });
   const [scheduleMeta, setScheduleMeta] = useState({ pageCount: 0 });
   const [schedulePageIndex, setSchedulePageIndex] = useState(0);
@@ -90,13 +94,38 @@ const DashboardDaily = () => {
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState(null);
 
+  const extractBranchId = useCallback((item) => {
+    if (!item) return null;
+    return item.branch_id ?? item.id ?? null;
+  }, []);
+
+  const extractPoolId = useCallback((item) => {
+    if (!item) return null;
+    return item.pool_id ?? item.id ?? null;
+  }, []);
+
+  const activeFilters = useMemo(() => {
+    const poolId = extractPoolId(selectedPool);
+    const branchId = extractBranchId(selectedBranch);
+    if (poolId) {
+      return {
+        filter_pool_id: poolId,
+        filter_group_by: "TRAINER",
+      };
+    }
+    if (branchId) return { filter_branch_id: branchId };
+    return {};
+  }, [extractBranchId, extractPoolId, selectedBranch, selectedPool]);
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await getDashboardDaily();
+        const res = await getDashboardDaily({
+          ...activeFilters,
+        });
         const payload = res?.data ?? res ?? {};
         const detail =
           payload?.detail ??
@@ -128,19 +157,27 @@ const DashboardDaily = () => {
     return () => {
       cancelled = true;
     };
-  }, [fallbackDetails]);
+  }, [activeFilters, fallbackDetails]);
 
   const fetchBranchSummary = async (dateKey, page = 1, pageSize = 20) => {
     if (!dateKey) return;
     setBranchLoading(true);
     setBranchError(null);
     try {
+      const isPoolFiltered = Boolean(activeFilters?.filter_pool_id);
+      const isBranchFiltered = Boolean(activeFilters?.filter_branch_id);
+      const groupBy = isPoolFiltered
+        ? "TRAINER"
+        : isBranchFiltered
+        ? "POOL"
+        : "BRANCH";
       const res = await getDashboardDaily({
         filter_start_date: dateKey,
         filter_end_date: dateKey,
-        filter_group_by: "BRANCH",
+        filter_group_by: groupBy,
         page,
         page_size: pageSize,
+        ...activeFilters,
       });
       const payload = res?.data ?? res ?? {};
       const list =
@@ -179,7 +216,7 @@ const DashboardDaily = () => {
   useEffect(() => {
     if (!selectedDate) return;
     fetchBranchSummary(selectedDate, branchPage);
-  }, [selectedDate, branchPage]);
+  }, [activeFilters, branchPage, selectedDate]);
 
   const fetchSchedules = async (
     pageIndex = 0,
@@ -195,6 +232,7 @@ const DashboardDaily = () => {
         page_size: pageSize,
         filter_start_date: dateKey,
         filter_end_date: dateKey,
+        ...activeFilters,
       });
       const payload = res?.data ?? res ?? {};
       const list =
@@ -233,7 +271,7 @@ const DashboardDaily = () => {
   useEffect(() => {
     if (!selectedDate) return;
     fetchSchedules(schedulePageIndex, schedulePageSize, selectedDate);
-  }, [selectedDate, schedulePageIndex, schedulePageSize]);
+  }, [activeFilters, schedulePageIndex, schedulePageSize, selectedDate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -241,7 +279,9 @@ const DashboardDaily = () => {
       setChartLoading(true);
       setChartError(null);
       try {
-        const res = await getDashboardDailyChart();
+        const res = await getDashboardDailyChart({
+          ...activeFilters,
+        });
         const payload = res?.data ?? res ?? {};
         const list =
           payload?.chart ??
@@ -267,7 +307,7 @@ const DashboardDaily = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeFilters]);
 
   const detailByDate = useMemo(() => {
     const map = new Map();
@@ -316,12 +356,57 @@ const DashboardDaily = () => {
     ];
   }, [selectedDetail]);
 
-  const branchColumns = useMemo(
-    () => [
+  const handleBranchDetail = useCallback(
+    (data) => {
+      if (!data) return;
+      const branchId = extractBranchId(data);
+      if (!branchId) return;
+      setSelectedBranch(data);
+      setSelectedPool(null);
+      setBranchPage(1);
+      setSchedulePageIndex(0);
+    },
+    [extractBranchId]
+  );
+
+  const handlePoolDetail = useCallback(
+    (data) => {
+      if (!data) return;
+      const poolId = extractPoolId(data);
+      if (!poolId) return;
+      setSelectedPool(data);
+      setSelectedBranch(null);
+      setBranchPage(1);
+      setSchedulePageIndex(0);
+    },
+    [extractPoolId]
+  );
+
+  const handleResetDrilldown = useCallback(() => {
+    setSelectedBranch(null);
+    setSelectedPool(null);
+    setBranchPage(1);
+    setSchedulePageIndex(0);
+  }, []);
+
+  const branchColumns = useMemo(() => {
+    const isBranchFocused = Boolean(selectedBranch);
+    const isPoolFocused = Boolean(selectedPool);
+    const titleLabel = isPoolFocused
+      ? "Pelatih"
+      : isBranchFocused
+      ? "Kolam"
+      : "Cabang";
+    return [
       {
-        Header: "Cabang",
-        accessor: "branch_name",
-        Cell: ({ value }) => value || "-",
+        Header: titleLabel,
+        accessor: "name",
+        Cell: ({ value, row }) =>
+          row?.original?.trainer_name ||
+          row?.original?.pool_name ||
+          value ||
+          row?.original?.name ||
+          "-",
       },
 
       {
@@ -354,9 +439,51 @@ const DashboardDaily = () => {
           <div className="text-right text-amber-600">{value ?? 0}</div>
         ),
       },
-    ],
-    []
-  );
+      {
+        Header: "Detail",
+        id: "detail",
+        Cell: ({ row }) => {
+          const data = row?.original ?? {};
+          const isTopLevel = !selectedBranch && !selectedPool;
+          const isBranchLevel = Boolean(selectedBranch) && !selectedPool;
+          const branchId =
+            extractBranchId(data) ?? (isTopLevel ? data.id ?? null : null);
+          const poolId =
+            extractPoolId(data) ?? (isBranchLevel ? data.id ?? null : null);
+          const hasBranch = Boolean(branchId);
+          const hasPool = Boolean(poolId);
+          const canDrill =
+            (isTopLevel && hasBranch) || (isBranchLevel && hasPool);
+          const onDetail = () => {
+            if (isTopLevel && hasBranch) {
+              return handleBranchDetail({ ...data, branch_id: branchId });
+            }
+            if (isBranchLevel && hasPool) {
+              return handlePoolDetail({ ...data, pool_id: poolId });
+            }
+            return undefined;
+          };
+          return (
+            <button
+              type="button"
+              onClick={() => canDrill && onDetail()}
+              disabled={!canDrill}
+              className="text-xs font-semibold text-sky-600 hover:text-sky-700 disabled:text-slate-400"
+            >
+              Detail
+            </button>
+          );
+        },
+      },
+    ];
+  }, [
+    extractBranchId,
+    extractPoolId,
+    handleBranchDetail,
+    handlePoolDetail,
+    selectedBranch,
+    selectedPool,
+  ]);
 
   const branchTableData = useMemo(
     () => ({
@@ -378,6 +505,7 @@ const DashboardDaily = () => {
       const res = await getDashboardDaily({
         filter_start_date: date,
         filter_end_date: date,
+        ...activeFilters,
       });
       const payload = res?.data ?? res ?? {};
       const detail =
@@ -417,9 +545,18 @@ const DashboardDaily = () => {
   const scheduleColumns = useMemo(
     () => [
       { Header: "Cabang", accessor: "branch_name" },
-      { Header: "Pelatih", accessor: "trainer_fullname" },
-      { Header: "Siswa", accessor: "student_fullname" },
+      {
+        Header: "Pelatih",
+        accessor: "trainer_nickname",
+        Cell: ({ value }) => toProperCase(value),
+      },
+      {
+        Header: "Siswa",
+        accessor: "student_fullname",
+        Cell: ({ value }) => toProperCase(value),
+      },
       { Header: "Kolam", accessor: "pool_name" },
+      { Header: "Pertemuan", accessor: "meet" },
       { Header: "Hari", accessor: "day" },
       { Header: "Jam", accessor: "time" },
       {
@@ -435,7 +572,22 @@ const DashboardDaily = () => {
       {
         Header: "Hadir?",
         accessor: "is_presence",
-        Cell: ({ value }) => (value ? "Hadir" : "Tidak hadir"),
+        Cell: ({ value }) =>
+          value ? (
+            <div className="flex justify-center">
+              <Icon
+                icon="heroicons-solid:check-badge"
+                className="w-5 h-5 text-emerald-500"
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <Icon
+                icon="heroicons-solid:x-mark"
+                className="w-5 h-5 text-amber-500"
+              />
+            </div>
+          ),
       },
     ],
     [formatDateId]
@@ -557,10 +709,35 @@ const DashboardDaily = () => {
                   <GroupChart4 stats={statCards} />
                 </div>
                 <div className="mt-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      Ringkasan per Cabang
-                    </h4>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Ringkasan per Cabang
+                      </h4>
+                      {selectedBranch ? (
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                          Cabang:{" "}
+                          {selectedBranch?.branch_name ||
+                            selectedBranch?.name ||
+                            "-"}
+                        </span>
+                      ) : null}
+                      {selectedPool ? (
+                        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
+                          Kolam:{" "}
+                          {selectedPool?.pool_name || selectedPool?.name || "-"}
+                        </span>
+                      ) : null}
+                      {selectedBranch || selectedPool ? (
+                        <button
+                          type="button"
+                          onClick={handleResetDrilldown}
+                          className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                        >
+                          Reset filter
+                        </button>
+                      ) : null}
+                    </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       {branchLoading ? <span>Memuat...</span> : null}
                       {branchError ? (
@@ -714,7 +891,7 @@ const DashboardDaily = () => {
           </Card>
         </div>
       </div>
-      <Card title="Team members" noborder>
+      <Card title="Schedule list" noborder>
         {scheduleLoading && scheduleList.results.length === 0 ? (
           <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-4 text-sm text-slate-500">
             Memuat data...
