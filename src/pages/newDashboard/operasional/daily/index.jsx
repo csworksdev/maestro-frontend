@@ -119,7 +119,7 @@ const DashboardDaily = () => {
       };
     }
     if (branchId)
-      return { filter_branch_id: branchId, filter_group_by: "TRAINER" };
+      return { filter_branch_id: branchId, filter_group_by: "POOL" };
     return {};
   }, [extractBranchId, extractPoolId, selectedBranch, selectedPool]);
 
@@ -175,8 +175,8 @@ const DashboardDaily = () => {
       const groupBy = isPoolFiltered
         ? "TRAINER"
         : isBranchFiltered
-        ? "POOL"
-        : "BRANCH";
+        ? "BRANCH"
+        : "POOL";
       const res = await getDashboardDaily({
         filter_start_date: dateKey,
         filter_end_date: dateKey,
