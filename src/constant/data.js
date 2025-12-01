@@ -150,6 +150,10 @@ export const menuChief = [
         childtitle: "Rekap Bulanan",
         childlink: "rekap-bulanan",
       },
+      {
+        childtitle: "Expense",
+        childlink: "finance/expense",
+      },
     ],
   },
   {

@@ -21,6 +21,7 @@ const OkupansiPool = lazy(() =>
 
 // Referensi
 const Cabang = lazy(() => import("@/pages/referensi/cabang"));
+const AddCabang = lazy(() => import("@/pages/referensi/cabang/add"));
 const EditCabang = lazy(() => import("@/pages/referensi/cabang/edit"));
 const Kolam = lazy(() => import("@/pages/referensi/kolam"));
 const EditKolam = lazy(() => import("@/pages/referensi/kolam/edit"));
@@ -116,7 +117,7 @@ const OpxRoutes = () => {
         </Route>
         <Route path="cabang">
           <Route index element={<Cabang />} />
-          <Route path="add" element={<EditCabang />} />
+          <Route path="add" element={<AddCabang />} />
           <Route path="edit" element={<EditCabang />} />
         </Route>
         <Route path="list-izin">

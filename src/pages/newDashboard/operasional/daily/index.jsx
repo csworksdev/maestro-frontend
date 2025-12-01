@@ -110,10 +110,16 @@ const DashboardDaily = () => {
     if (poolId) {
       return {
         filter_pool_id: poolId,
+        filter_branch_id:
+          extractBranchId(selectedPool) ??
+          branchId ??
+          selectedBranch?.branch_id ??
+          undefined,
         filter_group_by: "TRAINER",
       };
     }
-    if (branchId) return { filter_branch_id: branchId };
+    if (branchId)
+      return { filter_branch_id: branchId, filter_group_by: "TRAINER" };
     return {};
   }, [extractBranchId, extractPoolId, selectedBranch, selectedPool]);
 
@@ -375,7 +381,6 @@ const DashboardDaily = () => {
       const poolId = extractPoolId(data);
       if (!poolId) return;
       setSelectedPool(data);
-      setSelectedBranch(null);
       setBranchPage(1);
       setSchedulePageIndex(0);
     },
@@ -556,7 +561,11 @@ const DashboardDaily = () => {
         Cell: ({ value }) => toProperCase(value),
       },
       { Header: "Kolam", accessor: "pool_name" },
-      { Header: "Pertemuan", accessor: "meet" },
+      {
+        Header: "Pertemuan",
+        accessor: "meet",
+        Cell: ({ value }) => <div className="text-center">{value}</div>,
+      },
       { Header: "Hari", accessor: "day" },
       { Header: "Jam", accessor: "time" },
       {

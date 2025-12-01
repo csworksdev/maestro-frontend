@@ -36,6 +36,9 @@ const Textinput = ({
     setOpen(!open);
   };
 
+  const registerFn = typeof register === "function" ? register : null;
+  const registerProps = name && registerFn ? registerFn(name) : {};
+
   // Keydown event handler
   const handleKeyDown = (e) => {
     if (e.keyCode === 13) {
@@ -64,7 +67,7 @@ const Textinput = ({
         {name && !isMask && (
           <input
             type={type === "password" && open === true ? "text" : type}
-            {...register(name)}
+            {...registerProps}
             {...rest}
             className={`${
               error ? " has-error" : " "
