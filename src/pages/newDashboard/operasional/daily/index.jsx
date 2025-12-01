@@ -104,24 +104,21 @@ const DashboardDaily = () => {
     return item.pool_id ?? item.id ?? null;
   }, []);
 
-  const activeFilters = useMemo(() => {
-    const poolId = extractPoolId(selectedPool);
-    const branchId = extractBranchId(selectedBranch);
-    if (poolId) {
-      return {
-        filter_pool_id: poolId,
-        filter_branch_id:
-          extractBranchId(selectedPool) ??
-          branchId ??
-          selectedBranch?.branch_id ??
-          undefined,
-        filter_group_by: "TRAINER",
-      };
-    }
-    if (branchId)
-      return { filter_branch_id: branchId, filter_group_by: "POOL" };
-    return {};
-  }, [extractBranchId, extractPoolId, selectedBranch, selectedPool]);
+  const selectedBranchId = useMemo(
+    () => extractBranchId(selectedBranch),
+    [extractBranchId, selectedBranch]
+  );
+  const selectedPoolId = useMemo(
+    () => extractPoolId(selectedPool),
+    [extractPoolId, selectedPool]
+  );
+
+  const filterParams = useMemo(() => {
+    const params = {};
+    if (selectedBranchId) params.filter_branch_id = selectedBranchId;
+    if (selectedPoolId) params.filter_pool_id = selectedPoolId;
+    return params;
+  }, [selectedBranchId, selectedPoolId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,7 +127,7 @@ const DashboardDaily = () => {
       setError(null);
       try {
         const res = await getDashboardDaily({
-          ...activeFilters,
+          ...filterParams,
         });
         const payload = res?.data ?? res ?? {};
         const detail =
@@ -163,27 +160,27 @@ const DashboardDaily = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeFilters, fallbackDetails]);
+  }, [filterParams, fallbackDetails]);
 
   const fetchBranchSummary = async (dateKey, page = 1, pageSize = 20) => {
     if (!dateKey) return;
     setBranchLoading(true);
     setBranchError(null);
     try {
-      const isPoolFiltered = Boolean(activeFilters?.filter_pool_id);
-      const isBranchFiltered = Boolean(activeFilters?.filter_branch_id);
+      const isPoolFiltered = Boolean(selectedPoolId);
+      const isBranchFiltered = Boolean(selectedBranchId);
       const groupBy = isPoolFiltered
         ? "TRAINER"
         : isBranchFiltered
-        ? "BRANCH"
-        : "POOL";
+        ? "POOL"
+        : "BRANCH";
       const res = await getDashboardDaily({
         filter_start_date: dateKey,
         filter_end_date: dateKey,
         filter_group_by: groupBy,
         page,
         page_size: pageSize,
-        ...activeFilters,
+        ...filterParams,
       });
       const payload = res?.data ?? res ?? {};
       const list =
@@ -222,7 +219,7 @@ const DashboardDaily = () => {
   useEffect(() => {
     if (!selectedDate) return;
     fetchBranchSummary(selectedDate, branchPage);
-  }, [activeFilters, branchPage, selectedDate]);
+  }, [branchPage, filterParams, selectedBranchId, selectedPoolId, selectedDate]);
 
   const fetchSchedules = async (
     pageIndex = 0,
@@ -238,7 +235,7 @@ const DashboardDaily = () => {
         page_size: pageSize,
         filter_start_date: dateKey,
         filter_end_date: dateKey,
-        ...activeFilters,
+        ...filterParams,
       });
       const payload = res?.data ?? res ?? {};
       const list =
@@ -277,7 +274,7 @@ const DashboardDaily = () => {
   useEffect(() => {
     if (!selectedDate) return;
     fetchSchedules(schedulePageIndex, schedulePageSize, selectedDate);
-  }, [activeFilters, schedulePageIndex, schedulePageSize, selectedDate]);
+  }, [filterParams, schedulePageIndex, schedulePageSize, selectedDate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -286,7 +283,7 @@ const DashboardDaily = () => {
       setChartError(null);
       try {
         const res = await getDashboardDailyChart({
-          ...activeFilters,
+          ...filterParams,
         });
         const payload = res?.data ?? res ?? {};
         const list =
@@ -313,7 +310,7 @@ const DashboardDaily = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeFilters]);
+  }, [filterParams]);
 
   const detailByDate = useMemo(() => {
     const map = new Map();
@@ -510,7 +507,7 @@ const DashboardDaily = () => {
       const res = await getDashboardDaily({
         filter_start_date: date,
         filter_end_date: date,
-        ...activeFilters,
+        ...filterParams,
       });
       const payload = res?.data ?? res ?? {};
       const detail =
