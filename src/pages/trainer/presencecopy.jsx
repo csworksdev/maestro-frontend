@@ -768,7 +768,7 @@ const PresenceCopy = () => {
         <textarea
           className="form-control w-full"
           value={localValue}
-          maxLength={100}
+          maxLength={200}
           minLength={MIN_PROGRESS_LENGTH}
           required
           onChange={(e) => {
@@ -783,7 +783,7 @@ const PresenceCopy = () => {
           }}
         />
         <div className="text-xs text-gray-500 mt-1">
-          {trimmedLength}/100 karakter • {wordCount} kata
+          {trimmedLength}/200 karakter • {wordCount} kata
           {!isMeaningful && (
             <span className="text-red-500 ml-1">
               (Minimal {MIN_PROGRESS_LENGTH} karakter, 3 kata, tidak boleh
@@ -848,8 +848,9 @@ const PresenceCopy = () => {
                 const previousTrainerName = previousTrainerSource
                   ? convertToTitleCase(previousTrainerSource)
                   : "";
-                const previousTrainerNormalized =
-                  normalizeName(previousTrainerSource);
+                const previousTrainerNormalized = normalizeName(
+                  previousTrainerSource
+                );
 
                 const assignedTrainerSource = pickNameSource(
                   [
@@ -867,8 +868,9 @@ const PresenceCopy = () => {
                   ],
                   previousTrainerSource
                 );
-                const assignedTrainerNormalized =
-                  normalizeName(assignedTrainerSource);
+                const assignedTrainerNormalized = normalizeName(
+                  assignedTrainerSource
+                );
 
                 const mutatedTrainerSource = pickNameSource(
                   [
