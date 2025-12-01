@@ -26,6 +26,8 @@ const Select = ({
   ...rest
 }) => {
   options = options || Array(3).fill("option");
+  const registerFn = typeof register === "function" ? register : null;
+  const registerProps = name && registerFn ? registerFn(name) : {};
   return (
     <div
       className={`fromGroup z-1000 ${error ? "has-error" : ""}  ${
@@ -45,7 +47,7 @@ const Select = ({
       <div className={`relative ${horizontal ? "flex-1" : ""}`}>
         {name && (
           <select
-            {...register(name)}
+            {...registerProps}
             {...rest}
             className={`${
               error ? " has-error" : " "
