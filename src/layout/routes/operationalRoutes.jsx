@@ -21,7 +21,7 @@ const OkupansiPool = lazy(() =>
 
 // Referensi
 const Cabang = lazy(() => import("@/pages/referensi/cabang"));
-const AddCabang = lazy(() => import("@/pages/referensi/cabang/add"));
+const AddCabang = lazy(() => import("@/pages/referensi/cabang/edit"));
 const EditCabang = lazy(() => import("@/pages/referensi/cabang/edit"));
 const Kolam = lazy(() => import("@/pages/referensi/kolam"));
 const EditKolam = lazy(() => import("@/pages/referensi/kolam/edit"));
