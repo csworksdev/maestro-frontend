@@ -7,19 +7,28 @@ import Swal from "sweetalert2";
 
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
-import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import { createExpense } from "@/axios/finance/expense";
 
 const statusOptions = ["draft", "submitted", "approved", "rejected", "paid"];
-const categoryOptions = ["Operational", "Marketing", "General & Admin", "R&D", "Travel", "Other"];
+const categoryOptions = [
+  "Operational",
+  "Marketing",
+  "General & Admin",
+  "R&D",
+  "Travel",
+  "Other",
+];
 
 const FormValidationSchema = yup
   .object({
     title: yup.string().required("Judul wajib diisi"),
-    amount: yup.number().typeError("Jumlah harus angka").required("Jumlah wajib diisi"),
+    amount: yup
+      .number()
+      .typeError("Jumlah harus angka")
+      .required("Jumlah wajib diisi"),
   })
   .required();
 
@@ -39,7 +48,6 @@ const AddExpensePage = () => {
       description: "",
       category: "",
       amount: "",
-      tax_amount: "",
       currency: "IDR",
       transaction_date: "",
       payment_method: "",
@@ -52,11 +60,13 @@ const AddExpensePage = () => {
     },
   });
 
-  const totalWithTax = useMemo(() => {
-    const amount = Number(watch("amount") || 0);
-    const tax = Number(watch("tax_amount") || 0);
-    return amount + tax;
-  }, [watch]);
+  const amountValue = watch("amount");
+  const currencyValue = watch("currency");
+
+  const amountWithCurrency = useMemo(
+    () => formatCurrency(Number(amountValue) || 0, currencyValue),
+    [amountValue, currencyValue]
+  );
 
   const onSubmit = async (values) => {
     try {
@@ -89,22 +99,6 @@ const AddExpensePage = () => {
             register={register}
             error={errors.transaction_date?.message}
           />
-          <Select
-            name="category"
-            label="Kategori"
-            placeholder="Pilih kategori"
-            register={register}
-            options={categoryOptions.map((c) => ({ value: c, label: c }))}
-            error={errors.category?.message}
-          />
-          <Select
-            name="status"
-            label="Status"
-            placeholder="Pilih status"
-            register={register}
-            options={statusOptions.map((s) => ({ value: s, label: s }))}
-            error={errors.status?.message}
-          />
           <Textinput
             name="amount"
             label="Jumlah"
@@ -115,55 +109,11 @@ const AddExpensePage = () => {
             error={errors.amount?.message}
           />
           <Textinput
-            name="tax_amount"
-            label="Pajak"
-            type="number"
-            placeholder="0"
-            step="0.01"
-            register={register}
-            error={errors.tax_amount?.message}
-          />
-          <Textinput
-            name="currency"
-            label="Mata uang"
-            placeholder="IDR"
-            register={register}
-            error={errors.currency?.message}
-          />
-          <Textinput
-            name="payment_method"
-            label="Metode bayar"
-            placeholder="Transfer, cash, kartu..."
-            register={register}
-            error={errors.payment_method?.message}
-          />
-          <Textinput
             name="vendor"
             label="Vendor/penerima"
             placeholder="Nama vendor"
             register={register}
             error={errors.vendor?.message}
-          />
-          <Textinput
-            name="cost_center"
-            label="Cost center"
-            placeholder="CC-001"
-            register={register}
-            error={errors.cost_center?.message}
-          />
-          <Textinput
-            name="project_code"
-            label="Kode proyek"
-            placeholder="PRJ-01"
-            register={register}
-            error={errors.project_code?.message}
-          />
-          <Textinput
-            name="attachment_url"
-            label="URL bukti"
-            placeholder="https://..."
-            register={register}
-            error={errors.attachment_url?.message}
           />
           <Textarea
             name="description"
@@ -172,20 +122,34 @@ const AddExpensePage = () => {
             register={register}
             error={errors.description?.message}
           />
-          <Textarea name="notes" label="Catatan internal" rows={2} register={register} error={errors.notes?.message} />
+          <Textarea
+            name="notes"
+            label="Catatan internal"
+            rows={2}
+            register={register}
+            error={errors.notes?.message}
+          />
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-600">
             <Icon icon="heroicons-outline:banknotes" />
-            <span className="font-semibold">Total (termasuk pajak):</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(totalWithTax, watch("currency"))}</span>
+            <span className="font-semibold">Total:</span>
+            <span className="font-semibold text-slate-900">{amountWithCurrency}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button className="bg-slate-100 text-slate-700" onClick={() => navigate(-1)} type="button">
+            <Button
+              className="bg-slate-100 text-slate-700"
+              onClick={() => navigate(-1)}
+              type="button"
+            >
               Batal
             </Button>
-            <Button className="bg-primary-500 text-white" type="submit" isLoading={isSubmitting}>
+            <Button
+              className="bg-primary-500 text-white"
+              type="submit"
+              isLoading={isSubmitting}
+            >
               Simpan
             </Button>
           </div>
