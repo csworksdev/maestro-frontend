@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Textinput from "@/components/ui/Textinput";
-import Select from "@/components/ui/Select";
-import Badge from "@/components/ui/Badge";
 import Table from "@/components/globals/table/table";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -12,21 +10,10 @@ import TableAction from "@/components/globals/table/tableAction";
 import Icon from "@/components/ui/Icon";
 import { getExpenses, deleteExpense } from "@/axios/finance/expense";
 
-const statusOptions = ["draft", "submitted", "approved", "rejected", "paid"];
-const categoryOptions = [
-  "Operational",
-  "Marketing",
-  "General & Admin",
-  "R&D",
-  "Travel",
-  "Other",
-];
 const pageSizes = [10, 20, 50];
 
 const defaultFilters = {
   search: "",
-  category: "",
-  status: "",
   date_from: "",
   date_to: "",
 };
@@ -112,10 +99,7 @@ const ExpensePage = () => {
 
   const totalPageAmount = useMemo(
     () =>
-      (data || []).reduce(
-        (acc, curr) => acc + Number(curr?.total_with_tax || 0),
-        0
-      ),
+      (data || []).reduce((acc, curr) => acc + Number(curr?.amount || 0), 0),
     [data]
   );
 
@@ -148,28 +132,39 @@ const ExpensePage = () => {
   const columns = useMemo(
     () => [
       { Header: "Judul", accessor: "title" },
-      { Header: "Tanggal", accessor: "transaction_date" },
-      { Header: "Kategori", accessor: "category" },
-      { Header: "Vendor", accessor: "vendor" },
       {
-        Header: "Status",
-        accessor: "status",
-        Cell: (row) => (
-          <Badge
-            className={badgeClass(row?.cell?.value)}
-            label={row?.cell?.value || "draft"}
-          />
-        ),
+        Header: "Tanggal",
+        accessor: "transaction_date",
+        Cell: (row) => {
+          const trxDate = row?.row?.original?.transaction_date;
+          const created = row?.row?.original?.created_at;
+          return (
+            <div className="text-sm text-slate-700">
+              {formatDate(trxDate || created)}
+            </div>
+          );
+        },
       },
+      { Header: "Description", accessor: "description" },
       {
-        Header: "Amount (tax incl)",
-        accessor: "total_with_tax",
+        Header: "Jumlah",
+        accessor: "amount",
         Cell: (row) => (
           <div className="text-right font-semibold">
             {formatCurrency(
-              row?.row?.original?.total_with_tax,
+              row?.row?.original?.amount,
               row?.row?.original?.currency
             )}
+          </div>
+        ),
+      },
+      { Header: "Penerima", accessor: "vendor" },
+      {
+        Header: "Dibuat oleh",
+        accessor: "created_by",
+        Cell: (row) => (
+          <div className="text-sm text-slate-700">
+            {row?.row?.original?.created_by?.name || "-"}
           </div>
         ),
       },
@@ -200,8 +195,8 @@ const ExpensePage = () => {
             </p>
             <h1 className="text-3xl font-bold">Expense Manager</h1>
             <p className="text-sky-100/80">
-              Kelola pengeluaran harian dengan filter, status, dan insight
-              cepat.
+              Kelola pengeluaran harian dengan pencarian, filter tanggal, dan
+              insight cepat.
             </p>
             <div className="flex gap-3 pt-2">
               <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm">
@@ -239,60 +234,16 @@ const ExpensePage = () => {
 
       <Card
         title="Filter"
-        subtitle="Cari pengeluaran berdasarkan kata kunci, tanggal, kategori, dan status"
+        subtitle="Cari pengeluaran berdasarkan kata kunci dan rentang tanggal"
         className="border border-slate-100 shadow-md"
       >
-        <div className="flex flex-wrap gap-2">
-          {statusOptions.map((status) => {
-            const active = filters.status === status;
-            return (
-              <button
-                key={status}
-                type="button"
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    status: active ? "" : status,
-                  }))
-                }
-                className={`flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition ${
-                  active
-                    ? "border-sky-500 bg-sky-50 text-sky-700"
-                    : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                }`}
-              >
-                <Icon
-                  icon="heroicons-outline:adjustments-vertical"
-                  className="text-base"
-                />
-                {status}
-              </button>
-            );
-          })}
-        </div>
         <div className="grid md:grid-cols-3 gap-4">
           <Textinput
             label="Cari"
             name="search"
             value={filters.search}
             onChange={handleChangeFilter}
-            placeholder="Judul, vendor, cost center..."
-          />
-          <Select
-            label="Kategori"
-            placeholder="Semua kategori"
-            name="category"
-            options={categoryOptions.map((c) => ({ value: c, label: c }))}
-            value={filters.category}
-            onChange={handleChangeFilter}
-          />
-          <Select
-            label="Status"
-            placeholder="Semua status"
-            name="status"
-            options={statusOptions.map((s) => ({ value: s, label: s }))}
-            value={filters.status}
-            onChange={handleChangeFilter}
+            placeholder="Judul, vendor, deskripsi..."
           />
           <Textinput
             type="date"
@@ -336,9 +287,7 @@ const ExpensePage = () => {
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1">
               <Icon icon="heroicons-outline:adjustments-vertical" />
-              <span>
-                {filters.status ? `Status: ${filters.status}` : "Semua status"}
-              </span>
+              <span>Filter tanggal diterapkan jika diisi</span>
             </div>
             <div className="flex items-center gap-2">
               <label className="text-xs text-slate-500">Tampil</label>
@@ -387,19 +336,23 @@ const ExpensePage = () => {
                       data?.[0]?.currency || "IDR"
                     )}
                   </p>
-                  <p className="text-xs text-slate-500">Termasuk pajak</p>
+                  <p className="text-xs text-slate-500">
+                    Berdasarkan kolom jumlah di halaman ini
+                  </p>
                 </div>
                 <div className="rounded-xl border border-slate-100 bg-gradient-to-r from-emerald-50 to-white px-4 py-3 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-slate-500">
-                    Status aktif
+                    Rentang tanggal
                   </p>
                   <p className="text-sm font-medium text-slate-700">
-                    {filters.status
-                      ? `Filter: ${filters.status}`
-                      : "Semua status"}
+                    {filters.date_from || filters.date_to
+                      ? `${filters.date_from || "..."} → ${
+                          filters.date_to || "..."
+                        }`
+                      : "Tanpa filter tanggal"}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Klik chip status untuk toggle cepat
+                    Isi tanggal untuk mempersempit hasil
                   </p>
                 </div>
               </div>
@@ -416,13 +369,13 @@ const ExpensePage = () => {
                         }`
                       : "Tanpa filter tanggal"}
                   </span>
-                  {filters.category && (
+                  {filters.search && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 border border-slate-200">
                       <Icon
-                        icon="heroicons-outline:tag"
+                        icon="heroicons-outline:magnifying-glass"
                         className="text-base"
                       />
-                      {filters.category}
+                      {`Cari: ${filters.search}`}
                     </span>
                   )}
                 </div>
@@ -467,15 +420,11 @@ const formatCurrency = (value, currency = "IDR") => {
   }).format(value);
 };
 
-const badgeClass = (status) => {
-  const map = {
-    draft: "bg-slate-100 text-slate-700",
-    submitted: "bg-info-100 text-info-600",
-    approved: "bg-success-100 text-success-600",
-    rejected: "bg-danger-100 text-danger-600",
-    paid: "bg-primary-100 text-primary-600",
-  };
-  return `capitalize ${map[status] || map.draft}`;
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(date);
 };
 
 export default ExpensePage;
