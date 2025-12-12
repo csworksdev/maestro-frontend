@@ -289,7 +289,7 @@ const ExpensePage = () => {
               <Icon icon="heroicons-outline:adjustments-vertical" />
               <span>Filter tanggal diterapkan jika diisi</span>
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <label className="text-xs text-slate-500">Tampil</label>
               <select
                 className="form-control py-2"
@@ -305,7 +305,7 @@ const ExpensePage = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
           </div>
         }
       >

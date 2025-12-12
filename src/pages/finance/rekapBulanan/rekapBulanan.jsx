@@ -115,6 +115,7 @@ const RekapBulanan = () => {
     queryKey: ["rekap", "periodisasi"],
     queryFn: async () => {
       const res = await getPeriodisasiAll({
+        before_current: 3,
         page_size: 6,
       });
       return res.data.results;
