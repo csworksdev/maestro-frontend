@@ -9,28 +9,27 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      CI: true
 
     steps:
       - uses: actions/checkout@v4
 
-      # Pin Node version supaya sesuai dengan requirement project
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
 
-      # Install pnpm via official action (lebih cepat & konsisten)
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.17.1
           run_install: false
 
-      # ✅ Lanjut install dependencies
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      # Build project
       - name: Build project
         env:
             VITE_API_URL: ${{ secrets.VITE_API_URL }}
