@@ -34,29 +34,28 @@ jobs:
 
       - name: Build project
         env:
-            VITE_API_URL: ${{ secrets.VITE_API_URL }}
-            VITE_API_WS: ${{ secrets.VITE_API_WS }}
-            VITE_WATI_TOKEN: ${{ secrets.VITE_WATI_TOKEN }}
-            VITE_WATI_ENDPOINT: ${{ secrets.VITE_WATI_ENDPOINT }}
-            VITE_FCM_VAPID_KEY: ${{ secrets.VITE_FCM_VAPID_KEY }}
-            VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-            VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-            VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-            VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-            VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-            VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-            GENERATE_SOURCEMAP: false
-            VITE_TOKEN_REFRESH_INTERVAL_MINUTES: ${{ secrets.VITE_TOKEN_REFRESH_INTERVAL_MINUTES }}
-            VITE_TOKEN_REFRESH_INTERVAL_MS: ${{ secrets.VITE_TOKEN_REFRESH_INTERVAL_MS }}
-            VITE_TOKEN_REFRESH_BUFFER_SECONDS: ${{ secrets.VITE_TOKEN_REFRESH_BUFFER_SECONDS }}
-        run: pnpm build   # pastikan ini menghasilkan folder dist
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_WS: ${{ secrets.VITE_API_WS }}
+          VITE_WATI_TOKEN: ${{ secrets.VITE_WATI_TOKEN }}
+          VITE_WATI_ENDPOINT: ${{ secrets.VITE_WATI_ENDPOINT }}
+          VITE_FCM_VAPID_KEY: ${{ secrets.VITE_FCM_VAPID_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          GENERATE_SOURCEMAP: false
+          VITE_TOKEN_REFRESH_INTERVAL_MINUTES: ${{ secrets.VITE_TOKEN_REFRESH_INTERVAL_MINUTES }}
+          VITE_TOKEN_REFRESH_INTERVAL_MS: ${{ secrets.VITE_TOKEN_REFRESH_INTERVAL_MS }}
+          VITE_TOKEN_REFRESH_BUFFER_SECONDS: ${{ secrets.VITE_TOKEN_REFRESH_BUFFER_SECONDS }}
+        run: pnpm build # pastikan ini menghasilkan folder dist
 
-        
       # ✅ Deploy ke Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MAESTRO_FRONTEND }}
           channelId: live
           projectId: maestro-front
