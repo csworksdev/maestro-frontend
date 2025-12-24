@@ -18,7 +18,7 @@ const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isupdate = "false", data = {} } = location.state ?? {};
-  const isUpdate = isupdate == "true";
+  const isUpdate = isupdate === "true";
   const FormValidationSchema = yup
     .object({
       name: yup.string().required("Nama Specialization is required"),
@@ -46,10 +46,7 @@ const Edit = () => {
   const handleAdd = (data) => {
     AddSpecialization(data).then((res) => {
       if (res.status)
-        Swal.fire(
-          "Added!",
-          "Your file has been Added.",
-          "success",
+        Swal.fire("Added!", "Your file has been Added.", "success").then(() =>
           navigate(-1)
         );
     });
@@ -59,10 +56,7 @@ const Edit = () => {
   const handleUpdate = (updatedData) => {
     EditSpecialization(data.specialization_id, updatedData).then((res) => {
       if (res.status)
-        Swal.fire(
-          "Edited!",
-          "Your file has been Edited.",
-          "success",
+        Swal.fire("Edited!", "Your file has been Edited.", "success").then(() =>
           navigate(-1)
         );
     });
@@ -94,7 +88,7 @@ const Edit = () => {
         className="bg-primary-500 text-white mb-4"
         icon="heroicons-outline:arrow-uturn-left"
       />
-      <Card title={isUpdate ? "Update" : "Add" + " Specialization"}>
+      <Card title={`${isUpdate ? "Update" : "Add"} Specialization`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
           <Textinput
             name="name"
@@ -102,7 +96,7 @@ const Edit = () => {
             type="text"
             placeholder="Masukan Nama Spesialisasi"
             register={register}
-            error={errors.title}
+            error={errors.name}
             defaultValue={isUpdate ? data.name : ""}
           />
           <Textinput
@@ -111,8 +105,8 @@ const Edit = () => {
             type="text"
             placeholder="Masukan singkatan, maks. 3 huruf, contoh : ABK"
             register={register}
-            error={errors.title}
-            defaultValue={isUpdate ? data.name : ""}
+            error={errors.alias}
+            defaultValue={isUpdate ? data.alias : ""}
           />
           <div className="ltr:text-right rtl:text-left  space-x-3">
             <button

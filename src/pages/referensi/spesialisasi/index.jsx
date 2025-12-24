@@ -84,7 +84,7 @@ const Specialization = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteSpecialization(e.package_id).then((res) => {
+        DeleteSpecialization(e.specialization_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);
