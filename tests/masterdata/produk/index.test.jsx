@@ -3,7 +3,7 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import Produk from "../../../../src/pages/masterdata/produk/index";
+import Produk from "../../../src/pages/masterdata/produk/index";
 
 const mockNavigate = vi.fn();
 

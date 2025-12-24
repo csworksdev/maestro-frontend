@@ -3,13 +3,13 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import Cabang from "../../../../src/pages/referensi/cabang/index";
+import Kolam from "../../../src/pages/referensi/kolam/index";
 
 const mockNavigate = vi.fn();
 
-const { mockGetCabangAll, mockDeleteCabang } = vi.hoisted(() => ({
-  mockGetCabangAll: vi.fn(),
-  mockDeleteCabang: vi.fn(),
+const { mockGetKolamAll, mockDeleteKolam } = vi.hoisted(() => ({
+  mockGetKolamAll: vi.fn(),
+  mockDeleteKolam: vi.fn(),
 }));
 
 const mockSwalFire = vi.fn();
@@ -23,9 +23,9 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("@/axios/referensi/cabang", () => ({
-  getCabangAll: (...args) => mockGetCabangAll(...args),
-  DeleteCabang: (...args) => mockDeleteCabang(...args),
+vi.mock("@/axios/referensi/kolam", () => ({
+  getKolamAll: (...args) => mockGetKolamAll(...args),
+  DeleteKolam: (...args) => mockDeleteKolam(...args),
 }));
 
 vi.mock("sweetalert2", () => ({
@@ -70,7 +70,7 @@ vi.mock("@/components/globals/table/table", () => ({
   default: ({ listData, listColumn }) => (
     <div>
       {listData?.results?.map((row) => (
-        <div key={row.branch_id}>
+        <div key={row.pool_id}>
           {listColumn.map((column) => (
             <div key={column.id || column.accessor}>
               {column.accessor === "action"
@@ -84,11 +84,11 @@ vi.mock("@/components/globals/table/table", () => ({
   ),
 }));
 
-describe("Cabang list page", () => {
+describe("Kolam list page", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    mockGetCabangAll.mockReset();
-    mockDeleteCabang.mockReset();
+    mockGetKolamAll.mockReset();
+    mockDeleteKolam.mockReset();
     mockSwalFire.mockReset();
   });
 
@@ -96,15 +96,15 @@ describe("Cabang list page", () => {
     cleanup();
   });
 
-  it("fetches cabang list on load", async () => {
-    mockGetCabangAll.mockResolvedValue({
+  it("fetches kolam list on load", async () => {
+    mockGetKolamAll.mockResolvedValue({
       data: { count: 0, results: [] },
     });
 
-    render(<Cabang />);
+    render(<Kolam />);
 
     await waitFor(() => {
-      expect(mockGetCabangAll).toHaveBeenCalledWith({
+      expect(mockGetKolamAll).toHaveBeenCalledWith({
         page: 1,
         page_size: 10,
         search: "",
@@ -113,14 +113,14 @@ describe("Cabang list page", () => {
   });
 
   it("navigates to edit when edit action clicked", async () => {
-    mockGetCabangAll.mockResolvedValue({
+    mockGetKolamAll.mockResolvedValue({
       data: {
         count: 1,
-        results: [{ branch_id: 11, name: "Cabang A" }],
+        results: [{ pool_id: 11, name: "Kolam A" }],
       },
     });
 
-    render(<Cabang />);
+    render(<Kolam />);
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "edit" }));
@@ -128,30 +128,30 @@ describe("Cabang list page", () => {
     expect(mockNavigate).toHaveBeenCalledWith("edit", {
       state: {
         isupdate: "true",
-        data: { branch_id: 11, name: "Cabang A" },
+        data: { pool_id: 11, name: "Kolam A" },
       },
     });
   });
 
-  it("deletes cabang after confirmation", async () => {
-    mockGetCabangAll.mockResolvedValue({
+  it("deletes kolam after confirmation", async () => {
+    mockGetKolamAll.mockResolvedValue({
       data: {
         count: 1,
-        results: [{ branch_id: 5, name: "Cabang B" }],
+        results: [{ pool_id: 5, name: "Kolam B" }],
       },
     });
-    mockDeleteCabang.mockResolvedValue({ status: true });
+    mockDeleteKolam.mockResolvedValue({ status: true });
     mockSwalFire
       .mockResolvedValueOnce({ isConfirmed: true })
       .mockResolvedValueOnce({});
 
-    render(<Cabang />);
+    render(<Kolam />);
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "delete" }));
 
     await waitFor(() => {
-      expect(mockDeleteCabang).toHaveBeenCalledWith(5);
+      expect(mockDeleteKolam).toHaveBeenCalledWith(5);
     });
   });
 });

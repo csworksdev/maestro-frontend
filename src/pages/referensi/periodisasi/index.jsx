@@ -85,7 +85,7 @@ const Periodisasi = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeletePeriodisasi(e.package_id).then((res) => {
+        DeletePeriodisasi(e.periode_id).then((res) => {
           if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);

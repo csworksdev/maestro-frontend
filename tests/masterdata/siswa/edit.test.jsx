@@ -3,14 +3,14 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import Edit from "../../../../src/pages/referensi/kolam/edit";
+import Edit from "../../../src/pages/masterdata/siswa/edit";
 
 const mockNavigate = vi.fn();
 const mockLocation = { state: { isupdate: "false", data: {} } };
 
-const { mockAddKolam, mockEditKolam, mockGetCabangAll } = vi.hoisted(() => ({
-  mockAddKolam: vi.fn(),
-  mockEditKolam: vi.fn(),
+const { mockAddSiswa, mockEditSiswa, mockGetCabangAll } = vi.hoisted(() => ({
+  mockAddSiswa: vi.fn(),
+  mockEditSiswa: vi.fn(),
   mockGetCabangAll: vi.fn(),
 }));
 
@@ -25,9 +25,9 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("@/axios/referensi/kolam", () => ({
-  AddKolam: (...args) => mockAddKolam(...args),
-  EditKolam: (...args) => mockEditKolam(...args),
+vi.mock("@/axios/masterdata/siswa", () => ({
+  AddSiswa: (...args) => mockAddSiswa(...args),
+  EditSiswa: (...args) => mockEditSiswa(...args),
 }));
 
 vi.mock("@/axios/referensi/cabang", () => ({
@@ -40,16 +40,30 @@ vi.mock("sweetalert2", () => ({
   },
 }));
 
-vi.mock("@/components/Loading", () => ({
-  default: () => <div>Loading</div>,
+vi.mock("react-flatpickr", () => ({
+  default: ({ onChange }) => (
+    <input
+      aria-label="Tanggal Lahir"
+      type="text"
+      onChange={(event) => onChange([new Date(event.target.value)])}
+    />
+  ),
 }));
 
 vi.mock("@/components/ui/Card", () => ({
   default: ({ title, children }) => (
     <section>
-      <h1>{title}</h1>
+      <h1>{typeof title === "string" ? title : "Form Siswa"}</h1>
       {children}
     </section>
+  ),
+}));
+
+vi.mock("@/components/ui/Button", () => ({
+  default: ({ children, onClick }) => (
+    <button type="button" onClick={onClick}>
+      {children}
+    </button>
   ),
 }));
 
@@ -125,11 +139,25 @@ vi.mock("@/components/ui/Select", () => ({
   ),
 }));
 
-describe("Kolam edit page", () => {
+vi.mock("@/components/ui/Radio", () => ({
+  default: ({ label, value, checked, onChange }) => (
+    <label>
+      <input
+        type="radio"
+        value={value}
+        checked={checked}
+        onChange={onChange}
+      />
+      {label}
+    </label>
+  ),
+}));
+
+describe("Siswa edit page", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    mockAddKolam.mockReset();
-    mockEditKolam.mockReset();
+    mockAddSiswa.mockReset();
+    mockEditSiswa.mockReset();
     mockGetCabangAll.mockReset();
     mockSwalFire.mockReset();
   });
@@ -143,33 +171,40 @@ describe("Kolam edit page", () => {
     mockGetCabangAll.mockResolvedValue({
       data: { results: [{ branch_id: 1, name: "Cabang A" }] },
     });
-    mockAddKolam.mockResolvedValue({ status: true });
+    mockAddSiswa.mockResolvedValue({ status: true });
     mockSwalFire.mockResolvedValue({});
 
     render(<Edit />);
 
     const user = userEvent.setup();
-    await screen.findByLabelText("Nama Kolam");
-
-    await user.type(screen.getByLabelText("Nama Kolam"), "Kolam A");
-    await user.type(screen.getByLabelText("Alamat Kolam"), "Alamat A");
-    await user.type(screen.getByLabelText("No. Telepon"), "08123456789");
+    await user.type(screen.getByLabelText("Nama Lengkap"), "Siswa A");
+    await user.clear(screen.getByLabelText("Panggilan"));
+    await user.type(screen.getByLabelText("Panggilan"), "A");
+    await user.clear(screen.getByLabelText("Nama orang tua"));
+    await user.type(screen.getByLabelText("Nama orang tua"), "Ortu A");
+    await user.type(screen.getByLabelText("Telephone"), "08123456789");
+    await user.clear(screen.getByLabelText("Alamat"));
+    await user.type(screen.getByLabelText("Alamat"), "Alamat A");
+    await user.clear(screen.getByLabelText("Tempat Lahir"));
+    await user.type(screen.getByLabelText("Tempat Lahir"), "Jakarta");
+    await user.type(screen.getByLabelText("Tanggal Lahir"), "2020-01-01");
     await user.selectOptions(screen.getByLabelText("Cabang"), "1");
-    await user.type(screen.getByLabelText("Catatan"), "Catatan A");
 
-    await user.click(screen.getByRole("button", { name: /Add Kolam/i }));
+    await user.click(screen.getByRole("button", { name: /Add Siswa/i }));
 
     await waitFor(() => {
-      expect(mockAddKolam).toHaveBeenCalled();
+      expect(mockAddSiswa).toHaveBeenCalled();
     });
 
-    const [payload] = mockAddKolam.mock.calls[0];
+    const [payload] = mockAddSiswa.mock.calls[0];
     expect(payload).toMatchObject({
-      name: "Kolam A",
-      address: "Alamat A",
+      fullname: "Siswa A",
+      nickname: "A",
+      parent: "Ortu A",
       phone: "08123456789",
+      address: "Alamat A",
+      pob: "Jakarta",
       branch: "1",
-      notes: "Catatan A",
     });
 
     await waitFor(() => {
@@ -181,49 +216,46 @@ describe("Kolam edit page", () => {
     mockLocation.state = {
       isupdate: "true",
       data: {
-        pool_id: 9,
-        name: "Kolam Lama",
-        address: "Alamat Lama",
+        student_id: 9,
+        fullname: "Siswa Lama",
+        nickname: "SL",
+        gender: "L",
+        parent: "Ortu Lama",
         phone: "0811111111",
+        address: "Alamat Lama",
+        dob: "2020-01-01",
+        pob: "Bandung",
         branch: "1",
-        notes: "Catatan Lama",
       },
     };
     mockGetCabangAll.mockResolvedValue({
       data: { results: [{ branch_id: 1, name: "Cabang A" }] },
     });
-    mockEditKolam.mockResolvedValue({ status: true });
+    mockEditSiswa.mockResolvedValue({ status: true });
     mockSwalFire.mockResolvedValue({});
 
     render(<Edit />);
 
     const user = userEvent.setup();
-    await screen.findByLabelText("Nama Kolam");
-
-    await user.clear(screen.getByLabelText("Nama Kolam"));
-    await user.type(screen.getByLabelText("Nama Kolam"), "Kolam Baru");
-    await user.clear(screen.getByLabelText("Alamat Kolam"));
-    await user.type(screen.getByLabelText("Alamat Kolam"), "Alamat Baru");
-    await user.clear(screen.getByLabelText("No. Telepon"));
-    await user.type(screen.getByLabelText("No. Telepon"), "089999999");
+    await user.clear(screen.getByLabelText("Nama Lengkap"));
+    await user.type(screen.getByLabelText("Nama Lengkap"), "Siswa Baru");
+    await user.clear(screen.getByLabelText("Telephone"));
+    await user.type(screen.getByLabelText("Telephone"), "089999999");
     await user.selectOptions(screen.getByLabelText("Cabang"), "1");
-    await user.clear(screen.getByLabelText("Catatan"));
-    await user.type(screen.getByLabelText("Catatan"), "Catatan Baru");
 
-    await user.click(screen.getByRole("button", { name: /Update Kolam/i }));
+    await user.click(screen.getByRole("button", { name: /Update Siswa/i }));
 
     await waitFor(() => {
-      expect(mockEditKolam).toHaveBeenCalled();
+      expect(mockEditSiswa).toHaveBeenCalled();
     });
 
-    const [id, payload] = mockEditKolam.mock.calls[0];
+    const [id, payload] = mockEditSiswa.mock.calls[0];
     expect(id).toBe(9);
     expect(payload).toMatchObject({
-      name: "Kolam Baru",
-      address: "Alamat Baru",
+      fullname: "Siswa Baru",
       phone: "089999999",
       branch: "1",
-      notes: "Catatan Baru",
+      student_id: 9,
     });
 
     await waitFor(() => {

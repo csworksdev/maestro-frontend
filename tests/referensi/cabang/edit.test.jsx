@@ -3,7 +3,7 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import Edit from "../../../../src/pages/referensi/cabang/edit";
+import Edit from "../../../src/pages/referensi/cabang/edit";
 
 const mockNavigate = vi.fn();
 const mockLocation = { state: { isupdate: "false", data: {} } };

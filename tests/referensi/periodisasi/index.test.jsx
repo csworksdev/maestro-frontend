@@ -3,13 +3,13 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import Kolam from "../../../../src/pages/referensi/kolam/index";
+import Periodisasi from "../../../src/pages/referensi/periodisasi/index";
 
 const mockNavigate = vi.fn();
 
-const { mockGetKolamAll, mockDeleteKolam } = vi.hoisted(() => ({
-  mockGetKolamAll: vi.fn(),
-  mockDeleteKolam: vi.fn(),
+const { mockGetPeriodisasiAll, mockDeletePeriodisasi } = vi.hoisted(() => ({
+  mockGetPeriodisasiAll: vi.fn(),
+  mockDeletePeriodisasi: vi.fn(),
 }));
 
 const mockSwalFire = vi.fn();
@@ -23,9 +23,9 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("@/axios/referensi/kolam", () => ({
-  getKolamAll: (...args) => mockGetKolamAll(...args),
-  DeleteKolam: (...args) => mockDeleteKolam(...args),
+vi.mock("@/axios/referensi/periodisasi", () => ({
+  getPeriodisasiAll: (...args) => mockGetPeriodisasiAll(...args),
+  DeletePeriodisasi: (...args) => mockDeletePeriodisasi(...args),
 }));
 
 vi.mock("sweetalert2", () => ({
@@ -70,7 +70,7 @@ vi.mock("@/components/globals/table/table", () => ({
   default: ({ listData, listColumn }) => (
     <div>
       {listData?.results?.map((row) => (
-        <div key={row.pool_id}>
+        <div key={row.periode_id}>
           {listColumn.map((column) => (
             <div key={column.id || column.accessor}>
               {column.accessor === "action"
@@ -84,11 +84,11 @@ vi.mock("@/components/globals/table/table", () => ({
   ),
 }));
 
-describe("Kolam list page", () => {
+describe("Periodisasi list page", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    mockGetKolamAll.mockReset();
-    mockDeleteKolam.mockReset();
+    mockGetPeriodisasiAll.mockReset();
+    mockDeletePeriodisasi.mockReset();
     mockSwalFire.mockReset();
   });
 
@@ -96,15 +96,15 @@ describe("Kolam list page", () => {
     cleanup();
   });
 
-  it("fetches kolam list on load", async () => {
-    mockGetKolamAll.mockResolvedValue({
+  it("fetches periodisasi list on load", async () => {
+    mockGetPeriodisasiAll.mockResolvedValue({
       data: { count: 0, results: [] },
     });
 
-    render(<Kolam />);
+    render(<Periodisasi />);
 
     await waitFor(() => {
-      expect(mockGetKolamAll).toHaveBeenCalledWith({
+      expect(mockGetPeriodisasiAll).toHaveBeenCalledWith({
         page: 1,
         page_size: 10,
         search: "",
@@ -113,14 +113,14 @@ describe("Kolam list page", () => {
   });
 
   it("navigates to edit when edit action clicked", async () => {
-    mockGetKolamAll.mockResolvedValue({
+    mockGetPeriodisasiAll.mockResolvedValue({
       data: {
         count: 1,
-        results: [{ pool_id: 11, name: "Kolam A" }],
+        results: [{ periode_id: 11, name: "Periode A" }],
       },
     });
 
-    render(<Kolam />);
+    render(<Periodisasi />);
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "edit" }));
@@ -128,30 +128,30 @@ describe("Kolam list page", () => {
     expect(mockNavigate).toHaveBeenCalledWith("edit", {
       state: {
         isupdate: "true",
-        data: { pool_id: 11, name: "Kolam A" },
+        data: { periode_id: 11, name: "Periode A" },
       },
     });
   });
 
-  it("deletes kolam after confirmation", async () => {
-    mockGetKolamAll.mockResolvedValue({
+  it("deletes periodisasi after confirmation", async () => {
+    mockGetPeriodisasiAll.mockResolvedValue({
       data: {
         count: 1,
-        results: [{ pool_id: 5, name: "Kolam B" }],
+        results: [{ periode_id: 5, name: "Periode B" }],
       },
     });
-    mockDeleteKolam.mockResolvedValue({ status: true });
+    mockDeletePeriodisasi.mockResolvedValue({ status: true });
     mockSwalFire
       .mockResolvedValueOnce({ isConfirmed: true })
       .mockResolvedValueOnce({});
 
-    render(<Kolam />);
+    render(<Periodisasi />);
 
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "delete" }));
 
     await waitFor(() => {
-      expect(mockDeleteKolam).toHaveBeenCalledWith(5);
+      expect(mockDeletePeriodisasi).toHaveBeenCalledWith(5);
     });
   });
 });
