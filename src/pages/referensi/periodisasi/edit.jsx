@@ -14,7 +14,7 @@ const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isupdate = "false", data = {} } = location.state ?? {};
-  const isUpdate = isupdate == "true";
+  const isUpdate = isupdate === "true";
   const FormValidationSchema = yup
     .object({
       name: yup.string().required("Nama Periodisasi is required"),
@@ -40,11 +40,8 @@ const Edit = () => {
 
   const handleAdd = (data) => {
     AddPeriodisasi(data).then((res) => {
-      if (res)
-        Swal.fire(
-          "Added!",
-          "Your file has been Added.",
-          "success",
+      if (res?.status)
+        Swal.fire("Added!", "Your file has been Added.", "success").then(() =>
           navigate(-1)
         );
     });
@@ -53,11 +50,8 @@ const Edit = () => {
   // edit event
   const handleUpdate = (updatedData) => {
     EditPeriodisasi(data.periode_id, updatedData).then((res) => {
-      if (res)
-        Swal.fire(
-          "Edited!",
-          "Your file has been Edited.",
-          "success",
+      if (res?.status)
+        Swal.fire("Edited!", "Your file has been Edited.", "success").then(() =>
           navigate(-1)
         );
     });
@@ -94,7 +88,7 @@ const Edit = () => {
 
   return (
     <div>
-      <Card title={isUpdate ? "Update" : "Add" + " Periodisasi"}>
+      <Card title={`${isUpdate ? "Update" : "Add"} Periodisasi`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
           <Textinput
             name="name"
@@ -102,7 +96,7 @@ const Edit = () => {
             type="text"
             placeholder="Masukan Nama Periode"
             register={register}
-            error={errors.title}
+            error={errors.name}
             defaultValue={isUpdate ? data.name : ""}
           />
           <div className="grid grid-cols-3 gap-5">
@@ -112,7 +106,7 @@ const Edit = () => {
               type="month"
               placeholder="Masukan jumlah hari"
               register={register}
-              error={errors.title}
+              error={errors.month}
               // options={{ numeral: true, numeralPositiveOnly: true }}
               defaultValue={isUpdate ? data.month : ""}
             />
