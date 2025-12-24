@@ -12,7 +12,7 @@ export const getPaketAll = async (data) => {
 };
 export const getPaketByProduct = async (product_id) => {
   try {
-    let response = await axiosConfig.get("/api/package/", product_id, "/");
+    let response = await axiosConfig.get(`/api/package/${product_id}/`);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
