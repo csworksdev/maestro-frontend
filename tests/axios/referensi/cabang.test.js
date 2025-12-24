@@ -1,12 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import {
-  AddPaket,
-  DeletePaket,
-  EditPaket,
-  getPaketAll,
-  getPaketByProduct,
-} from "../../../src/axios/referensi/paket";
+  AddCabang,
+  DeleteCabang,
+  EditCabang,
+  getCabangAll,
+} from "../../../src/axios/referensi/cabang";
 
 const { mockGet, mockPost, mockPut, mockDelete } = vi.hoisted(() => ({
   mockGet: vi.fn(),
@@ -26,7 +25,7 @@ vi.mock("../../../src/axios/config", () => {
   };
 });
 
-describe("paket api", () => {
+describe("cabang api", () => {
   beforeEach(() => {
     mockGet.mockReset();
     mockPost.mockReset();
@@ -34,58 +33,48 @@ describe("paket api", () => {
     mockDelete.mockReset();
   });
 
-  it("requests paket list with params", async () => {
+  it("requests cabang list with params", async () => {
     const response = { data: { results: [] } };
     mockGet.mockResolvedValue(response);
 
-    const result = await getPaketAll({ page: 1 });
+    const result = await getCabangAll({ page: 1 });
 
     expect(result).toBe(response);
-    expect(mockGet).toHaveBeenCalledWith("/api/package/", {
+    expect(mockGet).toHaveBeenCalledWith("/api/branch/", {
       params: { page: 1 },
     });
   });
 
-  it("requests paket by product id", async () => {
-    const response = { data: { id: 12 } };
-    mockGet.mockResolvedValue(response);
-
-    const result = await getPaketByProduct(12);
-
-    expect(result).toBe(response);
-    expect(mockGet).toHaveBeenCalledWith("/api/package/12/");
-  });
-
-  it("posts paket data", async () => {
+  it("posts cabang data", async () => {
     const response = { status: 201 };
     mockPost.mockResolvedValue(response);
 
-    const payload = { name: "Paket A" };
-    const result = await AddPaket(payload);
+    const payload = { name: "Cabang A" };
+    const result = await AddCabang(payload);
 
     expect(result).toBe(response);
-    expect(mockPost).toHaveBeenCalledWith("/api/package/", payload);
+    expect(mockPost).toHaveBeenCalledWith("/api/branch/", payload);
   });
 
-  it("updates paket data", async () => {
+  it("updates cabang data", async () => {
     const response = { status: 200 };
     mockPut.mockResolvedValue(response);
 
-    const payload = { name: "Paket B" };
-    const result = await EditPaket(9, payload);
+    const payload = { name: "Cabang B" };
+    const result = await EditCabang(9, payload);
 
     expect(result).toBe(response);
-    expect(mockPut).toHaveBeenCalledWith("/api/package/9/", payload);
+    expect(mockPut).toHaveBeenCalledWith("/api/branch/9/", payload);
   });
 
-  it("deletes paket data", async () => {
+  it("deletes cabang data", async () => {
     const response = { status: 204 };
     mockDelete.mockResolvedValue(response);
 
-    const result = await DeletePaket(3);
+    const result = await DeleteCabang(3);
 
     expect(result).toBe(response);
-    expect(mockDelete).toHaveBeenCalledWith("/api/package/3/");
+    expect(mockDelete).toHaveBeenCalledWith("/api/branch/3/");
   });
 
   it("logs errors and returns undefined", async () => {
@@ -93,7 +82,7 @@ describe("paket api", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockGet.mockRejectedValue(error);
 
-    const result = await getPaketAll({ page: 1 });
+    const result = await getCabangAll({ page: 1 });
 
     expect(result).toBeUndefined();
     expect(consoleSpy).toHaveBeenCalled();

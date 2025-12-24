@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import {
-  AddPaket,
-  DeletePaket,
-  EditPaket,
-  getPaketAll,
-  getPaketByProduct,
-} from "../../../src/axios/referensi/paket";
+  AddProduk,
+  DeleteProduk,
+  EditProduk,
+  getProdukAll,
+  getProdukPool,
+} from "../../../src/axios/masterdata/produk";
 
 const { mockGet, mockPost, mockPut, mockDelete } = vi.hoisted(() => ({
   mockGet: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock("../../../src/axios/config", () => {
   };
 });
 
-describe("paket api", () => {
+describe("produk api", () => {
   beforeEach(() => {
     mockGet.mockReset();
     mockPost.mockReset();
@@ -34,58 +34,59 @@ describe("paket api", () => {
     mockDelete.mockReset();
   });
 
-  it("requests paket list with params", async () => {
+  it("requests produk list with params", async () => {
     const response = { data: { results: [] } };
     mockGet.mockResolvedValue(response);
 
-    const result = await getPaketAll({ page: 1 });
+    const result = await getProdukAll({ page: 1 });
 
     expect(result).toBe(response);
-    expect(mockGet).toHaveBeenCalledWith("/api/package/", {
+    expect(mockGet).toHaveBeenCalledWith("/api/product/", {
       params: { page: 1 },
     });
   });
 
-  it("requests paket by product id", async () => {
-    const response = { data: { id: 12 } };
+  it("requests produk pool by id with params", async () => {
+    const response = { data: { results: [] } };
     mockGet.mockResolvedValue(response);
 
-    const result = await getPaketByProduct(12);
+    const params = { page: 1 };
+    const result = await getProdukPool(7, params);
 
     expect(result).toBe(response);
-    expect(mockGet).toHaveBeenCalledWith("/api/package/12/");
+    expect(mockGet).toHaveBeenCalledWith("/api/productpool/7/", params);
   });
 
-  it("posts paket data", async () => {
+  it("posts produk data", async () => {
     const response = { status: 201 };
     mockPost.mockResolvedValue(response);
 
-    const payload = { name: "Paket A" };
-    const result = await AddPaket(payload);
+    const payload = { name: "Produk A" };
+    const result = await AddProduk(payload);
 
     expect(result).toBe(response);
-    expect(mockPost).toHaveBeenCalledWith("/api/package/", payload);
+    expect(mockPost).toHaveBeenCalledWith("/api/product/", payload);
   });
 
-  it("updates paket data", async () => {
+  it("updates produk data", async () => {
     const response = { status: 200 };
     mockPut.mockResolvedValue(response);
 
-    const payload = { name: "Paket B" };
-    const result = await EditPaket(9, payload);
+    const payload = { name: "Produk B" };
+    const result = await EditProduk(9, payload);
 
     expect(result).toBe(response);
-    expect(mockPut).toHaveBeenCalledWith("/api/package/9/", payload);
+    expect(mockPut).toHaveBeenCalledWith("/api/product/9/", payload);
   });
 
-  it("deletes paket data", async () => {
+  it("deletes produk data", async () => {
     const response = { status: 204 };
     mockDelete.mockResolvedValue(response);
 
-    const result = await DeletePaket(3);
+    const result = await DeleteProduk(3);
 
     expect(result).toBe(response);
-    expect(mockDelete).toHaveBeenCalledWith("/api/package/3/");
+    expect(mockDelete).toHaveBeenCalledWith("/api/product/3/");
   });
 
   it("logs errors and returns undefined", async () => {
@@ -93,7 +94,7 @@ describe("paket api", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockGet.mockRejectedValue(error);
 
-    const result = await getPaketAll({ page: 1 });
+    const result = await getProdukAll({ page: 1 });
 
     expect(result).toBeUndefined();
     expect(consoleSpy).toHaveBeenCalled();

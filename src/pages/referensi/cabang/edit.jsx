@@ -12,7 +12,7 @@ const Edit = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isupdate = "false", data = {} } = location.state ?? {};
-  const isUpdate = isupdate == "true";
+  const isUpdate = isupdate === "true";
   const FormValidationSchema = yup
     .object({
       name: yup.string().required("Nama Cabang is required"),
@@ -37,10 +37,7 @@ const Edit = () => {
   const handleAdd = (data) => {
     AddCabang(data).then((res) => {
       if (res.status)
-        Swal.fire(
-          "Added!",
-          "Your file has been Added.",
-          "success",
+        Swal.fire("Added!", "Your file has been Added.", "success").then(() =>
           navigate(-1)
         );
     });
@@ -50,10 +47,7 @@ const Edit = () => {
   const handleUpdate = (updatedData) => {
     EditCabang(data.branch_id, updatedData).then((res) => {
       if (res.status)
-        Swal.fire(
-          "Edited!",
-          "Your file has been Edited.",
-          "success",
+        Swal.fire("Edited!", "Your file has been Edited.", "success").then(() =>
           navigate(-1)
         );
     });
@@ -76,16 +70,16 @@ const Edit = () => {
 
   return (
     <div>
-      <Card title={isUpdate ? "Update" : "Add" + " Cabang"}>
+      <Card title={`${isUpdate ? "Update" : "Add"} Cabang`}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
           <Textinput
             name="name"
             label="Nama Cabang"
-            id={name}
+            id="name"
             type="text"
             placeholder="Masukan Nama Cabang"
             register={register}
-            error={errors.title}
+            error={errors.name}
             defaultValue={isUpdate ? data.name : ""}
           />
           <div className="ltr:text-right rtl:text-left  space-x-3">
