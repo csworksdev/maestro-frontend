@@ -29,6 +29,7 @@ import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, gender } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
+import Button from "@/components/ui/Button";
 
 const Edit = ({ state, onClose = null }) => {
   const navigate = useNavigate();
@@ -115,13 +116,15 @@ const Edit = ({ state, onClose = null }) => {
         setSelectGenderOption(data.trainer_gender);
         if (data.pool) {
           const productResponse = await getProdukPool(data.pool);
-          const productOptions = productResponse.data.results.map((item) => ({
+          const productResults = productResponse.data.results;
+          const productOptions = productResults.map((item) => ({
             value: item.product_id,
             label: item.name,
             price: item.price,
           }));
           setProductOption(productOptions);
-          setProductData(productResponse.data.results);
+          setProductData(productResults);
+          handleProductChange({ target: { value: data.product } }, productResults);
         }
 
         setValue("promo", data.promo);
@@ -139,7 +142,6 @@ const Edit = ({ state, onClose = null }) => {
 
         // setvalue product
         setValue("product", data.product);
-        handleProductChange({ target: { value: data.product } });
       } catch (error) {
         setLoadingError(error);
         // Swal.fire("Error", "Failed to load reference data.", "error");
@@ -268,11 +270,13 @@ const Edit = ({ state, onClose = null }) => {
     }
   };
 
-  const handleProductChange = (e) => {
+  const handleProductChange = (e, productList = productData) => {
     setSelectProductOption(e.target.value);
-    const findData = productData.find(
+    setValue("product", e.target.value);
+    const findData = productList.find(
       (item) => item.product_id === e.target.value
     );
+    if (!findData) return;
     setMaxStudents(findData.max_student);
     createDetail(findData);
   };
@@ -298,7 +302,7 @@ const Edit = ({ state, onClose = null }) => {
       const pool_notes = kolamOption.find(
         (item) => item.value === e.target.value
       );
-      setPoolNotes(pool_notes.notes);
+      setPoolNotes(pool_notes ? pool_notes.notes : null);
     }
   };
 
@@ -345,10 +349,12 @@ const Edit = ({ state, onClose = null }) => {
             value: item.trainer_id,
             label: item.fullname,
           }));
-          trainerOptions.push({
-            value: data.trainer,
-            label: data.trainer_name,
-          });
+          if (!trainerOptions.some((option) => option.value === data.trainer)) {
+            trainerOptions.push({
+              value: data.trainer,
+              label: data.trainer_name,
+            });
+          }
           setTrainerList(trainerResponse.data.results);
           setTrainerOption(trainerOptions);
         } catch (error) {
