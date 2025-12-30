@@ -139,32 +139,32 @@ const AdminRoutes = () => {
         <Route path="cabang">
           <Route index element={<Cabang />} />
           <Route path="add" element={<EditCabang />} />
-          <Route path="edit" element={<EditCabang />} />
+          <Route path="Edit" element={<EditCabang />} />
         </Route>
         <Route path="kolam">
           <Route index element={<Kolam />} />
           <Route path="add" element={<EditKolam />} />
-          <Route path="edit" element={<EditKolam />} />
+          <Route path="Edit" element={<EditKolam />} />
         </Route>
         <Route path="paket">
           <Route index element={<Paket />} />
           <Route path="add" element={<EditPaket />} />
-          <Route path="edit" element={<EditPaket />} />
+          <Route path="Edit" element={<EditPaket />} />
         </Route>
         <Route path="periodisasi">
           <Route index element={<Periodisasi />} />
           <Route path="add" element={<EditPeriodisasi />} />
-          <Route path="edit" element={<EditPeriodisasi />} />
+          <Route path="Edit" element={<EditPeriodisasi />} />
         </Route>
         <Route path="spesialisasi">
           <Route index element={<Specialization />} />
           <Route path="add" element={<EditSpecialization />} />
-          <Route path="edit" element={<EditSpecialization />} />
+          <Route path="Edit" element={<EditSpecialization />} />
         </Route>
         <Route path="kontakwati">
           <Route index element={<KontakWati />} />
           {/* <Route path="add" element={<EditSpecialization />} />
-                  <Route path="edit" element={<EditSpecialization />} /> */}
+                  <Route path="Edit" element={<EditSpecialization />} /> */}
         </Route>
         <Route index path="notifications" element={<NotificationPage />} />
         //#endregion
@@ -173,22 +173,22 @@ const AdminRoutes = () => {
         <Route path="siswa">
           <Route index element={<Siswa />} />
           <Route path="add" element={<EditSiswa />} />
-          <Route path="edit" element={<EditSiswa />} />
+          <Route path="Edit" element={<EditSiswa />} />
         </Route>
         <Route path="trainer">
           <Route index element={<Trainer />} />
           <Route path="add" element={<EditTrainer />} />
-          <Route path="edit" element={<EditTrainer />} />
+          <Route path="Edit" element={<EditTrainer />} />
         </Route>
         <Route path="produk">
           <Route index element={<Produk />} />
           <Route path="add" element={<EditProduk />} />
-          <Route path="edit" element={<EditProduk />} />
+          <Route path="Edit" element={<EditProduk />} />
         </Route>
         <Route path="promo">
           <Route index element={<Promo />} />
           <Route path="add" element={<EditPromo />} />
-          <Route path="edit" element={<EditPromo />} />
+          <Route path="Edit" element={<EditPromo />} />
         </Route>
         //#endregion
         {/*  */}
@@ -196,7 +196,7 @@ const AdminRoutes = () => {
         <Route path="order">
           <Route index element={<Order />} />
           {/* <Route path="add" element={<AddOrder />} />
-                  <Route path="edit" element={<EditOrder />} /> */}
+                  <Route path="Edit" element={<EditOrder />} /> */}
           <Route path="detail" element={<DetailOrder />} />
 
           <Route path="expired" element={<OrderExpired />} />
@@ -210,7 +210,7 @@ const AdminRoutes = () => {
         </Route>
         {/* <Route path="finishedOrder">
           <Route index element={<OrderFinished />} />
-          <Route path="edit" element={<EditOrder />} />
+          <Route path="Edit" element={<EditOrder />} />
           <Route path="detail" element={<DetailOrder />} />
         </Route> */}
         //#endregion
@@ -232,22 +232,22 @@ const AdminRoutes = () => {
         <Route path="user">
           <Route index element={<UMUser />} />
           <Route path="add" element={<UMUserEdit />} />
-          <Route path="edit" element={<UMUserEdit />} />
+          <Route path="Edit" element={<UMUserEdit />} />
         </Route>
         <Route path="menu">
           <Route index element={<UMMenu />} />
           <Route path="add" element={<UMMenuEdit />} />
-          <Route path="edit" element={<UMMenuEdit />} />
+          <Route path="Edit" element={<UMMenuEdit />} />
         </Route>
         <Route path="role">
           <Route index element={<UMRole />} />
           <Route path="add" element={<UMRoleEdit />} />
-          <Route path="edit" element={<UMRoleEdit />} />
+          <Route path="Edit" element={<UMRoleEdit />} />
         </Route>
         <Route path="permissions">
           <Route index element={<UMPermissions />} />
           <Route path="add" element={<UMPermissionsEdit />} />
-          <Route path="edit" element={<UMPermissionsEdit />} />
+          <Route path="Edit" element={<UMPermissionsEdit />} />
         </Route>
         //#endregion
         {/*  */}

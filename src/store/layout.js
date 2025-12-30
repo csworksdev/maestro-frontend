@@ -37,6 +37,12 @@ const initialMonochrome = () => {
   const item = window.localStorage.getItem("monochrome");
   return item ? JSON.parse(item) : themeConfig.layout.isMonochrome;
 };
+
+const initialTableDensity = () => {
+  const item = window.localStorage.getItem("tableDensity");
+  return item ? JSON.parse(item) : themeConfig.layout.tableDensity;
+};
+
 const initialState = {
   isRTL: initialRtl(),
   darkMode: initialDarkMode(),
@@ -51,6 +57,7 @@ const initialState = {
   footerType: themeConfig.layout.footerType,
   mobileMenu: themeConfig.layout.mobileMenu,
   isMonochrome: initialMonochrome(),
+  tableDensity: initialTableDensity(),
 };
 
 export const layoutSlice = createSlice({
@@ -114,6 +121,13 @@ export const layoutSlice = createSlice({
       state.isMonochrome = action.payload;
       window.localStorage.setItem("monochrome", JSON.stringify(action.payload));
     },
+    handleTableDensity: (state, action) => {
+      state.tableDensity = action.payload;
+      window.localStorage.setItem(
+        "tableDensity",
+        JSON.stringify(action.payload)
+      );
+    },
   },
 });
 
@@ -131,6 +145,7 @@ export const {
   handleFooterType,
   handleMobileMenu,
   handleMonoChrome,
+  handleTableDensity,
 } = layoutSlice.actions;
 
 export default layoutSlice.reducer;

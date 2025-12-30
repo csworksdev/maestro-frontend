@@ -87,11 +87,11 @@ const actions = [
     icon: "heroicons-outline:eye",
   },
   {
-    name: "edit",
+    name: "Edit",
     icon: "heroicons:pencil-square",
   },
   {
-    name: "delete",
+    name: "Delete",
     icon: "heroicons-outline:trash",
   },
 ];
@@ -181,7 +181,7 @@ const COLUMNS = [
                     className={`
                 
                   ${
-                    item.name === "delete"
+                    item.name === "Delete"
                       ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
                       : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
                   }
@@ -264,7 +264,12 @@ const TeamTable = () => {
                           );
                           const { key, ...rest } = headerProps || {};
                           return (
-                            <th key={key} {...rest} scope="col" className=" table-th ">
+                            <th
+                              key={key}
+                              {...rest}
+                              scope="col"
+                              className=" table-th "
+                            >
                               {column.render("Header")}
                               <span>
                                 {column.isSorted
@@ -293,7 +298,11 @@ const TeamTable = () => {
                           const { key: cellKey, ...cellRest } =
                             cell.getCellProps() || {};
                           return (
-                            <td {...cellRest} key={cellKey} className="table-td py-2">
+                            <td
+                              {...cellRest}
+                              key={cellKey}
+                              className="table-td py-2"
+                            >
                               {cell.render("Cell")}
                             </td>
                           );

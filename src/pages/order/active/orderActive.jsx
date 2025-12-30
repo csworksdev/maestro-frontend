@@ -204,7 +204,7 @@ const OrderActive = ({ is_finished }) => {
       handler: handleDetail,
     },
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       intent: "info",
       handler: handleEdit,
@@ -228,7 +228,7 @@ const OrderActive = ({ is_finished }) => {
       handler: handlePerpanjang,
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       intent: "danger",
       handler: handleDelete,

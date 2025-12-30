@@ -18,6 +18,37 @@
       crossorigin=""
     />
     <title>Maestro Swim</title>
+    <script>
+      (function () {
+        var defaultTitle = "Maestro Swim";
+        var host = window.location.hostname || "";
+        var parts = host.split(".");
+        var subdomain = parts.length > 2 ? parts[0] : "";
+        var subdomainLabel = "";
+        var subdomainMap = {
+          admin: "Admin",
+          ceo: "CEO",
+          cfo: "CFO",
+        };
+
+        if (subdomain && subdomain !== "www") {
+          subdomainLabel =
+            subdomainMap[subdomain] ||
+            subdomain
+              .replace(/[-_]+/g, " ")
+              .replace(/\b[a-z]/g, function (match) {
+                return match.toUpperCase();
+              });
+        }
+
+        var baseTitle = subdomainLabel
+          ? defaultTitle + " | " + subdomainLabel
+          : defaultTitle;
+
+        window.__APP_BASE_TITLE__ = baseTitle;
+        document.title = baseTitle;
+      })();
+    </script>
   </head>
   <body class="font-inter bg-[#EEF1F9] custom-tippy dashcode-app">
     <div id="root" class="h-full"></div>

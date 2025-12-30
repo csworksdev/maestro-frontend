@@ -143,6 +143,7 @@ const CekJadwal = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [reloadDone, setReloadDone] = useState(false);
   const [checked, setChecked] = useState(true);
+  const [isScheduleLoading, setIsScheduleLoading] = useState(false);
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -219,6 +220,43 @@ const CekJadwal = () => {
     },
     enabled: !!selectedBranch,
   });
+
+  const selectedBranchOption = useMemo(
+    () =>
+      memoizedBranchOptions.find((option) => option.value === selectedBranch) ||
+      null,
+    [memoizedBranchOptions, selectedBranch]
+  );
+
+  const selectedPoolItem = useMemo(
+    () => (selectedPool >= 0 ? poolOption[selectedPool] : null),
+    [poolOption, selectedPool]
+  );
+
+  const selectedDayName = useMemo(
+    () => selectedDay || daysOfWeek[selectedIndex]?.name || "",
+    [selectedDay, selectedIndex]
+  );
+
+  const visibleTrainerCount = useMemo(() => {
+    if (!jadwal.length) {
+      return 0;
+    }
+    if (!filteredPelatih) {
+      return jadwal.length;
+    }
+    return jadwal.filter((trainer) => trainer.trainer_id === filteredPelatih)
+      .length;
+  }, [jadwal, filteredPelatih]);
+
+  const filteredTrainers = useMemo(() => {
+    if (!selectedPoolItem) {
+      return [];
+    }
+    return jadwal.filter((trainer) =>
+      trainer.kolam.includes(selectedPoolItem.value)
+    );
+  }, [jadwal, selectedPoolItem]);
 
   useEffect(() => {
     if (!poolQuery.data) {
@@ -322,6 +360,7 @@ const CekJadwal = () => {
   };
 
   const loadSchedule = async (selectedBranch, poolName, dayName) => {
+    setIsScheduleLoading(true);
     try {
       const scheduleRes = await CJGetBranchDay(
         selectedBranch,
@@ -341,6 +380,8 @@ const CekJadwal = () => {
       setJadwal([...data]);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsScheduleLoading(false);
     }
   };
 
@@ -505,10 +546,9 @@ const CekJadwal = () => {
             // Jika free langsung render PelatihLibur
             if (orders[0]?.is_free) {
               return (
-                <div className="flex flex-col gap-4">
-                  <PelatihLibur key={jIdx} />
+                <div className="flex min-h-[70px] flex-col items-center justify-center gap-2">
+                  <PelatihLibur compact />
                   <PelatihKosong
-                    key={i}
                     pool={pool}
                     trainer={item}
                     hari={timeSlot.hari}
@@ -519,11 +559,20 @@ const CekJadwal = () => {
             }
 
             // Cek apakah ada slot di pool lain
-            const hasOtherPool = orders.some(
-              (slot) =>
-                slot.order_id &&
-                slot.pool_name !== pool.label &&
-                slot.p.every((item) => item.tgl === null)
+            const isOtherPoolSlot = (slot) =>
+              slot.order_id &&
+              slot.pool_name !== pool.label &&
+              Array.isArray(slot.p) &&
+              slot.p.every((item) => item.tgl === null);
+
+            const samePoolOrders = orders.filter(
+              (slot) => slot.order_id && slot.pool_name === pool.label
+            );
+            const otherPoolOrders = orders.filter(isOtherPoolSlot);
+            const otherPoolNames = Array.from(
+              new Set(
+                otherPoolOrders.map((slot) => slot.pool_name).filter(Boolean)
+              )
             );
 
             // Fungsi bantu: tentukan warna card
@@ -571,12 +620,7 @@ const CekJadwal = () => {
                         {slot.frequency_per_week}x / minggu
                       </span>
                     ) : null}
-                    <PerpanjangPaket
-                      order_id={slot.order_id}
-                      slot={slot}
-                      buttonClassName="btn btn-outline-primary"
-                      iconClassName="text-primary-500"
-                    />
+                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
                   </div>
                 );
               }
@@ -644,35 +688,33 @@ const CekJadwal = () => {
               );
             };
 
-            // Fungsi bantu: render slot pool lain
-            const renderOtherPoolSlot = (slot, key) => (
-              <PelatihAdaJadwal key={key} poolName={slot.pool_name} />
-            );
-
             return (
               <div
                 key={`${jIdx}-${i}-${jIdx}`}
                 className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
-                {orders.map((slot, k) => {
-                  if (!slot.order_id) return null; // skip slot kosong
+                {samePoolOrders.map((slot, k) =>
+                  renderSamePoolSlot(slot, `${i}-${jIdx}-${k}`)
+                )}
 
-                  const key = `${i}-${jIdx}-${k}`;
-                  if (slot.pool_name === pool.label) {
-                    return renderSamePoolSlot(slot, key);
-                  }
-                  return renderOtherPoolSlot(slot, key);
-                })}
-
-                {!hasOtherPool && (
-                  <PelatihKosong
-                    key={`${i}-${jIdx}`}
-                    pool={pool}
-                    trainer={item}
-                    hari={timeSlot.hari}
-                    jam={slotObj.jam}
+                {otherPoolOrders.length > 0 && (
+                  <PelatihAdaJadwal
+                    key={`other-${i}-${jIdx}`}
+                    poolNames={otherPoolNames}
+                    count={otherPoolOrders.length}
                   />
                 )}
+
+                {samePoolOrders.length === 0 &&
+                  otherPoolOrders.length === 0 && (
+                    <PelatihKosong
+                      key={`${i}-${jIdx}`}
+                      pool={pool}
+                      trainer={item}
+                      hari={timeSlot.hari}
+                      jam={slotObj.jam}
+                    />
+                  )}
               </div>
             );
           })
@@ -728,8 +770,8 @@ const CekJadwal = () => {
       <div className="w-full">
         <div className="overflow-x-auto">
           <div className="min-w-[1200px]">
-            <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-white">
-              <div className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky left-0 top-0 bg-white z-30">
+            <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-slate-50/90 backdrop-blur border-b border-slate-200/70">
+              <div className="border-b border-slate-200/70 p-2 min-h-[72px] text-center text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-center sticky left-0 top-0 bg-slate-50/90 z-30">
                 Pelatih
               </div>
               {columnHeader.slice(1).map((header, i) => {
@@ -737,7 +779,7 @@ const CekJadwal = () => {
                 return (
                   <div
                     key={i}
-                    className="border-b-4 border-blue-500 p-2 min-h-[80px] text-center font-semibold flex items-start justify-center sticky top-0 bg-white z-20"
+                    className="border-b border-slate-200/70 p-2 min-h-[72px] text-center text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-center sticky top-0 bg-slate-50/90 z-20"
                   >
                     {header}
                     {jumlahPerJam && (
@@ -763,8 +805,10 @@ const CekJadwal = () => {
                   className="grid grid-cols-15 gap-3 my-2 w-full"
                 >
                   <div
-                    className={`p-1 min-h-[80px] flex flex-col rounded-xl shadow sticky left-0 z-20 align-middle justify-center animation-ping gap-1 ${
-                      de.gender === "L" ? "bg-blue-300" : "bg-pink-300"
+                    className={`p-2 min-h-[80px] flex flex-col rounded-xl border border-white/40 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
+                      de.gender === "L"
+                        ? "bg-blue-100 text-blue-900"
+                        : "bg-pink-100 text-pink-900"
                     }`}
                   >
                     <span className="text-[clamp(8px,0.7vw,14px)] p-1 font-semibold">
@@ -788,15 +832,46 @@ const CekJadwal = () => {
   });
 
   const gridKolam = (hari) => {
-    const selectedPoolItem =
-      selectedPool >= 0 ? poolOption[selectedPool] : null;
+    const renderEmptyState = (title, description) => (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/70 p-8 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <Icon icon="heroicons-outline:calendar-days" width={22} />
+        </div>
+        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          {title}
+        </div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          {description}
+        </div>
+      </div>
+    );
 
-    const filteredTrainers = useMemo(() => {
-      if (!selectedPoolItem) return [];
-      return jadwal.filter((trainer) =>
-        trainer.kolam.includes(selectedPoolItem.value)
+    if (!selectedBranchOption) {
+      return renderEmptyState(
+        "Pilih cabang terlebih dahulu",
+        "Cek jadwal dimulai dengan memilih cabang yang ingin dicek."
       );
-    }, [jadwal, selectedPoolItem]);
+    }
+
+    if (!selectedPoolItem) {
+      return renderEmptyState(
+        "Pilih kolam untuk melihat jadwal",
+        "Kolam akan muncul setelah cabang dipilih."
+      );
+    }
+
+    if (isScheduleLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/70 p-8 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+          <Icon
+            icon="heroicons-outline:refresh"
+            width={22}
+            className="animate-spin text-primary-500"
+          />
+          Memuat jadwal...
+        </div>
+      );
+    }
 
     if (jadwal && jadwal.length > 0 && selectedPoolItem) {
       return (
@@ -819,12 +894,9 @@ const CekJadwal = () => {
         </div>
       );
     } else {
-      return (
-        <div className="flex flex-col h-full">
-          <div className="text-center text-sm text-gray-400">
-            No pool selected or data not available.
-          </div>
-        </div>
+      return renderEmptyState(
+        "Belum ada jadwal untuk hari ini",
+        "Gunakan slot kosong untuk menambah jadwal baru."
       );
     }
   };
@@ -850,15 +922,13 @@ const CekJadwal = () => {
         <Tooltip placement="top" arrow content="Buat Order">
           <button
             onClick={() => handleModal({ pool, jadwal, trainer, hari, jam })}
-            className="p-2 rounded-full bg-green-50 hover:bg-green-100 
-                     transition duration-200 ease-in-out transform 
-                     hover:scale-105 shadow-sm"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 hover:bg-emerald-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
           >
             <Icon
               icon="heroicons-outline:plus"
               width="20"
               height="20"
-              className="text-green-600"
+              className="text-emerald-600"
             />
           </button>
         </Tooltip>
@@ -878,7 +948,7 @@ const CekJadwal = () => {
               }}
               className={
                 buttonClassName ||
-                "p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm"
+                "p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300/70"
               }
             >
               <Icon
@@ -894,106 +964,247 @@ const CekJadwal = () => {
     }
   );
 
+  const legendItems = [
+    {
+      label: "Slot kosong (buat order)",
+      icon: "heroicons-outline:plus",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+    {
+      label: "Perpanjang paket",
+      icon: "heroicons-outline:heart",
+      className: "border-pink-200 bg-pink-50 text-pink-700",
+    },
+    {
+      label: "Jadwal di kolam lain",
+      icon: "heroicons-outline:hand-raised",
+      className: "border-slate-200 bg-slate-100 text-slate-600",
+    },
+    {
+      label: "Pelatih libur",
+      icon: "heroicons-outline:calendar-days",
+      className: "border-rose-200 bg-rose-50 text-rose-700",
+    },
+  ];
+
   return (
     <>
-      <div className="flex flex-row justify-between items-center">
-        <div className="flex flex-row items-center gap-3">
-          <label>Cabang</label>
-          <div className="flex gap-3 min-w-[400px]">
-            <AsyncSelect
-              name="kolam"
-              placeholder="Pilih Cabang"
-              defaultOptions={memoizedBranchOptions}
-              loadOptions={loadBranchOptions}
-              onChange={handleBranchChange}
-              className="grow z-50"
-              cacheOptions
-              isLoading={branchQuery.isLoading}
-              value={memoizedBranchOptions.find(
-                (option) => option.value === selectedBranch
-              )}
-            />
+      <div className="mb-3 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 p-3 shadow-sm dark:border-slate-700/70 dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-800/60 sm:p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Cek Jadwal
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Pilih cabang, kolam, dan hari. Klik slot kosong untuk membuat
+                order.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                Mode tampilan
+              </span>
+              <Switch
+                value={checked}
+                onChange={() => setChecked(!checked)}
+                prevLabel="Detail"
+                nextLabel="Siswa"
+                labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
+                wrapperClass="gap-2"
+                activeClass="bg-primary-500"
+              />
+            </div>
           </div>
+
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                Cabang
+              </label>
+              <AsyncSelect
+                name="kolam"
+                placeholder="Pilih Cabang"
+                defaultOptions={memoizedBranchOptions}
+                loadOptions={loadBranchOptions}
+                onChange={handleBranchChange}
+                className="react-select"
+                classNamePrefix="select"
+                cacheOptions
+                isLoading={branchQuery.isLoading}
+                menuPortalTarget={
+                  typeof window !== "undefined" ? document.body : null
+                }
+                styles={{
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 9999,
+                  }),
+                }}
+                loadingMessage={() => "Memuat cabang..."}
+                noOptionsMessage={() => "Cabang tidak ditemukan"}
+                value={selectedBranchOption}
+              />
+              {/* <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                Gunakan pencarian untuk mempercepat pemilihan cabang.
+              </span> */}
+            </div>
+
+            {/* <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  label: "Cabang",
+                  value: selectedBranchOption?.label || "Belum dipilih",
+                },
+                {
+                  label: "Kolam",
+                  value: selectedPoolItem?.label || "Belum dipilih",
+                },
+                {
+                  label: "Hari",
+                  value: selectedDayName || "Belum dipilih",
+                },
+                {
+                  label: "Pelatih",
+                  value: `${visibleTrainerCount} pelatih`,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-200"
+                >
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-400">
+                    {item.label}
+                  </span>
+                  <span className="text-slate-700 dark:text-slate-100">
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div> */}
+          </div>
+
+          {/* <div className="flex flex-nowrap items-center gap-2 overflow-x-auto rounded-xl border border-slate-200/70 bg-white/70 px-2 py-1.5 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/50 dark:text-slate-300">
+            {legendItems.map((item) => (
+              <div
+                key={item.label}
+                className={`inline-flex items-center gap-2 rounded-full border px-2 py-0.5 ${item.className}`}
+              >
+                <Icon icon={item.icon} width={14} />
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div> */}
         </div>
-        {/* Card View */}
-        <Switch
-          label="Active Switch"
-          value={checked}
-          onChange={() => setChecked(!checked)}
-          prevLabel={"Detail View"}
-          nextLabel={"Student View"}
-        />
       </div>
       <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
-        <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 py-3">
-          <>
-            {poolOption.map((item, i) => (
-              <Tab key={i}>
-                {({ selected }) => (
-                  <button
-                    className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0 hover:bg-sky-300 
-                ${
-                  selected
-                    ? "text-white bg-primary-500"
-                    : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
-                }`}
-                  >
-                    {`${item.label} (${item.filled})`}
-                  </button>
-                )}
-              </Tab>
-            )) ?? null}
-          </>
-        </Tab.List>
-        <Tab.Panels>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                Kolam
+              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Pilih kolam untuk melihat ketersediaan jadwal.
+              </p>
+            </div>
+            {poolQuery.isFetching && (
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Memuat kolam...
+              </span>
+            )}
+          </div>
+
+          {poolOption.length > 0 ? (
+            <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+              {poolOption.map((item, i) => (
+                <Tab key={i}>
+                  {({ selected }) => (
+                    <button
+                      className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
+                        selected
+                          ? "bg-primary-500 text-white shadow-sm"
+                          : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {item.label}
+                      <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
+                        {item.filled}
+                      </span>
+                    </button>
+                  )}
+                </Tab>
+              ))}
+            </Tab.List>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
+              {poolQuery.isLoading
+                ? "Memuat kolam..."
+                : selectedBranchOption
+                ? "Belum ada kolam di cabang ini."
+                : "Pilih cabang untuk menampilkan daftar kolam."}
+            </div>
+          )}
+        </div>
+
+        <Tab.Panels className="mt-4">
           <Tab.Group
             selectedIndex={selectedIndex ?? -1}
             onChange={handleChangeTab}
           >
-            <Tab.List className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-3 my-0 pb-3 justify-between ">
-              <div className="flex gap-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
                 {selectedBranch &&
                   tabHari.map((item, i) => (
                     <Tab key={i}>
                       {({ selected }) => (
                         <button
-                          className={`text-sm font-medium mb-7 last:mb-0 capitalize px-6 py-2 rounded-md transition duration-150 focus:outline-none ring-0  hover:bg-sky-300 
-                ${
-                  selected
-                    ? "text-white bg-primary-500"
-                    : "text-slate-500 bg-white dark:bg-slate-700 dark:text-slate-300"
-                }`}
+                          className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
+                            selected
+                              ? "bg-primary-500 text-white shadow-sm"
+                              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                          }`}
                         >
-                          {`${item.name} (${item.total})`}
+                          {item.name}
+                          <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
+                            {item.total}
+                          </span>
                         </button>
                       )}
                     </Tab>
                   ))}
-              </div>
+              </Tab.List>
+
               {filterPelatih && filterPelatih.length > 0 ? (
-                <Select
-                  name="filteredPelatih"
-                  options={filterPelatih ?? null}
-                  className="w-72 h-10 border-none"
-                  horizontal={true}
-                  isClearable={true}
-                  menuPortalTarget={
-                    typeof window !== "undefined" ? document.body : null
-                  }
-                  styles={{
-                    menuPortal: (base) => ({
-                      ...base,
-                      zIndex: 9999,
-                    }),
-                  }}
-                  placeholder="Filter Pelatih"
-                  onChange={(e) => {
-                    setFilteredPelatih(e?.value ?? "");
-                  }}
-                />
+                <div className="min-w-[220px]">
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                    Filter pelatih
+                  </label>
+                  <Select
+                    name="filteredPelatih"
+                    options={filterPelatih ?? null}
+                    className="react-select"
+                    classNamePrefix="select"
+                    isClearable={true}
+                    menuPortalTarget={
+                      typeof window !== "undefined" ? document.body : null
+                    }
+                    styles={{
+                      menuPortal: (base) => ({
+                        ...base,
+                        zIndex: 9999,
+                      }),
+                    }}
+                    placeholder="Pilih pelatih"
+                    onChange={(e) => {
+                      setFilteredPelatih(e?.value ?? "");
+                    }}
+                  />
+                </div>
               ) : null}
-            </Tab.List>
-            <Tab.Panels key={JSON.stringify(jadwal)}>
+            </div>
+
+            <Tab.Panels key={JSON.stringify(jadwal)} className="mt-4">
               {tabHari.map((item, index) => {
                 return (
                   <Tab.Panel key={index}>
@@ -1056,45 +1267,63 @@ const CekJadwal = () => {
 
 export default CekJadwal;
 
-const PelatihLibur = React.memo(() => (
-  <div className="flex flex-col items-center justify-center space-y-1">
-    <div className="p-2 rounded-full bg-red-50 shadow-sm">
+const PelatihLibur = React.memo(({ compact = false }) => {
+  const icon = (
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 shadow-sm">
       <Icon
         icon="heroicons-outline:calendar-days"
         width="20"
         height="20"
-        className="text-red-500"
+        className="text-rose-500"
       />
     </div>
-    <span className="text-xs font-medium text-red-600">Libur</span>
-  </div>
-));
+  );
 
-const PelatihAdaJadwal = React.memo(({ poolName = "" }) => (
-  <div className="flex justify-center items-center">
-    <Tooltip
-      placement="top"
-      arrow
-      content={
-        <div className="whitespace-pre-line text-sm text-white">
-          {`Sudah ada jadwal di \n${poolName}`}
-        </div>
-      }
-    >
-      <div
-        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 
-                      transition duration-200 ease-in-out shadow-sm cursor-default"
+  if (compact) {
+    return (
+      <Tooltip placement="top" arrow content="Libur">
+        {icon}
+      </Tooltip>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center space-y-1">
+      {icon}
+      <span className="text-xs font-medium text-rose-600">Libur</span>
+    </div>
+  );
+});
+
+const PelatihAdaJadwal = React.memo(({ poolNames = [], count = 0 }) => {
+  const list = poolNames.length ? poolNames : ["kolam lain"];
+  const heading = count > 1 ? `Sudah ada ${count} jadwal` : "Sudah ada jadwal";
+  return (
+    <div className="flex justify-center items-center">
+      <Tooltip
+        placement="top"
+        arrow
+        content={
+          <div className="whitespace-pre-line text-sm text-white">
+            {`${heading}\n${list.join("\n")}`}
+          </div>
+        }
       >
-        <Icon
-          icon="heroicons-outline:hand-raised"
-          width="20"
-          height="20"
-          className="text-gray-600"
-        />
-      </div>
-    </Tooltip>
-  </div>
-));
+        <div
+          className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 
+                        transition duration-200 ease-in-out shadow-sm cursor-default"
+        >
+          <Icon
+            icon="heroicons-outline:hand-raised"
+            width="20"
+            height="20"
+            className="text-slate-600"
+          />
+        </div>
+      </Tooltip>
+    </div>
+  );
+});
 
 const STATUS_MAP = {
   pending: {

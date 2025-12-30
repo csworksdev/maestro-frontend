@@ -87,7 +87,7 @@ const RekapBulanan = () => {
         "bg-warning-500 text-warning-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
     },
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons-outline:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },

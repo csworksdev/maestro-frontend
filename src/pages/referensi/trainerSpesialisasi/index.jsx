@@ -37,12 +37,12 @@ const Specialization = ({
 
   const actions = [
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       onClick: (row) => handleDelete(row.row.original),
       className:
@@ -134,7 +134,7 @@ const Specialization = ({
       onEdit(payload);
       return;
     }
-    navigate("edit", { state: payload });
+    navigate("Edit", { state: payload });
   };
 
   const formatDate = (value) => {

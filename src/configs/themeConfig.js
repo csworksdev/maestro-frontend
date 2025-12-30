@@ -14,6 +14,7 @@ const themeConfig = {
     navBarType: "sticky",
     footerType: "static",
     isMonochrome: false,
+    tableDensity: "comfortable",
     menu: {
       isCollapsed: false,
       isHidden: false,

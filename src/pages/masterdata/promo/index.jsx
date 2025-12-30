@@ -10,11 +10,7 @@ import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { DateTime } from "luxon";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const Promo = () => {
   const navigate = useNavigate();
@@ -85,7 +81,7 @@ const Promo = () => {
   };
 
   const handleEdit = (row) => {
-    navigate("edit", {
+    navigate("Edit", {
       state: {
         isupdate: "true",
         data: row,
@@ -127,7 +123,7 @@ const Promo = () => {
         <div className="flex flex-wrap gap-2 justify-center items-center">
           <TableAction
             action={{
-              name: "edit",
+              name: "Edit",
               icon: "heroicons:pencil-square",
               onClick: () => handleEdit(row.row.original),
             }}
@@ -136,7 +132,7 @@ const Promo = () => {
           />
           <TableAction
             action={{
-              name: "delete",
+              name: "Delete",
               icon: "heroicons-outline:trash",
               onClick: () => handleDelete(row.row.original),
               className:

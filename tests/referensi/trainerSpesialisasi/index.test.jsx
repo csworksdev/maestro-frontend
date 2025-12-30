@@ -135,7 +135,7 @@ describe("Trainer specialization list", () => {
     render(<TrainerSpesialisasi trainerId={7} onEdit={onEdit} />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "edit" }));
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
 
     expect(onEdit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -179,7 +179,7 @@ describe("Trainer specialization list", () => {
     render(<TrainerSpesialisasi trainerId={7} />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "delete" }));
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
       expect(mockDeleteTrainerSpecialization).toHaveBeenCalledWith(7);

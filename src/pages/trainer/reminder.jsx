@@ -14,11 +14,11 @@ const actions = [
   //   icon: "heroicons-outline:eye",
   // },
   {
-    name: "edit",
+    name: "Edit",
     icon: "heroicons:pencil-square",
   },
   {
-    name: "delete",
+    name: "Delete",
     icon: "heroicons-outline:trash",
   },
 ];

@@ -123,9 +123,9 @@ describe("Cabang list page", () => {
     render(<Cabang />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "edit" }));
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("edit", {
+    expect(mockNavigate).toHaveBeenCalledWith("Edit", {
       state: {
         isupdate: "true",
         data: { branch_id: 11, name: "Cabang A" },
@@ -148,7 +148,7 @@ describe("Cabang list page", () => {
     render(<Cabang />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "delete" }));
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
       expect(mockDeleteCabang).toHaveBeenCalledWith(5);

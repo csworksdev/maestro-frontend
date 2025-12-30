@@ -116,7 +116,7 @@ const ExpensePage = () => {
       name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) =>
-        navigate("edit", {
+        navigate("Edit", {
           state: { data: row.row.original },
         }),
     },

@@ -164,7 +164,7 @@ describe("OrderActive", () => {
     render(<OrderActive is_finished={false} />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "delete" }));
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
       expect(mockDeleteOrder).toHaveBeenCalledWith(5);
