@@ -329,7 +329,7 @@ const DetailOrder = ({
           name={"siswa"}
           label={"Siswa"}
           register={register}
-          defaultValue={params.listname.replace(", ", `\n`)}
+          defaultValue={(params.listname || "").replace(", ", `\n`)}
           disabled={true}
         />
         <OrderField label="Produk" value={params.product_name} />

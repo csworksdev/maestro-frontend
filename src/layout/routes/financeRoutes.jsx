@@ -84,17 +84,17 @@ const FinanceRoutes = () => {
         <Route path="paket">
           <Route index element={<Paket />} />
           <Route path="add" element={<EditPaket />} />
-          <Route path="edit" element={<EditPaket />} />
+          <Route path="Edit" element={<EditPaket />} />
         </Route>
         <Route path="periodisasi">
           <Route index element={<Periodisasi />} />
           <Route path="add" element={<EditPeriodisasi />} />
-          <Route path="edit" element={<EditPeriodisasi />} />
+          <Route path="Edit" element={<EditPeriodisasi />} />
         </Route>
         <Route path="produk">
           <Route index element={<Produk />} />
           <Route path="add" element={<EditProduk />} />
-          <Route path="edit" element={<EditProduk />} />
+          <Route path="Edit" element={<EditProduk />} />
         </Route>
         <Route path="invoices">
           <Route index element={<Invoice />} />
@@ -106,7 +106,7 @@ const FinanceRoutes = () => {
         <Route path="order">
           <Route index element={<Order />} />
           {/* <Route path="add" element={<AddOrder />} />
-                  <Route path="edit" element={<EditOrder />} /> */}
+                  <Route path="Edit" element={<EditOrder />} /> */}
           <Route path="detail" element={<DetailOrder />} />
           <Route path="expired" element={<OrderExpired />} />
           <Route path="waitinglist" element={<Waitinglist />} />
@@ -114,11 +114,11 @@ const FinanceRoutes = () => {
         <Route path="siswa">
           <Route index element={<Siswa />} />
           <Route path="add" element={<EditSiswa />} />
-          <Route path="edit" element={<EditSiswa />} />
+          <Route path="Edit" element={<EditSiswa />} />
         </Route>
         <Route path="finishedOrder">
           <Route index element={<OrderFinished />} />
-          <Route path="edit" element={<EditOrder />} />
+          <Route path="Edit" element={<EditOrder />} />
           <Route path="detail" element={<DetailOrder />} />
         </Route>
 

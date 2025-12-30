@@ -66,7 +66,14 @@ const Navmenu = ({ menus }) => {
         });
       }
     });
-    document.title = `Maestro Swim  | ${locationName}`;
+    const baseTitle =
+      typeof window !== "undefined" && window.__APP_BASE_TITLE__
+        ? window.__APP_BASE_TITLE__
+        : "Maestro Swim";
+    const pageTitle = locationName
+      ? `${baseTitle} | ${locationName}`
+      : baseTitle;
+    document.title = pageTitle;
 
     setActiveSubmenu(submenuIndex);
     setMultiMenu(multiMenuIndex);

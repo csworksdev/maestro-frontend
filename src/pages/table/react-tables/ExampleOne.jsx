@@ -117,7 +117,7 @@ const COLUMNS = [
                     className={`
                 
                   ${
-                    item.name === "delete"
+                    item.name === "Delete"
                       ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
                       : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
                   }
@@ -145,11 +145,11 @@ const actions = [
     icon: "heroicons-outline:eye",
   },
   {
-    name: "edit",
+    name: "Edit",
     icon: "heroicons:pencil-square",
   },
   {
-    name: "delete",
+    name: "Delete",
     icon: "heroicons-outline:trash",
   },
 ];

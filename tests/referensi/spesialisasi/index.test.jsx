@@ -125,9 +125,9 @@ describe("Specialization list page", () => {
     render(<Specialization />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "edit" }));
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("edit", {
+    expect(mockNavigate).toHaveBeenCalledWith("Edit", {
       state: {
         isupdate: "true",
         data: { specialization_id: 11, name: "Spec A" },
@@ -150,7 +150,7 @@ describe("Specialization list page", () => {
     render(<Specialization />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "delete" }));
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
       expect(mockDeleteSpecialization).toHaveBeenCalledWith(5);

@@ -354,6 +354,7 @@ const Add = () => {
 
   const handleProductChange = (e) => {
     setSelectProductOption(e.target.value);
+    setValue("product", e.target.value);
     const findData = productData.find(
       (item) => item.product_id === e.target.value
     );
@@ -640,9 +641,7 @@ const Add = () => {
                 Tanggal Order
               </label>
               <Flatpickr
-                defaultValue={DateTime.fromJSDate(DateTime.now()).toFormat(
-                  "yyyy-MM-dd"
-                )}
+                defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
                 name="order_date"
                 options={{
                   disableMobile: true,
@@ -662,9 +661,7 @@ const Add = () => {
                 Tanggal Mulai
               </label>
               <Flatpickr
-                defaultValue={DateTime.fromJSDate(DateTime.now()).toFormat(
-                  "yyyy-MM-dd"
-                )}
+                defaultValue={DateTime.now().toFormat("yyyy-MM-dd")}
                 name="start_date"
                 options={{
                   // minDate: DateTime.now().toFormat("yyyy-MM-dd"),

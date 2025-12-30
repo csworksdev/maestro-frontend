@@ -112,13 +112,13 @@ const OpxRoutes = () => {
         <Route path="order">
           <Route index element={<Order />} />
           {/* <Route path="add" element={<AddOrder />} />
-                          <Route path="edit" element={<EditOrder />} /> */}
+                          <Route path="Edit" element={<EditOrder />} /> */}
           <Route path="detail" element={<DetailOrder />} />
         </Route>
         <Route path="cabang">
           <Route index element={<Cabang />} />
           <Route path="add" element={<AddCabang />} />
-          <Route path="edit" element={<EditCabang />} />
+          <Route path="Edit" element={<EditCabang />} />
         </Route>
         <Route path="list-izin">
           <Route index element={<Leave />} />
@@ -126,17 +126,17 @@ const OpxRoutes = () => {
         <Route path="kolam">
           <Route index element={<Kolam />} />
           <Route path="add" element={<EditKolam />} />
-          <Route path="edit" element={<EditKolam />} />
+          <Route path="Edit" element={<EditKolam />} />
         </Route>
         <Route path="spesialisasi">
           <Route index element={<Specialization />} />
           <Route path="add" element={<EditSpecialization />} />
-          <Route path="edit" element={<EditSpecialization />} />
+          <Route path="Edit" element={<EditSpecialization />} />
         </Route>
         <Route path="trainer">
           <Route index element={<Trainer />} />
           <Route path="add" element={<EditTrainer />} />
-          <Route path="edit" element={<EditTrainer />} />
+          <Route path="Edit" element={<EditTrainer />} />
         </Route>
         <Route path="cek-jadwal">
           <Route index element={<CekJadwal />} />
@@ -148,7 +148,7 @@ const OpxRoutes = () => {
         <Route path="user">
           <Route index element={<UMUser />} />
           <Route path="add" element={<UMUserEdit />} />
-          <Route path="edit" element={<UMUserEdit />} />
+          <Route path="Edit" element={<UMUserEdit />} />
         </Route>
         <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />

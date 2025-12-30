@@ -25,12 +25,12 @@ const Periodisasi = () => {
 
   const actions = [
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       onClick: (row) => handleDelete(row.row.original),
       className:
@@ -96,7 +96,7 @@ const Periodisasi = () => {
   };
 
   const handleEdit = (e) => {
-    navigate("edit", {
+    navigate("Edit", {
       state: {
         isupdate: "true",
         data: e,

@@ -11,11 +11,7 @@ import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { useAuthStore } from "@/redux/slicers/authSlice";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const Siswa = () => {
   const navigate = useNavigate();
@@ -27,19 +23,19 @@ const Siswa = () => {
   const { roles } = useAuthStore((state) => state.data);
   const actionsAdmin = [
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
   ];
   const actions = [
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       onClick: (row) => handleDelete(row.row.original),
       className:
@@ -97,11 +93,7 @@ const Siswa = () => {
         deleteMutation.mutate(e.student_id, {
           onSuccess: (res) => {
             if (res?.status) {
-              Swal.fire(
-                "Deleted!",
-                "Your file has been deleted.",
-                "success"
-              );
+              Swal.fire("Deleted!", "Your file has been deleted.", "success");
             }
           },
           onError: (error) => {
@@ -113,7 +105,7 @@ const Siswa = () => {
   };
 
   const handleEdit = (e) => {
-    navigate("edit", {
+    navigate("Edit", {
       state: {
         isupdate: "true",
         data: e,

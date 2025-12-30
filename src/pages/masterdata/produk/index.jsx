@@ -4,10 +4,7 @@ import Table from "@/components/globals/table/table";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import {
-  DeleteProduk,
-  getProdukPool,
-} from "@/axios/masterdata/produk";
+import { DeleteProduk, getProdukPool } from "@/axios/masterdata/produk";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
@@ -16,11 +13,7 @@ import { Tab } from "@headlessui/react";
 import Select from "react-select";
 import { getKolamByBranch } from "@/axios/referensi/kolam";
 import { getCabangAll } from "@/axios/referensi/cabang";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const fetchBranchOptions = async () => {
   const params = {
@@ -79,9 +72,7 @@ const Produk = () => {
       setSelectedPoolIndex(0);
       return;
     }
-    setSelectedPoolIndex((prev) =>
-      prev < poolOptions.length ? prev : 0
-    );
+    setSelectedPoolIndex((prev) => (prev < poolOptions.length ? prev : 0));
   }, [poolOptions]);
 
   const selectedPool = poolOptions[selectedPoolIndex] || null;
@@ -117,12 +108,12 @@ const Produk = () => {
 
   const actions = [
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       onClick: (row) => handleDelete(row.row.original),
       className:
@@ -144,11 +135,7 @@ const Produk = () => {
         deleteMutation.mutate(item.product_id, {
           onSuccess: (res) => {
             if (res?.status) {
-              Swal.fire(
-                "Deleted!",
-                "Produk berhasil dihapus.",
-                "success"
-              );
+              Swal.fire("Deleted!", "Produk berhasil dihapus.", "success");
             }
           },
           onError: (error) => {
@@ -160,7 +147,7 @@ const Produk = () => {
   };
 
   const handleEdit = (item) => {
-    navigate("edit", {
+    navigate("Edit", {
       state: {
         isupdate: "true",
         data: item,
@@ -193,10 +180,7 @@ const Produk = () => {
     setPageIndex(0);
   };
 
-  const memoizedBranchOptions = useMemo(
-    () => branchOptions,
-    [branchOptions]
-  );
+  const memoizedBranchOptions = useMemo(() => branchOptions, [branchOptions]);
 
   const COLUMNS = [
     {
@@ -238,11 +222,7 @@ const Produk = () => {
       Cell: (row) => (
         <div className="flex flex-wrap gap-2 justify-center items-center">
           {actions.map((action, index) => (
-            <TableAction
-              key={action.id || index}
-              action={action}
-              row={row}
-            />
+            <TableAction key={action.id || index} action={action} row={row} />
           ))}
         </div>
       ),
@@ -333,17 +313,13 @@ const Produk = () => {
                             canPreviousPage={pageIndex > 0}
                             canNextPage={
                               pageIndex <
-                              Math.ceil(
-                                (listData.count || 0) / pageSize
-                              ) - 1
+                              Math.ceil((listData.count || 0) / pageSize) - 1
                             }
                             gotoPage={handlePageChange}
                             previousPage={() =>
                               handlePageChange(Math.max(pageIndex - 1, 0))
                             }
-                            nextPage={() =>
-                              handlePageChange(pageIndex + 1)
-                            }
+                            nextPage={() => handlePageChange(pageIndex + 1)}
                             setPageSize={handlePageSizeChange}
                           />
                         </>

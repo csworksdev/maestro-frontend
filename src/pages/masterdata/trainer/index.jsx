@@ -11,15 +11,8 @@ import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
 import TableAction from "@/components/globals/table/tableAction";
 import { toProperCase } from "@/utils";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  setLoading,
-  useLoadingStore,
-} from "@/redux/slicers/loadingSlice";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { setLoading, useLoadingStore } from "@/redux/slicers/loadingSlice";
 
 const Trainer = () => {
   const navigate = useNavigate();
@@ -30,12 +23,12 @@ const Trainer = () => {
 
   const actions = [
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       onClick: (row) => handleEdit(row.row.original),
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       onClick: (row) => handleDelete(row.row.original),
       className:
@@ -110,7 +103,7 @@ const Trainer = () => {
   };
 
   const handleEdit = (e) => {
-    navigate("edit", {
+    navigate("Edit", {
       state: {
         isupdate: "true",
         data: e,

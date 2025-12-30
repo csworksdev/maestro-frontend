@@ -17,23 +17,51 @@ const Modal = ({
   uncontrol,
   label = "Basic Modal",
   labelClass,
-  ref,
   icon,
   iconPosition = "left",
   iconClass = "text-[20px]",
+  lazy = false,
+  backdropClassName = "bg-slate-900/50",
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const isOpen = Boolean(uncontrol ? activeModal || showModal : activeModal);
+  const [shouldRenderBody, setShouldRenderBody] = useState(!lazy);
+
+  useEffect(() => {
+    if (!lazy) {
+      setShouldRenderBody(true);
+      return;
+    }
+    if (isOpen) {
+      setShouldRenderBody(true);
+    }
+  }, [isOpen, lazy]);
 
   const closeModal = () => {
     setShowModal(false);
   };
 
   const openModal = () => {
-    setShowModal(!showModal);
+    setShowModal((prev) => !prev);
   };
   const returnNull = () => {
     return null;
   };
+
+  const handleAfterLeave = () => {
+    if (lazy) {
+      setShouldRenderBody(false);
+    }
+  };
+
+  const shouldRenderContent = !lazy || isOpen || shouldRenderBody;
+  const resolvedChildren = shouldRenderContent
+    ? typeof children === "function"
+      ? children()
+      : children
+    : null;
+  const resolvedFooter = shouldRenderContent ? footerContent : null;
+  const backdropClasses = `fixed inset-0 ${backdropClassName}`;
 
   return (
     <>
@@ -60,7 +88,12 @@ const Modal = ({
             )}
             {label}
           </button>
-          <Transition appear show={activeModal || showModal} as={Fragment}>
+          <Transition
+            appear
+            show={isOpen}
+            as={Fragment}
+            afterLeave={handleAfterLeave}
+          >
             <Dialog
               as="div"
               className="relative z-[99999]"
@@ -76,7 +109,7 @@ const Modal = ({
                   leaveFrom={noFade ? "" : "opacity-100"}
                   leaveTo={noFade ? "" : "opacity-0"}
                 >
-                  <div className="fixed inset-0 bg-slate-900/50 backdrop-filter backdrop-blur-sm" />
+                  <div className={backdropClasses} />
                 </Transition.Child>
               )}
 
@@ -114,11 +147,11 @@ const Modal = ({
                           scrollContent ? "overflow-y-auto max-h-[400px]" : ""
                         }`}
                       >
-                        {children}
+                        {resolvedChildren}
                       </div>
-                      {footerContent && (
+                      {resolvedFooter && (
                         <div className="px-4 py-3 flex justify-end space-x-3 border-t border-slate-100 dark:border-slate-700">
-                          {footerContent}
+                          {resolvedFooter}
                         </div>
                       )}
                     </Dialog.Panel>
@@ -129,7 +162,7 @@ const Modal = ({
           </Transition>
         </>
       ) : (
-        <Transition appear show={activeModal} as={Fragment}>
+        <Transition appear show={isOpen} as={Fragment} afterLeave={handleAfterLeave}>
           <Dialog as="div" className="relative z-[99999]" onClose={onClose}>
             <Transition.Child
               as={Fragment}
@@ -141,7 +174,7 @@ const Modal = ({
               leaveTo={noFade ? "" : "opacity-0"}
             >
               {!disableBackdrop && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-filter backdrop-blur-sm" />
+                <div className={backdropClasses} />
               )}
             </Transition.Child>
 
@@ -179,11 +212,11 @@ const Modal = ({
                         scrollContent ? "overflow-y-auto max-h-[400px]" : ""
                       }`}
                     >
-                      {children}
+                      {resolvedChildren}
                     </div>
-                    {footerContent && (
+                    {resolvedFooter && (
                       <div className="px-4 py-3 flex justify-end space-x-3 border-t border-slate-100 dark:border-slate-700">
-                        {footerContent}
+                        {resolvedFooter}
                       </div>
                     )}
                   </Dialog.Panel>

@@ -39,7 +39,7 @@ const params = {
   page_size: 100,
 };
 
-const EditModal = ({ defaultOrder, onClose = null, isEdit = false }) => {
+const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
   const [currentOrder, setCurrentOrder] = useState(() => {
     if (Array.isArray(defaultOrder)) {
       return defaultOrder[0] ?? {}; // fallback kalau array kosong

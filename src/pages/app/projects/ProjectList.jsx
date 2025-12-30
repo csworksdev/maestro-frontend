@@ -121,7 +121,7 @@ const ProjectList = ({ projects }) => {
                       className={`
                 
                   ${
-                    item.name === "delete"
+                    item.name === "Delete"
                       ? "bg-danger-500 text-danger-500 bg-opacity-30   hover:bg-opacity-100 hover:text-white"
                       : "hover:bg-slate-900 hover:text-white dark:hover:bg-slate-600 dark:hover:bg-opacity-50"
                   }
@@ -149,12 +149,12 @@ const ProjectList = ({ projects }) => {
       doit: (item) => navigate(`/projects/${item.id}`),
     },
     {
-      name: "edit",
+      name: "Edit",
       icon: "heroicons:pencil-square",
       doit: (item) => dispatch(updateProject(item)),
     },
     {
-      name: "delete",
+      name: "Delete",
       icon: "heroicons-outline:trash",
       doit: (item) => dispatch(removeProject(item.id)),
     },
