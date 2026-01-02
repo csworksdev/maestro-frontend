@@ -706,16 +706,12 @@ const CekJadwal = () => {
                   />
                 )}
 
-                {samePoolOrders.length === 0 &&
-                  otherPoolOrders.length === 0 && (
-                    <PelatihKosong
-                      key={`${i}-${jIdx}`}
-                      pool={pool}
-                      trainer={item}
-                      hari={timeSlot.hari}
-                      jam={slotObj.jam}
-                    />
-                  )}
+                <PelatihKosong
+                  pool={pool}
+                  trainer={item}
+                  hari={timeSlot.hari}
+                  jam={slotObj.jam}
+                />
               </div>
             );
           })
