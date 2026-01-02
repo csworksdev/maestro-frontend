@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
+import PoolLoader from "@/components/PoolLoader";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
 import React, {
@@ -705,16 +706,12 @@ const CekJadwal = () => {
                   />
                 )}
 
-                {samePoolOrders.length === 0 &&
-                  otherPoolOrders.length === 0 && (
-                    <PelatihKosong
-                      key={`${i}-${jIdx}`}
-                      pool={pool}
-                      trainer={item}
-                      hari={timeSlot.hari}
-                      jam={slotObj.jam}
-                    />
-                  )}
+                <PelatihKosong
+                  pool={pool}
+                  trainer={item}
+                  hari={timeSlot.hari}
+                  jam={slotObj.jam}
+                />
               </div>
             );
           })
@@ -863,11 +860,7 @@ const CekJadwal = () => {
     if (isScheduleLoading) {
       return (
         <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/70 p-8 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <Icon
-            icon="heroicons-outline:refresh"
-            width={22}
-            className="animate-spin text-primary-500"
-          />
+          <PoolLoader size="sm" />
           Memuat jadwal...
         </div>
       );
