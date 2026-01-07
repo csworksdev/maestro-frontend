@@ -7,10 +7,10 @@ import PublicRoute from "./layout/PublicRoute";
 
 import AdminRoutes from "./layout/routes/adminRoutes";
 import ChiefRoutes from "./layout/routes/chiefRoutes";
-import CoachRoutes from "./layout/routes/coachRoutes";
 import FinanceRoutes from "./layout/routes/financeRoutes";
 import OpxRoutes from "./layout/routes/operationalRoutes";
 import { useFcmToken } from "./hooks/useFCMToken";
+import Redir from "./pages/redir";
 
 const LoginAdmin = lazy(() => import("@/pages/auth/login"));
 const LoginCoach = lazy(() => import("@/pages/auth/login2"));
@@ -42,10 +42,21 @@ const App = () => {
   const routesMap = {
     admin: <AdminRoutes />,
     chief: <ChiefRoutes />,
-    coach: <CoachRoutes />,
     finance: <FinanceRoutes />,
     opx: <OpxRoutes />,
   };
+
+  if (subdomain === "coach") {
+    return (
+      <main className="App relative">
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route path="*" element={<Redir />} />
+          </Routes>
+        </Suspense>
+      </main>
+    );
+  }
 
   return (
     <main className="App relative">
