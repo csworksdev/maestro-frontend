@@ -164,7 +164,7 @@ function Redir() {
         </div>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-xs text-white/60">
           <span className="rounded-full border border-white/10 px-4 py-2">
-            Butuh bantuan? Hubungi admin grup.
+            Butuh bantuan? Hubungi Chandra.
           </span>
           <span className="rounded-full border border-white/10 px-4 py-2">
             Update terbaru akan dibagikan lewat grup resmi.
