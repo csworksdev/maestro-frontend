@@ -7,6 +7,7 @@ import PublicRoute from "../PublicRoute";
 import AuthenticatedRoute from "../AuthenticatedRoute";
 import { Routes } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import Redir from "@/pages/redir";
 
 const LoginTrainer = lazy(() => import("@/pages/auth/login2"));
 const RegisterTrainer = lazy(() => import("@/pages/auth/register2"));
@@ -49,31 +50,32 @@ export const CoachRoutes = () => {
         path="/"
         element={
           <AuthenticatedRoute>
-            <Layout />
+            {/* <Layout /> */}
+            <Redir />
           </AuthenticatedRoute>
         }
       >
-        <Route index element={<Navigate to="presence" replace />} />
+        {/* <Route index element={<Navigate to="presence" replace />} /> */}
         {/* <Route path="dashboard" element={<CoachDashboard />} /> */}
         {/* <Route path="coach">
           <Route index element={<CoachDashboard />} /> */}
-        <Route path="earning" element={<CoachEarning />} />
-        <Route path="jadwal" element={<OwnSchedule />} />
+        {/* <Route path="earning" element={<CoachEarning />} />
+        <Route path="jadwal" element={<OwnSchedule />} /> */}
         {/* <Route path="performance" element={<CoachPerformance />} />
           <Route path="schedule" element={<CoachSchedule />} /> */}
-        <Route path="presence" element={<CoachPresence2 />} />
+        {/* <Route path="presence" element={<CoachPresence2 />} /> */}
         {/* <Route path="presence2" element={<CoachPresence2 />} /> */}
         {/* <Route path="reminder" element={<TrainerCourseReminder />} /> */}
-        <Route path="izin">
+        {/* <Route path="izin">
           <Route index element={<Leave />} />
           <Route path="ajukan" element={<LeaveForm />} />
         </Route>
         <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
         </Route>
-        <Route index path="notifications" element={<NotificationPage />} />
+        <Route index path="notifications" element={<NotificationPage />} /> */}
         {/* </Route> */}
-        <Route path="*" element={<ErrorPage />} />
+        {/* <Route path="*" element={<ErrorPage />} /> */}
       </Route>
     </Routes>
   );
