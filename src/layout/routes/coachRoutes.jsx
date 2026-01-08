@@ -46,15 +46,16 @@ export const CoachRoutes = () => {
       </Route>
 
       {/* Authenticated Routes */}
-      <Route
-        path="/"
+      <Route path="/*" element={<Redir />}>
+        {/* <Route
+        path="/*"
         element={
           <AuthenticatedRoute>
             {/* <Layout /> */}
-            <Redir />
+        {/* <Redir />
           </AuthenticatedRoute>
         }
-      >
+      > */}
         {/* <Route index element={<Navigate to="presence" replace />} /> */}
         {/* <Route path="dashboard" element={<CoachDashboard />} /> */}
         {/* <Route path="coach">
