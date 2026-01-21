@@ -70,7 +70,7 @@ const checkProduct = (product) => {
     case product.includes("gr"):
       return "Grup";
       break;
-    case product.includes("Baby"):
+    case product.includes("baby"):
       return "Baby";
       break;
     default:
@@ -110,24 +110,9 @@ const CekJadwal = () => {
     { name: "Minggu", data: [], total: 0 },
   ];
 
-  const dropdownItems = [
-    {
-      label: "Perpanjang Paket",
-      link: "#",
-    },
-    {
-      label: "Follow Up Siswa",
-      link: "#",
-    },
-    {
-      label: "Something else here",
-      link: "#",
-    },
-  ];
-
   const { user_id, username, roles } = useAuthStore((state) => state.data);
   const [tabHari, setTabHari] = useState(() =>
-    daysOfWeek.map((day) => ({ ...day }))
+    daysOfWeek.map((day) => ({ ...day })),
   );
   const [poolOption, setPoolOption] = useState([]);
   const [selectedPool, setSelectedPool] = useState(-1);
@@ -193,7 +178,7 @@ const CekJadwal = () => {
 
   const memoizedBranchOptions = useMemo(
     () => branchQuery.data ?? [],
-    [branchQuery.data]
+    [branchQuery.data],
   );
 
   useEffect(() => {
@@ -226,17 +211,17 @@ const CekJadwal = () => {
     () =>
       memoizedBranchOptions.find((option) => option.value === selectedBranch) ||
       null,
-    [memoizedBranchOptions, selectedBranch]
+    [memoizedBranchOptions, selectedBranch],
   );
 
   const selectedPoolItem = useMemo(
     () => (selectedPool >= 0 ? poolOption[selectedPool] : null),
-    [poolOption, selectedPool]
+    [poolOption, selectedPool],
   );
 
   const selectedDayName = useMemo(
     () => selectedDay || daysOfWeek[selectedIndex]?.name || "",
-    [selectedDay, selectedIndex]
+    [selectedDay, selectedIndex],
   );
 
   const visibleTrainerCount = useMemo(() => {
@@ -255,7 +240,7 @@ const CekJadwal = () => {
       return [];
     }
     return jadwal.filter((trainer) =>
-      trainer.kolam.includes(selectedPoolItem.value)
+      trainer.kolam.includes(selectedPoolItem.value),
     );
   }, [jadwal, selectedPoolItem]);
 
@@ -307,11 +292,11 @@ const CekJadwal = () => {
         return Promise.resolve([]);
       }
       const filtered = memoizedBranchOptions.filter((option) =>
-        option.label.toLowerCase().includes((inputValue ?? "").toLowerCase())
+        option.label.toLowerCase().includes((inputValue ?? "").toLowerCase()),
       );
       return Promise.resolve(filtered);
     },
-    [memoizedBranchOptions]
+    [memoizedBranchOptions],
   );
 
   const loadProduct = async (poolName) => {
@@ -366,16 +351,16 @@ const CekJadwal = () => {
       const scheduleRes = await CJGetBranchDay(
         selectedBranch,
         poolName,
-        dayName
+        dayName,
       );
       const data = scheduleRes.data.map((element) =>
-        fillBaseJadwalWithData({ ...BaseJadwal }, element)
+        fillBaseJadwalWithData({ ...BaseJadwal }, element),
       );
 
       setFilterPelatih(
         data.map((x) => {
           return { value: x.trainer_id, label: toProperCase(x.nickname) };
-        })
+        }),
       );
 
       setJadwal([...data]);
@@ -496,7 +481,7 @@ const CekJadwal = () => {
     const { value: order_date } = await Swal.fire({
       title: "Perpanjang paket ",
       text: `Siswa ${toProperCase(
-        slot.student
+        slot.student,
       )} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
       input: "date",
       icon: "question",
@@ -511,7 +496,7 @@ const CekJadwal = () => {
       Swal.fire({
         title: "Perpanjang paket ",
         text: `Siswa ${toProperCase(
-          slot.student
+          slot.student,
         )} akan diperpanjang ke tanggal ${order_date} ?`,
         icon: "warning",
         showCancelButton: true,
@@ -567,13 +552,13 @@ const CekJadwal = () => {
               slot.p.every((item) => item.tgl === null);
 
             const samePoolOrders = orders.filter(
-              (slot) => slot.order_id && slot.pool_name === pool.label
+              (slot) => slot.order_id && slot.pool_name === pool.label,
             );
             const otherPoolOrders = orders.filter(isOtherPoolSlot);
             const otherPoolNames = Array.from(
               new Set(
-                otherPoolOrders.map((slot) => slot.pool_name).filter(Boolean)
-              )
+                otherPoolOrders.map((slot) => slot.pool_name).filter(Boolean),
+              ),
             );
 
             // Fungsi bantu: tentukan warna card
@@ -695,7 +680,7 @@ const CekJadwal = () => {
                 className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
                 {samePoolOrders.map((slot, k) =>
-                  renderSamePoolSlot(slot, `${i}-${jIdx}-${k}`)
+                  renderSamePoolSlot(slot, `${i}-${jIdx}-${k}`),
                 )}
 
                 {otherPoolOrders.length > 0 && (
@@ -714,7 +699,7 @@ const CekJadwal = () => {
                 />
               </div>
             );
-          })
+          }),
         )}
       </>
     );
@@ -846,14 +831,14 @@ const CekJadwal = () => {
     if (!selectedBranchOption) {
       return renderEmptyState(
         "Pilih cabang terlebih dahulu",
-        "Cek jadwal dimulai dengan memilih cabang yang ingin dicek."
+        "Cek jadwal dimulai dengan memilih cabang yang ingin dicek.",
       );
     }
 
     if (!selectedPoolItem) {
       return renderEmptyState(
         "Pilih kolam untuk melihat jadwal",
-        "Kolam akan muncul setelah cabang dipilih."
+        "Kolam akan muncul setelah cabang dipilih.",
       );
     }
 
@@ -889,7 +874,7 @@ const CekJadwal = () => {
     } else {
       return renderEmptyState(
         "Belum ada jadwal untuk hari ini",
-        "Gunakan slot kosong untuk menambah jadwal baru."
+        "Gunakan slot kosong untuk menambah jadwal baru.",
       );
     }
   };
@@ -954,7 +939,7 @@ const CekJadwal = () => {
           </Tooltip>
         </div>
       );
-    }
+    },
   );
 
   const legendItems = [
@@ -1134,8 +1119,8 @@ const CekJadwal = () => {
               {poolQuery.isLoading
                 ? "Memuat kolam..."
                 : selectedBranchOption
-                ? "Belum ada kolam di cabang ini."
-                : "Pilih cabang untuk menampilkan daftar kolam."}
+                  ? "Belum ada kolam di cabang ini."
+                  : "Pilih cabang untuk menampilkan daftar kolam."}
             </div>
           )}
         </div>
@@ -1230,8 +1215,8 @@ const CekJadwal = () => {
                 prev.map((item, index) =>
                   index === selectedPool
                     ? { ...item, filled: item.filled + 1 }
-                    : item
-                )
+                    : item,
+                ),
               );
               setTabHari((prev) =>
                 prev.map((item, index) =>
@@ -1245,8 +1230,8 @@ const CekJadwal = () => {
                             (item.data[inputValue.time] || 0) + 1,
                         },
                       }
-                    : item
-                )
+                    : item,
+                ),
               );
               setReloadDone(true); // ✅ trigger setelah selesai update
             }}
