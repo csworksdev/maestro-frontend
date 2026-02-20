@@ -73,6 +73,11 @@ const AddJadwal = ({
         then: (schema) => schema.required("tanggal is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
+      // payment_date: yup.date().when("$isInvoice", {
+      //   is: true,
+      //   then: (schema) => schema.required("tanggal is required"),
+      //   otherwise: (schema) => schema.notRequired(),
+      // }),
     })
     .required();
   const [inputValue, setInputValue] = useState(params);
@@ -81,7 +86,7 @@ const AddJadwal = ({
   const [selectedStudents, setSelectedStudents] = useState([]);
   const { user_id, roles, username } = useAuthStore((state) => state.data);
   const [keterangan, setKeterangan] = useState(
-    "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)"
+    "test Privat 1 4x pertemuan A.n Anaknya Chandra ( Lagi ngetest ) (C.Aryaaa)",
   );
   const [parent, setParent] = useState([]);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -143,7 +148,7 @@ const AddJadwal = ({
           pob: values[6] || "",
           dob: values[7]
             ? DateTime.fromFormat(values[7].trim(), "M/d/yyyy").toFormat(
-                "yyyy-MM-dd"
+                "yyyy-MM-dd",
               )
             : "",
           branch: branch,
@@ -158,7 +163,7 @@ const AddJadwal = ({
       }));
 
       const check = await CheckDuplicateSiswa({ data }).then(
-        (res) => res.data.results
+        (res) => res.data.results,
       );
 
       let oldStudents = [];
@@ -230,7 +235,7 @@ const AddJadwal = ({
 
         setValue(
           "namapelanggan",
-          row.parent === "-" || row.parent === "" ? row.fullname : row.parent
+          row.parent === "-" || row.parent === "" ? row.fullname : row.parent,
         );
         setValue("phonepelanggan", toNormalizePhone(row.phone));
       });
@@ -267,8 +272,8 @@ const AddJadwal = ({
           prev.map((x) =>
             x.fullname === res.data.message.fullname
               ? { ...x, student_id: res.data.message.student_id }
-              : x
-          )
+              : x,
+          ),
         );
 
         return res.data.message;
@@ -282,7 +287,7 @@ const AddJadwal = ({
       const invoiceExternalId = generateExternalId();
       const totalOrdersToCreate = selectedProduct.reduce(
         (sum, product) => sum + (parseInt(product.qty, 10) || 0),
-        0
+        0,
       );
       let completedOrders = 0;
 
@@ -313,6 +318,9 @@ const AddJadwal = ({
             order_date: isInvoice
               ? DateTime.now().toFormat("yyyy-MM-dd")
               : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
+            // payment_date: isInvoice
+            //   ? DateTime.now().toFormat("yyyy-MM-dd")
+            //   : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
             students:
               product.package_name === "trial"
                 ? newData.updatedStudents
@@ -341,7 +349,7 @@ const AddJadwal = ({
                   price_per_meet: Math.floor(
                     (product.price * parseInt(inputValue.trainer_percentage)) /
                       100 /
-                      product.meetings
+                      product.meetings,
                   ),
                   schedule_date: DateTime.now()
                     .plus({ days: 7 * (i + 1) })
@@ -385,11 +393,11 @@ const AddJadwal = ({
             (parseInt(p.qty, 10) || 0) *
               (p.package_name === "trial" ? 1 : formList.length) *
               p.sellprice,
-          0
+          0,
         );
         const registrationAmount = Object.values(grouped).reduce(
           (sum, value) => sum + value.total,
-          0
+          0,
         );
         const invoiceItems = [
           ...selectedProduct.map((p) => ({
@@ -439,7 +447,7 @@ const AddJadwal = ({
               };
 
               await XenditCreatePaymentLink(paramxendit);
-            })
+            }),
           );
         }
       }
@@ -475,11 +483,11 @@ const AddJadwal = ({
   const handleProductSelectionChange = (option) => {
     const currentProductId = option.product_id;
     const isSelected = selectedProduct.some(
-      (p) => p.product_id === currentProductId
+      (p) => p.product_id === currentProductId,
     );
     if (isSelected) {
       setSelectedProduct(
-        selectedProduct.filter((p) => p.product_id !== currentProductId)
+        selectedProduct.filter((p) => p.product_id !== currentProductId),
       );
     } else {
       setSelectedProduct([
@@ -541,8 +549,8 @@ const AddJadwal = ({
       prevSelected.map((p) =>
         p.product_id === productId
           ? { ...p, qty: parseInt(rawValue, 10) || 0 }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -550,20 +558,20 @@ const AddJadwal = ({
   // Untuk update trial product di selectedProduct
   useEffect(() => {
     const trialStudentCount = formList.filter(
-      (student) => student.istrial
+      (student) => student.istrial,
     ).length;
     const trialProductDefinition = product.find(
-      (p) => p.package_name && p.package_name.toLowerCase() === "trial"
+      (p) => p.package_name && p.package_name.toLowerCase() === "trial",
     );
 
     if (!trialProductDefinition) return;
 
     setSelectedProduct((prevSelectedProducts) => {
       const currentTrialProductInSelection = prevSelectedProducts.find(
-        (p) => p.product_id === trialProductDefinition.product_id
+        (p) => p.product_id === trialProductDefinition.product_id,
       );
       const otherSelectedProducts = prevSelectedProducts.filter(
-        (p) => p.product_id !== trialProductDefinition.product_id
+        (p) => p.product_id !== trialProductDefinition.product_id,
       );
 
       if (trialStudentCount > 0) {
@@ -628,14 +636,14 @@ const AddJadwal = ({
             return ` (${p.name}) ${toProperCase(p.package_name)} ${
               p.meetings
             }x Pertemuan A.n ${studentsProper} (${toProperCase(
-              inputValue.trainer.fullname
+              inputValue.trainer.fullname,
             )})`;
           })
           .filter(Boolean) // Buang produk yang tidak punya siswa relevan
           .join("\n");
 
         return `Orang Tua: ${parentProper}\n${produkDesc}`;
-      }
+      },
     );
 
     // Gabungkan semua deskripsi per parent dengan baris kosong sebagai pemisah
@@ -659,7 +667,7 @@ const AddJadwal = ({
             .filter((p) => p.package_name === "trial")
             .reduce((acc, x) => {
               let filteredStudents = studentList.filter(
-                (sl) => sl.istrial === true
+                (sl) => sl.istrial === true,
               );
               if (filteredStudents.length === 0) return acc;
               else return acc + x.sellprice * filteredStudents.length;
@@ -682,7 +690,7 @@ const AddJadwal = ({
             .map((p) => {
               const isTrial = p.package_name.toLowerCase().includes("trial");
               let filteredStudents = studentList.filter((s) =>
-                isTrial ? s.istrial : true
+                isTrial ? s.istrial : true,
               );
 
               if (filteredStudents.length === 0) return null;
@@ -696,7 +704,7 @@ const AddJadwal = ({
               return `${toProperCase(p.package_name)} ${
                 p.meetings
               }x Pertemuan A.n ${studentsProper} (${toProperCase(
-                inputValue.trainer.fullname
+                inputValue.trainer.fullname,
               )})`;
             })
             .filter(Boolean)
@@ -711,7 +719,7 @@ const AddJadwal = ({
             shouldValidate: true,
             shouldDirty: true,
           });
-        }
+        },
       );
     } else {
       setValue("keteranganpelanggan", finalDeskripsi);
@@ -752,7 +760,7 @@ const AddJadwal = ({
       Swal.fire(
         "Limit Exceeded",
         `You can only select up to ${maxStudents} students.`,
-        "warning"
+        "warning",
       );
     }
   };
@@ -807,7 +815,7 @@ const AddJadwal = ({
 
       setValue(
         "namapelanggan",
-        row.parent === "-" || row.parent === "" ? row.fullname : row.parent
+        row.parent === "-" || row.parent === "" ? row.fullname : row.parent,
       );
       setValue("phonepelanggan", toNormalizePhone(row.phone));
 
@@ -842,13 +850,13 @@ const AddJadwal = ({
               // If 'istrial' is being set to true, other products might need adjustment (e.g. if trial is exclusive)
               // For now, this just updates the specific field. The useEffect above handles trial product.
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     // Update react-hook-form's state
     const studentIndexInRHF = fields.findIndex(
-      (field) => field.fullname === fullname
+      (field) => field.fullname === fullname,
     );
     if (studentIndexInRHF !== -1) {
       const fieldNameInRHF = `students[${studentIndexInRHF}].${kolom}`;
@@ -881,7 +889,7 @@ const AddJadwal = ({
     <>
       <form
         onSubmit={handleSubmit(onSubmit, (errors) =>
-          console.log("Form errors:", errors)
+          console.log("Form errors:", errors),
         )}
         className="space-y-4"
       >
@@ -921,9 +929,13 @@ const AddJadwal = ({
                       setValue("order_date", new Date(), {
                         shouldValidate: true,
                       });
+                      // setValue("payment_date", new Date(), {
+                      //   shouldValidate: true,
+                      // });
                     } else {
                       // kalau tidak buat xendit → hapus nilainya supaya nggak divalidasi
                       setValue("order_date", null, { shouldValidate: true });
+                      // setValue("payment_date", null, { shouldValidate: true });
                     }
                   }}
                 />
@@ -978,7 +990,10 @@ const AddJadwal = ({
           <div className="flex flex-col gap-4">
             {/* tanggal order akan muncul jika is invoice di centang */}
             {!isInvoice ? (
-              <Card bodyClass="p-3">
+              <Card
+                bodyClass="p-3 flex flex-col gap-4"
+                className="border-dashed border-2 border-gray-300"
+              >
                 <div className="flex flex-row items-center">
                   <label className="form-label basis-1/5" htmlFor="order_date">
                     Tanggal Order
@@ -1002,6 +1017,32 @@ const AddJadwal = ({
                     )}
                   />
                 </div>
+                {/* <div className="flex flex-row items-center">
+                  <label
+                    className="form-label basis-1/5"
+                    htmlFor="payment_date"
+                  >
+                    Tanggal Pembayaran
+                  </label>
+                  <Controller
+                    name="payment_date"
+                    control={control}
+                    defaultValue={null}
+                    render={({ field }) => (
+                      <Flatpickr
+                        {...field}
+                        options={{
+                          disableMobile: true,
+                          allowInput: true,
+                          altInput: true,
+                          altFormat: "d F Y",
+                        }}
+                        className="form-control py-2 bg-white basis-1/4"
+                        onChange={(date) => field.onChange(date[0])}
+                      />
+                    )}
+                  />
+                </div> */}
               </Card>
             ) : null}
             <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
@@ -1030,7 +1071,7 @@ const AddJadwal = ({
                   <div className="grid grid-cols-[1fr_100px] gap-3 mb-5 items-center">
                     {product.map((option, i) => {
                       const isDisabled = handleProductDisable(
-                        option.package_name
+                        option.package_name,
                       );
                       //  ||
                       // option.package_name.toLowerCase() === "trial";
@@ -1043,10 +1084,10 @@ const AddJadwal = ({
                           <Checkbox
                             name="product"
                             label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
-                              "id-ID"
+                              "id-ID",
                             ).format(option.sellprice)}`}
                             value={selectedProduct.some(
-                              (p) => p.product_id === option.product_id
+                              (p) => p.product_id === option.product_id,
                             )}
                             onChange={() => {
                               // This onChange is for non-trial products.
@@ -1056,7 +1097,7 @@ const AddJadwal = ({
                               ) {
                                 if (
                                   selectedProduct.some(
-                                    (p) => p.product_id === option.product_id
+                                    (p) => p.product_id === option.product_id,
                                   )
                                 )
                                   handleQtyChange(option.product_id, 0);
@@ -1084,7 +1125,7 @@ const AddJadwal = ({
                             defaultValue={1}
                             disabled={
                               !selectedProduct.some(
-                                (p) => p.product_id === option.product_id
+                                (p) => p.product_id === option.product_id,
                               )
                               // || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
                             }
@@ -1102,7 +1143,7 @@ const AddJadwal = ({
 
                               handleQtyChange(
                                 option.product_id,
-                                val.toString()
+                                val.toString(),
                               );
                             }}
                           />
@@ -1167,12 +1208,12 @@ const AddJadwal = ({
                             register={register}
                             options={allStatus}
                             onChange={(
-                              selectedOption // react-select passes the selected option object
+                              selectedOption, // react-select passes the selected option object
                             ) =>
                               handleRegStatChange(
                                 item.fullname,
                                 "reg_stat",
-                                selectedOption.target.value // Get value from the selected option
+                                selectedOption.target.value, // Get value from the selected option
                               )
                             }
                             id="hh"
@@ -1187,7 +1228,7 @@ const AddJadwal = ({
                               handleRegStatChange(
                                 item.fullname,
                                 "istrial",
-                                e.target.checked
+                                e.target.checked,
                               )
                             }
                             className="mx-auto"
@@ -1200,8 +1241,8 @@ const AddJadwal = ({
                               remove(index);
                               setFormList((currentList) =>
                                 currentList.filter(
-                                  (s) => s.fullname !== studentToRemoveFullname
-                                )
+                                  (s) => s.fullname !== studentToRemoveFullname,
+                                ),
                               );
                               setSelectedProduct([]);
                               forceUpdate();
@@ -1290,11 +1331,11 @@ const AddJadwal = ({
                                 ? 1
                                 : formList.length) *
                               p.sellprice,
-                          0
+                          0,
                         ) +
                         Object.values(grouped).reduce(
                           (sum, value) => sum + value.total,
-                          0
+                          0,
                         )
                       ).toLocaleString()}
                     </span>
@@ -1350,12 +1391,12 @@ const AddJadwal = ({
                       className="border rounded-md p-2"
                       onChange={(e) => {
                         const selected = parent.find(
-                          (p) => p.name === e.target.value
+                          (p) => p.name === e.target.value,
                         );
                         setValue("namapelanggan", selected?.name || "");
                         setValue(
                           "phonepelanggan",
-                          toNormalizePhone(selected?.phone || "")
+                          toNormalizePhone(selected?.phone || ""),
                         );
                       }}
                     >
@@ -1478,10 +1519,10 @@ function ProductSection({
               <Checkbox
                 name="product"
                 label={`${option.name.toLowerCase()} - Rp. ${new Intl.NumberFormat(
-                  "id-ID"
+                  "id-ID",
                 ).format(option.sellprice)}`}
                 value={selectedProduct.some(
-                  (p) => p.product_id === option.product_id
+                  (p) => p.product_id === option.product_id,
                 )}
                 onChange={() => {
                   // This onChange is for non-trial products.
@@ -1489,7 +1530,7 @@ function ProductSection({
                   if (option.package_name.toLowerCase() !== "trial") {
                     if (
                       selectedProduct.some(
-                        (p) => p.product_id === option.product_id
+                        (p) => p.product_id === option.product_id,
                       )
                     )
                       handleQtyChange(option.product_id, 0);
@@ -1517,7 +1558,7 @@ function ProductSection({
                 defaultValue={1}
                 disabled={
                   !selectedProduct.some(
-                    (p) => p.product_id === option.product_id
+                    (p) => p.product_id === option.product_id,
                   )
                   // || option.package_name.toLowerCase() === "trial" // Also disable qty input for trial product
                 }
@@ -1598,12 +1639,12 @@ function StudentSection({
                 register={register}
                 options={allStatus}
                 onChange={(
-                  selectedOption // react-select passes the selected option object
+                  selectedOption, // react-select passes the selected option object
                 ) =>
                   handleRegStatChange(
                     item.fullname,
                     "reg_stat",
-                    selectedOption.target.value // Get value from the selected option
+                    selectedOption.target.value, // Get value from the selected option
                   )
                 }
                 id="hh"
@@ -1617,7 +1658,7 @@ function StudentSection({
                   handleRegStatChange(
                     item.fullname,
                     "istrial",
-                    e.target.checked
+                    e.target.checked,
                   )
                 }
                 className="mx-auto"
@@ -1629,8 +1670,8 @@ function StudentSection({
                   remove(index);
                   setFormList((currentList) =>
                     currentList.filter(
-                      (s) => s.fullname !== studentToRemoveFullname
-                    )
+                      (s) => s.fullname !== studentToRemoveFullname,
+                    ),
                   );
                   setSelectedProduct([]);
                   forceUpdate();
@@ -1709,11 +1750,11 @@ function SummarySection({ selectedProduct, formList, grouped }) {
                       p.qty *
                         (p.package_name === "trial" ? 1 : formList.length) *
                         p.sellprice,
-                    0
+                    0,
                   ) +
                   Object.values(grouped).reduce(
                     (sum, value) => sum + value.total,
-                    0
+                    0,
                   )
                 ).toLocaleString()}
               </span>
@@ -1770,12 +1811,12 @@ function CustomerSection({
                 className="border rounded-md p-2"
                 onChange={(e) => {
                   const selected = parent.find(
-                    (p) => p.name === e.target.value
+                    (p) => p.name === e.target.value,
                   );
                   setValue("namapelanggan", selected?.name || "");
                   setValue(
                     "phonepelanggan",
-                    toNormalizePhone(selected?.phone || "")
+                    toNormalizePhone(selected?.phone || ""),
                   );
                 }}
               >
