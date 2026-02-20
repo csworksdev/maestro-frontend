@@ -107,11 +107,11 @@ const Produk = () => {
   });
 
   const actions = [
-    {
-      name: "Edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
-    },
+    // {
+    //   name: "Edit",
+    //   icon: "heroicons:pencil-square",
+    //   onClick: (row) => handleEdit(row.row.original),
+    // },
     {
       name: "Delete",
       icon: "heroicons-outline:trash",
@@ -308,7 +308,7 @@ const Produk = () => {
                             pageSize={pageSize}
                             pageIndex={pageIndex}
                             pageCount={Math.ceil(
-                              (listData.count || 0) / pageSize
+                              (listData.count || 0) / pageSize,
                             )}
                             canPreviousPage={pageIndex > 0}
                             canNextPage={
