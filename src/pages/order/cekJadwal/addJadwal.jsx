@@ -73,11 +73,11 @@ const AddJadwal = ({
         then: (schema) => schema.required("tanggal is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
-      payment_date: yup.date().when("$isInvoice", {
-        is: true,
-        then: (schema) => schema.required("tanggal is required"),
-        otherwise: (schema) => schema.notRequired(),
-      }),
+      // payment_date: yup.date().when("$isInvoice", {
+      //   is: true,
+      //   then: (schema) => schema.required("tanggal is required"),
+      //   otherwise: (schema) => schema.notRequired(),
+      // }),
     })
     .required();
   const [inputValue, setInputValue] = useState(params);
@@ -318,9 +318,9 @@ const AddJadwal = ({
             order_date: isInvoice
               ? DateTime.now().toFormat("yyyy-MM-dd")
               : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
-            payment_date: isInvoice
-              ? DateTime.now().toFormat("yyyy-MM-dd")
-              : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
+            // payment_date: isInvoice
+            //   ? DateTime.now().toFormat("yyyy-MM-dd")
+            //   : DateTime.fromJSDate(newData.order_date).toFormat("yyyy-MM-dd"),
             students:
               product.package_name === "trial"
                 ? newData.updatedStudents
@@ -929,13 +929,13 @@ const AddJadwal = ({
                       setValue("order_date", new Date(), {
                         shouldValidate: true,
                       });
-                      setValue("payment_date", new Date(), {
-                        shouldValidate: true,
-                      });
+                      // setValue("payment_date", new Date(), {
+                      //   shouldValidate: true,
+                      // });
                     } else {
                       // kalau tidak buat xendit → hapus nilainya supaya nggak divalidasi
                       setValue("order_date", null, { shouldValidate: true });
-                      setValue("payment_date", null, { shouldValidate: true });
+                      // setValue("payment_date", null, { shouldValidate: true });
                     }
                   }}
                 />
@@ -1017,7 +1017,7 @@ const AddJadwal = ({
                     )}
                   />
                 </div>
-                <div className="flex flex-row items-center">
+                {/* <div className="flex flex-row items-center">
                   <label
                     className="form-label basis-1/5"
                     htmlFor="payment_date"
@@ -1042,7 +1042,7 @@ const AddJadwal = ({
                       />
                     )}
                   />
-                </div>
+                </div> */}
               </Card>
             ) : null}
             <div className="grid grid-cols-[auto_auto] gap-5 mb-5">
