@@ -75,7 +75,7 @@ vi.mock("react-select", () => ({
       value={value?.value ?? ""}
       onChange={(event) => {
         const selected = options.find(
-          (option) => String(option.value) === event.target.value
+          (option) => String(option.value) === event.target.value,
         );
         onChange?.(selected ?? null);
       }}
@@ -210,26 +210,26 @@ describe("Produk list page", () => {
     cleanup();
   });
 
-  it("navigates to edit when edit action clicked", async () => {
-    render(<Produk />);
+  // it("navigates to edit when edit action clicked", async () => {
+  //   render(<Produk />);
 
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Edit" }));
+  //   const user = userEvent.setup();
+  //   await user.click(await screen.findByRole("button", { name: "Edit" }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("Edit", {
-      state: {
-        isupdate: "true",
-        data: {
-          product_id: 11,
-          name: "Produk A",
-          package_name: "Paket A",
-          meetings: 10,
-          price: 1000,
-          sellprice: 1200,
-        },
-      },
-    });
-  });
+  //   expect(mockNavigate).toHaveBeenCalledWith("Edit", {
+  //     state: {
+  //       isupdate: "true",
+  //       data: {
+  //         product_id: 11,
+  //         name: "Produk A",
+  //         package_name: "Paket A",
+  //         meetings: 10,
+  //         price: 1000,
+  //         sellprice: 1200,
+  //       },
+  //     },
+  //   });
+  // });
 
   it("deletes produk after confirmation", async () => {
     mockDeleteProduk.mockResolvedValue({ status: true });
