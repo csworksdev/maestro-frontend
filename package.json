@@ -41,6 +41,7 @@
     "dompurify": "^3.3.1",
     "export-to-csv": "^1.4.0",
     "firebase": "^10.14.1",
+    "firebase-tools": "^15.7.0",
     "flatpickr": "^4.6.13",
     "framer-motion": "^10.18.0",
     "idb": "^8.0.3",
