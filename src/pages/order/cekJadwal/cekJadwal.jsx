@@ -24,6 +24,7 @@ import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import Dropdown from "@/components/ui/Dropdown";
 import WhatsAppButton from "@/components/custom/sendwhatsapp";
+import ApprovedRescheduleTable from "@/components/custom/ApprovedRescheduleTable";
 import Icons from "@/components/ui/Icon";
 import Select from "react-select";
 import Switch from "@/components/ui/Switch";
@@ -127,6 +128,10 @@ const CekJadwal = () => {
   const [jadwal, setJadwal] = useState([]);
   const [productList, setProductList] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [activeView, setActiveView] = useState(() => {
+    if (typeof window === "undefined") return "schedule";
+    return localStorage.getItem("CekJadwalActiveView") || "schedule";
+  });
   const [reloadDone, setReloadDone] = useState(false);
   const [checked, setChecked] = useState(true);
   const [isScheduleLoading, setIsScheduleLoading] = useState(false);
@@ -378,6 +383,15 @@ const CekJadwal = () => {
       Swal.fire("Added!", "Your order has been added.", "success");
     }
   }, [reloadDone]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("CekJadwalActiveView", activeView);
+    }
+    if (activeView !== "schedule") {
+      setDetailModalVisible(false);
+    }
+  }, [activeView]);
 
   useEffect(() => {
     setFilterPelatih([]);
@@ -967,9 +981,9 @@ const CekJadwal = () => {
 
   return (
     <>
-      <div className="mb-3 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 p-3 shadow-sm dark:border-slate-700/70 dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-800/60 sm:p-4">
+      <div className="mb-4 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 p-3 shadow-sm dark:border-slate-700/70 dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-800/60 sm:p-4">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 Cek Jadwal
@@ -979,23 +993,56 @@ const CekJadwal = () => {
                 order.
               </p>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                Mode tampilan
-              </span>
-              <Switch
-                value={checked}
-                onChange={() => setChecked(!checked)}
-                prevLabel="Detail"
-                nextLabel="Siswa"
-                labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
-                wrapperClass="gap-2"
-                activeClass="bg-primary-500"
-              />
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                  Mode
+                </span>
+                <Switch
+                  value={checked}
+                  onChange={() => setChecked(!checked)}
+                  prevLabel="Detail"
+                  nextLabel="Siswa"
+                  labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
+                  wrapperClass="gap-2"
+                  activeClass="bg-primary-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                  Fitur
+                </span>
+                <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-900">
+                  <button
+                    type="button"
+                    onClick={() => setActiveView("schedule")}
+                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                      activeView === "schedule"
+                        ? "bg-primary-500 text-white"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Grid Jadwal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView("reschedule")}
+                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                      activeView === "reschedule"
+                        ? "bg-primary-500 text-white"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Reschedule
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,380px)_minmax(0,1fr)] lg:items-end">
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                 Cabang
@@ -1023,12 +1070,9 @@ const CekJadwal = () => {
                 noOptionsMessage={() => "Cabang tidak ditemukan"}
                 value={selectedBranchOption}
               />
-              {/* <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Gunakan pencarian untuk mempercepat pemilihan cabang.
-              </span> */}
             </div>
 
-            {/* <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {[
                 {
                   label: "Cabang",
@@ -1059,23 +1103,13 @@ const CekJadwal = () => {
                   </span>
                 </div>
               ))}
-            </div> */}
+            </div>
           </div>
-
-          {/* <div className="flex flex-nowrap items-center gap-2 overflow-x-auto rounded-xl border border-slate-200/70 bg-white/70 px-2 py-1.5 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/50 dark:text-slate-300">
-            {legendItems.map((item) => (
-              <div
-                key={item.label}
-                className={`inline-flex items-center gap-2 rounded-full border px-2 py-0.5 ${item.className}`}
-              >
-                <Icon icon={item.icon} width={14} />
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div> */}
         </div>
       </div>
-      <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
+
+      {activeView === "schedule" && (
+        <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -1193,8 +1227,18 @@ const CekJadwal = () => {
             </Tab.Panels>
           </Tab.Group>
         </Tab.Panels>
-      </Tab.Group>
-      {detailModalVisible && (
+        </Tab.Group>
+      )}
+
+      {activeView === "reschedule" && (
+        <ApprovedRescheduleTable
+          title="Reschedule Approved"
+          subtitle="Data reschedule approved langsung dari OPX API."
+          showSummary={false}
+        />
+      )}
+
+      {activeView === "schedule" && detailModalVisible && (
         <Modal
           title="Buat Invoice"
           activeModal={detailModalVisible}
