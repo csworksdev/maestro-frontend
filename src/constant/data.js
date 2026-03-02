@@ -306,6 +306,11 @@ export const menuOpx = [
     link: "list-izin",
   },
   {
+    title: "Reschedule",
+    icon: "heroicons-outline:arrow-path",
+    link: "reschedule",
+  },
+  {
     title: "Pelatih",
     icon: "heroicons-outline:users",
     link: "trainer",
