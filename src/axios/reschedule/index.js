@@ -13,7 +13,7 @@ export const getRescheduleAllOpx = async (params = {}) => {
 
 export const approveRescheduleOpx = async (id, data) => {
   try {
-    const response = await axiosConfig.patch(`/opx/reschedules/${id}/`, data);
+    const response = await axiosConfig.put(`/opx/reschedules/${id}/`, data);
     return response;
   } catch (error) {
     console.error("Error approving reschedule:", error);

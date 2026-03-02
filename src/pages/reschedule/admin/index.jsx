@@ -239,7 +239,7 @@ const Reschedule = () => {
       setProcessingIds((prev) => ({ ...prev, [rescheduleId]: true }));
       try {
         await approveRescheduleOpx(rescheduleId, {
-          action: isApproved ? "approved" : "rejected",
+          status: isApproved ? "approved" : "rejected",
         });
 
         await Swal.fire(
