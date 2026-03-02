@@ -269,6 +269,11 @@ export const menuAdminNew = [
     icon: "heroicons-outline:globe-americas",
     link: "followup-perpanjang",
   },
+  {
+    title: "Reschedule",
+    icon: "heroicons-outline:arrow-path",
+    link: "reschedule",
+  },
 ];
 
 export const menuOpx = [
