@@ -1,7 +1,7 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
-import { CJGetBranchDay, CJGetPool } from "@/axios/schedule/cekJadwal";
+import { CJGetPool } from "@/axios/schedule/cekJadwal";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -24,10 +24,12 @@ import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import Dropdown from "@/components/ui/Dropdown";
 import WhatsAppButton from "@/components/custom/sendwhatsapp";
+import ApprovedRescheduleTable from "@/components/custom/ApprovedRescheduleTable";
 import Icons from "@/components/ui/Icon";
 import Select from "react-select";
 import Switch from "@/components/ui/Switch";
 import { toProperCase } from "@/utils";
+import { buildWsUrl } from "@/utils/wsUrl";
 import { PerpanjangOrder } from "@/axios/masterdata/order";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import { useQuery } from "@tanstack/react-query";
@@ -127,9 +129,14 @@ const CekJadwal = () => {
   const [jadwal, setJadwal] = useState([]);
   const [productList, setProductList] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [activeView, setActiveView] = useState(() => {
+    if (typeof window === "undefined") return "schedule";
+    return localStorage.getItem("CekJadwalActiveView") || "schedule";
+  });
   const [reloadDone, setReloadDone] = useState(false);
   const [checked, setChecked] = useState(true);
   const [isScheduleLoading, setIsScheduleLoading] = useState(false);
+  const scheduleSocketRef = useRef(null);
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -345,31 +352,101 @@ const CekJadwal = () => {
     };
   };
 
-  const loadSchedule = async (selectedBranch, poolName, dayName) => {
-    setIsScheduleLoading(true);
-    try {
-      const scheduleRes = await CJGetBranchDay(
-        selectedBranch,
-        poolName,
-        dayName,
-      );
-      const data = scheduleRes.data.map((element) =>
-        fillBaseJadwalWithData({ ...BaseJadwal }, element),
-      );
+  const applyScheduleData = (scheduleData = []) => {
+    const data = scheduleData.map((element) =>
+      fillBaseJadwalWithData({ ...BaseJadwal }, element),
+    );
 
-      setFilterPelatih(
-        data.map((x) => {
-          return { value: x.trainer_id, label: toProperCase(x.nickname) };
-        }),
-      );
+    setFilterPelatih(
+      data.map((item) => ({
+        value: item.trainer_id,
+        label: toProperCase(item.nickname),
+      })),
+    );
+    setJadwal([...data]);
+  };
 
-      setJadwal([...data]);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsScheduleLoading(false);
+  const closeScheduleSocket = () => {
+    if (!scheduleSocketRef.current) {
+      return;
+    }
+
+    const ws = scheduleSocketRef.current;
+    scheduleSocketRef.current = null;
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onerror = null;
+    ws.onclose = null;
+
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
+      ws.close(1000);
     }
   };
+
+  const loadSchedule = async (_selectedBranch, poolName, dayName) => {
+    if (!poolName || !dayName) {
+      return;
+    }
+
+    setIsScheduleLoading(true);
+    closeScheduleSocket();
+
+    const endpoint = `/ws/schedule/?branch=${_selectedBranch}&pool=${poolName}&day=${dayName}`;
+    const wsUrl = buildWsUrl(endpoint);
+
+    if (!wsUrl) {
+      console.error("Unable to resolve schedule WebSocket URL");
+      setIsScheduleLoading(false);
+      return;
+    }
+
+    const ws = new WebSocket(wsUrl);
+    scheduleSocketRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        const payload = Array.isArray(message)
+          ? message
+          : Array.isArray(message?.payload)
+            ? message.payload
+            : Array.isArray(message?.data)
+              ? message.data
+              : null;
+
+        if (!payload) {
+          console.warn("Unknown schedule websocket payload:", message);
+          return;
+        }
+
+        applyScheduleData(payload);
+      } catch (error) {
+        console.error("Failed to parse schedule websocket payload:", error);
+      } finally {
+        setIsScheduleLoading(false);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("Schedule websocket error:", error);
+      setIsScheduleLoading(false);
+    };
+
+    ws.onclose = () => {
+      if (scheduleSocketRef.current === ws) {
+        scheduleSocketRef.current = null;
+      }
+    };
+  };
+
+  useEffect(() => {
+    return () => {
+      closeScheduleSocket();
+    };
+  }, []);
 
   useEffect(() => {
     if (reloadDone) {
@@ -378,6 +455,15 @@ const CekJadwal = () => {
       Swal.fire("Added!", "Your order has been added.", "success");
     }
   }, [reloadDone]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("CekJadwalActiveView", activeView);
+    }
+    if (activeView !== "schedule") {
+      setDetailModalVisible(false);
+    }
+  }, [activeView]);
 
   useEffect(() => {
     setFilterPelatih([]);
@@ -967,9 +1053,9 @@ const CekJadwal = () => {
 
   return (
     <>
-      <div className="mb-3 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 p-3 shadow-sm dark:border-slate-700/70 dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-800/60 sm:p-4">
+      <div className="mb-4 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 p-3 shadow-sm dark:border-slate-700/70 dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-800/60 sm:p-4">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 Cek Jadwal
@@ -979,23 +1065,56 @@ const CekJadwal = () => {
                 order.
               </p>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                Mode tampilan
-              </span>
-              <Switch
-                value={checked}
-                onChange={() => setChecked(!checked)}
-                prevLabel="Detail"
-                nextLabel="Siswa"
-                labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
-                wrapperClass="gap-2"
-                activeClass="bg-primary-500"
-              />
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                  Mode
+                </span>
+                <Switch
+                  value={checked}
+                  onChange={() => setChecked(!checked)}
+                  prevLabel="Detail"
+                  nextLabel="Siswa"
+                  labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
+                  wrapperClass="gap-2"
+                  activeClass="bg-primary-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                  Fitur
+                </span>
+                <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-900">
+                  <button
+                    type="button"
+                    onClick={() => setActiveView("schedule")}
+                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                      activeView === "schedule"
+                        ? "bg-primary-500 text-white"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Grid Jadwal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView("reschedule")}
+                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                      activeView === "reschedule"
+                        ? "bg-primary-500 text-white"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Reschedule
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,380px)_minmax(0,1fr)] lg:items-end">
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                 Cabang
@@ -1023,12 +1142,9 @@ const CekJadwal = () => {
                 noOptionsMessage={() => "Cabang tidak ditemukan"}
                 value={selectedBranchOption}
               />
-              {/* <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Gunakan pencarian untuk mempercepat pemilihan cabang.
-              </span> */}
             </div>
 
-            {/* <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {[
                 {
                   label: "Cabang",
@@ -1059,142 +1175,142 @@ const CekJadwal = () => {
                   </span>
                 </div>
               ))}
-            </div> */}
+            </div>
           </div>
-
-          {/* <div className="flex flex-nowrap items-center gap-2 overflow-x-auto rounded-xl border border-slate-200/70 bg-white/70 px-2 py-1.5 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/50 dark:text-slate-300">
-            {legendItems.map((item) => (
-              <div
-                key={item.label}
-                className={`inline-flex items-center gap-2 rounded-full border px-2 py-0.5 ${item.className}`}
-              >
-                <Icon icon={item.icon} width={14} />
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div> */}
         </div>
       </div>
-      <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                Kolam
-              </span>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Pilih kolam untuk melihat ketersediaan jadwal.
-              </p>
+
+      {activeView === "schedule" && (
+        <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                  Kolam
+                </span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Pilih kolam untuk melihat ketersediaan jadwal.
+                </p>
+              </div>
+              {poolQuery.isFetching && (
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  Memuat kolam...
+                </span>
+              )}
             </div>
-            {poolQuery.isFetching && (
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Memuat kolam...
-              </span>
+
+            {poolOption.length > 0 ? (
+              <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+                {poolOption.map((item, i) => (
+                  <Tab key={i}>
+                    {({ selected }) => (
+                      <button
+                        className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
+                          selected
+                            ? "bg-primary-500 text-white shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        {item.label}
+                        <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
+                          {item.filled}
+                        </span>
+                      </button>
+                    )}
+                  </Tab>
+                ))}
+              </Tab.List>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
+                {poolQuery.isLoading
+                  ? "Memuat kolam..."
+                  : selectedBranchOption
+                    ? "Belum ada kolam di cabang ini."
+                    : "Pilih cabang untuk menampilkan daftar kolam."}
+              </div>
             )}
           </div>
 
-          {poolOption.length > 0 ? (
-            <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-              {poolOption.map((item, i) => (
-                <Tab key={i}>
-                  {({ selected }) => (
-                    <button
-                      className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
-                        selected
-                          ? "bg-primary-500 text-white shadow-sm"
-                          : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                      }`}
-                    >
-                      {item.label}
-                      <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
-                        {item.filled}
-                      </span>
-                    </button>
-                  )}
-                </Tab>
-              ))}
-            </Tab.List>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
-              {poolQuery.isLoading
-                ? "Memuat kolam..."
-                : selectedBranchOption
-                  ? "Belum ada kolam di cabang ini."
-                  : "Pilih cabang untuk menampilkan daftar kolam."}
-            </div>
-          )}
-        </div>
+          <Tab.Panels className="mt-4">
+            <Tab.Group
+              selectedIndex={selectedIndex ?? -1}
+              onChange={handleChangeTab}
+            >
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
+                  {selectedBranch &&
+                    tabHari.map((item, i) => (
+                      <Tab key={i}>
+                        {({ selected }) => (
+                          <button
+                            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
+                              selected
+                                ? "bg-primary-500 text-white shadow-sm"
+                                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                            }`}
+                          >
+                            {item.name}
+                            <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
+                              {item.total}
+                            </span>
+                          </button>
+                        )}
+                      </Tab>
+                    ))}
+                </Tab.List>
 
-        <Tab.Panels className="mt-4">
-          <Tab.Group
-            selectedIndex={selectedIndex ?? -1}
-            onChange={handleChangeTab}
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-                {selectedBranch &&
-                  tabHari.map((item, i) => (
-                    <Tab key={i}>
-                      {({ selected }) => (
-                        <button
-                          className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
-                            selected
-                              ? "bg-primary-500 text-white shadow-sm"
-                              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                          }`}
-                        >
-                          {item.name}
-                          <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
-                            {item.total}
-                          </span>
-                        </button>
-                      )}
-                    </Tab>
-                  ))}
-              </Tab.List>
+                {filterPelatih && filterPelatih.length > 0 ? (
+                  <div className="min-w-[220px]">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                      Filter pelatih
+                    </label>
+                    <Select
+                      name="filteredPelatih"
+                      options={filterPelatih ?? null}
+                      className="react-select"
+                      classNamePrefix="select"
+                      isClearable={true}
+                      menuPortalTarget={
+                        typeof window !== "undefined" ? document.body : null
+                      }
+                      styles={{
+                        menuPortal: (base) => ({
+                          ...base,
+                          zIndex: 9999,
+                        }),
+                      }}
+                      placeholder="Pilih pelatih"
+                      onChange={(e) => {
+                        setFilteredPelatih(e?.value ?? "");
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </div>
 
-              {filterPelatih && filterPelatih.length > 0 ? (
-                <div className="min-w-[220px]">
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                    Filter pelatih
-                  </label>
-                  <Select
-                    name="filteredPelatih"
-                    options={filterPelatih ?? null}
-                    className="react-select"
-                    classNamePrefix="select"
-                    isClearable={true}
-                    menuPortalTarget={
-                      typeof window !== "undefined" ? document.body : null
-                    }
-                    styles={{
-                      menuPortal: (base) => ({
-                        ...base,
-                        zIndex: 9999,
-                      }),
-                    }}
-                    placeholder="Pilih pelatih"
-                    onChange={(e) => {
-                      setFilteredPelatih(e?.value ?? "");
-                    }}
-                  />
-                </div>
-              ) : null}
-            </div>
+              <Tab.Panels key={JSON.stringify(jadwal)} className="mt-4">
+                {tabHari.map((item, index) => {
+                  return (
+                    <Tab.Panel key={index}>
+                      <div>{gridKolam(item.name)}</div>
+                    </Tab.Panel>
+                  );
+                })}
+              </Tab.Panels>
+            </Tab.Group>
+          </Tab.Panels>
+        </Tab.Group>
+      )}
 
-            <Tab.Panels key={JSON.stringify(jadwal)} className="mt-4">
-              {tabHari.map((item, index) => {
-                return (
-                  <Tab.Panel key={index}>
-                    <div>{gridKolam(item.name)}</div>
-                  </Tab.Panel>
-                );
-              })}
-            </Tab.Panels>
-          </Tab.Group>
-        </Tab.Panels>
-      </Tab.Group>
-      {detailModalVisible && (
+      {activeView === "reschedule" && (
+        <ApprovedRescheduleTable
+          title="Reschedule Approved"
+          subtitle="Data reschedule approved langsung dari OPX API."
+          showSummary={false}
+        />
+      )}
+
+      {activeView === "schedule" && detailModalVisible && (
         <Modal
           title="Buat Invoice"
           activeModal={detailModalVisible}

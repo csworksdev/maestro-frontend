@@ -68,6 +68,7 @@ import { Routes } from "react-router-dom";
 const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
+const Reschedule = lazy(() => import("@/pages/reschedule/admin"));
 
 const OpxRoutes = () => {
   return (
@@ -122,6 +123,9 @@ const OpxRoutes = () => {
         </Route>
         <Route path="list-izin">
           <Route index element={<Leave />} />
+        </Route>
+        <Route path="reschedule">
+          <Route index element={<Reschedule />} />
         </Route>
         <Route path="kolam">
           <Route index element={<Kolam />} />

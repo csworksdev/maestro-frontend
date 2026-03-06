@@ -105,6 +105,9 @@ const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const EditPromo = lazy(() => import("@/pages/masterdata/promo/edit"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
+const RescheduleApprovedAdmin = lazy(() =>
+  import("@/pages/reschedule/admin/approved")
+);
 
 const AdminRoutes = () => {
   return (
@@ -268,6 +271,9 @@ const AdminRoutes = () => {
         </Route>
         <Route path="list-izin">
           <Route index element={<Leave />} />
+        </Route>
+        <Route path="reschedule">
+          <Route index element={<RescheduleApprovedAdmin />} />
         </Route>
         <Route path="chattest">
           <Route index element={<ChatTest />} />

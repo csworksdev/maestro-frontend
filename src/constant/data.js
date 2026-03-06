@@ -269,6 +269,11 @@ export const menuAdminNew = [
     icon: "heroicons-outline:globe-americas",
     link: "followup-perpanjang",
   },
+  {
+    title: "Reschedule",
+    icon: "heroicons-outline:arrow-path",
+    link: "reschedule",
+  },
 ];
 
 export const menuOpx = [
@@ -304,6 +309,11 @@ export const menuOpx = [
     title: "Ajuan Izin Pelatih",
     icon: "heroicons-outline:calendar-days",
     link: "list-izin",
+  },
+  {
+    title: "Reschedule",
+    icon: "heroicons-outline:arrow-path",
+    link: "reschedule",
   },
   {
     title: "Pelatih",

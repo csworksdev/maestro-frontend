@@ -103,7 +103,7 @@ const AddCoach = ({ handleSelectTrainer }) => {
     const updatedData = {
       user_id: e.trainer_id,
       username: e.nickname,
-      email: e.email,
+      email: e.nickname + "@maestroswim.com",
       password: "maestrobisa",
     };
     handleUpdate(updatedData);
