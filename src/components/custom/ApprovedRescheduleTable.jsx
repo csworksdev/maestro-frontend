@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DateTime } from "luxon";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
 import Icon from "@/components/ui/Icon";
 import PaginationComponent from "@/components/globals/table/pagination";
-import { getRescheduleAllOpx } from "@/axios/reschedule";
+import { buildWsUrl } from "@/utils/wsUrl";
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -18,6 +18,48 @@ const formatDate = (value) => {
 const formatTime = (value) => {
   if (!value) return "-";
   return String(value).replace(".", ":");
+};
+
+const WS_CLOSE_CODE_NORMAL = 1000;
+const WS_RECONNECT_DELAY = 3000;
+
+const extractReschedulePayload = (message) => {
+  const queue = [message, message?.payload, message?.data];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    if (Array.isArray(current)) {
+      return { rows: current, meta: {} };
+    }
+
+    if (typeof current !== "object") {
+      continue;
+    }
+
+    if (Array.isArray(current?.data)) {
+      return { rows: current.data, meta: current?.meta ?? {} };
+    }
+
+    if (Array.isArray(current?.results)) {
+      return { rows: current.results, meta: current?.meta ?? {} };
+    }
+
+    if (current?.data && typeof current.data === "object") {
+      queue.push(current.data);
+    }
+
+    if (current?.payload && typeof current.payload === "object") {
+      queue.push(current.payload);
+    }
+  }
+
+  return null;
 };
 
 const ApprovedRescheduleTable = ({
@@ -41,84 +83,154 @@ const ApprovedRescheduleTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
+  const socketRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  const wsEndpoint = useMemo(() => {
+    const params = new URLSearchParams({
+      page: String(pageIndex + 1),
+      page_size: String(pageSize),
+      filter_status: "approved",
+    });
 
-  const fetchReschedule = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
+    const studentValue = studentFilter.trim();
+    const trainerValue = trainerFilter.trim();
+    if (studentValue) {
+      params.set("filter_student", studentValue);
+    }
+    if (trainerValue) {
+      params.set("filter_trainer", trainerValue);
+    }
 
-    try {
-      const params = {
-        page: pageIndex + 1,
-        page_size: pageSize,
-        filter_status: "approved",
-      };
+    return `/ws/reschedule/?${params.toString()}`;
+  }, [pageIndex, pageSize, studentFilter, trainerFilter]);
 
-      if (studentFilter.trim()) {
-        params.filter_student = studentFilter.trim();
+  const applyReschedulePayload = useCallback(
+    (message) => {
+      const payload = message?.payload ?? message?.data ?? message ?? {};
+      const extractedPayload = extractReschedulePayload(payload);
+      if (!extractedPayload) {
+        console.warn("Ignored unknown approved reschedule websocket payload:", message);
+        return;
       }
 
-      if (trainerFilter.trim()) {
-        params.filter_trainer = trainerFilter.trim();
-      }
-
-      const response = await getRescheduleAllOpx(params);
-      if (!response) {
-        throw new Error("API response is empty");
-      }
-
-      const payload = response?.data ?? {};
-      const rows = Array.isArray(payload?.data)
-        ? payload.data
-        : Array.isArray(payload?.results)
-          ? payload.results
-          : [];
-
-      const payloadMeta = payload?.meta ?? {};
+      const { rows, meta: payloadMeta } = extractedPayload;
       const count =
         payloadMeta?.count ??
         payload?.count ??
+        message?.count ??
         (Array.isArray(rows) ? rows.length : 0);
-
       const totalPages =
         payloadMeta?.total_pages ??
         payloadMeta?.page_count ??
         (count && pageSize ? Math.ceil(count / pageSize) : 0);
 
       setListData({
-        results: rows,
+        results: Array.isArray(rows) ? rows : [],
         count,
       });
-
       setMeta({
         currentPage: payloadMeta?.current_page ?? pageIndex + 1,
         totalPages: totalPages ?? 0,
         hasNext:
           payloadMeta?.has_next ??
-          (typeof totalPages === "number" ? pageIndex + 1 < totalPages : false),
+          (totalPages ? pageIndex + 1 < totalPages : false),
         hasPrev: payloadMeta?.has_prev ?? pageIndex > 0,
       });
-
       setLastUpdated(
         DateTime.now().setLocale("id").toFormat("dd LLL yyyy, HH:mm"),
       );
-    } catch (error) {
-      console.error("Error fetching approved reschedules:", error);
-      setListData({ results: [], count: 0 });
-      setMeta({
-        currentPage: 1,
-        totalPages: 0,
-        hasNext: false,
-        hasPrev: false,
-      });
-      setErrorMessage("Gagal memuat data reschedule.");
-    } finally {
-      setIsLoading(false);
+      setErrorMessage("");
+    },
+    [pageIndex, pageSize],
+  );
+
+  const closeSocket = useCallback(() => {
+    if (!socketRef.current) {
+      return;
     }
-  }, [pageIndex, pageSize, studentFilter, trainerFilter]);
+
+    const ws = socketRef.current;
+    socketRef.current = null;
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onerror = null;
+    ws.onclose = null;
+
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
+      ws.close(WS_CLOSE_CODE_NORMAL);
+    }
+  }, []);
+
+  const connectSocket = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+    closeSocket();
+
+    const wsUrl = buildWsUrl(wsEndpoint);
+    if (!wsUrl) {
+      setIsLoading(false);
+      setErrorMessage("Gagal membentuk URL websocket reschedule.");
+      return;
+    }
+
+    const ws = new WebSocket(wsUrl);
+    socketRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        applyReschedulePayload(message);
+      } catch (error) {
+        console.error("Failed to parse approved reschedule websocket payload:", error);
+        setErrorMessage("Gagal membaca data websocket reschedule.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("Approved reschedule websocket error:", error);
+      setIsLoading(false);
+      setErrorMessage("Koneksi websocket reschedule bermasalah.");
+    };
+
+    ws.onclose = (event) => {
+      if (socketRef.current === ws) {
+        socketRef.current = null;
+      }
+
+      if (event.code !== WS_CLOSE_CODE_NORMAL) {
+        reconnectTimeoutRef.current = setTimeout(
+          () => connectSocket(),
+          WS_RECONNECT_DELAY,
+        );
+      }
+    };
+  }, [applyReschedulePayload, closeSocket, wsEndpoint]);
+
+  const fetchReschedule = useCallback(() => {
+    setIsLoading(true);
+    setErrorMessage("");
+    connectSocket();
+  }, [connectSocket]);
 
   useEffect(() => {
-    fetchReschedule();
-  }, [fetchReschedule]);
+    connectSocket();
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      closeSocket();
+    };
+  }, [closeSocket, connectSocket]);
 
   const handleApplyFilter = () => {
     setStudentFilter(studentFilterInput);
