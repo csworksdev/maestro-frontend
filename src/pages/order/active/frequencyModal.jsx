@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -18,30 +18,44 @@ import Icons from "@/components/ui/Icon";
 const sanitizeTimeOptions = () =>
   jam.filter((option) => option.value && option.value !== "0");
 
-const ensureSlotLength = (baseSlots = [], target = 1) => {
-  if (!target || target < 1) return [{ day: "", time: "" }];
+const normalizeSlot = (slot = {}, index = 0, createSlotId = () => "") => ({
+  slotId: slot?.slotId || createSlotId(),
+  order: index,
+  day: slot?.day || "",
+  time: slot?.time || "",
+});
+
+const ensureSlotLength = (baseSlots = [], target = 1, createSlotId) => {
+  if (!target || target < 1) {
+    return [normalizeSlot({}, 0, createSlotId)];
+  }
   const slots = baseSlots.length ? [...baseSlots] : [{ day: "", time: "" }];
   while (slots.length < target) {
     const last = slots[slots.length - 1] || { day: "", time: "" };
     slots.push({ day: last.day, time: last.time });
   }
-  return slots.slice(0, target).map((slot) => ({
-    day: slot?.day || "",
-    time: slot?.time || "",
-  }));
+  return slots
+    .slice(0, target)
+    .map((slot, index) => normalizeSlot(slot, index, createSlotId));
 };
 
 const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
   const orderId = defaultOrder?.order_id;
+  const nextSlotIdRef = useRef(0);
+  const createSlotId = () => {
+    nextSlotIdRef.current += 1;
+    return `frequency-slot-${nextSlotIdRef.current}`;
+  };
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [frequency, setFrequency] = useState(1);
-  const [slots, setSlots] = useState([{ day: "", time: "" }]);
+  const [slots, setSlots] = useState(() => ensureSlotLength([], 1, createSlotId));
   const [startDate, setStartDate] = useState("");
   const [pendingMeets, setPendingMeets] = useState([]);
   const [orderMeta, setOrderMeta] = useState(null);
   const [trainerSlots, setTrainerSlots] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const slotsRef = useRef(slots);
 
   const timeOptions = useMemo(() => sanitizeTimeOptions(), []);
   const maxFrequency = Math.max(pendingMeets.length || 0, 1);
@@ -96,6 +110,15 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
       }));
   }, [trainerSlots, dayOrderMap, timeOrderMap]);
 
+  const syncSlots = (updater) => {
+    setSlots((prev) => {
+      const nextSlots =
+        typeof updater === "function" ? updater(prev) : updater;
+      slotsRef.current = nextSlots;
+      return nextSlots;
+    });
+  };
+
   useEffect(() => {
     if (!orderId) return;
 
@@ -123,7 +146,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
         }
 
         if (currentSlots.length) {
-          setSlots(ensureSlotLength(currentSlots, initialFrequency));
+          syncSlots(ensureSlotLength(currentSlots, initialFrequency, createSlotId));
         } else {
           const fallback = [];
           if (payload.order?.day && payload.order?.time) {
@@ -137,7 +160,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
               time: pending[0].time,
             });
           }
-          setSlots(ensureSlotLength(fallback, initialFrequency));
+          syncSlots(ensureSlotLength(fallback, initialFrequency, createSlotId));
         }
       } catch (error) {
         const message =
@@ -158,7 +181,9 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
       const normalized = Math.max(prev, 1);
       const clamped = Math.min(normalized, maxFrequency);
       if (clamped !== prev) {
-        setSlots((prevSlots) => ensureSlotLength(prevSlots, clamped));
+        syncSlots((prevSlots) =>
+          ensureSlotLength(prevSlots, clamped, createSlotId)
+        );
       }
       return clamped;
     });
@@ -169,13 +194,13 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
     const safeValue = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
     const clampedValue = Math.min(safeValue, maxFrequency);
     setFrequency(clampedValue);
-    setSlots((prev) => ensureSlotLength(prev, clampedValue));
+    syncSlots((prev) => ensureSlotLength(prev, clampedValue, createSlotId));
   };
 
-  const handleSlotChange = (index, field, value) => {
-    setSlots((prev) =>
-      prev.map((slot, idx) =>
-        idx === index
+  const handleSlotChange = (slotId, field, value) => {
+    syncSlots((prev) =>
+      prev.map((slot) =>
+        slot.slotId === slotId
           ? {
               ...slot,
               [field]: value,
@@ -194,7 +219,10 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
       return;
     }
 
-    const hasEmptySlot = slots.some(
+    const orderedSlots = [...slotsRef.current].sort(
+      (slotA, slotB) => (slotA.order ?? 0) - (slotB.order ?? 0)
+    );
+    const hasEmptySlot = orderedSlots.some(
       (slot) =>
         !slot.day ||
         !slot.time ||
@@ -208,7 +236,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
 
     const payload = {
       frequency_per_week: frequency,
-      slots: slots.map((slot) => ({
+      slots: orderedSlots.map((slot) => ({
         day: slot.day,
         time: slot.time,
       })),
@@ -345,7 +373,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
           <div className="space-y-3">
             {slots.map((slot, index) => (
               <div
-                key={`slot-${index}`}
+                key={slot.slotId}
                 className="grid grid-cols-1 md:grid-cols-2 gap-3"
               >
                 <Select
@@ -357,7 +385,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
                   options={hari}
                   value={slot.day}
                   onChange={(e) =>
-                    handleSlotChange(index, "day", e.target.value)
+                    handleSlotChange(slot.slotId, "day", e.target.value)
                   }
                 />
                 <Select
@@ -365,7 +393,7 @@ const FrequencyModal = ({ defaultOrder = {}, onClose, onSuccess }) => {
                   options={timeOptions}
                   value={slot.time}
                   onChange={(e) =>
-                    handleSlotChange(index, "time", e.target.value)
+                    handleSlotChange(slot.slotId, "time", e.target.value)
                   }
                 />
               </div>
