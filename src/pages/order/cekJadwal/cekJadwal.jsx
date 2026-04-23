@@ -1917,16 +1917,16 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
           </div>
         }
       >
-        <div className="flex w-full min-w-[96px] flex-col justify-center gap-2 overflow-hidden rounded-l border-2 border-sky-300 bg-sky-50 p-2 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
+        <div className="mx-auto flex w-[104px] max-w-full flex-col justify-center gap-1.5 overflow-hidden rounded-md border-2 border-sky-300 bg-sky-50 p-1.5 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
           <Badge
-            label={`Latest schedule`}
-            className="justify-center rounded-full border border-sky-200 bg-white px-2 py-0.5 text-[clamp(8px,0.7vw,10px)] font-semibold text-sky-700 shadow-sm"
+            label={`Riwayat`}
+            className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
           />
           <Badge
             label={getCompletedScheduleProductLabel(visibleSchedules[0])}
-            className="justify-center bg-primary-500 text-[clamp(8px,0.7vw,10px)] text-white"
+            className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
           />
-          <div className="space-y-1 text-[clamp(8px,0.7vw,10px)] font-medium leading-snug text-slate-600">
+          <div className="space-y-0.5 text-[9px] font-medium leading-tight text-slate-600">
             {getStudentNames(visibleSchedules[0]).length ? (
               getStudentNames(visibleSchedules[0])
                 .slice(0, 2)
@@ -1939,7 +1939,7 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
               <div className="break-words">Siswa tidak tersedia</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 text-[clamp(8px,0.7vw,10px)] text-slate-500">
+          <div className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
             <span className="truncate">
               {formatCompletedScheduleDate(
                 getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
@@ -1947,8 +1947,8 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
             </span>
             <Icon
               icon="heroicons-outline:archive-box"
-              width="16"
-              height="16"
+              width="13"
+              height="13"
               className="shrink-0 text-sky-600"
             />
           </div>
