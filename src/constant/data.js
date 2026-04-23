@@ -99,8 +99,8 @@ export const menuFinance = [
     link: "xendit/transaction",
   },
   {
-    title: "Tautan Pembayaran",
-    icon: "heroicons-outline:link",
+    title: "Riwayat Invoice",
+    icon: "heroicons-outline:document-text",
     link: "xendit/invoice-history",
   },
 ];
@@ -249,11 +249,11 @@ export const menuAdminNew = [
   //   icon: "heroicons-outline:check",
   //   link: "finishedOrder",
   // },
-  {
-    title: "Broadcast",
-    icon: "heroicons-outline:globe-americas",
-    link: "broadcast",
-  },
+  // {
+  //   title: "Broadcast",
+  //   icon: "heroicons-outline:globe-americas",
+  //   link: "broadcast",
+  // },
   {
     title: "Kontak Wati",
     icon: "heroicons-outline:user-group",
@@ -264,15 +264,24 @@ export const menuAdminNew = [
     icon: "heroicons-outline:globe-americas",
     link: "promo",
   },
-  {
-    title: "Follow Up Perpanjang",
-    icon: "heroicons-outline:globe-americas",
-    link: "followup-perpanjang",
-  },
+  // {
+  //   title: "Follow Up Perpanjang",
+  //   icon: "heroicons-outline:globe-americas",
+  //   link: "followup-perpanjang",
+  // },
   {
     title: "Reschedule",
     icon: "heroicons-outline:arrow-path",
     link: "reschedule",
+  },
+  {
+    isHeadr: true,
+    title: "Xendit",
+  },
+  {
+    title: "Riwayat Invoice",
+    icon: "heroicons-outline:document-text",
+    link: "xendit/invoice-history",
   },
 ];
 
@@ -463,6 +472,26 @@ export const menuAdmin = [
       {
         childtitle: "Kontak Wati",
         childlink: "kontakwati",
+      },
+    ],
+  },
+  {
+    title: "Xendit",
+    icon: "heroicons-outline:banknotes",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Saldo",
+        childlink: "xendit/balance",
+      },
+      {
+        childtitle: "Transaksi",
+        childlink: "xendit/transaction",
+      },
+      {
+        childtitle: "Riwayat Invoice",
+        childlink: "xendit/invoice-history",
       },
     ],
   },

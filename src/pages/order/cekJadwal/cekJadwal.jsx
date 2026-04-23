@@ -1,7 +1,7 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
-import { CJGetPool } from "@/axios/schedule/cekJadwal";
+import { CJCompletedSchedule, CJGetPool } from "@/axios/schedule/cekJadwal";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -101,6 +101,332 @@ const iconProduct = (product) => {
   }
 };
 
+const normalizeScheduleTime = (time) => {
+  if (time === null || time === undefined) return "";
+
+  const raw = String(time).trim();
+  const match = raw.match(/(\d{1,2})[:.](\d{2})/);
+  if (match) {
+    return `${match[1].padStart(2, "0")}.${match[2]}`;
+  }
+
+  const hourOnly = raw.match(/\b(\d{1,2})\b/);
+  return hourOnly ? `${hourOnly[1].padStart(2, "0")}.00` : raw;
+};
+
+const normalizeLookupKey = (value) => {
+  if (value === null || value === undefined) return "";
+  return String(value).trim().toLowerCase();
+};
+
+const getScheduleTimeValue = (entry) =>
+  entry?.jam ??
+  entry?.time ??
+  entry?.start_time ??
+  entry?.startTime ??
+  entry?.schedule_time ??
+  entry?.scheduleTime ??
+  entry?.order_time ??
+  entry?.orderTime ??
+  entry?.hour;
+
+const getTrainerKeys = (entry) => {
+  const trainer =
+    entry?.trainer && typeof entry.trainer === "object" ? entry.trainer : null;
+
+  const values = [
+    entry?.trainer_id,
+    entry?.trainerId,
+    entry?.trainer_uuid,
+    entry?.coach_id,
+    typeof entry?.trainer === "string" ? entry.trainer : null,
+    trainer?.trainer_id,
+    trainer?.trainerId,
+    trainer?.id,
+    entry?.fullname,
+    entry?.full_name,
+    entry?.trainer_name,
+    entry?.trainerName,
+    entry?.nickname,
+    trainer?.fullname,
+    trainer?.full_name,
+    trainer?.name,
+    trainer?.nickname,
+  ];
+
+  return Array.from(new Set(values.map(normalizeLookupKey).filter(Boolean)));
+};
+
+const extractPayloadList = (response) => {
+  const data = response?.data;
+  const payload = data?.results ?? data?.data ?? data?.payload ?? data ?? [];
+
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    return Object.entries(payload).map(([key, value]) => {
+      const keyIsTime =
+        /^\d{1,2}[:.]\d{2}/.test(key) ||
+        normalizeScheduleTime(key) !== key ||
+        /^\d{1,2}$/.test(key);
+
+      if (Array.isArray(value)) {
+        return keyIsTime
+          ? { jam: key, orders: value }
+          : { trainer_id: key, orders: value };
+      }
+
+      return value && typeof value === "object"
+        ? {
+            ...value,
+            ...(keyIsTime
+              ? { jam: value.jam ?? key }
+              : { trainer_id: value.trainer_id ?? key }),
+          }
+        : { trainer_id: key, value };
+    });
+  }
+
+  return [];
+};
+
+const getStudentNames = (order) => {
+  const value =
+    order?.student ??
+    order?.students ??
+    order?.siswa ??
+    order?.student_names ??
+    order?.studentNames ??
+    order?.student_name ??
+    order?.studentName;
+
+  const list = Array.isArray(value) ? value : value ? [value] : [];
+
+  return list
+    .map((item) => {
+      if (!item) return null;
+      if (typeof item === "string") return item;
+      return (
+        item.fullname ??
+        item.full_name ??
+        item.name ??
+        item.student_name ??
+        item.nickname ??
+        null
+      );
+    })
+    .filter(Boolean);
+};
+
+const getCompletedOrderKey = (order) => {
+  const students = getStudentNames(order).join("|");
+  return (
+    order?.order_id ??
+    order?.orderId ??
+    order?.id ??
+    `${students}-${order?.product ?? order?.product_name ?? ""}-${
+      order?.completed_date ?? order?.finish_date ?? order?.end_date ?? ""
+    }`
+  );
+};
+
+const hasCompletedOrderDetails = (order) =>
+  Boolean(
+    order?.order_id ||
+    order?.orderId ||
+    order?.id ||
+    order?.product ||
+    order?.product_name ||
+    order?.paket ||
+    order?.package_name ||
+    order?.completed_date ||
+    order?.finish_date ||
+    order?.end_date ||
+    order?.last_meet_date ||
+    getStudentNames(order).length,
+  );
+
+const addCompletedOrderToIndex = (index, trainerKeys, timeKey, order) => {
+  if (!timeKey || trainerKeys.length === 0) return;
+  if (!hasCompletedOrderDetails(order)) return;
+
+  trainerKeys.forEach((trainerKey) => {
+    if (!index[trainerKey]) {
+      index[trainerKey] = {};
+    }
+    if (!index[trainerKey][timeKey]) {
+      index[trainerKey][timeKey] = [];
+    }
+    index[trainerKey][timeKey].push(order);
+  });
+};
+
+const buildCompletedScheduleIndex = (items = []) => {
+  const index = {};
+
+  const walkEntry = (entry, fallbackTrainerKeys = [], fallbackTime = "") => {
+    if (!entry) return;
+
+    const trainerKeys = Array.from(
+      new Set([...fallbackTrainerKeys, ...getTrainerKeys(entry)]),
+    );
+    const timeKey =
+      normalizeScheduleTime(getScheduleTimeValue(entry)) || fallbackTime;
+
+    if (Array.isArray(entry?.datahari)) {
+      entry.datahari.forEach((day) => {
+        if (Array.isArray(day?.data)) {
+          day.data.forEach((slot) =>
+            walkEntry(slot, trainerKeys, normalizeScheduleTime(slot?.jam)),
+          );
+          return;
+        }
+
+        if (day?.data && typeof day.data === "object") {
+          Object.entries(day.data).forEach(([jam, orders]) => {
+            const slotTime = normalizeScheduleTime(jam);
+            const orderList = Array.isArray(orders) ? orders : [orders];
+            orderList.forEach((order) =>
+              walkEntry(order, trainerKeys, slotTime),
+            );
+          });
+        }
+      });
+      return;
+    }
+
+    const nestedCollections = [
+      entry?.orders,
+      entry?.schedules,
+      entry?.completed_schedules,
+      entry?.completedSchedules,
+      entry?.order_schedules,
+      entry?.orderSchedules,
+    ].filter(Array.isArray);
+
+    if (nestedCollections.length > 0) {
+      nestedCollections.forEach((collection) =>
+        collection.forEach((order) => walkEntry(order, trainerKeys, timeKey)),
+      );
+      return;
+    }
+
+    if (entry?.data && typeof entry.data === "object") {
+      if (Array.isArray(entry.data)) {
+        entry.data.forEach((slot) => walkEntry(slot, trainerKeys, timeKey));
+        return;
+      }
+
+      Object.entries(entry.data).forEach(([jam, orders]) => {
+        const slotTime = normalizeScheduleTime(jam);
+        const orderList = Array.isArray(orders) ? orders : [orders];
+        orderList.forEach((order) => walkEntry(order, trainerKeys, slotTime));
+      });
+      return;
+    }
+
+    addCompletedOrderToIndex(index, trainerKeys, timeKey, entry);
+  };
+
+  items.forEach((item) => walkEntry(item));
+  return index;
+};
+
+const getCompletedSchedulesForSlot = (index, trainer, time) => {
+  const timeKey = normalizeScheduleTime(time);
+  const seen = new Set();
+
+  return getTrainerKeys(trainer)
+    .flatMap((trainerKey) => index?.[trainerKey]?.[timeKey] ?? [])
+    .filter((order) => {
+      const key = getCompletedOrderKey(order);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
+const getCompletedScheduleProductLabel = (schedule) => {
+  const product =
+    schedule?.product ??
+    schedule?.product_name ??
+    schedule?.paket ??
+    schedule?.package_name ??
+    "";
+
+  if (!product) return "Paket";
+
+  const normalizedProduct = String(product).toLowerCase();
+  const shortLabel = checkProduct(normalizedProduct);
+
+  if (shortLabel === "Trial" && !normalizedProduct.includes("trial")) {
+    return toProperCase(String(product));
+  }
+
+  return shortLabel;
+};
+
+const formatCompletedScheduleDate = (dateValue) => {
+  if (!dateValue) return "";
+
+  const rawValue = String(dateValue);
+  const isoDate = DateTime.fromISO(rawValue);
+  if (isoDate.isValid) {
+    return isoDate.toFormat("dd LLL yyyy");
+  }
+
+  const slashDate = DateTime.fromFormat(rawValue, "dd/MM/yyyy");
+  if (slashDate.isValid) {
+    return slashDate.toFormat("dd LLL yyyy");
+  }
+
+  return rawValue;
+};
+
+const getLastMeetDateFromSchedule = (schedule) => {
+  const meets =
+    schedule?.p ??
+    schedule?.meetings ??
+    schedule?.order_meetings ??
+    schedule?.orderMeetings ??
+    [];
+
+  if (!Array.isArray(meets)) return "";
+
+  return [...meets]
+    .reverse()
+    .map(
+      (meet) =>
+        meet?.tgl ??
+        meet?.date ??
+        meet?.meet_date ??
+        meet?.meeting_date ??
+        meet?.training_date,
+    )
+    .find(Boolean);
+};
+
+const getCompletedScheduleOrderDate = (schedule) =>
+  schedule?.order_date ??
+  schedule?.orderDate ??
+  schedule?.created_at ??
+  schedule?.createdAt ??
+  schedule?.order?.order_date ??
+  schedule?.order?.orderDate ??
+  "";
+
+const getCompletedScheduleLastTrainingDate = (schedule) =>
+  schedule?.last_training_date ??
+  schedule?.lastTrainingDate ??
+  schedule?.last_meet_date ??
+  schedule?.lastMeetDate ??
+  schedule?.last_presence_date ??
+  schedule?.lastPresenceDate ??
+  schedule?.completed_date ??
+  schedule?.finish_date ??
+  schedule?.end_date ??
+  getLastMeetDateFromSchedule(schedule) ??
+  "";
+
 const CekJadwal = () => {
   const daysOfWeek = [
     { name: "Senin", data: [], total: 0 },
@@ -136,7 +462,11 @@ const CekJadwal = () => {
   const [reloadDone, setReloadDone] = useState(false);
   const [checked, setChecked] = useState(true);
   const [isScheduleLoading, setIsScheduleLoading] = useState(false);
+  const [completedSchedules, setCompletedSchedules] = useState([]);
+  const [isCompletedScheduleLoading, setIsCompletedScheduleLoading] =
+    useState(false);
   const scheduleSocketRef = useRef(null);
+  const completedScheduleRequestRef = useRef(0);
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -251,6 +581,23 @@ const CekJadwal = () => {
     );
   }, [jadwal, selectedPoolItem]);
 
+  const completedScheduleIndex = useMemo(
+    () => buildCompletedScheduleIndex(completedSchedules),
+    [completedSchedules],
+  );
+
+  const completedScheduleCount = useMemo(() => {
+    const seen = new Set();
+
+    Object.values(completedScheduleIndex).forEach((scheduleByTime) => {
+      Object.values(scheduleByTime).forEach((orders) => {
+        orders.forEach((order) => seen.add(getCompletedOrderKey(order)));
+      });
+    });
+
+    return seen.size;
+  }, [completedScheduleIndex]);
+
   useEffect(() => {
     if (!poolQuery.data) {
       return;
@@ -262,6 +609,7 @@ const CekJadwal = () => {
     if (pools.length === 0) {
       setSelectedPool(-1);
       setTabHari(daysOfWeek.map((day) => ({ ...day })));
+      setCompletedSchedules([]);
       return;
     }
 
@@ -288,6 +636,7 @@ const CekJadwal = () => {
       const defaultDay = daysOfWeek[0]?.name;
       if (defaultDay) {
         loadSchedule(selectedBranch, defaultPool.value, defaultDay);
+        loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
       }
       loadProduct(defaultPool.value);
     }
@@ -364,6 +713,40 @@ const CekJadwal = () => {
       })),
     );
     setJadwal([...data]);
+  };
+
+  const loadCompletedSchedule = async (_selectedBranch, poolName, dayName) => {
+    if (!_selectedBranch || !poolName || !dayName) {
+      setCompletedSchedules([]);
+      return;
+    }
+
+    const requestId = completedScheduleRequestRef.current + 1;
+    completedScheduleRequestRef.current = requestId;
+    setIsCompletedScheduleLoading(true);
+
+    try {
+      const response = await CJCompletedSchedule(
+        _selectedBranch,
+        poolName,
+        dayName,
+      );
+
+      if (completedScheduleRequestRef.current !== requestId) {
+        return;
+      }
+
+      setCompletedSchedules(extractPayloadList(response));
+    } catch (error) {
+      console.error("Failed to load completed schedules:", error);
+      if (completedScheduleRequestRef.current === requestId) {
+        setCompletedSchedules([]);
+      }
+    } finally {
+      if (completedScheduleRequestRef.current === requestId) {
+        setIsCompletedScheduleLoading(false);
+      }
+    }
   };
 
   const closeScheduleSocket = () => {
@@ -479,6 +862,7 @@ const CekJadwal = () => {
       setFilterPelatih([]);
       setFilteredPelatih("");
       setSelectedDay(undefined);
+      setCompletedSchedules([]);
       return;
     }
 
@@ -490,6 +874,7 @@ const CekJadwal = () => {
     setSelectedDay(undefined);
     setFilterPelatih([]);
     setFilteredPelatih("");
+    setCompletedSchedules([]);
   };
 
   const handlePoolChange = (index) => {
@@ -517,6 +902,7 @@ const CekJadwal = () => {
 
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
+        loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
 
       if (poolName) {
@@ -537,6 +923,7 @@ const CekJadwal = () => {
       setSelectedDay(dayName);
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
+        loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
@@ -614,11 +1001,17 @@ const CekJadwal = () => {
         {filteredDataHari.flatMap((timeSlot, i) =>
           timeSlot.data.map((slotObj, jIdx) => {
             const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
+            const completedOrders = getCompletedSchedulesForSlot(
+              completedScheduleIndex,
+              item,
+              slotObj.jam,
+            );
 
             // Jika free langsung render PelatihLibur
             if (orders[0]?.is_free) {
               return (
                 <div className="flex min-h-[70px] flex-col items-center justify-center gap-2">
+                  <CompletedScheduleHint schedules={completedOrders} />
                   <PelatihLibur compact />
                   <PelatihKosong
                     pool={pool}
@@ -768,6 +1161,8 @@ const CekJadwal = () => {
                 {samePoolOrders.map((slot, k) =>
                   renderSamePoolSlot(slot, `${i}-${jIdx}-${k}`),
                 )}
+
+                <CompletedScheduleHint schedules={completedOrders} />
 
                 {otherPoolOrders.length > 0 && (
                   <PelatihAdaJadwal
@@ -1162,6 +1557,12 @@ const CekJadwal = () => {
                   label: "Pelatih",
                   value: `${visibleTrainerCount} pelatih`,
                 },
+                {
+                  label: "Riwayat",
+                  value: isCompletedScheduleLoading
+                    ? "Memuat..."
+                    : `${completedScheduleCount} selesai`,
+                },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -1326,6 +1727,11 @@ const CekJadwal = () => {
               const dayName = daysOfWeek[selectedIndex]?.name;
               if (selectedBranch && currentPool && dayName) {
                 loadSchedule(selectedBranch, currentPool.value, dayName);
+                loadCompletedSchedule(
+                  selectedBranch,
+                  currentPool.value,
+                  dayName,
+                );
               }
               setPoolOption((prev) =>
                 prev.map((item, index) =>
@@ -1413,6 +1819,139 @@ const PelatihAdaJadwal = React.memo(({ poolNames = [], count = 0 }) => {
             height="20"
             className="text-slate-600"
           />
+        </div>
+      </Tooltip>
+    </div>
+  );
+});
+
+const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
+  if (!schedules.length) return null;
+
+  const visibleSchedules = schedules.slice(0, 5);
+  const hiddenCount = schedules.length - visibleSchedules.length;
+
+  return (
+    <div className="flex w-full justify-center">
+      <Tooltip
+        placement="top"
+        arrow
+        interactive
+        theme="custom-light"
+        maxWidth={420}
+        content={
+          <div className="w-[320px] max-w-[calc(100vw-48px)] text-left">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-1 pb-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Icon
+                    icon="heroicons-outline:archive-box"
+                    width="17"
+                    height="17"
+                    className="shrink-0 text-sky-600"
+                  />
+                  <span>Latest slot ini</span>
+                </div>
+                <div className="mt-0.5 text-[11px] text-slate-500">
+                  Order selesai di pelatih dan jam yang sama.
+                </div>
+              </div>
+              <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
+                {schedules.length}
+              </span>
+            </div>
+            <div className="mt-2 max-h-[260px] space-y-2 overflow-y-auto pr-1">
+              {visibleSchedules.map((schedule, index) => {
+                const students = getStudentNames(schedule);
+                const orderDate = getCompletedScheduleOrderDate(schedule);
+                const lastTrainingDate =
+                  getCompletedScheduleLastTrainingDate(schedule);
+
+                return (
+                  <div
+                    key={`${getCompletedOrderKey(schedule)}-${index}`}
+                    className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="inline-flex min-w-[38px] justify-center rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
+                        {getCompletedScheduleProductLabel(schedule)}
+                      </span>
+                      {lastTrainingDate ? (
+                        <span className="whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
+                          {formatCompletedScheduleDate(lastTrainingDate)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-2 text-xs font-medium leading-snug text-slate-700">
+                      {students.length
+                        ? students.map((name) => toProperCase(name)).join(", ")
+                        : "Siswa tidak tersedia"}
+                    </div>
+                    <div className="mt-2 grid gap-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Order</span>
+                        <span className="font-semibold text-slate-700">
+                          {orderDate
+                            ? formatCompletedScheduleDate(orderDate)
+                            : "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Latihan terakhir</span>
+                        <span className="font-semibold text-slate-700">
+                          {lastTrainingDate
+                            ? formatCompletedScheduleDate(lastTrainingDate)
+                            : "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {hiddenCount > 0 ? (
+              <div className="mt-2 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
+                +{hiddenCount} order lainnya
+              </div>
+            ) : null}
+          </div>
+        }
+      >
+        <div className="flex w-full min-w-[96px] flex-col justify-center gap-2 overflow-hidden rounded-l border-2 border-sky-300 bg-sky-50 p-2 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
+          <Badge
+            label={`Latest schedule`}
+            className="justify-center rounded-full border border-sky-200 bg-white px-2 py-0.5 text-[clamp(8px,0.7vw,10px)] font-semibold text-sky-700 shadow-sm"
+          />
+          <Badge
+            label={getCompletedScheduleProductLabel(visibleSchedules[0])}
+            className="justify-center bg-primary-500 text-[clamp(8px,0.7vw,10px)] text-white"
+          />
+          <div className="space-y-1 text-[clamp(8px,0.7vw,10px)] font-medium leading-snug text-slate-600">
+            {getStudentNames(visibleSchedules[0]).length ? (
+              getStudentNames(visibleSchedules[0])
+                .slice(0, 2)
+                .map((name, index) => (
+                  <div key={`${name}-${index}`} className="break-words">
+                    {toProperCase(name)}
+                  </div>
+                ))
+            ) : (
+              <div className="break-words">Siswa tidak tersedia</div>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-2 text-[clamp(8px,0.7vw,10px)] text-slate-500">
+            <span className="truncate">
+              {formatCompletedScheduleDate(
+                getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
+              ) || "-"}
+            </span>
+            <Icon
+              icon="heroicons-outline:archive-box"
+              width="16"
+              height="16"
+              className="shrink-0 text-sky-600"
+            />
+          </div>
         </div>
       </Tooltip>
     </div>

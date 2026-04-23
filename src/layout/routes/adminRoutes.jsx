@@ -87,6 +87,9 @@ const XenditTransaction = lazy(() => import("@/pages/xendit/transaction"));
 const XenditInvoiceHistory = lazy(() =>
   import("@/pages/xendit/invoice-history")
 );
+const XenditInvoiceHistoryPreview = lazy(() =>
+  import("@/pages/xendit/invoice-history-preview")
+);
 const XenditBalance = lazy(() => import("@/pages/xendit/saldo"));
 
 // Wati
@@ -267,6 +270,10 @@ const AdminRoutes = () => {
           {/* <Route index element={<Produk />} /> */}
           <Route path="transaction" element={<XenditTransaction />} />
           <Route path="invoice-history" element={<XenditInvoiceHistory />} />
+          <Route
+            path="invoice-history/:invoice_id"
+            element={<XenditInvoiceHistoryPreview />}
+          />
           <Route path="balance" element={<XenditBalance />} />
         </Route>
         <Route path="list-izin">
