@@ -19,12 +19,45 @@ export const getXenditTransactionByID = async (transaction_id) => {
   }
 };
 
-export const getXenditInvoiceHistory = async () => {
+export const getXenditInvoiceHistory = async (params) => {
   try {
-    let response = await axiosConfig.get("/xendit/invoice-history/");
+    let response = await axiosConfig.get("/xendit/invoice-history/", {
+      params,
+    });
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getXenditInvoiceHistoryPreview = async (invoice_id) => {
+  try {
+    const response = await axiosConfig.get(
+      `/xendit/invoice-history/${invoice_id}/`,
+      {
+        responseType: "blob",
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching invoice preview:", error);
+    throw error;
+  }
+};
+
+export const downloadXenditInvoiceHistory = async (invoice_id) => {
+  try {
+    const response = await axiosConfig.get(
+      `/xendit/invoice-history/${invoice_id}/download/`,
+      {
+        responseType: "blob",
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error downloading invoice:", error);
+    throw error;
   }
 };
 

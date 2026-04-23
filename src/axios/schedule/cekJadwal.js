@@ -12,7 +12,7 @@ export const CJGetPool = async (id) => {
 export const CJGetTrainer = async (id) => {
   try {
     let response = await axiosConfig.get(
-      "/api/cekjadwal/gettrainer/" + id + "/"
+      "/api/cekjadwal/gettrainer/" + id + "/",
     );
     return response;
   } catch (error) {
@@ -37,7 +37,27 @@ export const CJGetBranchDay = async (selectedBranch, poolName, dayName) => {
         "&pool=" +
         poolName +
         "&day=" +
-        dayName
+        dayName,
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+export const CJCompletedSchedule = async (
+  selectedBranch,
+  poolName,
+  dayName,
+) => {
+  try {
+    let response = await axiosConfig.get(
+      "/api/cekjadwal/gecompleted-schedule/?branch=" +
+        selectedBranch +
+        "&pool=" +
+        poolName +
+        "&day=" +
+        dayName,
     );
     return response;
   } catch (error) {

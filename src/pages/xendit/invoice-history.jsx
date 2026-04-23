@@ -1,37 +1,60 @@
-import React, { Fragment, useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Loading from "@/components/Loading";
 import { useNavigate } from "react-router-dom";
 import Search from "@/components/globals/table/search";
-import { getXenditInvoiceHistory } from "@/axios/xendit";
-import TableXendit from "@/components/globals/table/tableXendit";
+import {
+  downloadXenditInvoiceHistory,
+  getXenditInvoiceHistory,
+} from "@/axios/xendit";
+import Table from "@/components/globals/table/table";
+import TableAction from "@/components/globals/table/tableAction";
 import Badge from "@/components/ui/Badge";
 import { DateTime } from "luxon";
+import { downloadBlobResponse } from "@/utils/blob-download";
+
+const getInvoiceId = (invoice) =>
+  invoice?.invoice_id || invoice?.id || invoice?.xendit_invoice_id;
+
+const normalizeInvoiceHistoryData = (payload) => {
+  const data = payload?.data ?? payload;
+
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      results: data,
+    };
+  }
+
+  if (Array.isArray(data?.results)) {
+    return {
+      count: data.count ?? data.results.length,
+      results: data.results,
+    };
+  }
+
+  if (Array.isArray(data?.data)) {
+    return {
+      count: data.count ?? data.data.length,
+      results: data.data,
+    };
+  }
+
+  return {
+    count: 0,
+    results: [],
+  };
+};
 
 const XenditInvoiceHistory = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null);
 
   const [listData, setListData] = useState({ count: 0, results: [] });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const actions = [
-    {
-      name: "Edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
-    },
-    {
-      name: "Delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
-  ];
 
   const fetchData = async (page, size, query) => {
     try {
@@ -41,13 +64,12 @@ const XenditInvoiceHistory = () => {
         page_size: size,
         search: query,
       };
-      getXenditInvoiceHistory(params)
-        .then((res) => {
-          setListData(res.data);
-        })
-        .finally(() => setIsLoading(false));
+      const res = await getXenditInvoiceHistory(params);
+      setListData(normalizeInvoiceHistoryData(res.data));
     } catch (error) {
       console.error("Error fetching data", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,6 +88,32 @@ const XenditInvoiceHistory = () => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     setPageIndex(0); // Reset to first page on search
+  };
+
+  const handlePreview = (invoice) => {
+    const invoiceId = getInvoiceId(invoice);
+    if (!invoiceId) {
+      return;
+    }
+
+    navigate(`/xendit/invoice-history/${invoiceId}`);
+  };
+
+  const handleDownload = async (invoice) => {
+    const invoiceId = getInvoiceId(invoice);
+    if (!invoiceId) {
+      return;
+    }
+
+    try {
+      setDownloadingInvoiceId(invoiceId);
+      const response = await downloadXenditInvoiceHistory(invoiceId);
+      downloadBlobResponse(response, `invoice-${invoiceId}.pdf`);
+    } catch (error) {
+      console.error("Error downloading invoice", error);
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
   };
 
   const COLUMNS = [
@@ -121,14 +169,14 @@ const XenditInvoiceHistory = () => {
       Cell: (row) => {
         return (
           <div className="flex flex-col gap-2">
-            {row?.cell?.value.map((item, index) => (
-              <Badge>
+            {(row?.cell?.value || []).map((item, index) => (
+              <Badge key={`${item?.name || "item"}-${index}`}>
                 <div className="flex flex-col">
-                  <div key={index}>Produk : {item.name}</div>
-                  <div key={index}>
+                  <div>Produk : {item.name}</div>
+                  <div>
                     Harga : {parseFloat(item.price).toLocaleString()}
                   </div>
-                  <div key={index}>
+                  <div>
                     Jumlah : {parseFloat(item.quantity).toLocaleString()}
                   </div>
                 </div>
@@ -151,6 +199,40 @@ const XenditInvoiceHistory = () => {
         );
       },
     },
+    {
+      Header: "Aksi",
+      accessor: "action",
+      disableSortBy: true,
+      disableHiding: true,
+      Cell: ({ row }) => {
+        const invoice = row?.original;
+        const invoiceId = getInvoiceId(invoice);
+        const isDownloading = downloadingInvoiceId === invoiceId;
+
+        return (
+          <div className="flex items-center justify-center gap-2">
+            <TableAction
+              row={row}
+              action={{
+                name: "Preview",
+                icon: "heroicons-outline:eye",
+                onClick: () => handlePreview(invoice),
+              }}
+            />
+            <TableAction
+              row={row}
+              action={{
+                name: isDownloading ? "Downloading" : "Download",
+                icon: "heroicons-outline:arrow-down-tray",
+                onClick: () => handleDownload(invoice),
+                className:
+                  "hover:border-success-300 hover:bg-success-50 hover:text-success-700 dark:hover:border-success-500/50 dark:hover:bg-success-500/10",
+              }}
+            />
+          </div>
+        );
+      },
+    },
   ];
 
   return (
@@ -161,7 +243,7 @@ const XenditInvoiceHistory = () => {
         ) : (
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
-            <TableXendit
+            <Table
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}
