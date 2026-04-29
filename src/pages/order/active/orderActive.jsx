@@ -41,7 +41,79 @@ const ACTION_INTENTS = {
 const composeActionClass = (intent = "neutral") =>
   `${ACTION_SHARED_CLASS} ${ACTION_INTENTS[intent] || ACTION_INTENTS.neutral}`;
 
-const OrderActive = ({ is_finished }) => {
+const getOrderStatus = (isFinish) => {
+  if (isFinish === true) {
+    return {
+      label: "Selesai",
+      className:
+        "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-400/30",
+    };
+  }
+
+  if (isFinish === false) {
+    return {
+      label: "Berjalan",
+      className:
+        "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-400/30",
+    };
+  }
+
+  return {
+    label: "Status belum tersedia",
+    className:
+      "bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-400/30",
+  };
+};
+
+const normalizeOrderRegistrationStatus = (value) => {
+  if (value === true) return "new";
+  if (value === false) return "extend";
+
+  const normalizedValue = String(value || "").toLowerCase();
+
+  if (["new", "baru", "true"].includes(normalizedValue)) return "new";
+  if (["extend", "perpanjang", "false"].includes(normalizedValue)) {
+    return "extend";
+  }
+
+  return "";
+};
+
+const getOrderRegistrationStatus = (students = []) => {
+  const statuses = [
+    ...new Set(
+      students
+        .map((student) => normalizeOrderRegistrationStatus(student?.is_new))
+        .filter(Boolean),
+    ),
+  ];
+
+  if (statuses.length === 0) return null;
+
+  if (statuses.length > 1) {
+    return {
+      label: "Campuran",
+      className:
+        "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-400/30",
+    };
+  }
+
+  if (statuses[0] === "new") {
+    return {
+      label: "Baru",
+      className:
+        "bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-400/30",
+    };
+  }
+
+  return {
+    label: "Perpanjang",
+    className:
+      "bg-cyan-50 text-cyan-700 ring-cyan-600/20 dark:bg-cyan-500/10 dark:text-cyan-200 dark:ring-cyan-400/30",
+  };
+};
+
+const OrderActive = ({ is_finished = null }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -66,14 +138,23 @@ const OrderActive = ({ is_finished }) => {
       const params = {
         page: page + 1,
         page_size: size,
-        is_finish: is_finished,
         search: query,
       };
+
+      if (is_finished !== null && is_finished !== undefined) {
+        params.is_finish = is_finished;
+      }
+
       getOrderAll(params)
         .then((res) => {
           const updateData = res.data.results.map((item) => ({
             ...item,
-            listname: item.students.map((i) => i.student_fullname).join(", "),
+            listname: (item.students || [])
+              .map((i) => i.student_fullname)
+              .join(", "),
+            orderRegistrationStatus: getOrderRegistrationStatus(
+              item.students || [],
+            ),
           }));
 
           res = {
@@ -163,7 +244,7 @@ const OrderActive = ({ is_finished }) => {
     const { value: order_date } = await Swal.fire({
       title: "Perpanjang paket ",
       text: `Siswa ${toProperCase(
-        e.listname
+        e.listname,
       )} akan diperpanjang ? jika Ya, silahkan isi tanggal ordernya`,
       input: "date",
       icon: "question",
@@ -178,7 +259,7 @@ const OrderActive = ({ is_finished }) => {
       Swal.fire({
         title: "Perpanjang paket ",
         text: `Siswa ${toProperCase(
-          e.listname
+          e.listname,
         )} akan diperpanjang ke tanggal ${order_date} ?`,
         icon: "warning",
         showCancelButton: true,
@@ -246,8 +327,8 @@ const OrderActive = ({ is_finished }) => {
   const actions = buildActions(actionBlueprints);
   const actionsAdmin = buildActions(
     actionBlueprints.filter((action) =>
-      ["Perpanjang Paket", "Atur Frekuensi"].includes(action.name)
-    )
+      ["Perpanjang Paket", "Atur Frekuensi"].includes(action.name),
+    ),
   );
 
   const COLUMNS = [
@@ -312,9 +393,18 @@ const OrderActive = ({ is_finished }) => {
       accessor: "listname",
       id: "listname",
       Cell: (row) => {
+        const registrationStatus = row?.row?.original?.orderRegistrationStatus;
+
         return (
-          <div>
-            {row?.cell?.value.split(",").map((substring, idx) => {
+          <div className="flex flex-col gap-2">
+            {registrationStatus && (
+              <span
+                className={`inline-flex w-fit items-center rounded px-2 py-1 text-xs font-semibold ring-1 ring-inset ${registrationStatus.className}`}
+              >
+                {registrationStatus.label}
+              </span>
+            )}
+            {(row?.cell?.value || "").split(",").map((substring, idx) => {
               return (
                 <div className="flex flex-row gap-1" key={idx}>
                   <div className="p-0 mr-1">{idx + 1}.</div>
@@ -370,13 +460,22 @@ const OrderActive = ({ is_finished }) => {
       Header: "Tanggal Kadaluwarsa",
       accessor: "expire_date",
       id: "expire_date",
-      Cell: (row) => {
+      Cell: ({ cell, row }) => {
+        const status = getOrderStatus(row?.original?.is_finish);
+
         return (
-          <span>
-            {row?.cell?.value !== null
-              ? DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")
-              : ""}
-          </span>
+          <div className="flex flex-col items-center gap-2">
+            <span>
+              {cell?.value !== null
+                ? DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")
+                : "-"}
+            </span>
+            <span
+              className={`inline-flex w-fit items-center rounded px-2 py-1 text-xs font-semibold ring-1 ring-inset ${status.className}`}
+            >
+              {status.label}
+            </span>
+          </div>
         );
       },
     },
@@ -485,6 +584,14 @@ const OrderActive = ({ is_finished }) => {
       id: "action",
       sticky: "right",
       Cell: (row) => {
+        if (row?.row?.original?.is_finish === true) {
+          return (
+            <span className="inline-flex items-center rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+              Order selesai
+            </span>
+          );
+        }
+
         return (
           <div className="flex flex-wrap gap-2 justify-center items-center">
             {(roles == "Admin" ? actionsAdmin : actions).map(
@@ -494,7 +601,7 @@ const OrderActive = ({ is_finished }) => {
                   action={action}
                   row={row}
                 />
-              )
+              ),
             )}
           </div>
         );
@@ -504,7 +611,7 @@ const OrderActive = ({ is_finished }) => {
 
   const fixColumn = () => {
     let newData = [...COLUMNS];
-    if (is_finished) newData.splice(-1);
+    if (is_finished === true) newData.splice(-1);
     return newData;
   };
 

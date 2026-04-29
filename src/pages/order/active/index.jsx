@@ -17,7 +17,7 @@ const Order = () => {
         //   </Button>
         // }
       >
-        <OrderActive is_finished={false} />
+        <OrderActive is_finished={{}} />
       </Card>
     </div>
   );
