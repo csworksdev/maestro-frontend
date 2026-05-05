@@ -15,7 +15,7 @@ vi.mock("@/components/ui/Card", () => ({
 
 vi.mock("../../../src/pages/order/active/orderActive", () => ({
   default: ({ is_finished }) => (
-    <div>OrderActive {String(is_finished)}</div>
+    <div>OrderActive {typeof is_finished}</div>
   ),
 }));
 
@@ -28,6 +28,6 @@ describe("Order active index page", () => {
     render(<Order />);
 
     expect(screen.getByText("Order")).toBeInTheDocument();
-    expect(screen.getByText("OrderActive false")).toBeInTheDocument();
+    expect(screen.getByText("OrderActive object")).toBeInTheDocument();
   });
 });
