@@ -41,6 +41,9 @@ const ACTION_INTENTS = {
 const composeActionClass = (intent = "neutral") =>
   `${ACTION_SHARED_CLASS} ${ACTION_INTENTS[intent] || ACTION_INTENTS.neutral}`;
 
+const FINISHED_ORDER_ROW_CLASS =
+  "!bg-red-50 text-red-950 hover:!bg-red-100 dark:!bg-red-950/40 dark:text-red-100 dark:hover:!bg-red-900/50";
+
 const getOrderStatus = (isFinish) => {
   if (isFinish === true) {
     return {
@@ -657,6 +660,9 @@ const OrderActive = ({ is_finished = null }) => {
             listColumn={fixColumn()}
             searchValue={searchQuery}
             handleSearch={handleSearch}
+            getRowClassName={(row) =>
+              row?.is_finish === true ? FINISHED_ORDER_ROW_CLASS : ""
+            }
           />
           <PaginationComponent
             pageSize={pageSize}

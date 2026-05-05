@@ -65,6 +65,7 @@ const Table = ({
   isCheckbox = false,
   isPagination = true,
   onSelectionChange,
+  getRowClassName,
 }) => {
   const dispatch = useDispatch();
   const density = useSelector(
@@ -324,6 +325,8 @@ const Table = ({
   const renderRow = (row, idx, fixed = false) => {
     prepareRow(row);
     const { key, ...restRowProps } = row.getRowProps();
+    const rowClassName = getRowClassName?.(row.original, row, idx) || "";
+
     return (
       <tr
         {...restRowProps}
@@ -337,7 +340,7 @@ const Table = ({
           idx % 2 === 0
             ? "bg-slate-50 dark:bg-slate-900"
             : "bg-white dark:bg-slate-800"
-        } hover:bg-primary-50 dark:hover:bg-slate-700`}
+        } hover:bg-primary-50 dark:hover:bg-slate-700 ${rowClassName}`}
       >
         {fixed ? (
           <td
@@ -515,6 +518,7 @@ export default memo(Table, (prev, next) => {
   return (
     prev.listData?.results === next.listData?.results &&
     prev.listColumn === next.listColumn &&
-    prev.handleSearch === next.handleSearch
+    prev.handleSearch === next.handleSearch &&
+    prev.getRowClassName === next.getRowClassName
   );
 });
