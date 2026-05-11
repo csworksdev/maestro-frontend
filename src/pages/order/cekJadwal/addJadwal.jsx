@@ -58,6 +58,14 @@ const allStatus = [
   },
 ];
 
+const isExistingStudent = (student) => Boolean(student?.student_id);
+
+const getRegistrationStatus = (student, forceExtend = false) =>
+  forceExtend ? "extend" : student?.reg_stat || "newreg";
+
+const getIsNewRegistration = (student, forceExtend = false) =>
+  getRegistrationStatus(student, forceExtend) !== "extend";
+
 const AddJadwal = ({
   params,
   product,
@@ -327,9 +335,11 @@ const AddJadwal = ({
                     .filter((s) => s.istrial)
                     .map((student) => ({
                       student_id: student.student_id,
+                      is_new: student.is_new,
                     }))
                 : newData.updatedStudents.map((student) => ({
                     student_id: student.student_id,
+                    is_new: student.is_new,
                   })),
             invoice_id: invoiceExternalId,
           };
@@ -465,8 +475,32 @@ const AddJadwal = ({
 
       // Buat updated students dengan student_id baru:
       const updatedStudents = newData.students.map((x) => {
-        const found = allStudents.find((s) => s.fullname === x.fullname);
-        return found ? { ...x, student_id: found.student_id } : x;
+        const found = allStudents.find(
+          (s) =>
+            s.fullname === x.fullname ||
+            s.label === x.fullname ||
+            s.student_id === x.student_id ||
+            s.value === x.student_id,
+        );
+        const studentId = found?.student_id || found?.value || x.student_id;
+        const student = {
+          ...x,
+          student_id: studentId,
+        };
+        const shouldForceExtend =
+          isExistingStudent(x) ||
+          found?.is_new === false ||
+          x.reg_stat === "extend";
+        const regStat = getRegistrationStatus(student, shouldForceExtend);
+
+        return {
+          ...student,
+          reg_stat: regStat,
+          is_new: getIsNewRegistration(
+            { ...student, reg_stat: regStat },
+            shouldForceExtend,
+          ),
+        };
       });
 
       setSelectedStudents(allStudents); // update state global
@@ -802,7 +836,14 @@ const AddJadwal = ({
 
   const addOldStudent = () => {
     selectedOldStudents.length > 0 &&
-      setSelectedStudents((prev) => [...prev, ...selectedOldStudents]);
+      setSelectedStudents((prev) => [
+        ...prev,
+        ...selectedOldStudents.map((student) => ({
+          student_id: student.value,
+          fullname: student.label,
+          is_new: false,
+        })),
+      ]);
 
     const parsedRows = selectedOldStudents.map((row) => {
       append({
@@ -815,7 +856,7 @@ const AddJadwal = ({
 
       setValue(
         "namapelanggan",
-        row.parent === "-" || row.parent === "" ? row.fullname : row.parent,
+        row.parent === "-" || row.parent === "" ? row.label : row.parent,
       );
       setValue("phonepelanggan", toNormalizePhone(row.phone));
 
@@ -840,13 +881,19 @@ const AddJadwal = ({
   // #endregion
 
   const handleRegStatChange = (fullname, kolom, value) => {
+    const currentStudent = formList.find((p) => p.fullname === fullname);
+    const safeValue =
+      kolom === "reg_stat" && isExistingStudent(currentStudent)
+        ? "extend"
+        : value;
+
     // Update local formList state
     setFormList((prevSelected) =>
       prevSelected.map((p) =>
         p.fullname === fullname
           ? {
               ...p,
-              [kolom]: value,
+              [kolom]: safeValue,
               // If 'istrial' is being set to true, other products might need adjustment (e.g. if trial is exclusive)
               // For now, this just updates the specific field. The useEffect above handles trial product.
             }
@@ -860,7 +907,7 @@ const AddJadwal = ({
     );
     if (studentIndexInRHF !== -1) {
       const fieldNameInRHF = `students[${studentIndexInRHF}].${kolom}`;
-      setValue(fieldNameInRHF, value, {
+      setValue(fieldNameInRHF, safeValue, {
         shouldValidate: true,
         shouldDirty: true,
       });
