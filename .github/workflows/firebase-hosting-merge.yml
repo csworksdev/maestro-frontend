@@ -51,12 +51,10 @@ jobs:
           VITE_TOKEN_REFRESH_BUFFER_SECONDS: ${{ secrets.VITE_TOKEN_REFRESH_BUFFER_SECONDS }}
         run: pnpm build # pastikan ini menghasilkan folder dist
 
-      # ✅ Deploy ke Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MAESTRO_FRONTEND }}
-          # channelId: pr${{ github.event.pull_request.number }}
           channelId: live
           projectId: maestro-front
