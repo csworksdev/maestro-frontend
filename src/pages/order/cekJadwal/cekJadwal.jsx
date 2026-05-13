@@ -453,6 +453,7 @@ const CekJadwal = () => {
   const [jumlahPelatih, setJumlahPelatih] = useState([]);
   const [filterPelatih, setFilterPelatih] = useState([]);
   const [filteredPelatih, setFilteredPelatih] = useState("");
+  const [filteredGender, setFilteredGender] = useState("");
   const [jadwal, setJadwal] = useState([]);
   const [productList, setProductList] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -563,16 +564,26 @@ const CekJadwal = () => {
     [selectedDay, selectedIndex],
   );
 
+  const genderOptions = useMemo(
+    () => [
+      { value: "L", label: "Laki-laki" },
+      { value: "P", label: "Perempuan" },
+    ],
+    [],
+  );
+
   const visibleTrainerCount = useMemo(() => {
     if (!jadwal.length) {
       return 0;
     }
-    if (!filteredPelatih) {
-      return jadwal.length;
-    }
-    return jadwal.filter((trainer) => trainer.trainer_id === filteredPelatih)
-      .length;
-  }, [jadwal, filteredPelatih]);
+    return jadwal.filter((trainer) => {
+      const matchesTrainer =
+        !filteredPelatih || trainer.trainer_id === filteredPelatih;
+      const matchesGender =
+        !filteredGender || trainer.gender === filteredGender;
+      return matchesTrainer && matchesGender;
+    }).length;
+  }, [jadwal, filteredGender, filteredPelatih]);
 
   const filteredTrainers = useMemo(() => {
     if (!selectedPoolItem) {
@@ -669,7 +680,7 @@ const CekJadwal = () => {
       const defaultDay = daysOfWeek[0]?.name;
       if (defaultDay) {
         loadSchedule(selectedBranch, defaultPool.value, defaultDay);
-        // loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
+        loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
       }
       loadProduct(defaultPool.value);
     }
@@ -935,7 +946,7 @@ const CekJadwal = () => {
 
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
-        // loadCompletedSchedule(selectedBranch, poolName, dayName);
+        loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
 
       if (poolName) {
@@ -956,7 +967,7 @@ const CekJadwal = () => {
       setSelectedDay(dayName);
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
-        // loadCompletedSchedule(selectedBranch, poolName, dayName);
+        loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
@@ -1043,9 +1054,9 @@ const CekJadwal = () => {
             // Jika free langsung render PelatihLibur
             if (orders[0]?.is_free) {
               return (
-                <div className="flex min-h-[70px] flex-col items-center justify-center gap-2">
+                <div className="flex min-h-[56px] flex-col items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 p-1.5 shadow-sm shadow-rose-100/60">
                   <CompletedScheduleHint schedules={completedOrders} />
-                  <PelatihLibur compact />
+                  <PelatihLibur />
                   <PelatihKosong
                     pool={pool}
                     trainer={item}
@@ -1107,7 +1118,7 @@ const CekJadwal = () => {
 
               if (diff > 2) {
                 return {
-                  label: "Lewat >2 hari",
+                  label: "Paket selesai Lewat dari 2 hari",
                   className: "bg-red-500",
                   textClassName: "text-red-700",
                 };
@@ -1214,16 +1225,6 @@ const CekJadwal = () => {
               if (!slots.length) return null;
 
               const firstSlot = slots[0];
-              const statusCounts = slots.reduce(
-                (acc, slot) => {
-                  const status = getSlotStatus(slot).label;
-                  if (status === "Lewat >2 hari") acc.overdue += 1;
-                  else if (status === "Perlu follow up") acc.followUp += 1;
-                  else acc.active += 1;
-                  return acc;
-                },
-                { active: 0, followUp: 0, overdue: 0 },
-              );
               const products = Array.from(
                 new Set(slots.map((slot) => checkProduct(slot.product))),
               );
@@ -1268,9 +1269,9 @@ const CekJadwal = () => {
                 >
                   <button
                     type="button"
-                    className="mx-auto flex w-full max-w-[92px] flex-col items-center gap-1 rounded-lg border border-primary-100 bg-white px-2 py-2 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                    className="mx-auto flex w-full max-w-[96px] items-center justify-center rounded-lg border border-primary-100 bg-white px-2 py-1.5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
                   >
-                    <div className="flex items-center gap-1.5">
+                    {/* <div className="flex items-center gap-1.5">
                       <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[11px] font-semibold text-white">
                         {slots.length}
                       </span>
@@ -1280,23 +1281,12 @@ const CekJadwal = () => {
                     </div>
                     <div className="text-[10px] font-semibold text-slate-700">
                       {products.join(", ")}
-                    </div>
+                    </div> */}
                     {studentPreview.length ? (
-                      <div className="line-clamp-2 text-[9px] leading-tight text-slate-500">
+                      <div className="line-clamp-2 text-[11px] font-semibold leading-[1.15] text-slate-600">
                         {studentPreview.join(", ")}
                       </div>
                     ) : null}
-                    <div className="mt-0.5 flex items-center gap-1">
-                      {statusCounts.overdue > 0 ? (
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                      ) : null}
-                      {statusCounts.followUp > 0 ? (
-                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
-                      ) : null}
-                      {statusCounts.active > 0 ? (
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      ) : null}
-                    </div>
                   </button>
                 </Tooltip>
               );
@@ -1305,7 +1295,7 @@ const CekJadwal = () => {
             return (
               <div
                 key={`${jIdx}-${i}-${jIdx}`}
-                className="flex flex-col gap-2 min-h-[70px] justify-center"
+                className="flex min-h-[56px] flex-col justify-center gap-1.5"
               >
                 {renderSamePoolOrders(samePoolOrders, `${i}-${jIdx}`)}
 
@@ -1349,10 +1339,13 @@ const CekJadwal = () => {
   // );
 
   const GridKolamHeader = React.memo(({ item, trainers, day }) => {
-    let dataJadwal =
-      filteredPelatih !== ""
-        ? jadwal.filter((x) => x.trainer_id === filteredPelatih)
-        : jadwal;
+    let dataJadwal = jadwal.filter((trainer) => {
+      const matchesTrainer =
+        !filteredPelatih || trainer.trainer_id === filteredPelatih;
+      const matchesGender =
+        !filteredGender || trainer.gender === filteredGender;
+      return matchesTrainer && matchesGender;
+    });
     const scrollContainerRef = useRef(null);
     const [scrollHeight, setScrollHeight] = useState(null);
 
@@ -1409,7 +1402,7 @@ const CekJadwal = () => {
         <div className="overflow-x-auto bg-slate-50/70 dark:bg-slate-950/20">
           <div className="min-w-[1200px]">
             <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-slate-100/95 backdrop-blur border-b border-slate-200/70 dark:bg-slate-900/95 dark:border-slate-700">
-              <div className="border-b border-slate-200/70 p-2 min-h-[58px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky left-0 top-0 bg-slate-100/95 z-30 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
+              <div className="border-b border-slate-200/70 p-2 min-h-[40px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky left-0 top-0 bg-slate-100/95 z-30 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
                 Pelatih
               </div>
               {columnHeader.slice(1).map((header, i) => {
@@ -1420,11 +1413,11 @@ const CekJadwal = () => {
                     className="border-b border-slate-200/70 p-2 min-h-[58px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky top-0 bg-slate-100/95 z-20 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
                   >
                     {header}
-                    {jumlahPerJam && (
+                    {/* {jumlahPerJam && (
                       <>
                         <br />({jumlahPerJam})
                       </>
-                    )}
+                    )} */}
                   </div>
                 );
               })}
@@ -1440,16 +1433,16 @@ const CekJadwal = () => {
               {dataJadwal.map((de) => (
                 <div
                   key={de.trainer_id}
-                  className="grid grid-cols-15 gap-3 w-full border-b border-slate-100 px-3 py-2 transition hover:bg-white dark:border-slate-800 dark:hover:bg-slate-900/70"
+                  className="grid grid-cols-15 gap-2 w-full border-b border-slate-100 px-2 py-1 transition hover:bg-white dark:border-slate-800 dark:hover:bg-slate-900/70"
                 >
                   <div
-                    className={`p-2 min-h-[88px] flex flex-col rounded-xl border border-white/50 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
+                    className={`p-2 min-h-[68px] flex flex-col rounded-xl border border-white/50 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
                       de.gender === "L"
                         ? "bg-blue-100 text-blue-900 ring-1 ring-blue-200/70"
                         : "bg-pink-100 text-pink-900 ring-1 ring-pink-200/70"
                     }`}
                   >
-                    <span className="text-[clamp(8px,0.7vw,14px)] p-1 font-semibold">
+                    <span className="text-[clamp(8px,0.7vw,10px)] p-1 font-semibold">
                       {de.nickname && (
                         <>
                           {toProperCase(de.nickname)}
@@ -1558,12 +1551,12 @@ const CekJadwal = () => {
         <Tooltip placement="top" arrow content="Buat Order">
           <button
             onClick={() => handleModal({ pool, jadwal, trainer, hari, jam })}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 hover:bg-emerald-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 hover:bg-emerald-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
           >
             <Icon
               icon="heroicons-outline:plus"
-              width="20"
-              height="20"
+              width="12"
+              height="12"
               className="text-emerald-600"
             />
           </button>
@@ -1625,7 +1618,7 @@ const CekJadwal = () => {
 
   const viewControls = (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <div className="flex items-center gap-2 rounded-lg border border-slate-200/70 bg-white px-2 py-1 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+      {/* <div className="flex items-center gap-2 rounded-lg border border-slate-200/70 bg-white px-2 py-1 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
           Mode
         </span>
@@ -1638,7 +1631,7 @@ const CekJadwal = () => {
           wrapperClass="gap-2"
           activeClass="bg-primary-500"
         />
-      </div>
+      </div> */}
 
       <div className="flex items-center gap-2 rounded-lg border border-slate-200/70 bg-white px-2 py-1 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
@@ -1654,7 +1647,7 @@ const CekJadwal = () => {
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
             }`}
           >
-            Grid Jadwal
+            Jadwal
           </button>
           <button
             type="button"
@@ -1680,9 +1673,9 @@ const CekJadwal = () => {
 
       {activeView === "schedule" && (
         <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
-          <div className="mb-3 flex flex-col gap-3 rounded-xl border border-slate-200/70 bg-white p-3 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
-            <div className="grid gap-3 md:grid-cols-[minmax(220px,320px)_minmax(0,1fr)] md:items-end">
-              <div className="flex flex-col gap-1">
+          <div className="mb-3 overflow-hidden rounded-xl border border-slate-200/70 bg-white shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+            <div className="grid gap-4 p-3 lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)] lg:items-center">
+              <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-3">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                   Cabang
                 </label>
@@ -1753,12 +1746,12 @@ const CekJadwal = () => {
                 selectedIndex={selectedIndex ?? -1}
                 onChange={handleChangeTab}
               >
-                <div className="grid gap-3 border-t border-slate-100 pt-3 dark:border-slate-800 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                <div className="grid gap-4 border-t border-slate-100 p-3 dark:border-slate-800 xl:grid-cols-[minmax(0,1fr)_minmax(500px,600px)] xl:items-center">
+                  <div className="grid min-w-0 grid-cols-[58px_minmax(0,1fr)] items-center gap-3">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                       Hari
                     </div>
-                    <Tab.List className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200/70 bg-slate-50 p-1 dark:border-slate-700/70 dark:bg-slate-800/60">
+                    <Tab.List className="flex min-w-0 gap-1 overflow-x-auto rounded-lg border border-slate-200/70 bg-slate-50 p-1 dark:border-slate-700/70 dark:bg-slate-800/60">
                       {selectedBranch &&
                         tabHari.map((item, i) => (
                           <Tab as={React.Fragment} key={i}>
@@ -1781,14 +1774,39 @@ const CekJadwal = () => {
                     </Tab.List>
                   </div>
 
-                  {filterPelatih && filterPelatih.length > 0 ? (
-                    <div className="min-w-[200px] lg:w-[260px]">
-                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                        Filter pelatih
+                  <div className="grid gap-3 sm:grid-cols-[minmax(250px,1fr)_minmax(210px,240px)] sm:items-center">
+                    {filterPelatih && filterPelatih.length > 0 ? (
+                      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                          Pelatih
+                        </label>
+                        <Select
+                          name="filteredPelatih"
+                          options={filterPelatih ?? null}
+                          className="react-select"
+                          classNamePrefix="select"
+                          isClearable={true}
+                          menuPortalTarget={
+                            typeof window !== "undefined" ? document.body : null
+                          }
+                          styles={{
+                            ...compactSelectStyles,
+                          }}
+                          placeholder="Pilih pelatih"
+                          onChange={(e) => {
+                            setFilteredPelatih(e?.value ?? "");
+                          }}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="grid grid-cols-[56px_minmax(0,1fr)] items-center gap-2">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                        Gender
                       </label>
                       <Select
-                        name="filteredPelatih"
-                        options={filterPelatih ?? null}
+                        name="filteredGender"
+                        options={genderOptions}
                         className="react-select"
                         classNamePrefix="select"
                         isClearable={true}
@@ -1798,13 +1816,13 @@ const CekJadwal = () => {
                         styles={{
                           ...compactSelectStyles,
                         }}
-                        placeholder="Pilih pelatih"
+                        placeholder="Semua gender"
                         onChange={(e) => {
-                          setFilteredPelatih(e?.value ?? "");
+                          setFilteredGender(e?.value ?? "");
                         }}
                       />
                     </div>
-                  ) : null}
+                  </div>
                 </div>
 
                 <Tab.Panels key={JSON.stringify(jadwal)} className="mt-3">
@@ -1876,11 +1894,11 @@ const CekJadwal = () => {
               const dayName = daysOfWeek[selectedIndex]?.name;
               if (selectedBranch && currentPool && dayName) {
                 loadSchedule(selectedBranch, currentPool.value, dayName);
-                // loadCompletedSchedule(
-                //   selectedBranch,
-                //   currentPool.value,
-                //   dayName,
-                // );
+                loadCompletedSchedule(
+                  selectedBranch,
+                  currentPool.value,
+                  dayName,
+                );
               }
               setPoolOption((prev) =>
                 prev.map((item, index) =>
@@ -1916,30 +1934,12 @@ const CekJadwal = () => {
 
 export default CekJadwal;
 
-const PelatihLibur = React.memo(({ compact = false }) => {
-  const icon = (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 shadow-sm">
-      <Icon
-        icon="heroicons-outline:calendar-days"
-        width="20"
-        height="20"
-        className="text-rose-500"
-      />
-    </div>
-  );
-
-  if (compact) {
-    return (
-      <Tooltip placement="top" arrow content="Libur">
-        {icon}
-      </Tooltip>
-    );
-  }
-
+const PelatihLibur = React.memo(() => {
   return (
-    <div className="flex flex-col items-center justify-center space-y-1">
-      {icon}
-      <span className="text-xs font-medium text-rose-600">Libur</span>
+    <div className="flex w-full justify-center">
+      <span className="inline-flex min-w-[60px] items-center justify-center rounded bg-white/75 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-rose-700 shadow-sm">
+        Libur
+      </span>
     </div>
   );
 });
@@ -2071,7 +2071,7 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
             label={`Riwayat`}
             className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
           />
-          <Badge
+          {/* <Badge
             label={getCompletedScheduleProductLabel(visibleSchedules[0])}
             className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
           />
@@ -2100,7 +2100,7 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
               height="13"
               className="shrink-0 text-sky-600"
             />
-          </div>
+          </div> */}
         </div>
       </Tooltip>
     </div>
