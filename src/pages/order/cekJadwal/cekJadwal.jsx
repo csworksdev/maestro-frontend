@@ -17,6 +17,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import AsyncSelect from "react-select/async";
 import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
@@ -465,6 +466,7 @@ const CekJadwal = () => {
   const [completedSchedules, setCompletedSchedules] = useState([]);
   const [isCompletedScheduleLoading, setIsCompletedScheduleLoading] =
     useState(false);
+  const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
   const completedScheduleRequestRef = useRef(0);
 
@@ -598,6 +600,37 @@ const CekJadwal = () => {
     return seen.size;
   }, [completedScheduleIndex]);
 
+  const compactSelectStyles = useMemo(
+    () => ({
+      control: (base) => ({
+        ...base,
+        minHeight: 36,
+        borderRadius: 10,
+        borderColor: "#e2e8f0",
+        boxShadow: "none",
+        fontSize: 13,
+      }),
+      valueContainer: (base) => ({
+        ...base,
+        padding: "0 10px",
+      }),
+      indicatorsContainer: (base) => ({
+        ...base,
+        height: 34,
+      }),
+      menuPortal: (base) => ({
+        ...base,
+        zIndex: 9999,
+      }),
+    }),
+    [],
+  );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    setBreadcrumbActionsRoot(document.getElementById("breadcrumb-actions"));
+  }, []);
+
   useEffect(() => {
     if (!poolQuery.data) {
       return;
@@ -636,7 +669,7 @@ const CekJadwal = () => {
       const defaultDay = daysOfWeek[0]?.name;
       if (defaultDay) {
         loadSchedule(selectedBranch, defaultPool.value, defaultDay);
-        loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
+        // loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
       }
       loadProduct(defaultPool.value);
     }
@@ -902,7 +935,7 @@ const CekJadwal = () => {
 
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
-        loadCompletedSchedule(selectedBranch, poolName, dayName);
+        // loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
 
       if (poolName) {
@@ -923,7 +956,7 @@ const CekJadwal = () => {
       setSelectedDay(dayName);
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
-        loadCompletedSchedule(selectedBranch, poolName, dayName);
+        // loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
@@ -1011,7 +1044,7 @@ const CekJadwal = () => {
             if (orders[0]?.is_free) {
               return (
                 <div className="flex min-h-[70px] flex-col items-center justify-center gap-2">
-                  <CompletedScheduleHint schedules={completedOrders} />
+                  {/* <CompletedScheduleHint schedules={completedOrders} /> */}
                   <PelatihLibur compact />
                   <PelatihKosong
                     pool={pool}
@@ -1059,97 +1092,211 @@ const CekJadwal = () => {
               return cardColor;
             };
 
-            // Fungsi bantu: render slot untuk pool yang sama
-            const renderSamePoolSlot = (slot, key) => {
-              const cardColor = getCardColor(slot);
-
-              if (checked) {
-                return (
-                  <div
-                    key={key}
-                    className={`${cardColor} shadow shadow-blue-500/50 rounded-l p-2 flex flex-col overflow-hidden justify-center gap-3`}
-                  >
-                    <AdminBadge admin={slot.admin} />
-                    <Badge
-                      label={checkProduct(slot.product)}
-                      className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
-                    />
-                    {slot.student?.map((x, idx) => (
-                      <div key={idx} className="text-[clamp(8px,0.7vw,10px)]">
-                        {/* {toProperCase(x.split(" ")[0])} */}
-                        {toProperCase(x)}
-                      </div>
-                    ))}
-                    {slot.frequency_per_week > 1 ? (
-                      <span className="text-[clamp(8px,0.7vw,10px)]">
-                        {slot.frequency_per_week}x / minggu
-                      </span>
-                    ) : null}
-                    <PerpanjangPaket order_id={slot.order_id} slot={slot} />
-                  </div>
-                );
+            const getSlotStatus = (slot) => {
+              const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
+              if (!pLastRaw) {
+                return {
+                  label: "Aktif",
+                  className: "bg-emerald-500",
+                  textClassName: "text-emerald-700",
+                };
               }
+
+              const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
+              const diff = DateTime.now().diff(pLast, "days").days;
+
+              if (diff > 2) {
+                return {
+                  label: "Lewat >2 hari",
+                  className: "bg-red-500",
+                  textClassName: "text-red-700",
+                };
+              }
+              if (diff > 0) {
+                return {
+                  label: "Perlu follow up",
+                  className: "bg-yellow-500",
+                  textClassName: "text-yellow-700",
+                };
+              }
+
+              return {
+                label: "Aktif",
+                className: "bg-emerald-500",
+                textClassName: "text-emerald-700",
+              };
+            };
+
+            const renderOrderDetail = (slot, detailKey) => {
+              const students = slot.student?.filter(Boolean) ?? [];
+              const studentText = students.length
+                ? students.map(toProperCase).join(", ")
+                : "Tanpa nama siswa";
+              const status = getSlotStatus(slot);
 
               return (
                 <div
-                  key={key}
-                  className={`${cardColor} shadow shadow-blue-500/50 rounded-xl px-2 py-3 flex flex-col gap-2 overflow-hidden justify-center`}
+                  key={detailKey}
+                  className={`${getCardColor(slot)} rounded-lg border p-2.5 text-slate-700`}
                 >
-                  <>
-                    <AdminBadge admin={slot.admin} />
-                    <PaymentStatusBadge status={slot.is_paid} />
-                    <Badge
-                      label={checkProduct(slot.product)}
-                      className="bg-primary-500 text-white justify-center text-[clamp(8px,0.7vw,12px)]"
-                    />
-                    {/* copy order id */}
-                    {user_id === "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" && (
-                      <button
-                        onClick={() => {
-                          const text = `order_id = '${slot.order_id}'`;
-                          navigator.clipboard.writeText(text);
-                        }}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <Icons
-                          icon="heroicons-outline:clipboard-copy"
-                          className="w-5 h-5"
-                        />
-                      </button>
-                    )}
-                    <div className="flex justify-between">
-                      <Tooltip
-                        content={toProperCase(slot.student?.join(", ") || "")}
-                      >
-                        <span>{iconProduct(slot.product)}</span>
-                      </Tooltip>
-                      {slot.frequency_per_week > 1 ? (
-                        <span className="text-[clamp(8px,0.7vw,10px)]">
-                          {slot.frequency_per_week}x / minggu
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full border border-pink-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-pink-700 shadow-sm">
+                          {toProperCase(slot.admin)}
                         </span>
-                      ) : null}
-                      {slot?.is_paid !== "pending" && (
-                        <Tooltip
-                          content={
-                            slot.p?.length
-                              ? slot.p.map((pItem, idx) => (
-                                  <div key={idx}>
-                                    <strong>P{pItem.meet}</strong>:{" "}
-                                    {pItem.tgl || "-"}
-                                  </div>
-                                ))
-                              : "Tidak ada pertemuan"
-                          }
+                        <Badge
+                          label={checkProduct(slot.product)}
+                          className="bg-primary-500 text-white justify-center text-[10px]"
+                        />
+                        {!checked ? (
+                          <PaymentStatusBadge status={slot.is_paid} />
+                        ) : null}
+                      </div>
+                      <div className="mt-2 text-xs font-semibold leading-relaxed text-slate-700">
+                        {studentText}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+                        {slot.frequency_per_week > 1 ? (
+                          <span>{slot.frequency_per_week}x / minggu</span>
+                        ) : null}
+                        <span
+                          className={`inline-flex items-center gap-1 font-semibold ${status.textClassName}`}
                         >
-                          <span>{iconProduct("p")}</span>
-                        </Tooltip>
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${status.className}`}
+                          />
+                          {status.label}
+                        </span>
+                      </div>
+                      {slot?.is_paid !== "pending" && slot.p?.length ? (
+                        <div className="mt-2 grid grid-cols-2 gap-1 text-[10px] text-slate-600">
+                          {slot.p.slice(-4).map((pItem, idx) => (
+                            <span
+                              key={`${pItem.meet}-${idx}`}
+                              className="rounded bg-white/70 px-1.5 py-0.5"
+                            >
+                              P{pItem.meet}: {pItem.tgl || "-"}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex shrink-0 flex-col items-center gap-2">
+                      {user_id === "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" && (
+                        <button
+                          onClick={() => {
+                            const text = `order_id = '${slot.order_id}'`;
+                            navigator.clipboard.writeText(text);
+                          }}
+                          className="rounded-full bg-white/80 p-1 text-blue-500 shadow-sm hover:text-blue-700"
+                        >
+                          <Icons
+                            icon="heroicons-outline:clipboard-copy"
+                            className="h-4 w-4"
+                          />
+                        </button>
                       )}
+                      <PerpanjangPaket
+                        order_id={slot.order_id}
+                        slot={slot}
+                        buttonClassName="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-pink-600 shadow-sm transition hover:bg-pink-50"
+                        iconClassName="text-pink-600"
+                      />
                     </div>
-                    <div className="relative">
-                      <PerpanjangPaket order_id={slot.order_id} slot={slot} />
-                    </div>
-                  </>
+                  </div>
                 </div>
+              );
+            };
+
+            const renderSamePoolOrders = (slots, key) => {
+              if (!slots.length) return null;
+
+              const firstSlot = slots[0];
+              const statusCounts = slots.reduce(
+                (acc, slot) => {
+                  const status = getSlotStatus(slot).label;
+                  if (status === "Lewat >2 hari") acc.overdue += 1;
+                  else if (status === "Perlu follow up") acc.followUp += 1;
+                  else acc.active += 1;
+                  return acc;
+                },
+                { active: 0, followUp: 0, overdue: 0 },
+              );
+              const products = Array.from(
+                new Set(slots.map((slot) => checkProduct(slot.product))),
+              );
+              const studentPreview =
+                firstSlot.student?.filter(Boolean).slice(0, 2).map(toProperCase) ??
+                [];
+
+              return (
+                <Tooltip
+                  key={key}
+                  placement="top"
+                  arrow
+                  interactive
+                  theme="custom-light"
+                  maxWidth={420}
+                  content={
+                    <div className="w-[360px] max-w-[calc(100vw-48px)] text-left">
+                      <div className="mb-2 flex items-start justify-between gap-3 border-b border-slate-200 pb-2">
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            {slots.length > 1
+                              ? `${slots.length} jadwal di slot ini`
+                              : "Detail jadwal"}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {toProperCase(item.nickname)} - {slotObj.jam}
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 ring-1 ring-primary-100">
+                          {products.join(", ")}
+                        </span>
+                      </div>
+                      <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
+                        {slots.map((slot, detailIndex) =>
+                          renderOrderDetail(slot, `${key}-${detailIndex}`),
+                        )}
+                      </div>
+                    </div>
+                  }
+                >
+                  <button
+                    type="button"
+                    className="mx-auto flex w-full max-w-[92px] flex-col items-center gap-1 rounded-lg border border-primary-100 bg-white px-2 py-2 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        {slots.length}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-600">
+                        jadwal
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-semibold text-slate-700">
+                      {products.join(", ")}
+                    </div>
+                    {studentPreview.length ? (
+                      <div className="line-clamp-2 text-[9px] leading-tight text-slate-500">
+                        {studentPreview.join(", ")}
+                      </div>
+                    ) : null}
+                    <div className="mt-0.5 flex items-center gap-1">
+                      {statusCounts.overdue > 0 ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                      ) : null}
+                      {statusCounts.followUp > 0 ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                      ) : null}
+                      {statusCounts.active > 0 ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      ) : null}
+                    </div>
+                  </button>
+                </Tooltip>
               );
             };
 
@@ -1158,11 +1305,9 @@ const CekJadwal = () => {
                 key={`${jIdx}-${i}-${jIdx}`}
                 className="flex flex-col gap-2 min-h-[70px] justify-center"
               >
-                {samePoolOrders.map((slot, k) =>
-                  renderSamePoolSlot(slot, `${i}-${jIdx}-${k}`),
-                )}
+                {renderSamePoolOrders(samePoolOrders, `${i}-${jIdx}`)}
 
-                <CompletedScheduleHint schedules={completedOrders} />
+                {/* <CompletedScheduleHint schedules={completedOrders} /> */}
 
                 {otherPoolOrders.length > 0 && (
                   <PelatihAdaJadwal
@@ -1230,11 +1375,39 @@ const CekJadwal = () => {
     }, [dataJadwal, updateScrollHeight]);
 
     return (
-      <div className="w-full">
-        <div className="overflow-x-auto">
+      <div className="w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+        {/* <div className="flex flex-col gap-3 border-b border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Jadwal Pelatih
+              </h3>
+              <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-600 dark:bg-primary-500/10 dark:text-primary-300">
+                {day}
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+              {item.label} - {dataJadwal.length} pelatih tampil
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {legendItems.slice(0, 3).map((legend) => (
+              <span
+                key={legend.label}
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${legend.className}`}
+              >
+                <Icon icon={legend.icon} width="13" height="13" />
+                {legend.label}
+              </span>
+            ))}
+          </div>
+        </div> */}
+
+        <div className="overflow-x-auto bg-slate-50/70 dark:bg-slate-950/20">
           <div className="min-w-[1200px]">
-            <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-slate-50/90 backdrop-blur border-b border-slate-200/70">
-              <div className="border-b border-slate-200/70 p-2 min-h-[72px] text-center text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-center sticky left-0 top-0 bg-slate-50/90 z-30">
+            <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-slate-100/95 backdrop-blur border-b border-slate-200/70 dark:bg-slate-900/95 dark:border-slate-700">
+              <div className="border-b border-slate-200/70 p-2 min-h-[58px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky left-0 top-0 bg-slate-100/95 z-30 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
                 Pelatih
               </div>
               {columnHeader.slice(1).map((header, i) => {
@@ -1242,7 +1415,7 @@ const CekJadwal = () => {
                 return (
                   <div
                     key={i}
-                    className="border-b border-slate-200/70 p-2 min-h-[72px] text-center text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-center sticky top-0 bg-slate-50/90 z-20"
+                    className="border-b border-slate-200/70 p-2 min-h-[58px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky top-0 bg-slate-100/95 z-20 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
                   >
                     {header}
                     {jumlahPerJam && (
@@ -1265,13 +1438,13 @@ const CekJadwal = () => {
               {dataJadwal.map((de) => (
                 <div
                   key={de.trainer_id}
-                  className="grid grid-cols-15 gap-3 my-2 w-full"
+                  className="grid grid-cols-15 gap-3 w-full border-b border-slate-100 px-3 py-2 transition hover:bg-white dark:border-slate-800 dark:hover:bg-slate-900/70"
                 >
                   <div
-                    className={`p-2 min-h-[80px] flex flex-col rounded-xl border border-white/40 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
+                    className={`p-2 min-h-[88px] flex flex-col rounded-xl border border-white/50 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
                       de.gender === "L"
-                        ? "bg-blue-100 text-blue-900"
-                        : "bg-pink-100 text-pink-900"
+                        ? "bg-blue-100 text-blue-900 ring-1 ring-blue-200/70"
+                        : "bg-pink-100 text-pink-900 ring-1 ring-pink-200/70"
                     }`}
                   >
                     <span className="text-[clamp(8px,0.7vw,14px)] p-1 font-semibold">
@@ -1337,6 +1510,8 @@ const CekJadwal = () => {
         <div className="flex flex-col h-full">
           <Card
             key={selectedPoolItem.value}
+            className="bg-transparent shadow-none"
+            bodyClass="p-0"
             // subtitle={selectedPoolItem.label}
             // headerslot={
             //   <div className="flex flex-col gap-1 text-sm">
@@ -1446,261 +1621,233 @@ const CekJadwal = () => {
     },
   ];
 
-  return (
-    <>
-      <div className="mb-4 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-slate-100/70 p-3 shadow-sm dark:border-slate-700/70 dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-800/60 sm:p-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                Cek Jadwal
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pilih cabang, kolam, dan hari. Klik slot kosong untuk membuat
-                order.
-              </p>
-            </div>
+  const viewControls = (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex items-center gap-2 rounded-lg border border-slate-200/70 bg-white px-2 py-1 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+          Mode
+        </span>
+        <Switch
+          value={checked}
+          onChange={() => setChecked(!checked)}
+          prevLabel="Detail"
+          nextLabel="Siswa"
+          labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
+          wrapperClass="gap-2"
+          activeClass="bg-primary-500"
+        />
+      </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  Mode
-                </span>
-                <Switch
-                  value={checked}
-                  onChange={() => setChecked(!checked)}
-                  prevLabel="Detail"
-                  nextLabel="Siswa"
-                  labelClass="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300"
-                  wrapperClass="gap-2"
-                  activeClass="bg-primary-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/80 px-2 py-1.5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  Fitur
-                </span>
-                <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-900">
-                  <button
-                    type="button"
-                    onClick={() => setActiveView("schedule")}
-                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
-                      activeView === "schedule"
-                        ? "bg-primary-500 text-white"
-                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    Grid Jadwal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveView("reschedule")}
-                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
-                      activeView === "reschedule"
-                        ? "bg-primary-500 text-white"
-                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    Reschedule
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-3 lg:grid-cols-[minmax(260px,380px)_minmax(0,1fr)] lg:items-end">
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                Cabang
-              </label>
-              <AsyncSelect
-                name="kolam"
-                placeholder="Pilih Cabang"
-                defaultOptions={memoizedBranchOptions}
-                loadOptions={loadBranchOptions}
-                onChange={handleBranchChange}
-                className="react-select"
-                classNamePrefix="select"
-                cacheOptions
-                isLoading={branchQuery.isLoading}
-                menuPortalTarget={
-                  typeof window !== "undefined" ? document.body : null
-                }
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 9999,
-                  }),
-                }}
-                loadingMessage={() => "Memuat cabang..."}
-                noOptionsMessage={() => "Cabang tidak ditemukan"}
-                value={selectedBranchOption}
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {[
-                {
-                  label: "Cabang",
-                  value: selectedBranchOption?.label || "Belum dipilih",
-                },
-                {
-                  label: "Kolam",
-                  value: selectedPoolItem?.label || "Belum dipilih",
-                },
-                {
-                  label: "Hari",
-                  value: selectedDayName || "Belum dipilih",
-                },
-                {
-                  label: "Pelatih",
-                  value: `${visibleTrainerCount} pelatih`,
-                },
-                {
-                  label: "Riwayat",
-                  value: isCompletedScheduleLoading
-                    ? "Memuat..."
-                    : `${completedScheduleCount} selesai`,
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-200"
-                >
-                  <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-400">
-                    {item.label}
-                  </span>
-                  <span className="text-slate-700 dark:text-slate-100">
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="flex items-center gap-2 rounded-lg border border-slate-200/70 bg-white px-2 py-1 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+          Fitur
+        </span>
+        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-900">
+          <button
+            type="button"
+            onClick={() => setActiveView("schedule")}
+            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+              activeView === "schedule"
+                ? "bg-primary-500 text-white"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+            }`}
+          >
+            Grid Jadwal
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView("reschedule")}
+            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+              activeView === "reschedule"
+                ? "bg-primary-500 text-white"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+            }`}
+          >
+            Reschedule
+          </button>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      {breadcrumbActionsRoot
+        ? createPortal(viewControls, breadcrumbActionsRoot)
+        : null}
 
       {activeView === "schedule" && (
         <Tab.Group selectedIndex={selectedPool} onChange={handlePoolChange}>
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  Kolam
-                </span>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Pilih kolam untuk melihat ketersediaan jadwal.
-                </p>
+          <div className="mb-3 flex flex-col gap-3 rounded-xl border border-slate-200/70 bg-white p-3 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+            <div className="grid gap-3 md:grid-cols-[minmax(220px,320px)_minmax(0,1fr)] md:items-end">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                  Cabang
+                </label>
+                <AsyncSelect
+                  name="kolam"
+                  placeholder="Pilih Cabang"
+                  defaultOptions={memoizedBranchOptions}
+                  loadOptions={loadBranchOptions}
+                  onChange={handleBranchChange}
+                  className="react-select"
+                  classNamePrefix="select"
+                  cacheOptions
+                  isLoading={branchQuery.isLoading}
+                  menuPortalTarget={
+                    typeof window !== "undefined" ? document.body : null
+                  }
+                  styles={{
+                    ...compactSelectStyles,
+                  }}
+                  loadingMessage={() => "Memuat cabang..."}
+                  noOptionsMessage={() => "Cabang tidak ditemukan"}
+                  value={selectedBranchOption}
+                />
               </div>
-              {poolQuery.isFetching && (
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  Memuat kolam...
-                </span>
-              )}
-            </div>
 
-            {poolOption.length > 0 ? (
-              <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-                {poolOption.map((item, i) => (
-                  <Tab key={i}>
-                    {({ selected }) => (
-                      <button
-                        className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
-                          selected
-                            ? "bg-primary-500 text-white shadow-sm"
-                            : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                        }`}
-                      >
-                        {item.label}
-                        <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
-                          {item.filled}
-                        </span>
-                      </button>
-                    )}
-                  </Tab>
-                ))}
-              </Tab.List>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
-                {poolQuery.isLoading
-                  ? "Memuat kolam..."
-                  : selectedBranchOption
-                    ? "Belum ada kolam di cabang ini."
-                    : "Pilih cabang untuk menampilkan daftar kolam."}
-              </div>
-            )}
-          </div>
+              <div className="min-w-0">
+                {poolQuery.isFetching && (
+                  <div className="mb-1 text-right text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Memuat kolam...
+                  </div>
+                )}
 
-          <Tab.Panels className="mt-4">
-            <Tab.Group
-              selectedIndex={selectedIndex ?? -1}
-              onChange={handleChangeTab}
-            >
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <Tab.List className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/60">
-                  {selectedBranch &&
-                    tabHari.map((item, i) => (
-                      <Tab key={i}>
+                {poolOption.length > 0 ? (
+                  <Tab.List className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200/70 bg-slate-50 p-1 dark:border-slate-700/70 dark:bg-slate-800/60">
+                    {poolOption.map((item, i) => (
+                      <Tab as={React.Fragment} key={i}>
                         {({ selected }) => (
                           <button
-                            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none ${
+                            className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition focus:outline-none ${
                               selected
-                                ? "bg-primary-500 text-white shadow-sm"
-                                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                ? "bg-primary-500 text-white shadow-sm ring-1 ring-primary-400"
+                                : "text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-900"
                             }`}
                           >
-                            {item.name}
+                            {item.label}
                             <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
-                              {item.total}
+                              {item.filled}
                             </span>
                           </button>
                         )}
                       </Tab>
                     ))}
-                </Tab.List>
-
-                {filterPelatih && filterPelatih.length > 0 ? (
-                  <div className="min-w-[220px]">
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                      Filter pelatih
-                    </label>
-                    <Select
-                      name="filteredPelatih"
-                      options={filterPelatih ?? null}
-                      className="react-select"
-                      classNamePrefix="select"
-                      isClearable={true}
-                      menuPortalTarget={
-                        typeof window !== "undefined" ? document.body : null
-                      }
-                      styles={{
-                        menuPortal: (base) => ({
-                          ...base,
-                          zIndex: 9999,
-                        }),
-                      }}
-                      placeholder="Pilih pelatih"
-                      onChange={(e) => {
-                        setFilteredPelatih(e?.value ?? "");
-                      }}
-                    />
+                  </Tab.List>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-3 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+                    {poolQuery.isLoading
+                      ? "Memuat kolam..."
+                      : selectedBranchOption
+                        ? "Belum ada kolam di cabang ini."
+                        : "Pilih cabang untuk menampilkan daftar kolam."}
                   </div>
-                ) : null}
+                )}
               </div>
+            </div>
 
-              <Tab.Panels key={JSON.stringify(jadwal)} className="mt-4">
-                {tabHari.map((item, index) => {
-                  return (
-                    <Tab.Panel key={index}>
-                      <div>{gridKolam(item.name)}</div>
-                    </Tab.Panel>
-                  );
-                })}
-              </Tab.Panels>
-            </Tab.Group>
-          </Tab.Panels>
+            <Tab.Panels>
+              <Tab.Group
+                selectedIndex={selectedIndex ?? -1}
+                onChange={handleChangeTab}
+              >
+                <div className="grid gap-3 border-t border-slate-100 pt-3 dark:border-slate-800 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                      Hari
+                    </div>
+                    <Tab.List className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200/70 bg-slate-50 p-1 dark:border-slate-700/70 dark:bg-slate-800/60">
+                      {selectedBranch &&
+                        tabHari.map((item, i) => (
+                          <Tab as={React.Fragment} key={i}>
+                            {({ selected }) => (
+                              <button
+                                className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition focus:outline-none ${
+                                  selected
+                                    ? "bg-primary-500 text-white shadow-sm ring-1 ring-primary-400"
+                                    : "text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-900"
+                                }`}
+                              >
+                                {item.name}
+                                <span className="ml-2 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-200">
+                                  {item.total}
+                                </span>
+                              </button>
+                            )}
+                          </Tab>
+                        ))}
+                    </Tab.List>
+                  </div>
+
+                  {filterPelatih && filterPelatih.length > 0 ? (
+                    <div className="min-w-[200px] lg:w-[260px]">
+                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                        Filter pelatih
+                      </label>
+                      <Select
+                        name="filteredPelatih"
+                        options={filterPelatih ?? null}
+                        className="react-select"
+                        classNamePrefix="select"
+                        isClearable={true}
+                        menuPortalTarget={
+                          typeof window !== "undefined" ? document.body : null
+                        }
+                        styles={{
+                          ...compactSelectStyles,
+                        }}
+                        placeholder="Pilih pelatih"
+                        onChange={(e) => {
+                          setFilteredPelatih(e?.value ?? "");
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                <Tab.Panels key={JSON.stringify(jadwal)} className="mt-3">
+                  {tabHari.map((item, index) => {
+                    return (
+                      <Tab.Panel key={index}>
+                        <div>{gridKolam(item.name)}</div>
+                      </Tab.Panel>
+                    );
+                  })}
+                </Tab.Panels>
+              </Tab.Group>
+            </Tab.Panels>
+          </div>
         </Tab.Group>
+      )}
+
+      {activeView === "reschedule" && (
+        <div className="mb-3 rounded-xl border border-slate-200/70 bg-white p-3 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+          <div className="flex flex-col gap-1 sm:w-[320px]">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+              Cabang
+            </label>
+            <AsyncSelect
+              name="kolam"
+              placeholder="Pilih Cabang"
+              defaultOptions={memoizedBranchOptions}
+              loadOptions={loadBranchOptions}
+              onChange={handleBranchChange}
+              className="react-select"
+              classNamePrefix="select"
+              cacheOptions
+              isLoading={branchQuery.isLoading}
+              menuPortalTarget={
+                typeof window !== "undefined" ? document.body : null
+              }
+              styles={{
+                ...compactSelectStyles,
+              }}
+              loadingMessage={() => "Memuat cabang..."}
+              noOptionsMessage={() => "Cabang tidak ditemukan"}
+              value={selectedBranchOption}
+            />
+          </div>
+        </div>
       )}
 
       {activeView === "reschedule" && (
@@ -1727,11 +1874,11 @@ const CekJadwal = () => {
               const dayName = daysOfWeek[selectedIndex]?.name;
               if (selectedBranch && currentPool && dayName) {
                 loadSchedule(selectedBranch, currentPool.value, dayName);
-                loadCompletedSchedule(
-                  selectedBranch,
-                  currentPool.value,
-                  dayName,
-                );
+                // loadCompletedSchedule(
+                //   selectedBranch,
+                //   currentPool.value,
+                //   dayName,
+                // );
               }
               setPoolOption((prev) =>
                 prev.map((item, index) =>
@@ -1825,138 +1972,138 @@ const PelatihAdaJadwal = React.memo(({ poolNames = [], count = 0 }) => {
   );
 });
 
-const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
-  if (!schedules.length) return null;
+// const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
+//   if (!schedules.length) return null;
 
-  const visibleSchedules = schedules.slice(0, 5);
-  const hiddenCount = schedules.length - visibleSchedules.length;
+//   const visibleSchedules = schedules.slice(0, 5);
+//   const hiddenCount = schedules.length - visibleSchedules.length;
 
-  return (
-    <div className="flex w-full justify-center">
-      <Tooltip
-        placement="top"
-        arrow
-        interactive
-        theme="custom-light"
-        maxWidth={420}
-        content={
-          <div className="w-[320px] max-w-[calc(100vw-48px)] text-left">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-1 pb-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <Icon
-                    icon="heroicons-outline:archive-box"
-                    width="17"
-                    height="17"
-                    className="shrink-0 text-sky-600"
-                  />
-                  <span>Latest slot ini</span>
-                </div>
-                <div className="mt-0.5 text-[11px] text-slate-500">
-                  Order selesai di pelatih dan jam yang sama.
-                </div>
-              </div>
-              <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
-                {schedules.length}
-              </span>
-            </div>
-            <div className="mt-2 max-h-[260px] space-y-2 overflow-y-auto pr-1">
-              {visibleSchedules.map((schedule, index) => {
-                const students = getStudentNames(schedule);
-                const orderDate = getCompletedScheduleOrderDate(schedule);
-                const lastTrainingDate =
-                  getCompletedScheduleLastTrainingDate(schedule);
+//   return (
+//     <div className="flex w-full justify-center">
+//       <Tooltip
+//         placement="top"
+//         arrow
+//         interactive
+//         theme="custom-light"
+//         maxWidth={420}
+//         content={
+//           <div className="w-[320px] max-w-[calc(100vw-48px)] text-left">
+//             <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-1 pb-2">
+//               <div className="min-w-0">
+//                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+//                   <Icon
+//                     icon="heroicons-outline:archive-box"
+//                     width="17"
+//                     height="17"
+//                     className="shrink-0 text-sky-600"
+//                   />
+//                   <span>Latest slot ini</span>
+//                 </div>
+//                 <div className="mt-0.5 text-[11px] text-slate-500">
+//                   Order selesai di pelatih dan jam yang sama.
+//                 </div>
+//               </div>
+//               <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
+//                 {schedules.length}
+//               </span>
+//             </div>
+//             <div className="mt-2 max-h-[260px] space-y-2 overflow-y-auto pr-1">
+//               {visibleSchedules.map((schedule, index) => {
+//                 const students = getStudentNames(schedule);
+//                 const orderDate = getCompletedScheduleOrderDate(schedule);
+//                 const lastTrainingDate =
+//                   getCompletedScheduleLastTrainingDate(schedule);
 
-                return (
-                  <div
-                    key={`${getCompletedOrderKey(schedule)}-${index}`}
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="inline-flex min-w-[38px] justify-center rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
-                        {getCompletedScheduleProductLabel(schedule)}
-                      </span>
-                      {lastTrainingDate ? (
-                        <span className="whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
-                          {formatCompletedScheduleDate(lastTrainingDate)}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-2 text-xs font-medium leading-snug text-slate-700">
-                      {students.length
-                        ? students.map((name) => toProperCase(name)).join(", ")
-                        : "Siswa tidak tersedia"}
-                    </div>
-                    <div className="mt-2 grid gap-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
-                      <div className="flex items-center justify-between gap-2">
-                        <span>Order</span>
-                        <span className="font-semibold text-slate-700">
-                          {orderDate
-                            ? formatCompletedScheduleDate(orderDate)
-                            : "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span>Latihan terakhir</span>
-                        <span className="font-semibold text-slate-700">
-                          {lastTrainingDate
-                            ? formatCompletedScheduleDate(lastTrainingDate)
-                            : "-"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {hiddenCount > 0 ? (
-              <div className="mt-2 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
-                +{hiddenCount} order lainnya
-              </div>
-            ) : null}
-          </div>
-        }
-      >
-        <div className="mx-auto flex w-[104px] max-w-full flex-col justify-center gap-1.5 overflow-hidden rounded-md border-2 border-sky-300 bg-sky-50 p-1.5 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
-          <Badge
-            label={`Riwayat`}
-            className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
-          />
-          <Badge
-            label={getCompletedScheduleProductLabel(visibleSchedules[0])}
-            className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
-          />
-          <div className="space-y-0.5 text-[9px] font-medium leading-tight text-slate-600">
-            {getStudentNames(visibleSchedules[0]).length ? (
-              getStudentNames(visibleSchedules[0])
-                .slice(0, 2)
-                .map((name, index) => (
-                  <div key={`${name}-${index}`} className="break-words">
-                    {toProperCase(name)}
-                  </div>
-                ))
-            ) : (
-              <div className="break-words">Siswa tidak tersedia</div>
-            )}
-          </div>
-          <div className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
-            <span className="truncate">
-              {formatCompletedScheduleDate(
-                getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
-              ) || "-"}
-            </span>
-            <Icon
-              icon="heroicons-outline:archive-box"
-              width="13"
-              height="13"
-              className="shrink-0 text-sky-600"
-            />
-          </div>
-        </div>
-      </Tooltip>
-    </div>
-  );
-});
+//                 return (
+//                   <div
+//                     key={`${getCompletedOrderKey(schedule)}-${index}`}
+//                     className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5"
+//                   >
+//                     <div className="flex items-start justify-between gap-3">
+//                       <span className="inline-flex min-w-[38px] justify-center rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
+//                         {getCompletedScheduleProductLabel(schedule)}
+//                       </span>
+//                       {lastTrainingDate ? (
+//                         <span className="whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
+//                           {formatCompletedScheduleDate(lastTrainingDate)}
+//                         </span>
+//                       ) : null}
+//                     </div>
+//                     <div className="mt-2 text-xs font-medium leading-snug text-slate-700">
+//                       {students.length
+//                         ? students.map((name) => toProperCase(name)).join(", ")
+//                         : "Siswa tidak tersedia"}
+//                     </div>
+//                     <div className="mt-2 grid gap-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
+//                       <div className="flex items-center justify-between gap-2">
+//                         <span>Order</span>
+//                         <span className="font-semibold text-slate-700">
+//                           {orderDate
+//                             ? formatCompletedScheduleDate(orderDate)
+//                             : "-"}
+//                         </span>
+//                       </div>
+//                       <div className="flex items-center justify-between gap-2">
+//                         <span>Latihan terakhir</span>
+//                         <span className="font-semibold text-slate-700">
+//                           {lastTrainingDate
+//                             ? formatCompletedScheduleDate(lastTrainingDate)
+//                             : "-"}
+//                         </span>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 );
+//               })}
+//             </div>
+//             {hiddenCount > 0 ? (
+//               <div className="mt-2 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
+//                 +{hiddenCount} order lainnya
+//               </div>
+//             ) : null}
+//           </div>
+//         }
+//       >
+//         <div className="mx-auto flex w-[104px] max-w-full flex-col justify-center gap-1.5 overflow-hidden rounded-md border-2 border-sky-300 bg-sky-50 p-1.5 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
+//           <Badge
+//             label={`Riwayat`}
+//             className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
+//           />
+//           <Badge
+//             label={getCompletedScheduleProductLabel(visibleSchedules[0])}
+//             className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
+//           />
+//           <div className="space-y-0.5 text-[9px] font-medium leading-tight text-slate-600">
+//             {getStudentNames(visibleSchedules[0]).length ? (
+//               getStudentNames(visibleSchedules[0])
+//                 .slice(0, 2)
+//                 .map((name, index) => (
+//                   <div key={`${name}-${index}`} className="break-words">
+//                     {toProperCase(name)}
+//                   </div>
+//                 ))
+//             ) : (
+//               <div className="break-words">Siswa tidak tersedia</div>
+//             )}
+//           </div>
+//           <div className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
+//             <span className="truncate">
+//               {formatCompletedScheduleDate(
+//                 getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
+//               ) || "-"}
+//             </span>
+//             <Icon
+//               icon="heroicons-outline:archive-box"
+//               width="13"
+//               height="13"
+//               className="shrink-0 text-sky-600"
+//             />
+//           </div>
+//         </div>
+//       </Tooltip>
+//     </div>
+//   );
+// });
 
 const STATUS_MAP = {
   pending: {

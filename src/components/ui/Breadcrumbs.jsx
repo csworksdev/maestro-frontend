@@ -32,7 +32,7 @@ const Breadcrumbs = () => {
   return (
     <>
       {!isHide ? (
-        <div className="md:mb-6 mb-4 flex space-x-3 rtl:space-x-reverse">
+        <div className="md:mb-6 mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <ul className="breadcrumbs">
             <li className="text-primary-500">
               <NavLink to="/" className="text-lg">
@@ -56,6 +56,10 @@ const Breadcrumbs = () => {
               {locationName}
             </li>
           </ul>
+          <div
+            id="breadcrumb-actions"
+            className="flex shrink-0 justify-start md:justify-end"
+          />
         </div>
       ) : null}
     </>
