@@ -1044,7 +1044,7 @@ const CekJadwal = () => {
             if (orders[0]?.is_free) {
               return (
                 <div className="flex min-h-[70px] flex-col items-center justify-center gap-2">
-                  {/* <CompletedScheduleHint schedules={completedOrders} /> */}
+                  <CompletedScheduleHint schedules={completedOrders} />
                   <PelatihLibur compact />
                   <PelatihKosong
                     pool={pool}
@@ -1228,8 +1228,10 @@ const CekJadwal = () => {
                 new Set(slots.map((slot) => checkProduct(slot.product))),
               );
               const studentPreview =
-                firstSlot.student?.filter(Boolean).slice(0, 2).map(toProperCase) ??
-                [];
+                firstSlot.student
+                  ?.filter(Boolean)
+                  .slice(0, 2)
+                  .map(toProperCase) ?? [];
 
               return (
                 <Tooltip
@@ -1307,7 +1309,7 @@ const CekJadwal = () => {
               >
                 {renderSamePoolOrders(samePoolOrders, `${i}-${jIdx}`)}
 
-                {/* <CompletedScheduleHint schedules={completedOrders} /> */}
+                <CompletedScheduleHint schedules={completedOrders} />
 
                 {otherPoolOrders.length > 0 && (
                   <PelatihAdaJadwal
@@ -1972,138 +1974,138 @@ const PelatihAdaJadwal = React.memo(({ poolNames = [], count = 0 }) => {
   );
 });
 
-// const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
-//   if (!schedules.length) return null;
+const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
+  if (!schedules.length) return null;
 
-//   const visibleSchedules = schedules.slice(0, 5);
-//   const hiddenCount = schedules.length - visibleSchedules.length;
+  const visibleSchedules = schedules.slice(0, 5);
+  const hiddenCount = schedules.length - visibleSchedules.length;
 
-//   return (
-//     <div className="flex w-full justify-center">
-//       <Tooltip
-//         placement="top"
-//         arrow
-//         interactive
-//         theme="custom-light"
-//         maxWidth={420}
-//         content={
-//           <div className="w-[320px] max-w-[calc(100vw-48px)] text-left">
-//             <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-1 pb-2">
-//               <div className="min-w-0">
-//                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-//                   <Icon
-//                     icon="heroicons-outline:archive-box"
-//                     width="17"
-//                     height="17"
-//                     className="shrink-0 text-sky-600"
-//                   />
-//                   <span>Latest slot ini</span>
-//                 </div>
-//                 <div className="mt-0.5 text-[11px] text-slate-500">
-//                   Order selesai di pelatih dan jam yang sama.
-//                 </div>
-//               </div>
-//               <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
-//                 {schedules.length}
-//               </span>
-//             </div>
-//             <div className="mt-2 max-h-[260px] space-y-2 overflow-y-auto pr-1">
-//               {visibleSchedules.map((schedule, index) => {
-//                 const students = getStudentNames(schedule);
-//                 const orderDate = getCompletedScheduleOrderDate(schedule);
-//                 const lastTrainingDate =
-//                   getCompletedScheduleLastTrainingDate(schedule);
+  return (
+    <div className="flex w-full justify-center">
+      <Tooltip
+        placement="top"
+        arrow
+        interactive
+        theme="custom-light"
+        maxWidth={420}
+        content={
+          <div className="w-[320px] max-w-[calc(100vw-48px)] text-left">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-1 pb-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Icon
+                    icon="heroicons-outline:archive-box"
+                    width="17"
+                    height="17"
+                    className="shrink-0 text-sky-600"
+                  />
+                  <span>Latest slot ini</span>
+                </div>
+                <div className="mt-0.5 text-[11px] text-slate-500">
+                  Order selesai di pelatih dan jam yang sama.
+                </div>
+              </div>
+              <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
+                {schedules.length}
+              </span>
+            </div>
+            <div className="mt-2 max-h-[260px] space-y-2 overflow-y-auto pr-1">
+              {visibleSchedules.map((schedule, index) => {
+                const students = getStudentNames(schedule);
+                const orderDate = getCompletedScheduleOrderDate(schedule);
+                const lastTrainingDate =
+                  getCompletedScheduleLastTrainingDate(schedule);
 
-//                 return (
-//                   <div
-//                     key={`${getCompletedOrderKey(schedule)}-${index}`}
-//                     className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5"
-//                   >
-//                     <div className="flex items-start justify-between gap-3">
-//                       <span className="inline-flex min-w-[38px] justify-center rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
-//                         {getCompletedScheduleProductLabel(schedule)}
-//                       </span>
-//                       {lastTrainingDate ? (
-//                         <span className="whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
-//                           {formatCompletedScheduleDate(lastTrainingDate)}
-//                         </span>
-//                       ) : null}
-//                     </div>
-//                     <div className="mt-2 text-xs font-medium leading-snug text-slate-700">
-//                       {students.length
-//                         ? students.map((name) => toProperCase(name)).join(", ")
-//                         : "Siswa tidak tersedia"}
-//                     </div>
-//                     <div className="mt-2 grid gap-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
-//                       <div className="flex items-center justify-between gap-2">
-//                         <span>Order</span>
-//                         <span className="font-semibold text-slate-700">
-//                           {orderDate
-//                             ? formatCompletedScheduleDate(orderDate)
-//                             : "-"}
-//                         </span>
-//                       </div>
-//                       <div className="flex items-center justify-between gap-2">
-//                         <span>Latihan terakhir</span>
-//                         <span className="font-semibold text-slate-700">
-//                           {lastTrainingDate
-//                             ? formatCompletedScheduleDate(lastTrainingDate)
-//                             : "-"}
-//                         </span>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 );
-//               })}
-//             </div>
-//             {hiddenCount > 0 ? (
-//               <div className="mt-2 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
-//                 +{hiddenCount} order lainnya
-//               </div>
-//             ) : null}
-//           </div>
-//         }
-//       >
-//         <div className="mx-auto flex w-[104px] max-w-full flex-col justify-center gap-1.5 overflow-hidden rounded-md border-2 border-sky-300 bg-sky-50 p-1.5 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
-//           <Badge
-//             label={`Riwayat`}
-//             className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
-//           />
-//           <Badge
-//             label={getCompletedScheduleProductLabel(visibleSchedules[0])}
-//             className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
-//           />
-//           <div className="space-y-0.5 text-[9px] font-medium leading-tight text-slate-600">
-//             {getStudentNames(visibleSchedules[0]).length ? (
-//               getStudentNames(visibleSchedules[0])
-//                 .slice(0, 2)
-//                 .map((name, index) => (
-//                   <div key={`${name}-${index}`} className="break-words">
-//                     {toProperCase(name)}
-//                   </div>
-//                 ))
-//             ) : (
-//               <div className="break-words">Siswa tidak tersedia</div>
-//             )}
-//           </div>
-//           <div className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
-//             <span className="truncate">
-//               {formatCompletedScheduleDate(
-//                 getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
-//               ) || "-"}
-//             </span>
-//             <Icon
-//               icon="heroicons-outline:archive-box"
-//               width="13"
-//               height="13"
-//               className="shrink-0 text-sky-600"
-//             />
-//           </div>
-//         </div>
-//       </Tooltip>
-//     </div>
-//   );
-// });
+                return (
+                  <div
+                    key={`${getCompletedOrderKey(schedule)}-${index}`}
+                    className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="inline-flex min-w-[38px] justify-center rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
+                        {getCompletedScheduleProductLabel(schedule)}
+                      </span>
+                      {lastTrainingDate ? (
+                        <span className="whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
+                          {formatCompletedScheduleDate(lastTrainingDate)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-2 text-xs font-medium leading-snug text-slate-700">
+                      {students.length
+                        ? students.map((name) => toProperCase(name)).join(", ")
+                        : "Siswa tidak tersedia"}
+                    </div>
+                    <div className="mt-2 grid gap-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Order</span>
+                        <span className="font-semibold text-slate-700">
+                          {orderDate
+                            ? formatCompletedScheduleDate(orderDate)
+                            : "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Latihan terakhir</span>
+                        <span className="font-semibold text-slate-700">
+                          {lastTrainingDate
+                            ? formatCompletedScheduleDate(lastTrainingDate)
+                            : "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {hiddenCount > 0 ? (
+              <div className="mt-2 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
+                +{hiddenCount} order lainnya
+              </div>
+            ) : null}
+          </div>
+        }
+      >
+        <div className="mx-auto flex w-[104px] max-w-full flex-col justify-center gap-1.5 overflow-hidden rounded-md border-2 border-sky-300 bg-sky-50 p-1.5 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
+          <Badge
+            label={`Riwayat`}
+            className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
+          />
+          <Badge
+            label={getCompletedScheduleProductLabel(visibleSchedules[0])}
+            className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
+          />
+          <div className="space-y-0.5 text-[9px] font-medium leading-tight text-slate-600">
+            {getStudentNames(visibleSchedules[0]).length ? (
+              getStudentNames(visibleSchedules[0])
+                .slice(0, 2)
+                .map((name, index) => (
+                  <div key={`${name}-${index}`} className="break-words">
+                    {toProperCase(name)}
+                  </div>
+                ))
+            ) : (
+              <div className="break-words">Siswa tidak tersedia</div>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
+            <span className="truncate">
+              {formatCompletedScheduleDate(
+                getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
+              ) || "-"}
+            </span>
+            <Icon
+              icon="heroicons-outline:archive-box"
+              width="13"
+              height="13"
+              className="shrink-0 text-sky-600"
+            />
+          </div>
+        </div>
+      </Tooltip>
+    </div>
+  );
+});
 
 const STATUS_MAP = {
   pending: {
