@@ -680,7 +680,7 @@ const CekJadwal = () => {
       const defaultDay = daysOfWeek[0]?.name;
       if (defaultDay) {
         loadSchedule(selectedBranch, defaultPool.value, defaultDay);
-        // loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
+        loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
       }
       loadProduct(defaultPool.value);
     }
@@ -946,7 +946,7 @@ const CekJadwal = () => {
 
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
-        // loadCompletedSchedule(selectedBranch, poolName, dayName);
+        loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
 
       if (poolName) {
@@ -967,7 +967,7 @@ const CekJadwal = () => {
       setSelectedDay(dayName);
       if (selectedBranch && poolName && dayName) {
         loadSchedule(selectedBranch, poolName, dayName);
-        // loadCompletedSchedule(selectedBranch, poolName, dayName);
+        loadCompletedSchedule(selectedBranch, poolName, dayName);
       }
     } catch (error) {
       console.error("An error occurred while loading the schedule:", error);
@@ -1894,11 +1894,11 @@ const CekJadwal = () => {
               const dayName = daysOfWeek[selectedIndex]?.name;
               if (selectedBranch && currentPool && dayName) {
                 loadSchedule(selectedBranch, currentPool.value, dayName);
-                // loadCompletedSchedule(
-                //   selectedBranch,
-                //   currentPool.value,
-                //   dayName,
-                // );
+                loadCompletedSchedule(
+                  selectedBranch,
+                  currentPool.value,
+                  dayName,
+                );
               }
               setPoolOption((prev) =>
                 prev.map((item, index) =>
@@ -2071,7 +2071,7 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
             label={`Riwayat`}
             className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
           />
-          <Badge
+          {/* <Badge
             label={getCompletedScheduleProductLabel(visibleSchedules[0])}
             className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
           />
@@ -2100,7 +2100,7 @@ const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
               height="13"
               className="shrink-0 text-sky-600"
             />
-          </div>
+          </div> */}
         </div>
       </Tooltip>
     </div>
