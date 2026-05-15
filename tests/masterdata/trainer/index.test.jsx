@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { DateTime } from "luxon";
 
 import Trainer from "../../../src/pages/masterdata/trainer/index";
 
@@ -18,6 +19,7 @@ const mockUseQuery = vi.fn();
 const mockUseMutation = vi.fn();
 const mockSetLoading = vi.fn();
 const mockUseLoadingStore = vi.fn();
+let dateTimeNowSpy;
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -76,32 +78,16 @@ vi.mock("@/components/globals/table/pagination", () => ({
   default: () => <div>Pagination</div>,
 }));
 
-vi.mock("@/components/globals/table/tableAction", () => ({
-  default: ({ action, row }) => (
-    <button onClick={() => action.onClick(row)}>{action.name}</button>
-  ),
-}));
-
-vi.mock("@/components/globals/table/table", () => ({
-  default: ({ listData, listColumn }) => (
-    <div>
-      {listData?.results?.map((row) => (
-        <div key={row.trainer_id}>
-          {listColumn.map((column) => (
-            <div key={column.id || column.accessor}>
-              {column.accessor === "action"
-                ? column.Cell({ row: { original: row } })
-                : null}
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  ),
+vi.mock("@/components/ui/Icon", () => ({
+  default: ({ icon }) => <span data-testid="icon">{icon}</span>,
 }));
 
 describe("Trainer list page", () => {
   beforeEach(() => {
+    dateTimeNowSpy = vi
+      .spyOn(DateTime, "now")
+      .mockReturnValue(DateTime.fromISO("2026-05-15T00:00:00.000"));
+
     mockNavigate.mockReset();
     mockDeleteTrainer.mockReset();
     mockGetTrainerAll.mockReset();
@@ -129,6 +115,21 @@ describe("Trainer list page", () => {
               dob: "1990-01-01",
               is_active: true,
               branch_name: "Cabang A",
+              reg_date: "2024-01-05",
+              is_fulltime: true,
+              avatar: null,
+            },
+            {
+              trainer_id: 12,
+              fullname: "Trainer B",
+              nickname: "TB",
+              gender: "P",
+              dob: "1995-02-02",
+              is_active: false,
+              branch_name: "Cabang B",
+              reg_date: "2025-02-10",
+              is_fulltime: false,
+              avatar: "https://example.com/trainer-b.jpg",
             },
           ],
         },
@@ -155,18 +156,46 @@ describe("Trainer list page", () => {
 
   afterEach(() => {
     cleanup();
+    dateTimeNowSpy?.mockRestore();
+  });
+
+  it("renders trainer cards with work type, registration date, and membership duration", async () => {
+    render(<Trainer />);
+
+    expect(await screen.findByText("Trainer A")).toBeInTheDocument();
+    expect(screen.getByText("Trainer B")).toBeInTheDocument();
+    expect(screen.getByText("Fulltime")).toBeInTheDocument();
+    expect(screen.getByText("Freelance")).toBeInTheDocument();
+    expect(screen.getByText("05 Jan 2024")).toBeInTheDocument();
+    expect(screen.getByText("10 Feb 2025")).toBeInTheDocument();
+    expect(screen.getByText("2 tahun, 4 bulan, 10 hari")).toBeInTheDocument();
+    expect(screen.getByText("1 tahun, 3 bulan, 5 hari")).toBeInTheDocument();
+  });
+
+  it("shows avatar preview when trainer avatar is clicked", async () => {
+    render(<Trainer />);
+
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Lihat avatar Trainer B" })
+    );
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getAllByAltText("Trainer B")).toHaveLength(2);
   });
 
   it("navigates to edit when edit action clicked", async () => {
     render(<Trainer />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Edit" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Edit Trainer A" })
+    );
 
     expect(mockNavigate).toHaveBeenCalledWith("Edit", {
       state: {
         isupdate: "true",
-        data: {
+        data: expect.objectContaining({
           trainer_id: 11,
           fullname: "Trainer A",
           nickname: "TA",
@@ -174,7 +203,9 @@ describe("Trainer list page", () => {
           dob: "1990-01-01",
           is_active: true,
           branch_name: "Cabang A",
-        },
+          reg_date: "2024-01-05",
+          is_fulltime: true,
+        }),
       },
     });
   });
@@ -186,7 +217,9 @@ describe("Trainer list page", () => {
     render(<Trainer />);
 
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Delete" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Hapus Trainer A" })
+    );
 
     await waitFor(() => {
       expect(mockDeleteTrainer).toHaveBeenCalledWith(11);
