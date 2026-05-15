@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
-import Table from "@/components/globals/table/table";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -9,32 +8,96 @@ import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import SkeletionTable from "@/components/skeleton/Table";
-import TableAction from "@/components/globals/table/tableAction";
 import { toProperCase } from "@/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { setLoading, useLoadingStore } from "@/redux/slicers/loadingSlice";
+import Icon from "@/components/ui/Icon";
+import DefaultAvatar from "@/assets/images/all-img/user.png";
+
+const getTrainerAvatar = (trainer) => {
+  const avatar =
+    trainer?.avatar ||
+    trainer?.avatar_url ||
+    trainer?.photo ||
+    trainer?.photo_url ||
+    trainer?.image ||
+    trainer?.image_url ||
+    trainer?.profile_picture ||
+    trainer?.profile_picture_url ||
+    trainer?.picture ||
+    trainer?.trainer_avatar;
+
+  const rawUrl =
+    typeof avatar === "string" ? avatar : avatar?.url || avatar?.file || "";
+
+  if (!rawUrl) return DefaultAvatar;
+  if (/^(https?:|data:|blob:)/.test(rawUrl)) return rawUrl;
+
+  const baseUrl = import.meta.env.VITE_API_MEDIA_URL?.replace(/\/$/, "");
+  return baseUrl
+    ? `${baseUrl}${rawUrl.startsWith("/") ? "" : "/"}${rawUrl}`
+    : rawUrl;
+};
+
+const getTrainerAge = (dob) => {
+  if (!dob) return "-";
+
+  const birthDate = DateTime.fromISO(dob);
+  if (!birthDate.isValid) return "-";
+
+  return `${Math.floor(DateTime.now().diff(birthDate, ["years"]).years)} Tahun`;
+};
+
+const formatRegDate = (regDate) => {
+  if (!regDate) return "-";
+
+  const date = DateTime.fromISO(regDate);
+  if (!date.isValid) return "-";
+
+  return date.setLocale("id").toFormat("dd LLL yyyy");
+};
+
+const getMembershipDuration = (regDate) => {
+  if (!regDate) return "-";
+
+  const startDate = DateTime.fromISO(regDate).startOf("day");
+  const today = DateTime.now().startOf("day");
+
+  if (!startDate.isValid || startDate > today) return "-";
+
+  const duration = today.diff(startDate, ["years", "months", "days"]).toObject();
+  const years = Math.floor(duration.years || 0);
+  const months = Math.floor(duration.months || 0);
+  const days = Math.floor(duration.days || 0);
+
+  return `${years} tahun, ${months} bulan, ${days} hari`;
+};
+
+const InfoItem = ({ icon, label, value, className = "", valueClassName = "" }) => (
+  <div
+    className={`rounded border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900 ${className}`}
+  >
+    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+      <Icon icon={icon} className="text-sm" />
+      <span>{label}</span>
+    </div>
+    <p
+      className={`text-sm font-semibold text-slate-700 dark:text-slate-200 ${
+        valueClassName || "truncate"
+      }`}
+    >
+      {value || "-"}
+    </p>
+  </div>
+);
 
 const Trainer = () => {
   const navigate = useNavigate();
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [previewAvatar, setPreviewAvatar] = useState(null);
   const queryClient = useQueryClient();
-
-  const actions = [
-    {
-      name: "Edit",
-      icon: "heroicons:pencil-square",
-      onClick: (row) => handleEdit(row.row.original),
-    },
-    {
-      name: "Delete",
-      icon: "heroicons-outline:trash",
-      onClick: (row) => handleDelete(row.row.original),
-      className:
-        "bg-danger-500 text-danger-500 bg-opacity-30 hover:bg-opacity-100 hover:text-white",
-    },
-  ];
 
   const trainerQuery = useQuery({
     queryKey: ["trainer", { pageIndex, pageSize, searchQuery }],
@@ -111,76 +174,6 @@ const Trainer = () => {
     });
   };
 
-  const COLUMNS = [
-    {
-      Header: "Trainer",
-      accessor: "fullname",
-      Cell: (row) => {
-        return <span>{toProperCase(row?.cell?.value)}</span>;
-      },
-    },
-    {
-      Header: "Panggilan",
-      accessor: "nickname",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "Jenis Kelamin",
-      accessor: "gender",
-      Cell: (row) => {
-        return (
-          <span>{row?.cell?.value == "L" ? "Laki-laki" : "Perempuan"}</span>
-        );
-      },
-    },
-    {
-      Header: "Usia",
-      accessor: "dob",
-      Cell: (row) => {
-        if (!row?.cell?.value) return <span>{row?.cell?.value}</span>;
-        const today = DateTime.now();
-        const dob = DateTime.fromISO(row?.cell?.value);
-        const age = today.diff(dob, ["years"]).years;
-        return <span>{Math.floor(age)} Tahun</span>;
-      },
-    },
-    {
-      Header: "Aktif",
-      accessor: "is_active",
-      Cell: (row) => {
-        return <span>{row?.cell?.value ? "Aktif" : "Tidak Aktif"}</span>;
-      },
-    },
-    {
-      Header: "Cabang",
-      accessor: "branch_name",
-      Cell: (row) => {
-        return <span>{row?.cell?.value}</span>;
-      },
-    },
-    {
-      Header: "action",
-      accessor: "action",
-      id: "action",
-      sticky: "right",
-      Cell: (row) => {
-        return (
-          <div className="flex flex-wrap gap-2 justify-center items-center">
-            {actions.map((action, index) => (
-              <TableAction
-                key={action.id || index} // 👈 kasih key DI SINI
-                action={action}
-                row={row}
-              />
-            ))}
-          </div>
-        );
-      },
-    },
-  ];
-
   return (
     <div className="grid grid-cols-1 justify-end">
       <Card
@@ -198,13 +191,138 @@ const Trainer = () => {
           <SkeletionTable />
         ) : (
           <>
-            <Table
-              listData={listData}
-              listColumn={COLUMNS}
-              searchValue={searchQuery}
-              handleSearch={handleSearch}
-              isLoading={isLoading}
-            />
+            {isLoading && (
+              <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                Memuat data trainer...
+              </div>
+            )}
+            {listData.results?.length ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {listData.results.map((trainer) => {
+                  const avatarUrl = getTrainerAvatar(trainer);
+                  const trainerName =
+                    toProperCase(trainer?.fullname || "") || "Tanpa Nama";
+                  const gender =
+                    trainer?.gender === "L"
+                      ? "Laki-laki"
+                      : trainer?.gender === "P"
+                        ? "Perempuan"
+                        : "-";
+
+                  return (
+                    <div
+                      key={trainer.trainer_id}
+                      className="flex min-h-[360px] flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
+                    >
+                      <div className="relative bg-slate-50 px-4 pb-5 pt-4 dark:bg-slate-900">
+                        <div className="absolute right-4 top-4">
+                          <span
+                            className={`inline-flex rounded px-2 py-1 text-xs font-semibold ${
+                              trainer?.is_active
+                                ? "bg-success-500 text-success-500 bg-opacity-20"
+                                : "bg-danger-500 text-danger-500 bg-opacity-20"
+                            }`}
+                          >
+                            {trainer?.is_active ? "Aktif" : "Tidak Aktif"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center pt-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewAvatar({
+                                src: avatarUrl,
+                                name: trainerName,
+                              })
+                            }
+                            className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm ring-1 ring-slate-200 dark:border-slate-800 dark:bg-slate-700 dark:ring-slate-700"
+                            aria-label={`Lihat avatar ${trainerName}`}
+                          >
+                            <img
+                              src={avatarUrl}
+                              alt={trainerName}
+                              className="h-full w-full object-cover"
+                              onError={(event) => {
+                                event.currentTarget.src = DefaultAvatar;
+                              }}
+                            />
+                          </button>
+                          <h3 className="mt-3 max-w-full truncate text-base font-semibold text-slate-900 dark:text-white">
+                            {trainerName}
+                          </h3>
+                          <p className="max-w-full truncate text-sm text-slate-500 dark:text-slate-400">
+                            {trainer?.nickname || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-1 flex-col p-4">
+                        <div className="grid grid-cols-2 gap-2">
+                          <InfoItem
+                            icon="heroicons-outline:user"
+                            label="Gender"
+                            value={gender}
+                          />
+                          <InfoItem
+                            icon="heroicons-outline:cake"
+                            label="Usia"
+                            value={getTrainerAge(trainer?.dob)}
+                          />
+                          <InfoItem
+                            icon="heroicons-outline:map-pin"
+                            label="Cabang"
+                            value={trainer?.branch_name}
+                            className="col-span-2"
+                          />
+                          <InfoItem
+                            icon="heroicons-outline:briefcase"
+                            label="Tipe Kerja"
+                            value={trainer?.is_fulltime ? "Fulltime" : "Freelance"}
+                            className="col-span-2"
+                          />
+                          <InfoItem
+                            icon="heroicons-outline:calendar-days"
+                            label="Reg Date"
+                            value={formatRegDate(trainer?.reg_date)}
+                            className="col-span-2"
+                          />
+                          <InfoItem
+                            icon="heroicons-outline:clock"
+                            label="Bergabung"
+                            value={getMembershipDuration(trainer?.reg_date)}
+                            className="col-span-2"
+                            valueClassName="whitespace-normal"
+                          />
+                        </div>
+
+                        <div className="mt-auto flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(trainer)}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                            aria-label={`Edit ${trainerName}`}
+                          >
+                            <Icon icon="heroicons:pencil-square" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(trainer)}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded bg-danger-500 bg-opacity-20 text-danger-500 hover:bg-opacity-100 hover:text-white"
+                            aria-label={`Hapus ${trainerName}`}
+                          >
+                            <Icon icon="heroicons-outline:trash" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-md border border-slate-200 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                Data trainer tidak ditemukan.
+              </div>
+            )}
             <PaginationComponent
               pageSize={pageSize}
               pageIndex={pageIndex}
@@ -219,6 +337,39 @@ const Trainer = () => {
           </>
         )}
       </Card>
+      {previewAvatar && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setPreviewAvatar(null)}
+        >
+          <button
+            type="button"
+            className="absolute right-6 top-6 text-3xl leading-none text-white"
+            aria-label="Tutup preview avatar"
+            onClick={(event) => {
+              event.stopPropagation();
+              setPreviewAvatar(null);
+            }}
+          >
+            <Icon icon="heroicons-outline:x" />
+          </button>
+          <div
+            className="max-h-full max-w-full rounded-md bg-white p-2 dark:bg-slate-800"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={previewAvatar.src}
+              alt={previewAvatar.name}
+              className="max-h-[80vh] max-w-[90vw] object-contain"
+              onError={(event) => {
+                event.currentTarget.src = DefaultAvatar;
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
