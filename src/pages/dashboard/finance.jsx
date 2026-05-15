@@ -47,14 +47,14 @@ const ConnectionIndicator = ({ readyState }) => {
     readyState === SOCKET_READY_STATE.OPEN
       ? "bg-emerald-500"
       : readyState === SOCKET_READY_STATE.CONNECTING
-      ? "bg-amber-500"
-      : "bg-rose-500";
+        ? "bg-amber-500"
+        : "bg-rose-500";
   const label =
     readyState === SOCKET_READY_STATE.OPEN
       ? "Online"
       : readyState === SOCKET_READY_STATE.CONNECTING
-      ? "Menghubungkan..."
-      : "Terputus";
+        ? "Menghubungkan..."
+        : "Terputus";
   return (
     <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-300">
       <span className={`h-2 w-2 rounded-full ${color}`} />
@@ -85,16 +85,16 @@ const DashboardHeader = ({ title }) => (
 
 const FinanceDashboard = () => {
   const revenueExpenseSocket = useFinanceDashboardSocket(
-    "/ws/finance/revenue-expense/"
+    "/ws/finance/revenue-expense/",
   );
   const cashflowSocket = useFinanceDashboardSocket(
-    "/ws/finance/cashflow-trend/"
+    "/ws/finance/cashflow-trend/",
   );
   const salaryRatioSocket = useFinanceDashboardSocket(
-    "/ws/finance/salary-ratio/"
+    "/ws/finance/salary-ratio/",
   );
   const projectionSocket = useFinanceDashboardSocket(
-    "/ws/finance/cash-projection/"
+    "/ws/finance/cash-projection/",
   );
 
   const monthlyFinancials = useMemo(
@@ -102,18 +102,19 @@ const FinanceDashboard = () => {
       Array.isArray(revenueExpenseSocket.data)
         ? revenueExpenseSocket.data.map((item) => ({
             ...item,
-            revenue: Number(item.revenue || 0),
+            revenue_new: Number(item.revenue_new || 0),
+            revenue_extend: Number(item.revenue_extend || 0),
             expense: Number(item.expense || 0),
             net: Number(item.revenue || 0) - Number(item.expense || 0),
           }))
         : [],
-    [revenueExpenseSocket.data]
+    [revenueExpenseSocket.data],
   );
 
   const latestMonthly = monthlyFinancials.at(-1);
   const totalNetYear = monthlyFinancials.reduce(
     (acc, curr) => acc + (curr.net || 0),
-    0
+    0,
   );
 
   const cashflowSeries = useMemo(
@@ -126,7 +127,7 @@ const FinanceDashboard = () => {
             net: Number(item.net || 0),
           }))
         : [],
-    [cashflowSocket.data]
+    [cashflowSocket.data],
   );
 
   const cashflowAggregates = useMemo(() => {
@@ -137,7 +138,7 @@ const FinanceDashboard = () => {
         acc.net += curr.net || 0;
         return acc;
       },
-      { positive: 0, negative: 0, net: 0 }
+      { positive: 0, negative: 0, net: 0 },
     );
   }, [cashflowSeries]);
 
@@ -153,7 +154,7 @@ const FinanceDashboard = () => {
             salary: Number(item.salary || 0),
           }))
         : [],
-    [salaryRatioSocket.data]
+    [salaryRatioSocket.data],
   );
 
   const latestSalaryRatio = salaryRatioSeries.at(-1);
@@ -262,27 +263,36 @@ const FinanceDashboard = () => {
                   formatter={(value, _name, item) => {
                     const dataKey = item?.dataKey;
                     const label =
-                      dataKey === "revenue"
-                        ? "Pendapatan"
-                        : dataKey === "expense"
-                        ? "Pengeluaran"
-                        : dataKey;
+                      dataKey === "revenue_new"
+                        ? "Baru"
+                        : dataKey === "revenue_extend"
+                          ? "Perpanjangan"
+                          : dataKey === "expense"
+                            ? "Pengeluaran"
+                            : dataKey;
                     return [formatCurrency(value), label];
                   }}
                 />
                 <Legend
                   formatter={(_value, entry) => {
                     const dataKey = entry?.dataKey;
-                    if (dataKey === "revenue") return "Pendapatan";
+                    if (dataKey === "revenue_new") return "Baru";
+                    if (dataKey === "revenue_extend") return "Perpanjangan";
                     if (dataKey === "expense") return "Pengeluaran";
                     return entry?.value || dataKey;
                   }}
                 />
                 <Bar
-                  dataKey="revenue"
+                  dataKey="revenue_new"
                   fill="#2563eb"
                   radius={[4, 4, 0, 0]}
-                  name="Pendapatan"
+                  name="Baru"
+                />
+                <Bar
+                  dataKey="revenue_extend"
+                  fill="#3b82f6"
+                  radius={[4, 4, 0, 0]}
+                  name="Perpanjangan"
                 />
                 <Bar
                   dataKey="expense"
@@ -336,9 +346,7 @@ const FinanceDashboard = () => {
                 <p className="text-xs text-slate-400">Memuat data...</p>
               )}
               {cashflowSocket.error && (
-                <p className="text-xs text-rose-500">
-                  {cashflowSocket.error}
-                </p>
+                <p className="text-xs text-rose-500">{cashflowSocket.error}</p>
               )}
             </div>
             <div className="lg:col-span-2 h-64">
@@ -361,8 +369,8 @@ const FinanceDashboard = () => {
                         dataKey === "positive"
                           ? "Arus Masuk"
                           : dataKey === "negative"
-                          ? "Arus Keluar"
-                          : "Net";
+                            ? "Arus Keluar"
+                            : "Net";
                       return [formatCurrency(value), label];
                     }}
                   />
@@ -371,8 +379,8 @@ const FinanceDashboard = () => {
                       entry?.dataKey === "positive"
                         ? "Arus Masuk"
                         : entry?.dataKey === "negative"
-                        ? "Arus Keluar"
-                        : "Net"
+                          ? "Arus Keluar"
+                          : "Net"
                     }
                   />
                   <Bar
@@ -455,7 +463,9 @@ const FinanceDashboard = () => {
                   <XAxis dataKey="label" />
                   <YAxis
                     yAxisId="left"
-                    tickFormatter={(value) => `${Number(value || 0).toFixed(0)}%`}
+                    tickFormatter={(value) =>
+                      `${Number(value || 0).toFixed(0)}%`
+                    }
                     width={40}
                   />
                   <YAxis
@@ -567,9 +577,7 @@ const FinanceDashboard = () => {
               <p className="text-xs text-slate-400">Memuat data...</p>
             )}
             {projectionSocket.error && (
-              <p className="text-xs text-rose-500">
-                {projectionSocket.error}
-              </p>
+              <p className="text-xs text-rose-500">{projectionSocket.error}</p>
             )}
           </div>
           <div className="lg:col-span-3 h-80">
