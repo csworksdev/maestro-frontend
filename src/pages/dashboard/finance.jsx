@@ -42,6 +42,8 @@ const formatPercent = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
+const MONTHLY_FINANCIAL_TICK_INTERVAL = 100_000_000;
+
 const ConnectionIndicator = ({ readyState }) => {
   const color =
     readyState === SOCKET_READY_STATE.OPEN
@@ -116,6 +118,28 @@ const FinanceDashboard = () => {
     (acc, curr) => acc + (curr.net || 0),
     0,
   );
+  const monthlyFinancialTicks = useMemo(() => {
+    const maxValue = monthlyFinancials.reduce(
+      (max, item) =>
+        Math.max(
+          max,
+          item.revenue_new || 0,
+          item.revenue_extend || 0,
+          item.expense || 0,
+        ),
+      0,
+    );
+    const upperBound = Math.max(
+      MONTHLY_FINANCIAL_TICK_INTERVAL,
+      Math.ceil(maxValue / MONTHLY_FINANCIAL_TICK_INTERVAL) *
+        MONTHLY_FINANCIAL_TICK_INTERVAL,
+    );
+
+    return Array.from(
+      { length: upperBound / MONTHLY_FINANCIAL_TICK_INTERVAL + 1 },
+      (_, index) => index * MONTHLY_FINANCIAL_TICK_INTERVAL,
+    );
+  }, [monthlyFinancials]);
 
   const cashflowSeries = useMemo(
     () =>
@@ -252,6 +276,9 @@ const FinanceDashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="label" />
                 <YAxis
+                  ticks={monthlyFinancialTicks}
+                  domain={[0, monthlyFinancialTicks.at(-1)]}
+                  allowDecimals={false}
                   tickFormatter={(value) =>
                     new Intl.NumberFormat("id-ID", {
                       notation: "compact",

@@ -127,9 +127,9 @@ const RekapBulanan = () => {
   const listPeriode = useMemo(
     () =>
       (periodeQuery.data ?? []).sort(
-        (a, b) => new Date(b.start_date) - new Date(a.start_date)
+        (a, b) => new Date(b.start_date) - new Date(a.start_date),
       ),
-    [periodeQuery.data]
+    [periodeQuery.data],
   );
 
   const filtersLoading = trainerQuery.isLoading || periodeQuery.isLoading;
@@ -169,7 +169,7 @@ const RekapBulanan = () => {
       }
       const response = await getRekapByTrainer(
         selectedPeriode.name,
-        selectedTrainer.trainer_id
+        selectedTrainer.trainer_id,
       );
       setListData(response.data);
       reSummarize();
@@ -208,7 +208,7 @@ const RekapBulanan = () => {
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <
                 DateTime.fromFormat(
                   selectedPeriode?.start_date,
-                  "yyyy-MM-dd"
+                  "yyyy-MM-dd",
                 ) &&
               item[objNamePaid] &&
               item[objNameOrderID] !== ""
@@ -222,13 +222,10 @@ const RekapBulanan = () => {
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >=
                 DateTime.fromFormat(
                   selectedPeriode?.start_date,
-                  "yyyy-MM-dd"
+                  "yyyy-MM-dd",
                 ) &&
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") <=
-                DateTime.fromFormat(
-                  selectedPeriode?.end_date,
-                  "yyyy-MM-dd"
-                ).plus({ days: -1 }) &&
+                DateTime.fromFormat(selectedPeriode?.end_date, "yyyy-MM-dd") &&
               item[objNameOrderID] !== ""
             ) {
               if (item[objNamePaid]) {
@@ -248,10 +245,7 @@ const RekapBulanan = () => {
               }
             } else if (
               DateTime.fromFormat(item[objDate], "dd/MM/yyyy") >
-                DateTime.fromFormat(
-                  selectedPeriode?.end_date,
-                  "yyyy-MM-dd"
-                ).plus({ days: -1 }) &&
+                DateTime.fromFormat(selectedPeriode?.end_date, "yyyy-MM-dd") &&
               !item[objNamePaid] &&
               item[objNameOrderID] !== ""
             ) {
@@ -574,12 +568,12 @@ const RekapBulanan = () => {
     const tanggalValue = DateTime.fromFormat(tanggal, "dd/MM/yyyy");
     const periodeStart = DateTime.fromFormat(
       selectedPeriode.start_date,
-      "yyyy-MM-dd"
+      "yyyy-MM-dd",
     );
     const periodeEnd = DateTime.fromFormat(
       selectedPeriode.end_date,
-      "yyyy-MM-dd"
-    ).plus({ days: -1 });
+      "yyyy-MM-dd",
+    );
 
     let periode = "next";
     if (tanggalValue < periodeStart) periode = "prev";
@@ -849,7 +843,7 @@ const RekapBulanan = () => {
   function findOrderByDetailId(orders, orderDetailId) {
     let order = orders.find(
       (order) =>
-        String(order.order_id) && Object.values(order).includes(orderDetailId)
+        String(order.order_id) && Object.values(order).includes(orderDetailId),
     );
     if (!order) return null;
 
@@ -857,7 +851,7 @@ const RekapBulanan = () => {
       (key) =>
         order[key] === orderDetailId &&
         key.startsWith("p") &&
-        key.endsWith("_order_detail_id")
+        key.endsWith("_order_detail_id"),
     );
 
     return matchedKey
@@ -895,15 +889,15 @@ const RekapBulanan = () => {
 
       const periodeStart = DateTime.fromFormat(
         selectedPeriode.start_date,
-        "yyyy-MM-dd"
+        "yyyy-MM-dd",
       );
       const periodeEnd = DateTime.fromFormat(
         selectedPeriode.end_date,
-        "yyyy-MM-dd"
-      ).plus({ days: -1 });
+        "yyyy-MM-dd",
+      );
 
       const filteredData = listData.results.filter(
-        (x) => x.order_id === e.order_id
+        (x) => x.order_id === e.order_id,
       );
 
       const unpaidOrderId = [];
@@ -920,7 +914,7 @@ const RekapBulanan = () => {
           ) {
             const pertemuanDate = DateTime.fromFormat(
               element[objDate],
-              "dd/MM/yyyy"
+              "dd/MM/yyyy",
             );
             if (pertemuanDate <= periodeEnd && pertemuanDate >= periodeStart) {
               unpaidOrderId.push(element[objNameOrderID]);
@@ -942,12 +936,12 @@ const RekapBulanan = () => {
 
       const periodeStart = DateTime.fromFormat(
         selectedPeriode.start_date,
-        "yyyy-MM-dd"
+        "yyyy-MM-dd",
       );
       const periodeEnd = DateTime.fromFormat(
         selectedPeriode.end_date,
-        "yyyy-MM-dd"
-      ).plus({ days: -1 });
+        "yyyy-MM-dd",
+      );
 
       const unpaidOrderId = [];
       listData.results.forEach((item) => {
@@ -963,7 +957,7 @@ const RekapBulanan = () => {
           ) {
             const pertemuanDate = DateTime.fromFormat(
               item[objDate],
-              "dd/MM/yyyy"
+              "dd/MM/yyyy",
             );
             if (pertemuanDate <= periodeEnd && pertemuanDate >= periodeStart) {
               unpaidOrderId.push(item[objNameOrderID]);
@@ -1019,7 +1013,7 @@ const RekapBulanan = () => {
                 setValue("trainer", e.target.value);
                 setSelectedTrainer(
                   listTrainer.find((a) => a.trainer_id === e.target.value) ||
-                    null
+                    null,
                 );
               }}
             />
@@ -1037,7 +1031,7 @@ const RekapBulanan = () => {
               onChange={(e) => {
                 setValue("periode", e.target.value);
                 setSelectedPeriode(
-                  listPeriode.find((a) => a.name === e.target.value) || null
+                  listPeriode.find((a) => a.name === e.target.value) || null,
                 );
               }}
             />
