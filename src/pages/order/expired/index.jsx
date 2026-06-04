@@ -214,6 +214,7 @@ const OrderActive = () => {
         <Card title={"Order Expired"}>
           <Search searchValue={searchQuery} handleSearch={handleSearch} />
           <Table
+            tableId={"order-expired"}
             listData={listData}
             listColumn={COLUMNS}
             searchValue={searchQuery}

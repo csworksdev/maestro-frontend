@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { DateTime } from "luxon";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
@@ -109,7 +115,10 @@ const ApprovedRescheduleTable = ({
       const payload = message?.payload ?? message?.data ?? message ?? {};
       const extractedPayload = extractReschedulePayload(payload);
       if (!extractedPayload) {
-        console.warn("Ignored unknown approved reschedule websocket payload:", message);
+        console.warn(
+          "Ignored unknown approved reschedule websocket payload:",
+          message,
+        );
         return;
       }
 
@@ -189,7 +198,10 @@ const ApprovedRescheduleTable = ({
         const message = JSON.parse(event.data);
         applyReschedulePayload(message);
       } catch (error) {
-        console.error("Failed to parse approved reschedule websocket payload:", error);
+        console.error(
+          "Failed to parse approved reschedule websocket payload:",
+          error,
+        );
         setErrorMessage("Gagal membaca data websocket reschedule.");
       } finally {
         setIsLoading(false);
@@ -288,7 +300,9 @@ const ApprovedRescheduleTable = ({
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-100">
                 {day}, {time}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">{date}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
+                {date}
+              </p>
             </div>
           );
         },
@@ -306,7 +320,9 @@ const ApprovedRescheduleTable = ({
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-100">
                 {day}, {time}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">{date}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
+                {date}
+              </p>
             </div>
           );
         },
@@ -343,19 +359,25 @@ const ApprovedRescheduleTable = ({
         >
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-lg border border-slate-200/80 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60">
-              <p className="text-xs text-slate-500 dark:text-slate-300">Total Data</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
+                Total Data
+              </p>
               <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
                 {listData.count}
               </p>
             </div>
             <div className="rounded-lg border border-slate-200/80 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60">
-              <p className="text-xs text-slate-500 dark:text-slate-300">Filter Siswa</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
+                Filter Siswa
+              </p>
               <p className="mt-1 truncate text-sm font-medium text-slate-900 dark:text-white">
                 {studentFilter || "Semua"}
               </p>
             </div>
             <div className="rounded-lg border border-slate-200/80 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60">
-              <p className="text-xs text-slate-500 dark:text-slate-300">Filter Pelatih</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
+                Filter Pelatih
+              </p>
               <p className="mt-1 truncate text-sm font-medium text-slate-900 dark:text-white">
                 {trainerFilter || "Semua"}
               </p>
@@ -396,7 +418,10 @@ const ApprovedRescheduleTable = ({
 
             <div className="relative">
               <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon icon="heroicons-outline:academic-cap" className="h-4 w-4" />
+                <Icon
+                  icon="heroicons-outline:academic-cap"
+                  className="h-4 w-4"
+                />
               </span>
               <input
                 value={trainerFilterInput}
@@ -455,6 +480,7 @@ const ApprovedRescheduleTable = ({
         ) : (
           <>
             <Table
+              tableId={"approved-reschedule"}
               listData={listData}
               listColumn={columns}
               isAction={false}

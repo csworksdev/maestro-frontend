@@ -147,6 +147,7 @@ const Cabang = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"cabang-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

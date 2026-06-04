@@ -68,6 +68,30 @@ const getOrderStatus = (isFinish) => {
   };
 };
 
+const getPaymentStatus = (isPaid = "paid") => {
+  if (isPaid === "settled") {
+    return {
+      label: "Settled",
+      className:
+        "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-400/30",
+    };
+  }
+
+  if (isPaid === "paid") {
+    return {
+      label: "Paid",
+      className:
+        "bg-yellow-50 text-yellow-700 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-400/30",
+    };
+  }
+
+  return {
+    label: "Status belum tersedia",
+    className:
+      "bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-400/30",
+  };
+};
+
 const normalizeOrderRegistrationStatus = (value) => {
   if (value === true) return "new";
   if (value === false) return "extend";
@@ -451,11 +475,19 @@ const OrderActive = ({ is_finished = null }) => {
       Header: "Tanggal Order",
       accessor: "order_date",
       id: "order_date",
-      Cell: (row) => {
+      Cell: ({ row }) => {
+        const status = getPaymentStatus(row?.original?.is_paid);
         return (
-          <span>
-            {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
-          </span>
+          <div className="flex flex-col items-center gap-2">
+            <span
+              className={`inline-flex w-fit items-center rounded px-2 py-1 text-xs font-semibold ring-1 ring-inset ${status.className}`}
+            >
+              {status.label}
+            </span>
+            <span>
+              {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
+            </span>
+          </div>
         );
       },
     },
@@ -656,6 +688,7 @@ const OrderActive = ({ is_finished = null }) => {
         <>
           <Search searchValue={searchQuery} handleSearch={handleSearch} />
           <Table
+            tableId={is_finished === true ? "order-finished" : "order-active"}
             listData={listData}
             listColumn={fixColumn()}
             searchValue={searchQuery}

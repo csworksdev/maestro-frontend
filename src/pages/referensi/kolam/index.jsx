@@ -176,6 +176,7 @@ const Kolam = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"kolam-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

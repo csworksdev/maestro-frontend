@@ -321,7 +321,7 @@ const AddJadwal = ({
             create_by: user_id,
             created_at: DateTime.now(),
             is_finish: false,
-            is_paid: isInvoice ? "pending" : "settled",
+            is_paid: isInvoice ? "pending" : "paid",
             start_date: DateTime.now().plus({ days: 7 }).toFormat("yyyy-MM-dd"),
             order_date: isInvoice
               ? DateTime.now().toFormat("yyyy-MM-dd")

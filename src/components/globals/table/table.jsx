@@ -12,6 +12,7 @@ import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import Dropdown from "@/components/ui/Dropdown";
 import { handleTableDensity } from "@/store/layout";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 import {
   useTable,
   usePagination,
@@ -58,6 +59,7 @@ const IndeterminateCheckbox = React.forwardRef(
 );
 
 const Table = ({
+  tableId,
   listData,
   listColumn,
   handleSearch,
@@ -71,6 +73,7 @@ const Table = ({
   const density = useSelector(
     (state) => state.layout?.tableDensity || "comfortable"
   );
+  const userId = useAuthStore((state) => state.data?.user_id);
   const columns = useMemo(
     () =>
       listColumn.map((col, index) => ({
@@ -84,7 +87,23 @@ const Table = ({
   );
 
   const data = useMemo(() => listData?.results ?? [], [listData]);
-  const [hiddenColumnIds, setHiddenColumnIds] = useState([]);
+
+  const storageKey =
+    tableId && userId ? `table_cols_${userId}_${tableId}` : null;
+
+  const [hiddenColumnIds, setHiddenColumnIds] = useState(() => {
+    if (!storageKey) return [];
+    try {
+      return JSON.parse(localStorage.getItem(storageKey)) ?? [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (!storageKey) return;
+    localStorage.setItem(storageKey, JSON.stringify(hiddenColumnIds));
+  }, [hiddenColumnIds, storageKey]);
 
   const isColumnLocked = useCallback(
     (column) =>

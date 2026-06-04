@@ -135,6 +135,7 @@ const XenditTransaction = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <TableXendit
+              tableId={"xendit-transaction-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

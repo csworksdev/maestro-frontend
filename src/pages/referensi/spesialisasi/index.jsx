@@ -187,6 +187,7 @@ const Specialization = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"spesialisasi-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

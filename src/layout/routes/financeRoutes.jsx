@@ -31,6 +31,7 @@ const DetailOrder = lazy(() => import("@/pages/order/active/detail"));
 const RekapBulanan = lazy(() =>
   import("@/pages/finance/rekapBulanan/rekapBulanan")
 );
+const RekapPelatih = lazy(() => import("@/pages/finance/rekapPelatih"));
 const FinanceDashboard = lazy(() => import("@/pages/dashboard/finance"));
 
 // Siswa
@@ -128,6 +129,10 @@ const FinanceRoutes = () => {
         <Route path="rekap-bulanan">
           <Route index element={<RekapBulanan />} />
           <Route path="detailorderpelatih" element={<DetailOrder />} />
+        </Route>
+
+        <Route path="rekap-pelatih">
+          <Route index element={<RekapPelatih />} />
         </Route>
 
         <Route path="xendit">

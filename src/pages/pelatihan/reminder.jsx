@@ -91,6 +91,7 @@ const Reminder = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"reminder-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

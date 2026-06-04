@@ -65,7 +65,7 @@ const DashboardDaily = () => {
         sum: 400,
       },
     ],
-    []
+    [],
   );
 
   const [calendarDetails, setCalendarDetails] = useState([]);
@@ -106,11 +106,11 @@ const DashboardDaily = () => {
 
   const selectedBranchId = useMemo(
     () => extractBranchId(selectedBranch),
-    [extractBranchId, selectedBranch]
+    [extractBranchId, selectedBranch],
   );
   const selectedPoolId = useMemo(
     () => extractPoolId(selectedPool),
-    [extractPoolId, selectedPool]
+    [extractPoolId, selectedPool],
   );
 
   const filterParams = useMemo(() => {
@@ -142,7 +142,7 @@ const DashboardDaily = () => {
           setCalendarDetails(safe);
           const firstDate = safe[0]?.date || null;
           setSelectedDate((prev) =>
-            prev && safe.find((d) => d.date === prev) ? prev : firstDate
+            prev && safe.find((d) => d.date === prev) ? prev : firstDate,
           );
         }
       } catch (err) {
@@ -172,8 +172,8 @@ const DashboardDaily = () => {
       const groupBy = isPoolFiltered
         ? "TRAINER"
         : isBranchFiltered
-        ? "POOL"
-        : "BRANCH";
+          ? "POOL"
+          : "BRANCH";
       const res = await getDashboardDaily({
         filter_start_date: dateKey,
         filter_end_date: dateKey,
@@ -219,12 +219,18 @@ const DashboardDaily = () => {
   useEffect(() => {
     if (!selectedDate) return;
     fetchBranchSummary(selectedDate, branchPage);
-  }, [branchPage, filterParams, selectedBranchId, selectedPoolId, selectedDate]);
+  }, [
+    branchPage,
+    filterParams,
+    selectedBranchId,
+    selectedPoolId,
+    selectedDate,
+  ]);
 
   const fetchSchedules = async (
     pageIndex = 0,
     pageSize = 10,
-    dateKey = selectedDate
+    dateKey = selectedDate,
   ) => {
     if (!dateKey) return;
     setScheduleLoading(true);
@@ -369,7 +375,7 @@ const DashboardDaily = () => {
       setBranchPage(1);
       setSchedulePageIndex(0);
     },
-    [extractBranchId]
+    [extractBranchId],
   );
 
   const handlePoolDetail = useCallback(
@@ -381,7 +387,7 @@ const DashboardDaily = () => {
       setBranchPage(1);
       setSchedulePageIndex(0);
     },
-    [extractPoolId]
+    [extractPoolId],
   );
 
   const handleResetDrilldown = useCallback(() => {
@@ -397,8 +403,8 @@ const DashboardDaily = () => {
     const titleLabel = isPoolFocused
       ? "Pelatih"
       : isBranchFocused
-      ? "Kolam"
-      : "Cabang";
+        ? "Kolam"
+        : "Cabang";
     return [
       {
         Header: titleLabel,
@@ -449,9 +455,9 @@ const DashboardDaily = () => {
           const isTopLevel = !selectedBranch && !selectedPool;
           const isBranchLevel = Boolean(selectedBranch) && !selectedPool;
           const branchId =
-            extractBranchId(data) ?? (isTopLevel ? data.id ?? null : null);
+            extractBranchId(data) ?? (isTopLevel ? (data.id ?? null) : null);
           const poolId =
-            extractPoolId(data) ?? (isBranchLevel ? data.id ?? null : null);
+            extractPoolId(data) ?? (isBranchLevel ? (data.id ?? null) : null);
           const hasBranch = Boolean(branchId);
           const hasPool = Boolean(poolId);
           const canDrill =
@@ -493,7 +499,7 @@ const DashboardDaily = () => {
       count:
         branchMeta?.count ?? branchMeta?.page_count ?? branchData?.length ?? 0,
     }),
-    [branchData, branchMeta]
+    [branchData, branchMeta],
   );
 
   const handleDateChange = async ({ date }) => {
@@ -521,7 +527,7 @@ const DashboardDaily = () => {
       setCalendarDetails(safe);
       const firstDate = safe[0]?.date || date;
       setSelectedDate((prev) =>
-        prev && safe.find((d) => d.date === prev) ? prev : firstDate
+        prev && safe.find((d) => d.date === prev) ? prev : firstDate,
       );
       fetchBranchSummary(date, 1);
     } catch (err) {
@@ -596,7 +602,7 @@ const DashboardDaily = () => {
           ),
       },
     ],
-    [formatDateId]
+    [formatDateId],
   );
 
   const schedulePageCount = useMemo(() => {
@@ -609,9 +615,9 @@ const DashboardDaily = () => {
   const chartCategories = useMemo(
     () =>
       (chartData || []).map(
-        (item) => item?.month_label || `Bulan ${item?.month_value || ""}`
+        (item) => item?.month_label || `Bulan ${item?.month_value || ""}`,
       ),
-    [chartData]
+    [chartData],
   );
 
   const chartSeries = useMemo(
@@ -633,7 +639,7 @@ const DashboardDaily = () => {
         data: (chartData || []).map((item) => item?.unattendance ?? 0),
       },
     ],
-    [chartData]
+    [chartData],
   );
 
   const chartOptions = useMemo(
@@ -666,7 +672,7 @@ const DashboardDaily = () => {
         labels: {
           style: {
             colors: (chartCategories || []).map(() =>
-              isDark ? "#CBD5E1" : "#475569"
+              isDark ? "#CBD5E1" : "#475569",
             ),
             fontFamily: "Inter",
           },
@@ -689,7 +695,7 @@ const DashboardDaily = () => {
         },
       },
     }),
-    [chartCategories, isDark]
+    [chartCategories, isDark],
   );
 
   return (
@@ -763,6 +769,7 @@ const DashboardDaily = () => {
                     </div>
                   ) : (
                     <Table
+                      tableId={"daily-branch-summary"}
                       listData={branchTableData}
                       listColumn={branchColumns}
                       isAction={false}
@@ -863,7 +870,7 @@ const DashboardDaily = () => {
                           (((selectedDetail.on_schedule || 0) +
                             (selectedDetail.reschedule || 0)) /
                             selectedDetail.schedule) *
-                            100
+                            100,
                         )}%`
                       : "0%"}
                   </p>
@@ -913,6 +920,7 @@ const DashboardDaily = () => {
         ) : (
           <>
             <Table
+              tableId={"daily-schedule-list"}
               listData={scheduleList}
               listColumn={scheduleColumns}
               isAction={false}
@@ -933,7 +941,7 @@ const DashboardDaily = () => {
                 setSchedulePageIndex((prev) =>
                   schedulePageCount
                     ? Math.min(schedulePageCount - 1, prev + 1)
-                    : prev + 1
+                    : prev + 1,
                 )
               }
               setPageSize={(size) => {

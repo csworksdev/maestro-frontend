@@ -188,6 +188,7 @@ const DashboardPerpanjangAdmin = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"followup-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

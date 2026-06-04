@@ -191,6 +191,7 @@ const Broadcast = () => {
           ) : (
             <>
               <Table
+                tableId={"broadcast-table"}
                 listData={listData}
                 listColumn={COLUMNS}
                 searchValue={searchQuery}

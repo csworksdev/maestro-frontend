@@ -165,6 +165,7 @@ const DashboardPerpanjangTrainer = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"dashboard-followup-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

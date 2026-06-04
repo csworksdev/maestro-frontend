@@ -100,7 +100,7 @@ const ExpensePage = () => {
   const totalPageAmount = useMemo(
     () =>
       (data || []).reduce((acc, curr) => acc + Number(curr?.amount || 0), 0),
-    [data]
+    [data],
   );
 
   const listData = useMemo(
@@ -108,7 +108,7 @@ const ExpensePage = () => {
       count: meta?.count ?? data.length,
       results: data,
     }),
-    [data, meta]
+    [data, meta],
   );
 
   const actions = [
@@ -153,7 +153,7 @@ const ExpensePage = () => {
           <div className="text-right font-semibold">
             {formatCurrency(
               row?.row?.original?.amount,
-              row?.row?.original?.currency
+              row?.row?.original?.currency,
             )}
           </div>
         ),
@@ -182,7 +182,7 @@ const ExpensePage = () => {
         ),
       },
     ],
-    [actions]
+    [actions],
   );
 
   return (
@@ -210,7 +210,7 @@ const ExpensePage = () => {
                 <span className="font-semibold text-white">
                   {formatCurrency(
                     totalPageAmount,
-                    data?.[0]?.currency || "IDR"
+                    data?.[0]?.currency || "IDR",
                   )}
                 </span>
               </div>
@@ -333,7 +333,7 @@ const ExpensePage = () => {
                   <p className="text-2xl font-semibold text-slate-900">
                     {formatCurrency(
                       totalPageAmount,
-                      data?.[0]?.currency || "IDR"
+                      data?.[0]?.currency || "IDR",
                     )}
                   </p>
                   <p className="text-xs text-slate-500">
@@ -386,6 +386,7 @@ const ExpensePage = () => {
               </div>
             </div>
             <Table
+              tableId={"expense-table"}
               listData={listData}
               listColumn={columns}
               handleSearch={handleSearch}

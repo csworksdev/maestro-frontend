@@ -80,6 +80,11 @@ export const menuFinance = [
     link: "rekap-bulanan",
   },
   {
+    title: "Rekap Pelatih",
+    icon: "heroicons-outline:user-group",
+    link: "rekap-pelatih",
+  },
+  {
     isHeadr: true,
     title: "Xendit",
   },

@@ -182,6 +182,7 @@ const Paket = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"paket-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}
