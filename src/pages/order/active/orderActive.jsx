@@ -475,7 +475,7 @@ const OrderActive = ({ is_finished = null }) => {
       Header: "Tanggal Order",
       accessor: "order_date",
       id: "order_date",
-      Cell: ({ row }) => {
+      Cell: ({ row, cell }) => {
         const status = getPaymentStatus(row?.original?.is_paid);
         return (
           <div className="flex flex-col items-center gap-2">
@@ -484,9 +484,7 @@ const OrderActive = ({ is_finished = null }) => {
             >
               {status.label}
             </span>
-            <span>
-              {DateTime.fromISO(row?.cell?.value).toFormat("d MMMM yyyy")}
-            </span>
+            <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
           </div>
         );
       },
