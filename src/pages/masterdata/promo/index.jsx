@@ -164,6 +164,7 @@ const Promo = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"promo-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

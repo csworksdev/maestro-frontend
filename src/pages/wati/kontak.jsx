@@ -107,8 +107,8 @@ const Kontak = () => {
     const ids = [
       ...new Set(
         rows
-          .map((r) => (r?.original ? r.original.id : r.id ?? null))
-          .filter(Boolean) // buang null/undefined
+          .map((r) => (r?.original ? r.original.id : (r.id ?? null)))
+          .filter(Boolean), // buang null/undefined
       ),
     ];
     setSelectedID(ids);
@@ -200,10 +200,10 @@ const Kontak = () => {
       accessor: "admin", // pastikan ini UUID string
       Cell: ({ cell, row }) => {
         const [selected, setSelected] = React.useState(
-          furits.find((f) => f.value === cell.value)
+          furits.find((f) => f.value === cell.value),
         );
         const [original, setOriginal] = React.useState(
-          furits.find((f) => f.value === cell.value)
+          furits.find((f) => f.value === cell.value),
         );
 
         React.useEffect(() => {
@@ -351,6 +351,7 @@ const Kontak = () => {
         ) : (
           <>
             <Table
+              tableId={"kontak-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

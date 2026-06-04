@@ -1098,7 +1098,11 @@ const RekapBulanan = () => {
           ) : listData.results.length > 0 ? (
             <>
               <PeriodSummary />
-              <Table listData={listData} listColumn={COLUMNS} />
+              <Table
+                tableId={"rekap-bulanan"}
+                listData={listData}
+                listColumn={COLUMNS}
+              />
             </>
           ) : (
             <p>No data available</p>

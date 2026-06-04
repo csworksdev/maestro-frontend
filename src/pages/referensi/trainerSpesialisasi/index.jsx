@@ -250,6 +250,7 @@ const Specialization = ({
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"trainer-specialization-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

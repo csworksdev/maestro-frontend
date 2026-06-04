@@ -171,7 +171,7 @@ const Siswa = () => {
                   action={action}
                   row={row}
                 />
-              )
+              ),
             )}
           </div>
         );
@@ -204,6 +204,7 @@ const Siswa = () => {
             </div>
 
             <Table
+              tableId={"siswa-table"}
               listData={listData}
               listColumn={COLUMNS}
               handleSearch={handleSearch}

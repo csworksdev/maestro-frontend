@@ -400,6 +400,7 @@ const Invoice = () => {
                 {JenisPembayaran.map((item, i) => (
                   <Tab.Panel key={item}>
                     <Table
+                      tableId={`invoice-table-${item.toLowerCase()}`} // unique tableId untuk setiap tab
                       listData={listData}
                       listColumn={COLUMNS}
                       searchValue={searchText}

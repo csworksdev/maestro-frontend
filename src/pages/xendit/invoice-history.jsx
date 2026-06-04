@@ -173,9 +173,7 @@ const XenditInvoiceHistory = () => {
               <Badge key={`${item?.name || "item"}-${index}`}>
                 <div className="flex flex-col">
                   <div>Produk : {item.name}</div>
-                  <div>
-                    Harga : {parseFloat(item.price).toLocaleString()}
-                  </div>
+                  <div>Harga : {parseFloat(item.price).toLocaleString()}</div>
                   <div>
                     Jumlah : {parseFloat(item.quantity).toLocaleString()}
                   </div>
@@ -244,6 +242,7 @@ const XenditInvoiceHistory = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"xendit-invoice-history-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

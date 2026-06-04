@@ -299,6 +299,7 @@ const Produk = () => {
                             />
                           </div>
                           <Table
+                            tableId={"produk-table"}
                             listData={listData}
                             listColumn={COLUMNS}
                             searchValue={searchQuery}

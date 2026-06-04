@@ -202,6 +202,7 @@ const Periodisasi = () => {
           <>
             <Search searchValue={searchQuery} handleSearch={handleSearch} />
             <Table
+              tableId={"periodisasi-table"}
               listData={listData}
               listColumn={COLUMNS}
               searchValue={searchQuery}

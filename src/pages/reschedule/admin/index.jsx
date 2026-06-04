@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
@@ -215,7 +221,10 @@ const Reschedule = () => {
     ws.onerror = null;
     ws.onclose = null;
 
-    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
       ws.close(WS_CLOSE_CODE_NORMAL);
     }
   }, []);
@@ -675,6 +684,7 @@ const Reschedule = () => {
         ) : (
           <>
             <Table
+              tableId={"reschedule-admin-table"}
               listData={tableData}
               listColumn={columns}
               isAction={false}

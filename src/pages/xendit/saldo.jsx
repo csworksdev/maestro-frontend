@@ -204,7 +204,7 @@ const XenditBalance = () => {
                 <Icons
                   icon="heroicons-outline:clipboard-copy"
                   className={clsx(
-                    "w-5 h-5 transition-opacity transform"
+                    "w-5 h-5 transition-opacity transform",
                     // kamu bisa tambah animasi di sini kalau mau
                   )}
                 />
@@ -235,8 +235,8 @@ const XenditBalance = () => {
       Cell: ({ row }) => (
         <div className="flex items-center gap-2 justify-end text-green-500 font-semibold">
           <span>{formatAmount(row, "CREDIT")}</span>
-          {row?.original.line_type == "TRANSACTION" ??
-          row?.original.debit_or_credit == "CREDIT" ? (
+          {(row?.original.line_type == "TRANSACTION" ??
+          row?.original.debit_or_credit == "CREDIT") ? (
             <button
               onClick={() => handleCopy(row?.original.amount, row.id)} // gunakan row.id di sini
               className="text-blue-500 hover:text-blue-700 relative transition-transform active:scale-90"
@@ -244,7 +244,7 @@ const XenditBalance = () => {
               <Icons
                 icon="heroicons-outline:clipboard-copy"
                 className={clsx(
-                  "w-5 h-5 transition-opacity transform"
+                  "w-5 h-5 transition-opacity transform",
                   // kamu bisa tambah animasi di sini kalau mau
                 )}
               />
@@ -360,7 +360,7 @@ const XenditBalance = () => {
                       }
                       return acc;
                     },
-                    {}
+                    {},
                   );
 
                   // Step 2: Render result
@@ -376,6 +376,7 @@ const XenditBalance = () => {
             </div>
             {listData.length ?? (
               <Table
+                tableId={"xendit-balance-table"}
                 listData={listData}
                 listColumn={COLUMNS}
                 searchValue={searchQuery}

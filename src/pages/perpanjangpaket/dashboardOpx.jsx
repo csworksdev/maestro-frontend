@@ -136,6 +136,7 @@ const DashboardPerpanjangOpx = () => {
         <>
           {/* <Search searchValue={searchQuery} handleSearch={handleSearch} /> */}
           <Table
+            tableId={"followup-table"}
             listData={summary}
             listColumn={COLUMNS}
             isAction={false}
