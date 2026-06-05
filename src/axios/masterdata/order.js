@@ -110,3 +110,12 @@ export const updateOrderFrequency = async (orderId, data) => {
     throw error;
   }
 };
+
+export const SettleOrder = async (orderId) => {
+  try {
+    return await axiosConfig.post(`/api/order/${orderId}/settled/`);
+  } catch (error) {
+    console.error("Error settling order:", error);
+    throw error;
+  }
+};

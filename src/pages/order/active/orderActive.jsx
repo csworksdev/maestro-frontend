@@ -8,6 +8,7 @@ import {
   DeleteOrder,
   getOrderAll,
   PerpanjangOrder,
+  SettleOrder,
 } from "@/axios/masterdata/order";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -267,6 +268,37 @@ const OrderActive = ({ is_finished = null }) => {
     setModalData(e);
   };
 
+  const handleSettle = async (e) => {
+    Swal.fire({
+      title: "Ubah ke Settled?",
+      text: `Status pembayaran order ini akan diubah menjadi Settled dan tidak dapat dikembalikan.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Ya, Settled",
+      cancelButtonText: "Batal",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await SettleOrder(e.order_id);
+          Swal.fire(
+            "Berhasil!",
+            "Status berhasil diubah ke Settled.",
+            "success",
+          );
+          fetchData(pageIndex, pageSize, searchQuery);
+        } catch {
+          Swal.fire(
+            "Gagal!",
+            "Terjadi kesalahan saat mengubah status.",
+            "error",
+          );
+        }
+      }
+    });
+  };
+
   const handlePerpanjang = async (e) => {
     const { value: order_date } = await Swal.fire({
       title: "Perpanjang paket ",
@@ -476,7 +508,8 @@ const OrderActive = ({ is_finished = null }) => {
       accessor: "order_date",
       id: "order_date",
       Cell: ({ row, cell }) => {
-        const status = getPaymentStatus(row?.original?.is_paid);
+        const isPaid = row?.original?.is_paid;
+        const status = getPaymentStatus(isPaid);
         return (
           <div className="flex flex-col items-center gap-2">
             <span
@@ -485,6 +518,17 @@ const OrderActive = ({ is_finished = null }) => {
               {status.label}
             </span>
             <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
+            {isPaid !== "settled" &&
+              // roles === "Finance" &&
+              roles === "Superuser" && (
+                <button
+                  onClick={() => handleSettle(row.original)}
+                  className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold bg-green-500/15 text-green-700 hover:bg-green-500 hover:text-white ring-1 ring-inset ring-green-600/20 transition-colors dark:bg-green-500/20 dark:text-green-200"
+                >
+                  <Icon icon="heroicons-outline:check-circle" width={14} />
+                  Tandai Settled
+                </button>
+              )}
           </div>
         );
       },
