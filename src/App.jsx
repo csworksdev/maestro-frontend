@@ -11,6 +11,7 @@ import FinanceRoutes from "./layout/routes/financeRoutes";
 import OpxRoutes from "./layout/routes/operationalRoutes";
 import { useFcmToken } from "./hooks/useFCMToken";
 import Redir from "./pages/redir";
+import { useSubdomainStore } from "./redux/slicers/subdomainSlice";
 
 const LoginAdmin = lazy(() => import("@/pages/auth/login"));
 const LoginCoach = lazy(() => import("@/pages/auth/login2"));
@@ -21,8 +22,7 @@ const ForgotPassAdmin = lazy(() => import("@/pages/auth/forgot-password"));
 const ErrorPage = lazy(() => import("./pages/404"));
 
 const App = () => {
-  const hostname = window.location.hostname;
-  let subdomain = hostname.split(".")[0];
+  const subdomain = useSubdomainStore((state) => state.subdomain);
   // const isAuth = useSelector((state) => state.auth.isAuth);
 
   const { fcmToken, removeFcmToken } = useFcmToken();
@@ -33,11 +33,6 @@ const App = () => {
       // misalnya init WebSocket di sini
     }
   }, [fcmToken]);
-
-  // hapus prefix "dev" kalau ada
-  if (subdomain.startsWith("dev")) {
-    subdomain = subdomain.replace("dev", "");
-  }
 
   const routesMap = {
     admin: <AdminRoutes />,

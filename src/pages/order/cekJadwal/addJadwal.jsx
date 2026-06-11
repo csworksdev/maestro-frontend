@@ -819,6 +819,7 @@ const AddJadwal = ({
   const StudentDefaultOptions = async () => {
     try {
       const response = await getSiswaAll({
+        page: 1,
         page_size: 10,
       });
       const students = response.data.results.map((student) => ({

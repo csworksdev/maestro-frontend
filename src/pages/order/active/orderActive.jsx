@@ -519,7 +519,8 @@ const OrderActive = ({ is_finished = null }) => {
             </span>
             <span>{DateTime.fromISO(cell?.value).toFormat("d MMMM yyyy")}</span>
             {isPaid !== "settled" &&
-              window.location.hostname.split(".")[0].replace("dev", "") === "finance" && (
+              window.location.hostname.split(".")[0].replace("dev", "") ===
+                "finance" && (
                 <button
                   onClick={() => handleSettle(row.original)}
                   className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold bg-green-500/15 text-green-700 hover:bg-green-500 hover:text-white ring-1 ring-inset ring-green-600/20 transition-colors dark:bg-green-500/20 dark:text-green-200"
@@ -666,21 +667,55 @@ const OrderActive = ({ is_finished = null }) => {
               Order selesai
             </span>
           );
-        }
+        } else {
+          if (roles == "Superuser") {
+            return (
+              <div className="flex flex-wrap gap-2 justify-center items-center">
+                {actions.map((action, index) => (
+                  <TableAction
+                    key={action.id || index} // 👈 kasih key DI SINI
+                    action={action}
+                    row={row}
+                  />
+                ))}
+              </div>
+            );
+          } else if (roles == "Admin") {
+            return (
+              <div className="flex flex-wrap gap-2 justify-center items-center">
+                {actionsAdmin.map((action, index) => (
+                  <TableAction
+                    key={action.id || index} // 👈 kasih key DI SINI
+                    action={action}
+                    row={row}
+                  />
+                ))}
+              </div>
+            );
+          } else {
+            return (
+              <span className="inline-flex items-center rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                N/A
+              </span>
+            );
+          }
 
-        return (
-          <div className="flex flex-wrap gap-2 justify-center items-center">
-            {(roles == "Admin" ? actionsAdmin : actions).map(
-              (action, index) => (
-                <TableAction
-                  key={action.id || index} // 👈 kasih key DI SINI
-                  action={action}
-                  row={row}
-                />
-              ),
-            )}
-          </div>
-        );
+          return null;
+
+          // return (
+          //   <div className="flex flex-wrap gap-2 justify-center items-center">
+          //     {(roles == "Admin" ? actionsAdmin : actions).map(
+          //       (action, index) => (
+          //         <TableAction
+          //           key={action.id || index} // 👈 kasih key DI SINI
+          //           action={action}
+          //           row={row}
+          //         />
+          //       ),
+          //     )}
+          //   </div>
+          // );
+        }
       },
     },
   ];
