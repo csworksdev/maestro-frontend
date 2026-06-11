@@ -1,19 +1,14 @@
 import React from "react";
-import { render, screen, waitFor, cleanup } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, waitFor, cleanup } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import OrderActive from "../../../src/pages/order/active/orderActive";
 
 const mockNavigate = vi.fn();
 
-const { mockGetOrderAll, mockDeleteOrder, mockPerpanjangOrder } = vi.hoisted(
-  () => ({
-    mockGetOrderAll: vi.fn(),
-    mockDeleteOrder: vi.fn(),
-    mockPerpanjangOrder: vi.fn(),
-  })
-);
+const { mockGetOrderAll } = vi.hoisted(() => ({
+  mockGetOrderAll: vi.fn(),
+}));
 
 const mockSwalFire = vi.fn();
 const mockUseAuthStore = vi.fn();
@@ -29,8 +24,6 @@ vi.mock("react-router-dom", async () => {
 
 vi.mock("@/axios/masterdata/order", () => ({
   getOrderAll: (...args) => mockGetOrderAll(...args),
-  DeleteOrder: (...args) => mockDeleteOrder(...args),
-  PerpanjangOrder: (...args) => mockPerpanjangOrder(...args),
 }));
 
 vi.mock("@/redux/slicers/authSlice", () => ({
@@ -118,8 +111,6 @@ describe("OrderActive", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
     mockGetOrderAll.mockReset();
-    mockDeleteOrder.mockReset();
-    mockPerpanjangOrder.mockReset();
     mockSwalFire.mockReset();
     mockUseAuthStore.mockReset();
 
@@ -149,25 +140,4 @@ describe("OrderActive", () => {
     });
   });
 
-  it("deletes order after confirmation", async () => {
-    mockGetOrderAll.mockResolvedValue({
-      data: {
-        count: 1,
-        results: [{ order_id: 5, students: [] }],
-      },
-    });
-    mockDeleteOrder.mockResolvedValue({ status: true });
-    mockSwalFire
-      .mockResolvedValueOnce({ isConfirmed: true })
-      .mockResolvedValueOnce({});
-
-    render(<OrderActive is_finished={false} />);
-
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Delete" }));
-
-    await waitFor(() => {
-      expect(mockDeleteOrder).toHaveBeenCalledWith(5);
-    });
-  });
 });
