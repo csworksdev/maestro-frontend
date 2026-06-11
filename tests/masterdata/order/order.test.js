@@ -32,6 +32,10 @@ vi.mock("../../../src/axios/config", () => {
   };
 });
 
+vi.mock("../../../src/redux/slicers/subdomainSlice", () => ({
+  getSubdomain: () => "/api",
+}));
+
 describe("order api", () => {
   beforeEach(() => {
     mockGet.mockReset();
