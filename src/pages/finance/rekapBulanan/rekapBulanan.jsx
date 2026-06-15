@@ -1007,7 +1007,7 @@ const RekapBulanan = () => {
                   value: item.trainer_id,
                   label: item.nickname,
                 }))
-                .sort((a, b) => a.label.localeCompare(b.label))}
+                .sort((a, b) => (a.label ?? "").localeCompare(b.label ?? ""))}
               // defaultValue={listTrainer[0]?.value || ""}
               onChange={(e) => {
                 setValue("trainer", e.target.value);
