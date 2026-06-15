@@ -1840,7 +1840,7 @@ const CekJadwal = () => {
         </Tab.Group>
       )}
 
-      {activeView === "reschedule" && (
+      {/* {activeView === "reschedule" && (
         <div className="mb-3 rounded-xl border border-slate-200/70 bg-white p-3 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
           <div className="flex flex-col gap-1 sm:w-[320px]">
             <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
@@ -1868,7 +1868,7 @@ const CekJadwal = () => {
             />
           </div>
         </div>
-      )}
+      )} */}
 
       {activeView === "reschedule" && (
         <ApprovedRescheduleTable

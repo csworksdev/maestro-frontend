@@ -668,7 +668,7 @@ const OrderActive = ({ is_finished = null }) => {
             </span>
           );
         } else {
-          if (roles == "Superuser") {
+          if (roles == "Superuser" || roles == "Finance") {
             return (
               <div className="flex flex-wrap gap-2 justify-center items-center">
                 {actions.map((action, index) => (
