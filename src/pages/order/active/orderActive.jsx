@@ -23,6 +23,7 @@ import EditModal from "./editModal";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import MutasiSiswaModal from "./mutasiSiswa";
 import FrequencyModal from "./frequencyModal";
+import FilterModal, { EMPTY_FILTERS } from "./filterModal";
 
 const ACTION_SHARED_CLASS = "shadow-sm transition-colors";
 
@@ -153,13 +154,20 @@ const OrderActive = ({ is_finished = null }) => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [mutasiModalVisible, setMutasiModalVisible] = useState(false);
   const [frequencyModalVisible, setFrequencyModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [isEdited, setisEdited] = useState(false);
   const [modalData, setModalData] = useState(null);
 
   const data = useAuthStore((state) => state.data);
   const roles = data?.roles;
 
-  const fetchData = async (page = 1, size = 10, query) => {
+  const fetchData = async (
+    page = 1,
+    size = 10,
+    query,
+    activeFilters = filters,
+  ) => {
     try {
       setIsLoading(true);
       setListData();
@@ -171,6 +179,16 @@ const OrderActive = ({ is_finished = null }) => {
 
       if (is_finished !== null && is_finished !== undefined) {
         params.is_finish = is_finished;
+      }
+
+      if (activeFilters?.filter_start_date) {
+        params.filter_start_date = activeFilters.filter_start_date;
+      }
+      if (activeFilters?.filter_end_date) {
+        params.filter_end_date = activeFilters.filter_end_date;
+      }
+      if (activeFilters?.filter_payment_status) {
+        params.filter_payment_status = activeFilters.filter_payment_status;
       }
 
       getOrderAll(params)
@@ -204,8 +222,8 @@ const OrderActive = ({ is_finished = null }) => {
   };
 
   useEffect(() => {
-    fetchData(pageIndex, pageSize, searchQuery);
-  }, [pageIndex, pageSize, searchQuery]);
+    fetchData(pageIndex, pageSize, searchQuery, filters);
+  }, [pageIndex, pageSize, searchQuery, filters]);
 
   useEffect(() => {
     if (!editModalVisible && isEdited) {
@@ -226,6 +244,13 @@ const OrderActive = ({ is_finished = null }) => {
     setSearchQuery(query);
     setPageIndex(0); // Reset to first page on search
   };
+
+  const handleApplyFilter = (newFilters) => {
+    setFilters(newFilters);
+    setPageIndex(0); // Reset to first page on filter change
+  };
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   const handleDelete = (e) => {
     Swal.fire({
@@ -751,18 +776,32 @@ const OrderActive = ({ is_finished = null }) => {
 
   return (
     <>
-      {/* {is_finished === false ? (
-        <Button className="btn-primary ">
-          <Link to="add" isupdate="false">
-            Tambah
-          </Link>
-        </Button>
-      ) : null} */}
       {isLoading ? (
         <Loading />
       ) : (
         <>
-          <Search searchValue={searchQuery} handleSearch={handleSearch} />
+          <div className="flex flex-wrap items-center gap-3 mb-5">
+            <Button
+              className="shrink-0 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+              onClick={() => setFilterModalVisible(true)}
+            >
+              <span className="flex items-center">
+                <Icon
+                  icon="heroicons-outline:adjustments-horizontal"
+                  className="mr-2"
+                />
+                Filter
+                {activeFilterCount > 0 && (
+                  <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-xs font-semibold text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </span>
+            </Button>
+            <div className="min-w-[240px] flex-1 [&>div]:mb-0">
+              <Search searchValue={searchQuery} handleSearch={handleSearch} />
+            </div>
+          </div>
           <Table
             tableId={is_finished === true ? "order-finished" : "order-active"}
             listData={listData}
@@ -822,6 +861,20 @@ const OrderActive = ({ is_finished = null }) => {
                 defaultOrder={modalData}
                 onClose={() => setMutasiModalVisible(false)}
                 isEdit={(e) => setisEdited(e)}
+              />
+            </Modal>
+          )}
+          {filterModalVisible && (
+            <Modal
+              title="Filter Order"
+              activeModal={filterModalVisible}
+              onClose={() => setFilterModalVisible(false)}
+              className="max-w-lg"
+            >
+              <FilterModal
+                defaultFilters={filters}
+                onApply={handleApplyFilter}
+                onClose={() => setFilterModalVisible(false)}
               />
             </Modal>
           )}
