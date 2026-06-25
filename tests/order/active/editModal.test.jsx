@@ -17,6 +17,10 @@ const {
   mockMigrasiOrderById: vi.fn(),
 }));
 
+vi.mock("@/axios/masterdata/trainer", () => ({
+  getTrainerAll: (...args) => mockGetTrainerAll(...args),
+}));
+
 const mockSwalFire = vi.fn();
 
 vi.mock("@/axios/referensi/kolam", () => ({
@@ -90,17 +94,20 @@ vi.mock("react-select/async", () => ({
 
 describe("Edit order modal", () => {
   beforeEach(() => {
+    mockGetTrainerAll.mockReset();
     mockGetKolamByBranch.mockReset();
     mockGetProdukPool.mockReset();
     mockMigrasiOrderById.mockReset();
     mockSwalFire.mockReset();
+
+    mockGetTrainerAll.mockResolvedValue({ data: { results: [] } });
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it("loads trainer, kolam, and product options", async () => {
+  it("loads kolam and product options on mount", async () => {
     mockGetKolamByBranch.mockResolvedValue({ data: { results: [] } });
     mockGetProdukPool.mockResolvedValue({ data: { results: [] } });
 
@@ -118,16 +125,12 @@ describe("Edit order modal", () => {
     );
 
     await waitFor(() => {
-      expect(mockGetTrainerAll).toHaveBeenCalledWith({
-        page: 1,
-        page_size: 100,
-      });
       expect(mockGetKolamByBranch).toHaveBeenCalledWith(3);
       expect(mockGetProdukPool).toHaveBeenCalledWith(9);
     });
   });
 
-  it("updates trainer when selection changes", async () => {
+  it("updates kolam when selection changes", async () => {
     mockGetKolamByBranch.mockResolvedValue({ data: { results: [] } });
     mockGetProdukPool.mockResolvedValue({ data: { results: [] } });
     mockMigrasiOrderById.mockResolvedValue({ status: true });
@@ -147,11 +150,11 @@ describe("Edit order modal", () => {
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Select Coach" }));
+    await user.click(screen.getByRole("button", { name: "Select Kolam" }));
     await user.click(screen.getByRole("button", { name: "Ganti" }));
 
     await waitFor(() => {
-      expect(mockMigrasiOrderById).toHaveBeenCalledWith(1, "trainer", 2);
+      expect(mockMigrasiOrderById).toHaveBeenCalledWith(1, "pool", 2);
     });
   });
 });
