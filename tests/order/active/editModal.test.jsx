@@ -19,10 +19,6 @@ const {
 
 const mockSwalFire = vi.fn();
 
-vi.mock("@/axios/masterdata/trainer", () => ({
-  getTrainerAll: (...args) => mockGetTrainerAll(...args),
-}));
-
 vi.mock("@/axios/referensi/kolam", () => ({
   getKolamByBranch: (...args) => mockGetKolamByBranch(...args),
 }));
@@ -94,7 +90,6 @@ vi.mock("react-select/async", () => ({
 
 describe("Edit order modal", () => {
   beforeEach(() => {
-    mockGetTrainerAll.mockReset();
     mockGetKolamByBranch.mockReset();
     mockGetProdukPool.mockReset();
     mockMigrasiOrderById.mockReset();
@@ -106,7 +101,6 @@ describe("Edit order modal", () => {
   });
 
   it("loads trainer, kolam, and product options", async () => {
-    mockGetTrainerAll.mockResolvedValue({ data: { results: [] } });
     mockGetKolamByBranch.mockResolvedValue({ data: { results: [] } });
     mockGetProdukPool.mockResolvedValue({ data: { results: [] } });
 
@@ -120,18 +114,20 @@ describe("Edit order modal", () => {
           pool: 9,
           order_date: "2024-01-01",
         }}
-      />
+      />,
     );
 
     await waitFor(() => {
-      expect(mockGetTrainerAll).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+      expect(mockGetTrainerAll).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 100,
+      });
       expect(mockGetKolamByBranch).toHaveBeenCalledWith(3);
       expect(mockGetProdukPool).toHaveBeenCalledWith(9);
     });
   });
 
   it("updates trainer when selection changes", async () => {
-    mockGetTrainerAll.mockResolvedValue({ data: { results: [] } });
     mockGetKolamByBranch.mockResolvedValue({ data: { results: [] } });
     mockGetProdukPool.mockResolvedValue({ data: { results: [] } });
     mockMigrasiOrderById.mockResolvedValue({ status: true });
@@ -147,7 +143,7 @@ describe("Edit order modal", () => {
           pool: 9,
           order_date: "2024-01-01",
         }}
-      />
+      />,
     );
 
     const user = userEvent.setup();
