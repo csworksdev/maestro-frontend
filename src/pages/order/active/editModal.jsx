@@ -88,22 +88,22 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
   const loadTrainerOptions = (inputValue) =>
     Promise.resolve(
       listTrainer.filter((t) =>
-        t.label.toLowerCase().includes(inputValue.toLowerCase())
-      )
+        t.label.toLowerCase().includes(inputValue.toLowerCase()),
+      ),
     );
 
   const loadKolamOptions = (inputValue) =>
     Promise.resolve(
       listKolam.filter((t) =>
-        t.label.toLowerCase().includes(inputValue.toLowerCase())
-      )
+        t.label.toLowerCase().includes(inputValue.toLowerCase()),
+      ),
     );
 
   const loadProductOptions = (inputValue) =>
     Promise.resolve(
       listProduct.filter((t) =>
-        t.label.toLowerCase().includes(inputValue.toLowerCase())
-      )
+        t.label.toLowerCase().includes(inputValue.toLowerCase()),
+      ),
     );
 
   const updateOrder = async (fieldName, fieldValue) => {
@@ -111,7 +111,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
       const res = await migrasiOrderById(
         currentOrder.order_id,
         fieldName,
-        fieldValue
+        fieldValue,
       );
 
       if (res.status) {
@@ -132,7 +132,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <Card title={"Ganti Pelatih"}>
+      {/* <Card title={"Ganti Pelatih"}>
         <div className="grid grid-cols-[auto,1fr,auto,auto,1fr,auto] gap-4 items-center">
           <label className="text-sm text-gray-700">Dari</label>
           <Textinput
@@ -155,7 +155,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
               </Button>
             )}
         </div>
-      </Card>
+      </Card> */}
 
       <Card title={"Ganti Kolam"}>
         <div className="grid grid-cols-[auto,1fr,auto,auto,1fr,auto] gap-4 items-center">
@@ -195,7 +195,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
             className="form-control py-2"
             onChange={(date) => {
               setSelectedDate(
-                DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd")
+                DateTime.fromJSDate(date[0]).toFormat("yyyy-MM-dd"),
               );
             }}
             readOnly={false}
