@@ -20,13 +20,14 @@ export const getOrderById = async (id) => {
     console.error("Error fetching data:", error);
   }
 };
-export const migrasiOrderById = async (orderId, key, value) => {
+export const migrasiOrderById = async (orderId, key, value, meet) => {
   try {
-    let response = await axiosConfig.put(getSubdomain() + "/order/migrasi/", {
-      order_id: orderId,
-      key: key,
-      value: value,
-    });
+    const body = { order_id: orderId, key, value };
+    if (meet !== undefined && meet !== null) body.meet = meet;
+    let response = await axiosConfig.put(
+      getSubdomain() + "/order/migrasi/",
+      body,
+    );
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
