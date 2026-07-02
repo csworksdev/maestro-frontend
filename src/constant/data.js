@@ -364,11 +364,11 @@ export const menuOpx = [
     icon: "heroicons-outline:users",
     link: "user",
   },
-  {
-    title: "Follow Up Perpanjang",
-    icon: "heroicons-outline:globe-americas",
-    link: "followup-perpanjang",
-  },
+  // {
+  //   title: "Follow Up Perpanjang",
+  //   icon: "heroicons-outline:globe-americas",
+  //   link: "followup-perpanjang",
+  // },
 ];
 
 export const menuAdmin = [
