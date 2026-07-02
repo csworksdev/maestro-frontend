@@ -174,6 +174,18 @@ const Reschedule = () => {
     () => `/ws/reschedule/?page=${pageIndex + 1}&page_size=${pageSize}`,
     [pageIndex, pageSize],
   );
+  const [summaryData, setSummaryData] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  });
+  const socketRefSummary = useRef(null);
+  const reconnectTimeoutRefSummary = useRef(null);
+  const wsSummaryEndpoint = useMemo(
+    () => `/ws/reschedule/summary/?page=${pageIndex + 1}&page_size=${pageSize}`,
+    [pageIndex, pageSize],
+  );
 
   const applyReschedulePayload = useCallback(
     (message) => {
@@ -239,6 +251,7 @@ const Reschedule = () => {
     setErrorMessage("");
     closeSocket();
 
+    // #region WebSocket Data URL
     const wsUrl = buildWsUrl(wsEndpoint);
     if (!wsUrl) {
       setIsLoading(false);
@@ -281,21 +294,121 @@ const Reschedule = () => {
     };
   }, [applyReschedulePayload, closeSocket, wsEndpoint]);
 
+  // summary socket
+
+  const applyRescheduleSummaryPayload = useCallback(
+    (message) => {
+      const payload = message?.payload ?? message?.data ?? message ?? {};
+      // const { rows, meta: payloadMeta } = extractReschedulePayload(payload);
+      console.log("Reschedule summary payload:", payload.data);
+
+      setSummaryData({
+        total: payload?.data?.total ?? 0,
+        pending: payload?.data?.pending ?? 0,
+        approved: payload?.data?.approved ?? 0,
+        rejected: payload?.data?.rejected ?? 0,
+      });
+    },
+    [pageIndex, pageSize],
+  );
+
+  const closeSummarySocket = useCallback(() => {
+    if (!socketRefSummary.current) {
+      return;
+    }
+
+    const ws = socketRefSummary.current;
+    socketRefSummary.current = null;
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onerror = null;
+    ws.onclose = null;
+
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
+      ws.close(WS_CLOSE_CODE_NORMAL);
+    }
+  }, []);
+
+  const connectSummarySocket = useCallback(() => {
+    if (reconnectTimeoutRefSummary.current) {
+      clearTimeout(reconnectTimeoutRefSummary.current);
+      reconnectTimeoutRefSummary.current = null;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+    closeSummarySocket();
+
+    // #region WebSocket Data URL
+    const wsUrl = buildWsUrl(wsSummaryEndpoint);
+    if (!wsUrl) {
+      setIsLoading(false);
+      setErrorMessage("Gagal membentuk URL websocket reschedule.");
+      return;
+    }
+
+    const ws = new WebSocket(wsUrl);
+    socketRefSummary.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        applyRescheduleSummaryPayload(message);
+      } catch (error) {
+        console.error("Failed to parse reschedule websocket payload:", error);
+        setErrorMessage("Gagal membaca data websocket reschedule.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("Reschedule websocket error:", error);
+      setIsLoading(false);
+      setErrorMessage("Koneksi websocket reschedule bermasalah.");
+    };
+
+    ws.onclose = (event) => {
+      if (socketRefSummary.current === ws) {
+        socketRefSummary.current = null;
+      }
+
+      if (event.code !== WS_CLOSE_CODE_NORMAL) {
+        reconnectTimeoutRefSummary.current = setTimeout(
+          () => connectSummarySocket(),
+          WS_RECONNECT_DELAY,
+        );
+      }
+    };
+  }, [applyRescheduleSummaryPayload, closeSummarySocket, wsSummaryEndpoint]);
+
   const fetchReschedule = useCallback(() => {
     setIsLoading(true);
     setErrorMessage("");
     connectSocket();
   }, [connectSocket]);
 
+  const fetchSummaryReschedule = useCallback(() => {
+    setIsLoading(true);
+    setErrorMessage("");
+    connectSummarySocket();
+  }, [connectSummarySocket]);
+
   useEffect(() => {
     connectSocket();
+    connectSummarySocket();
     return () => {
-      if (reconnectTimeoutRef.current) {
+      if (reconnectTimeoutRef.current || reconnectTimeoutRefSummary.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        clearTimeout(reconnectTimeoutRefSummary.current);
       }
       closeSocket();
+      closeSummarySocket();
     };
-  }, [closeSocket, connectSocket]);
+  }, [closeSocket, closeSummarySocket, connectSocket, connectSummarySocket]);
 
   const filteredResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -616,7 +729,7 @@ const Reschedule = () => {
               Total Data
             </p>
             <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
-              {summary.total}
+              {summaryData.total}
             </p>
           </div>
           <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
@@ -624,7 +737,7 @@ const Reschedule = () => {
               Menunggu
             </p>
             <p className="mt-1 text-xl font-semibold text-amber-700 dark:text-amber-200">
-              {summary.pending}
+              {summaryData.pending}
             </p>
           </div>
           <div className="rounded-lg border border-emerald-200/80 bg-emerald-50/70 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
@@ -632,13 +745,13 @@ const Reschedule = () => {
               Disetujui
             </p>
             <p className="mt-1 text-xl font-semibold text-emerald-700 dark:text-emerald-200">
-              {summary.approved}
+              {summaryData.approved}
             </p>
           </div>
           <div className="rounded-lg border border-rose-200/80 bg-rose-50/70 p-3 dark:border-rose-500/30 dark:bg-rose-500/10">
             <p className="text-xs text-rose-700 dark:text-rose-300">Ditolak</p>
             <p className="mt-1 text-xl font-semibold text-rose-700 dark:text-rose-200">
-              {summary.rejected}
+              {summaryData.rejected}
             </p>
           </div>
         </div>
@@ -680,7 +793,9 @@ const Reschedule = () => {
             </div>
             <button
               type="button"
-              onClick={fetchReschedule}
+              onClick={() => {
+                (fetchReschedule(), fetchRescheduleSummary());
+              }}
               className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-primary-200 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
               <Icon icon="heroicons-outline:arrow-path" className="h-4 w-4" />

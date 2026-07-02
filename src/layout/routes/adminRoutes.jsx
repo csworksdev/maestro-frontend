@@ -16,14 +16,14 @@ const Dashboard = lazy(() => import("@/pages/dashboard"));
 const DashboardSales = lazy(() => import("@/pages/newDashboard/sales"));
 
 const DashboardRevenue = lazy(() => import("@/pages/newDashboard/revenue"));
-const DashboardOkupansi = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi")
+const DashboardOkupansi = lazy(
+  () => import("@/pages/newDashboard/operasional/okupansi"),
 );
-const OkupansiBranch = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi/okupansi_branch")
+const OkupansiBranch = lazy(
+  () => import("@/pages/newDashboard/operasional/okupansi/okupansi_branch"),
 );
-const OkupansiPool = lazy(() =>
-  import("@/pages/newDashboard/operasional/okupansi/okupansi_pool")
+const OkupansiPool = lazy(
+  () => import("@/pages/newDashboard/operasional/okupansi/okupansi_pool"),
 );
 
 // Referensi
@@ -34,12 +34,12 @@ const EditKolam = lazy(() => import("@/pages/referensi/kolam/edit"));
 const Paket = lazy(() => import("@/pages/referensi/paket"));
 const EditPaket = lazy(() => import("@/pages/referensi/paket/edit"));
 const Periodisasi = lazy(() => import("@/pages/referensi/periodisasi"));
-const EditPeriodisasi = lazy(() =>
-  import("@/pages/referensi/periodisasi/edit")
+const EditPeriodisasi = lazy(
+  () => import("@/pages/referensi/periodisasi/edit"),
 );
 const Specialization = lazy(() => import("@/pages/referensi/spesialisasi"));
-const EditSpecialization = lazy(() =>
-  import("@/pages/referensi/spesialisasi/edit")
+const EditSpecialization = lazy(
+  () => import("@/pages/referensi/spesialisasi/edit"),
 );
 
 // Master Data
@@ -73,22 +73,22 @@ const UMMenuEdit = lazy(() => import("@/pages/usermanagement/menu/edit"));
 const UMRole = lazy(() => import("@/pages/usermanagement/role"));
 const UMRoleEdit = lazy(() => import("@/pages/usermanagement/role/edit"));
 const UMPermissions = lazy(() => import("@/pages/usermanagement/permission"));
-const UMPermissionsEdit = lazy(() =>
-  import("@/pages/usermanagement/permission/edit")
+const UMPermissionsEdit = lazy(
+  () => import("@/pages/usermanagement/permission/edit"),
 );
 
 // Finance
-const RekapBulanan = lazy(() =>
-  import("@/pages/finance/rekapBulanan/rekapBulanan")
+const RekapBulanan = lazy(
+  () => import("@/pages/finance/rekapBulanan/rekapBulanan"),
 );
 
 // Xendit
 const XenditTransaction = lazy(() => import("@/pages/xendit/transaction"));
-const XenditInvoiceHistory = lazy(() =>
-  import("@/pages/xendit/invoice-history")
+const XenditInvoiceHistory = lazy(
+  () => import("@/pages/xendit/invoice-history"),
 );
-const XenditInvoiceHistoryPreview = lazy(() =>
-  import("@/pages/xendit/invoice-history-preview")
+const XenditInvoiceHistoryPreview = lazy(
+  () => import("@/pages/xendit/invoice-history-preview"),
 );
 const XenditBalance = lazy(() => import("@/pages/xendit/saldo"));
 
@@ -108,8 +108,8 @@ const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const EditPromo = lazy(() => import("@/pages/masterdata/promo/edit"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
-const RescheduleApprovedAdmin = lazy(() =>
-  import("@/pages/reschedule/admin/approved")
+const RescheduleApprovedAdmin = lazy(
+  () => import("@/pages/reschedule/admin/approved"),
 );
 
 const AdminRoutes = () => {
@@ -290,9 +290,9 @@ const AdminRoutes = () => {
         </Route>
         //#endregion
         {/* Followup Perpanjang */}
-        <Route path="followup-perpanjang">
+        {/* <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
-        </Route>
+        </Route> */}
         {/* Fallback */}
         <Route path="*" element={<ErrorPage />} />
       </Route>
