@@ -27,7 +27,7 @@ const ChatPage = () => {
   const searchContacts = contacts?.filter(
     (item) =>
       item.fullName?.toLowerCase().includes(searchContact.toLowerCase()) ||
-      item.phoneNumber?.toLowerCase().includes(searchContact.toLowerCase())
+      item.phoneNumber?.toLowerCase().includes(searchContact.toLowerCase()),
   );
   const displayContacts = searchContact ? searchContacts : contacts;
 
@@ -44,10 +44,10 @@ const ChatPage = () => {
     const statusIndex = headers.findIndex((header) => header === "status");
     if (phoneIndex === -1 || statusIndex === -1) return [];
     const broadcastIndex = headers.findIndex(
-      (header) => header === "broadcastname"
+      (header) => header === "broadcastname",
     );
     const templateIndex = headers.findIndex(
-      (header) => header === "templatename"
+      (header) => header === "templatename",
     );
     const uniqueNumbers = new Set();
     const parsedContacts = [];
@@ -86,7 +86,7 @@ const ChatPage = () => {
       const contactsFromCsv = parseContactsFromCsv(loadEvent.target.result);
       if (!contactsFromCsv.length) {
         toast.warning(
-          "File CSV tidak memiliki kontak REPLIED atau nomor yang valid."
+          "File CSV tidak memiliki kontak REPLIED atau nomor yang valid.",
         );
         return;
       }
@@ -201,13 +201,13 @@ const ChatPage = () => {
             </Card>
           </div>
           {/* right side information*/}
-          {width > breakpoints.lg && openinfo && activechat && (
+          {/* {width > breakpoints.lg && openinfo && activechat && (
             <div className="flex-none w-[285px]">
               <Card bodyClass="p-0 h-full" className="h-full">
                 <Info />
               </Card>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

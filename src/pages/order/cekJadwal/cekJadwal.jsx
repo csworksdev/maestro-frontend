@@ -1052,17 +1052,22 @@ const CekJadwal = () => {
             );
 
             // Jika free langsung render PelatihLibur
+
             if (orders[0]?.is_free) {
               return (
                 <div className="flex min-h-[56px] flex-col items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 p-1.5 shadow-sm shadow-rose-100/60">
                   <CompletedScheduleHint schedules={completedOrders} />
                   <PelatihLibur />
-                  <PelatihKosong
-                    pool={pool}
-                    trainer={item}
-                    hari={timeSlot.hari}
-                    jam={slotObj.jam}
-                  />
+                  {orders[orders.length - 1]?.is_pending_reschedule ? (
+                    <div>{orders[orders.length - 1]?.status}</div>
+                  ) : (
+                    <PelatihKosong
+                      pool={pool}
+                      trainer={item}
+                      hari={timeSlot.hari}
+                      jam={slotObj.jam}
+                    />
+                  )}
                 </div>
               );
             }
@@ -1309,12 +1314,17 @@ const CekJadwal = () => {
                   />
                 )}
 
-                <PelatihKosong
-                  pool={pool}
-                  trainer={item}
-                  hari={timeSlot.hari}
-                  jam={slotObj.jam}
-                />
+                {orders[orders.length - 1]?.is_pending_reschedule ? (
+                  <PendingReschedule />
+                ) : (
+                  // <div>asd</div>
+                  <PelatihKosong
+                    pool={pool}
+                    trainer={item}
+                    hari={timeSlot.hari}
+                    jam={slotObj.jam}
+                  />
+                )}
               </div>
             );
           }),
@@ -1564,6 +1574,23 @@ const CekJadwal = () => {
       </div>
     );
   });
+
+  const PendingReschedule = () => {
+    return (
+      <div className="flex justify-center items-center">
+        <Tooltip placement="top" arrow content="Sedang menunggu reschedule">
+          <button className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-50 hover:bg-yellow-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300/70">
+            <Icon
+              icon="heroicons-outline:x-circle"
+              width="12"
+              height="12"
+              className="text-yellow-600"
+            />
+          </button>
+        </Tooltip>
+      </div>
+    );
+  };
 
   const PerpanjangPaket = React.memo(
     ({ order_id, slot, buttonClassName = "", iconClassName = "" }) => {
