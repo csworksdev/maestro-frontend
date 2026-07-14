@@ -107,11 +107,11 @@ const Produk = () => {
   });
 
   const actions = [
-    // {
-    //   name: "Edit",
-    //   icon: "heroicons:pencil-square",
-    //   onClick: (row) => handleEdit(row.row.original),
-    // },
+    {
+      name: "Edit",
+      icon: "heroicons:pencil-square",
+      onClick: (row) => handleEdit(row.row.original),
+    },
     {
       name: "Delete",
       icon: "heroicons-outline:trash",
