@@ -27,6 +27,7 @@ import EditModal from "@/pages/order/active/editModal";
 import { toProperCase } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
 import Badge from "@/components/ui/Badge";
+import { Tab } from "@headlessui/react";
 
 const parseMutasiStatus = (value) => {
   if (typeof value === "boolean") return value;
@@ -43,6 +44,9 @@ const parseMutasiStatus = (value) => {
 const RekapBulanan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [listData, setListData] = useState({ results: [] });
+  const [listDataBase, setListDataBase] = useState({ results: [] });
+  const [listDataMutasiIn, setListDataMutasiIn] = useState({ results: [] });
+  const [listDataMutasiOut, setListDataMutasiOut] = useState({ results: [] });
   const [searchQuery, setSearchQuery] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -171,8 +175,30 @@ const RekapBulanan = () => {
         selectedPeriode.name,
         selectedTrainer.trainer_id,
       );
-      setListData(response.data);
-      reSummarize();
+      const baseData = response?.data ?? { results: [] };
+      const results = baseData.results ?? [];
+
+      setListDataBase(baseData);
+      setListData({
+        ...baseData,
+        results: results.filter((item) => !parseMutasiStatus(item.is_mutasi)),
+      });
+      setListDataMutasiIn({
+        ...baseData,
+        results: results.filter(
+          (item) =>
+            parseMutasiStatus(item.is_mutasi) &&
+            item.mutasi_direction === "mutasi_dari",
+        ),
+      });
+      setListDataMutasiOut({
+        ...baseData,
+        results: results.filter(
+          (item) =>
+            parseMutasiStatus(item.is_mutasi) &&
+            item.mutasi_direction === "mutasi_ke",
+        ),
+      });
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     } finally {
@@ -197,7 +223,7 @@ const RekapBulanan = () => {
       });
       let unpaidOrderId = [];
 
-      listData.results.forEach((item) => {
+      listDataBase.results.forEach((item) => {
         for (let index = 1; index <= 8; index++) {
           var objDate = "p" + index;
           var objNamePaid = "p" + index + "_paid";
@@ -269,7 +295,7 @@ const RekapBulanan = () => {
 
   useEffect(() => {
     reSummarize();
-  }, [listData, selectedPeriode]);
+  }, [listDataBase, selectedPeriode]);
 
   useEffect(() => {
     if (!editModalVisible && isEdited) {
@@ -1065,7 +1091,7 @@ const RekapBulanan = () => {
                 </button>
               )}
             </div>
-            {listData.results.length > 0 ? (
+            {listDataBase.results.length > 0 ? (
               <div className="flex flex-row-reverse content-end pt-3 flex-1">
                 <button
                   type="button"
@@ -1093,19 +1119,75 @@ const RekapBulanan = () => {
               </div>
             ) : null}
           </form>
+          <PeriodSummary />
           {filtersLoading || isLoading ? (
             <SkeletionTable />
-          ) : listData.results.length > 0 ? (
-            <>
-              <PeriodSummary />
-              <Table
-                tableId={"rekap-bulanan"}
-                listData={listData}
-                listColumn={COLUMNS}
-              />
-            </>
           ) : (
-            <p>No data available</p>
+            <Tab.Group>
+              <Tab.List className="flex flex-wrap gap-2 py-4">
+                {[
+                  { label: "Reguler", count: listData.results.length },
+                  {
+                    label: "Mutasi Masuk",
+                    count: listDataMutasiIn.results.length,
+                  },
+                  {
+                    label: "Mutasi Keluar",
+                    count: listDataMutasiOut.results.length,
+                  },
+                ].map((item) => (
+                  <Tab
+                    key={item.label}
+                    className={({ selected }) =>
+                      `rounded px-4 py-2 text-sm font-medium ${
+                        selected
+                          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      }`
+                    }
+                  >
+                    {item.label} ({item.count})
+                  </Tab>
+                ))}
+              </Tab.List>
+              <Tab.Panels>
+                <Tab.Panel>
+                  {listData.results.length > 0 ? (
+                    <>
+                      <Table
+                        tableId={"rekap-bulanan"}
+                        listData={listData}
+                        listColumn={COLUMNS}
+                      />
+                    </>
+                  ) : (
+                    <p>No data available</p>
+                  )}
+                </Tab.Panel>
+                <Tab.Panel>
+                  {listDataMutasiIn.results.length > 0 ? (
+                    <Table
+                      tableId={"rekap-bulanan-mutasi-in"}
+                      listData={listDataMutasiIn}
+                      listColumn={COLUMNS}
+                    />
+                  ) : (
+                    <p>No data available</p>
+                  )}
+                </Tab.Panel>
+                <Tab.Panel>
+                  {listDataMutasiOut.results.length > 0 ? (
+                    <Table
+                      tableId={"rekap-bulanan-mutasi-out"}
+                      listData={listDataMutasiOut}
+                      listColumn={COLUMNS}
+                    />
+                  ) : (
+                    <p>No data available</p>
+                  )}
+                </Tab.Panel>
+              </Tab.Panels>
+            </Tab.Group>
           )}
           {detailModalVisible && (
             <Modal
