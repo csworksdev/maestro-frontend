@@ -367,6 +367,7 @@ const AddJadwal = ({
                   student: student.student_id,
                   meet: i + 1,
                   is_presence: false,
+                  presence_by: inputValue.trainer.trainer_id,
                 };
 
                 orderDetailPromises.push(AddOrderDetail(temp)); // tanpa await
