@@ -9,6 +9,7 @@ import AdminRoutes from "./layout/routes/adminRoutes";
 import ChiefRoutes from "./layout/routes/chiefRoutes";
 import FinanceRoutes from "./layout/routes/financeRoutes";
 import OpxRoutes from "./layout/routes/operationalRoutes";
+import HydroRoutes from "./layout/routes/hydroRoutes";
 import { useFcmToken } from "./hooks/useFCMToken";
 import Redir from "./pages/redir";
 import { useSubdomainStore } from "./redux/slicers/subdomainSlice";
@@ -39,6 +40,7 @@ const App = () => {
     chief: <ChiefRoutes />,
     finance: <FinanceRoutes />,
     opx: <OpxRoutes />,
+    hydro: <HydroRoutes />,
   };
 
   if (subdomain === "coach") {
