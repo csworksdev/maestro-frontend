@@ -6,9 +6,20 @@ import {
   getCookie,
 } from "@/utils/authCookies";
 
+// export const login = async (data) => {
+//   try {
+//     let response = await axiosConfig.post("/auth/users/login/", data, {
+//       withCredentials: false,
+//     });
+//     return response;
+//   } catch (error) {
+//     console.error("Error fetching data:", error);
+//   }
+// };
+
 export const login = async (data) => {
   try {
-    let response = await axiosConfig.post("/auth/users/login/", data, {
+    let response = await axiosConfig.post("/auth/users/login_v2/", data, {
       withCredentials: false,
     });
     return response;
