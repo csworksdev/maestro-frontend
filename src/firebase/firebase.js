@@ -20,14 +20,18 @@ export const firebaseConfig = {
   appId: getFirebaseEnvValue("VITE_FIREBASE_APP_ID"),
 };
 
+const getMissingFirebaseConfigKeys = () => {
+  return Object.entries(firebaseConfig)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+};
+
 const hasRequiredFirebaseConfig = () => {
-  return Object.values(firebaseConfig).every((value) => Boolean(value));
+  return getMissingFirebaseConfigKeys().length === 0;
 };
 
 if (import.meta.env?.DEV) {
-  const missingKeys = Object.entries(firebaseConfig)
-    .filter(([, value]) => !value)
-    .map(([key]) => key);
+  const missingKeys = getMissingFirebaseConfigKeys();
 
   if (missingKeys.length) {
     console.warn(
@@ -51,6 +55,12 @@ export const getMessagingInstance = () => {
   }
 
   if (!hasRequiredFirebaseConfig()) {
+    const missingKeys = getMissingFirebaseConfigKeys();
+    console.warn(
+      `[FCM] Konfigurasi Firebase belum lengkap (${missingKeys.join(
+        ", ",
+      )}). FCM dilewati.`,
+    );
     return Promise.resolve(null);
   }
 
