@@ -382,9 +382,9 @@ export const menuHydro = [
     link: "dashboard",
   },
   {
-    title: "Dashboard Cabang",
-    icon: "heroicons-outline:chart-pie",
-    link: "daily",
+    title: "Hydro Chart",
+    icon: "heroicons-outline:chart-bar",
+    link: "chart",
   },
   {
     isHeadr: true,
