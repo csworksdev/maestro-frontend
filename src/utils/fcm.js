@@ -12,17 +12,6 @@ const needsUserActivation = () =>
   !!navigator.userActivation &&
   navigator.userActivation.isActive === false;
 
-export const getNotificationPermission = () => {
-  if (typeof Notification === "undefined") {
-    return "unsupported";
-  }
-
-  return Notification.permission;
-};
-
-export const canUseFcmToken = () =>
-  getNotificationPermission() === "granted";
-
 export const requestNotificationPermissionSafely = async () => {
   if (typeof Notification === "undefined") {
     console.warn("[FCM] Notification API tidak tersedia di browser.");
@@ -37,6 +26,9 @@ export const requestNotificationPermissionSafely = async () => {
     Notification.permission === "default" &&
     needsUserActivation()
   ) {
+    console.warn(
+      "[FCM] Browser memerlukan interaksi user (klik/tap) sebelum memunculkan prompt notifikasi."
+    );
     return "default";
   }
 
@@ -50,10 +42,6 @@ export const requestNotificationPermissionSafely = async () => {
 
 // ✅ Cek permission dulu
 export const requestAndSendToken = async (onTokenSaved) => {
-  if (!canUseFcmToken()) {
-    return null;
-  }
-
   const messaging = await getMessagingInstance();
   if (!messaging) {
     console.warn("[FCM] Browser ini tidak mendukung push notification web.");

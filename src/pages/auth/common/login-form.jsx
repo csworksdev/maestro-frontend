@@ -12,7 +12,7 @@ import { login } from "@/axios/auth/auth";
 
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
-import { canUseFcmToken, requestAndSendToken } from "@/utils/fcm";
+import { requestAndSendToken } from "@/utils/fcm";
 import { axiosConfig } from "@/axios/config";
 
 const schema = yup.object({
@@ -56,34 +56,33 @@ const LoginForm = () => {
           DateTime.now().toFormat("c") - 1
         );
 
+        // ✅ Kirim FCM token setelah login berhasil
+        await requestAndSendToken(async (token) => {
+          try {
+            await axiosConfig.post(
+              "/api/notifikasi/save-token/",
+              {
+                token,
+                device_type: "web",
+                origin: window.location.hostname,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${access}`,
+                },
+              }
+            );
+            // console.log("✅ FCM token disimpan di server");
+          } catch (err) {
+            console.error(
+              "❌ Gagal simpan FCM token:",
+              err.response?.data || err.message
+            );
+          }
+        });
+
         // ✅ Baru pindah ke dashboard
         navigate("/");
-
-        if (canUseFcmToken()) {
-          requestAndSendToken(async (token) => {
-            try {
-              await axiosConfig.post(
-                "/api/notifikasi/save-token/",
-                {
-                  token,
-                  device_type: "web",
-                  origin: window.location.hostname,
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${access}`,
-                  },
-                }
-              );
-              // console.log("✅ FCM token disimpan di server");
-            } catch (err) {
-              console.error(
-                "❌ Gagal simpan FCM token:",
-                err.response?.data || err.message
-              );
-            }
-          });
-        }
       } else {
         Swal.fire({
           title: "username or password invalid",
