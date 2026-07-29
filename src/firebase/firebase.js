@@ -11,6 +11,23 @@ const getFirebaseEnvValue = (key) => {
   return typeof value === "string" && value.trim().length > 0 ? value : "";
 };
 
+const getRuntimeFirebaseConfig = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const runtimeConfig = window.__FIREBASE_CONFIG__;
+  if (
+    runtimeConfig &&
+    typeof runtimeConfig === "object" &&
+    Object.values(runtimeConfig).every((value) => Boolean(value))
+  ) {
+    return runtimeConfig;
+  }
+
+  return null;
+};
+
 export const firebaseConfig = {
   apiKey: getFirebaseEnvValue("VITE_FIREBASE_API_KEY"),
   authDomain: getFirebaseEnvValue("VITE_FIREBASE_AUTH_DOMAIN"),
@@ -21,7 +38,9 @@ export const firebaseConfig = {
 };
 
 const getMissingFirebaseConfigKeys = () => {
-  return Object.entries(firebaseConfig)
+  const configSource = getRuntimeFirebaseConfig() || firebaseConfig;
+
+  return Object.entries(configSource)
     .filter(([, value]) => !value)
     .map(([key]) => key);
 };
@@ -46,7 +65,8 @@ let firebaseApp = null;
 let messagingPromise = null;
 
 if (hasRequiredFirebaseConfig()) {
-  firebaseApp = initializeApp(firebaseConfig);
+  const configToUse = getRuntimeFirebaseConfig() || firebaseConfig;
+  firebaseApp = initializeApp(configToUse);
 }
 
 export const getMessagingInstance = () => {

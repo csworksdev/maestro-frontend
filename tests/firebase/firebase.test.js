@@ -43,4 +43,31 @@ describe("firebase messaging initialization", () => {
     expect(getMessagingMock).not.toHaveBeenCalled();
     expect(isSupportedMock).not.toHaveBeenCalled();
   });
+
+  it("uses runtime Firebase config when build env is missing", async () => {
+    vi.stubEnv("VITE_FIREBASE_API_KEY", "");
+    vi.stubEnv("VITE_FIREBASE_AUTH_DOMAIN", "");
+    vi.stubEnv("VITE_FIREBASE_PROJECT_ID", "");
+    vi.stubEnv("VITE_FIREBASE_STORAGE_BUCKET", "");
+    vi.stubEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", "");
+    vi.stubEnv("VITE_FIREBASE_APP_ID", "");
+
+    window.__FIREBASE_CONFIG__ = {
+      apiKey: "runtime-api-key",
+      authDomain: "runtime.firebaseapp.com",
+      projectId: "runtime-project",
+      storageBucket: "runtime.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abc",
+    };
+
+    const { getMessagingInstance } = await import("@/firebase/firebase");
+
+    await expect(getMessagingInstance()).resolves.toEqual({
+      name: "messaging",
+    });
+    expect(initializeAppMock).toHaveBeenCalledWith(window.__FIREBASE_CONFIG__);
+    expect(getMessagingMock).toHaveBeenCalled();
+    expect(isSupportedMock).toHaveBeenCalled();
+  });
 });
