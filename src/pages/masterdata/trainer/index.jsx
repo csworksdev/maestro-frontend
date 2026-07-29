@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { setLoading, useLoadingStore } from "@/redux/slicers/loadingSlice";
 import Icon from "@/components/ui/Icon";
 import DefaultAvatar from "@/assets/images/all-img/user.png";
+import { buildWsUrl } from "@/utils/wsUrl";
 
 const getTrainerAvatar = (trainer) => {
   const avatar =
@@ -73,6 +74,70 @@ const getMembershipDuration = (regDate) => {
   return `${years} tahun, ${months} bulan, ${days} hari`;
 };
 
+const normalizeLookupKey = (value) => {
+  if (value === null || value === undefined) return "";
+  return String(value).trim().toLowerCase();
+};
+
+const getTrainerLookupKeys = (trainer) =>
+  [
+    trainer?.trainer_id,
+    trainer?.trainerId,
+    trainer?.id,
+    trainer?.fullname,
+    trainer?.full_name,
+    trainer?.name,
+    trainer?.nickname,
+  ]
+    .map(normalizeLookupKey)
+    .filter(Boolean);
+
+const getTrainerWorkTypeValue = (trainer) =>
+  trainer?.contract_type_display ??
+  trainer?.contractTypeDisplay ??
+  trainer?.contract_type ??
+  trainer?.contractType ??
+  (trainer?.is_fulltime === true
+    ? "Fulltime"
+    : trainer?.is_fulltime === false
+      ? "Freelance"
+      : "");
+
+const collectScheduleWorkTypes = (value, result = {}) => {
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectScheduleWorkTypes(item, result));
+    return result;
+  }
+
+  if (!value || typeof value !== "object") {
+    return result;
+  }
+
+  const trainer =
+    value.trainer && typeof value.trainer === "object" ? value.trainer : null;
+  const workType = getTrainerWorkTypeValue(value) || getTrainerWorkTypeValue(trainer);
+
+  if (workType) {
+    getTrainerLookupKeys(value).forEach((key) => {
+      result[key] = workType;
+    });
+    getTrainerLookupKeys(trainer).forEach((key) => {
+      result[key] = workType;
+    });
+  }
+
+  Object.values(value).forEach((item) => collectScheduleWorkTypes(item, result));
+  return result;
+};
+
+const getTrainerWorkType = (trainer, scheduleWorkTypes) => {
+  const scheduleWorkType = getTrainerLookupKeys(trainer)
+    .map((key) => scheduleWorkTypes[key])
+    .find(Boolean);
+
+  return scheduleWorkType || getTrainerWorkTypeValue(trainer) || "-";
+};
+
 const InfoItem = ({ icon, label, value, className = "", valueClassName = "" }) => (
   <div
     className={`rounded border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900 ${className}`}
@@ -97,6 +162,8 @@ const Trainer = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [scheduleWorkTypes, setScheduleWorkTypes] = useState({});
+  const scheduleSocketRef = useRef(null);
   const queryClient = useQueryClient();
 
   const trainerQuery = useQuery({
@@ -119,6 +186,53 @@ const Trainer = () => {
   useEffect(() => {
     setLoading(trainerQuery.isFetching);
   }, [trainerQuery.isFetching]);
+
+  useEffect(() => {
+    const wsUrl = buildWsUrl("/ws/schedule/");
+    if (!wsUrl) {
+      return undefined;
+    }
+
+    const ws = new WebSocket(wsUrl);
+    scheduleSocketRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        const payload = message?.payload ?? message?.data ?? message;
+        const nextWorkTypes = collectScheduleWorkTypes(payload);
+
+        if (Object.keys(nextWorkTypes).length) {
+          setScheduleWorkTypes((current) => ({
+            ...current,
+            ...nextWorkTypes,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to parse trainer work type websocket payload:", error);
+      }
+    };
+
+    ws.onclose = () => {
+      if (scheduleSocketRef.current === ws) {
+        scheduleSocketRef.current = null;
+      }
+    };
+
+    return () => {
+      ws.onmessage = null;
+      ws.onclose = null;
+      if (
+        ws.readyState === WebSocket.OPEN ||
+        ws.readyState === WebSocket.CONNECTING
+      ) {
+        ws.close(1000);
+      }
+      if (scheduleSocketRef.current === ws) {
+        scheduleSocketRef.current = null;
+      }
+    };
+  }, []);
 
   const handlePageChange = (page) => {
     setPageIndex(page);
@@ -277,7 +391,7 @@ const Trainer = () => {
                           <InfoItem
                             icon="heroicons-outline:briefcase"
                             label="Tipe Kerja"
-                            value={trainer?.is_fulltime ? "Fulltime" : "Freelance"}
+                            value={getTrainerWorkType(trainer, scheduleWorkTypes)}
                             className="col-span-2"
                           />
                           <InfoItem

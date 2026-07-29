@@ -14,11 +14,34 @@ import { getCabangAll } from "@/axios/referensi/cabang";
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
 
+const contractTypeOptions = [
+  { value: "Fulltime", label: "Fulltime" },
+  { value: "Parttime", label: "Parttime" },
+  { value: "Freelance", label: "Freelance" },
+];
+
+const normalizeContractType = (value, isFulltime) => {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (normalized === "fulltime") return "Fulltime";
+  if (normalized === "parttime") return "Parttime";
+  if (normalized === "freelance") return "Freelance";
+
+  if (isFulltime === true) return "Fulltime";
+  if (isFulltime === false) return "Freelance";
+
+  return "Freelance";
+};
+
 const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
   const [selectOption, setSelectOption] = useState(false);
   const [mobileOption, setMobileOption] = useState(false);
+  const [contractTypeOption, setContractTypeOption] = useState("Freelance");
   const [branchOption, setBranchOption] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,6 +92,12 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
       setSelectOption(data.is_active);
       setMobileOption(data.is_fulltime);
+      setContractTypeOption(
+        normalizeContractType(
+          data.contract_type_display ?? data.contract_type,
+          data.is_fulltime
+        )
+      );
     }
   }, [isUpdate, data, setValue]);
 
@@ -131,8 +160,12 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const handleMobileOption = (e) => {
     setMobileOption(e.target.value == "false" ? false : true);
   };
+  const handleContractTypeOption = (e) => {
+    setContractTypeOption(e.target.value);
+  };
 
   const onSubmit = (newData) => {
+    const contractType = normalizeContractType(contractTypeOption, mobileOption);
     const updatedData = {
       ...data,
       fullname: newData.fullname,
@@ -140,7 +173,9 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
-      is_fulltime: mobileOption,
+      is_fulltime: contractType === "Fulltime",
+      contract_type: contractType,
+      contract_type_display: contractType,
       is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,
@@ -293,6 +328,22 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
               value={option.value}
               checked={selectOption === option.value}
               onChange={handleOption}
+              disabled={loading}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap space-xy-5">
+          <label className="form-label" htmlFor="contract_type">
+            Tipe Kontrak
+          </label>
+          {contractTypeOptions.map((option) => (
+            <Radio
+              key={option.value}
+              label={option.label}
+              name="contract_type"
+              value={option.value}
+              checked={contractTypeOption === option.value}
+              onChange={handleContractTypeOption}
               disabled={loading}
             />
           ))}
