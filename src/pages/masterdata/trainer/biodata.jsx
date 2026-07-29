@@ -16,7 +16,7 @@ import Textinput from "@/components/ui/Textinput";
 
 const contractTypeOptions = [
   { value: "Fulltime", label: "Fulltime" },
-  { value: "Parttime", label: "Parttime" },
+  { value: "Hybrid", label: "Hybrid" },
   { value: "Freelance", label: "Freelance" },
 ];
 
@@ -27,7 +27,7 @@ const normalizeContractType = (value, isFulltime) => {
     .replace(/[\s_-]/g, "");
 
   if (normalized === "fulltime") return "Fulltime";
-  if (normalized === "parttime") return "Parttime";
+  if (normalized === "hybrid") return "Hybrid";
   if (normalized === "freelance") return "Freelance";
 
   if (isFulltime === true) return "Fulltime";
