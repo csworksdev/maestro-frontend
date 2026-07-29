@@ -120,6 +120,34 @@ const normalizeLookupKey = (value) => {
   return String(value).trim().toLowerCase();
 };
 
+const getTrainerWorkStatus = (trainer) =>
+  trainer?.contract_type_display ??
+  trainer?.contractTypeDisplay ??
+  trainer?.contract_type ??
+  trainer?.contractType ??
+  (trainer?.is_fulltime === true
+    ? "Fulltime"
+    : trainer?.is_fulltime === false
+      ? "Freelance"
+      : "");
+
+const getTrainerWorkStatusClassName = (status) => {
+  const normalizedStatus = normalizeLookupKey(status);
+
+  if (normalizedStatus.includes("full")) {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
+
+  if (
+    normalizedStatus.includes("free") ||
+    normalizedStatus.includes("part")
+  ) {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+
+  return "border-slate-200 bg-white/80 text-slate-600";
+};
+
 const getScheduleTimeValue = (entry) =>
   entry?.jam ??
   entry?.time ??
@@ -735,6 +763,8 @@ const CekJadwal = () => {
       trainer_id: fillData.trainer_id ?? baseJadwal.trainer_id,
       fullname: fillData.fullname ?? baseJadwal.fullname,
       nickname: fillData.nickname ?? baseJadwal.nickname,
+      contract_type_display:
+        getTrainerWorkStatus(fillData) ?? baseJadwal.contract_type_display,
       phone: fillData.phone ?? baseJadwal.phone,
       gender: fillData.gender ?? baseJadwal.gender,
       kolam: fillData.kolam ?? baseJadwal.kolam,
@@ -1440,31 +1470,45 @@ const CekJadwal = () => {
                 scrollHeight ? { maxHeight: `${scrollHeight}px` } : undefined
               }
             >
-              {dataJadwal.map((de) => (
-                <div
-                  key={de.trainer_id}
-                  className="grid grid-cols-15 gap-2 w-full border-b border-slate-100 px-2 py-1 transition hover:bg-white dark:border-slate-800 dark:hover:bg-slate-900/70"
-                >
-                  <div
-                    className={`p-2 min-h-[68px] flex flex-col rounded-xl border border-white/50 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
-                      de.gender === "L"
-                        ? "bg-blue-100 text-blue-900 ring-1 ring-blue-200/70"
-                        : "bg-pink-100 text-pink-900 ring-1 ring-pink-200/70"
-                    }`}
-                  >
-                    <span className="text-[clamp(8px,0.7vw,10px)] p-1 font-semibold">
-                      {de.nickname && (
-                        <>
-                          {toProperCase(de.nickname)}
-                          <br />({de.total_order})
-                        </>
-                      )}
-                    </span>
-                  </div>
+              {dataJadwal.map((de) => {
+                const workStatus = getTrainerWorkStatus(de);
 
-                  <GridKolamDetail item={de} pool={item} />
-                </div>
-              ))}
+                return (
+                  <div
+                    key={de.trainer_id}
+                    className="grid grid-cols-15 gap-2 w-full border-b border-slate-100 px-2 py-1 transition hover:bg-white dark:border-slate-800 dark:hover:bg-slate-900/70"
+                  >
+                    <div
+                      className={`p-2 min-h-[78px] flex flex-col rounded-xl border border-white/50 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
+                        de.gender === "L"
+                          ? "bg-blue-100 text-blue-900 ring-1 ring-blue-200/70"
+                          : "bg-pink-100 text-pink-900 ring-1 ring-pink-200/70"
+                      }`}
+                    >
+                      <span className="text-[clamp(8px,0.7vw,10px)] p-1 font-semibold leading-tight">
+                        {de.nickname && (
+                          <>
+                            {toProperCase(de.nickname)}
+                            <br />({de.total_order})
+                          </>
+                        )}
+                      </span>
+                      {workStatus && (
+                        <span
+                          className={`mx-1 inline-flex max-w-full items-center justify-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-none ${getTrainerWorkStatusClassName(
+                            workStatus,
+                          )}`}
+                          title={`Status kerja: ${workStatus}`}
+                        >
+                          {workStatus}
+                        </span>
+                      )}
+                    </div>
+
+                    <GridKolamDetail item={de} pool={item} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getToken } from "firebase/messaging";
 import { getMessagingInstance } from "@/firebase/firebase";
 import {
+  canUseFcmToken,
   sendTokenToBackend,
   removeFcmToken as removeFcmTokenUtil,
   requestNotificationPermissionSafely,
@@ -17,6 +18,10 @@ export const useFcmToken = () => {
   useEffect(() => {
     const fetchToken = async () => {
       try {
+        if (!canUseFcmToken()) {
+          return;
+        }
+
         const messaging = await getMessagingInstance();
         if (!messaging) {
           console.warn(

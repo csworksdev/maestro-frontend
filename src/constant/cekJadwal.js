@@ -1,6 +1,7 @@
 export const BaseJadwal = {
   trainer_id: "",
   fullname: "",
+  contract_type_display: "",
   gender: "",
   kolam: [],
   total_order: 0,
