@@ -66,7 +66,9 @@ const getMembershipDuration = (regDate) => {
 
   if (!startDate.isValid || startDate > today) return "-";
 
-  const duration = today.diff(startDate, ["years", "months", "days"]).toObject();
+  const duration = today
+    .diff(startDate, ["years", "months", "days"])
+    .toObject();
   const years = Math.floor(duration.years || 0);
   const months = Math.floor(duration.months || 0);
   const days = Math.floor(duration.days || 0);
@@ -92,16 +94,9 @@ const getTrainerLookupKeys = (trainer) =>
     .map(normalizeLookupKey)
     .filter(Boolean);
 
-const getTrainerWorkTypeValue = (trainer) =>
-  trainer?.contract_type_display ??
-  trainer?.contractTypeDisplay ??
-  trainer?.contract_type ??
-  trainer?.contractType ??
-  (trainer?.is_fulltime === true
-    ? "Fulltime"
-    : trainer?.is_fulltime === false
-      ? "Freelance"
-      : "");
+const getTrainerWorkTypeValue = (trainer) => {
+  return trainer?.contract_type_display;
+};
 
 const collectScheduleWorkTypes = (value, result = {}) => {
   if (Array.isArray(value)) {
@@ -115,7 +110,8 @@ const collectScheduleWorkTypes = (value, result = {}) => {
 
   const trainer =
     value.trainer && typeof value.trainer === "object" ? value.trainer : null;
-  const workType = getTrainerWorkTypeValue(value) || getTrainerWorkTypeValue(trainer);
+  const workType =
+    getTrainerWorkTypeValue(value) || getTrainerWorkTypeValue(trainer);
 
   if (workType) {
     getTrainerLookupKeys(value).forEach((key) => {
@@ -126,7 +122,9 @@ const collectScheduleWorkTypes = (value, result = {}) => {
     });
   }
 
-  Object.values(value).forEach((item) => collectScheduleWorkTypes(item, result));
+  Object.values(value).forEach((item) =>
+    collectScheduleWorkTypes(item, result),
+  );
   return result;
 };
 
@@ -138,7 +136,13 @@ const getTrainerWorkType = (trainer, scheduleWorkTypes) => {
   return scheduleWorkType || getTrainerWorkTypeValue(trainer) || "-";
 };
 
-const InfoItem = ({ icon, label, value, className = "", valueClassName = "" }) => (
+const InfoItem = ({
+  icon,
+  label,
+  value,
+  className = "",
+  valueClassName = "",
+}) => (
   <div
     className={`rounded border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900 ${className}`}
   >
@@ -209,7 +213,10 @@ const Trainer = () => {
           }));
         }
       } catch (error) {
-        console.error("Failed to parse trainer work type websocket payload:", error);
+        console.error(
+          "Failed to parse trainer work type websocket payload:",
+          error,
+        );
       }
     };
 
@@ -391,7 +398,11 @@ const Trainer = () => {
                           <InfoItem
                             icon="heroicons-outline:briefcase"
                             label="Tipe Kerja"
-                            value={getTrainerWorkType(trainer, scheduleWorkTypes)}
+                            value={
+                              trainer?.contract_type_display ||
+                              trainer?.contract_type ||
+                              "-"
+                            }
                             className="col-span-2"
                           />
                           <InfoItem

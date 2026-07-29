@@ -15,25 +15,25 @@ import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
 
 const contractTypeOptions = [
-  { value: "Fulltime", label: "Fulltime" },
-  { value: "Hybrid", label: "Hybrid" },
-  { value: "Freelance", label: "Freelance" },
+  { value: "fulltime", label: "Fulltime" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "freelance", label: "Freelance" },
 ];
 
-const normalizeContractType = (value, isFulltime) => {
+const normalizeContractType = (value) => {
   const normalized = String(value ?? "")
     .trim()
     .toLowerCase()
     .replace(/[\s_-]/g, "");
 
-  if (normalized === "fulltime") return "Fulltime";
-  if (normalized === "hybrid") return "Hybrid";
-  if (normalized === "freelance") return "Freelance";
+  if (normalized === "fulltime") return "fulltime";
+  if (normalized === "hybrid") return "hybrid";
+  if (normalized === "freelance") return "freelance";
 
-  if (isFulltime === true) return "Fulltime";
-  if (isFulltime === false) return "Freelance";
+  // if (isFulltime === true) return "Fulltime";
+  // if (isFulltime === false) return "Freelance";
 
-  return "Freelance";
+  return normmalized;
 };
 
 const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
@@ -41,7 +41,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const isUpdate = isupdate === "true";
   const [selectOption, setSelectOption] = useState(false);
   const [mobileOption, setMobileOption] = useState(false);
-  const [contractTypeOption, setContractTypeOption] = useState("Freelance");
+  const [contractTypeOption, setContractTypeOption] = useState("freelance");
   const [branchOption, setBranchOption] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,10 +93,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       setSelectOption(data.is_active);
       setMobileOption(data.is_fulltime);
       setContractTypeOption(
-        normalizeContractType(
-          data.contract_type_display ?? data.contract_type,
-          data.is_fulltime
-        )
+        normalizeContractType(data.contract_type_display ?? data.contract_type),
       );
     }
   }, [isUpdate, data, setValue]);
@@ -137,7 +134,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       if (res.status) {
         Swal.fire("Added!", "Your file has been added.", "success").then(() =>
           // navigate(-1)
-          updatedData(data)
+          updatedData(data),
         );
       }
     });
@@ -148,7 +145,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       if (res.status) {
         Swal.fire("Edited!", "Your file has been edited.", "success").then(() =>
           // navigate(-1)
-          updatedData(data)
+          updatedData(data),
         );
       }
     });
@@ -165,7 +162,10 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   };
 
   const onSubmit = (newData) => {
-    const contractType = normalizeContractType(contractTypeOption, mobileOption);
+    const contractType = normalizeContractType(
+      contractTypeOption,
+      mobileOption,
+    );
     const updatedData = {
       ...data,
       fullname: newData.fullname,
