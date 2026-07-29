@@ -5,6 +5,7 @@ import {
   menuSuperUser,
   menuTrainer,
   menuOpx,
+  menuHydro,
 } from "./data";
 
 const getMenuByRole = (role = "") => {
@@ -20,6 +21,8 @@ const getMenuByRole = (role = "") => {
       return [...menuOpx];
     case "Chief":
       return [...menuChief];
+    case "Hydro":
+      return [...menuHydro];
     default:
       return [
         ...menuChief,
@@ -27,6 +30,7 @@ const getMenuByRole = (role = "") => {
         ...menuOpx,
         ...menuAdminNew,
         ...menuFinance,
+        ...menuHydro,
       ];
   }
 };

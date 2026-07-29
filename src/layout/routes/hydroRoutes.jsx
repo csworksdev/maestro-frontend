@@ -9,6 +9,7 @@ import AuthenticatedRoute from "../AuthenticatedRoute";
 // Auth Pages
 
 // Dashboard
+const HydroDashboardChart = lazy(() => import("@/pages/hydro/dashboardChart"));
 const DashboardOkupansi = lazy(
   () => import("@/pages/newDashboard/operasional/okupansi"),
 );
@@ -73,6 +74,7 @@ const Reschedule = lazy(() => import("@/pages/reschedule/admin"));
 const HydroRoutes = () => {
   return (
     <Routes>
+      {/* <Route path="/hydro/dashboard/chart/" element={<HydroDashboardChart />} /> */}
       {/* Public Routes for Admin */}
       {/* <Route
         path="/auth"
@@ -98,6 +100,7 @@ const HydroRoutes = () => {
       >
         <Route path="dashboard">
           <Route index element={<DashboardOperational />} />
+          <Route path="chart" element={<HydroDashboardChart />} />
 
           <Route path="operasional">
             <Route path="okupansi">
@@ -109,29 +112,8 @@ const HydroRoutes = () => {
             </Route>
           </Route>
         </Route>
+        <Route path="chart" element={<HydroDashboardChart />} />
         <Route path="daily" element={<DashboardDaily />} />
-        <Route path="order">
-          <Route index element={<Order />} />
-          {/* <Route path="add" element={<AddOrder />} />
-                          <Route path="Edit" element={<EditOrder />} /> */}
-          <Route path="detail" element={<DetailOrder />} />
-        </Route>
-        <Route path="cabang">
-          <Route index element={<Cabang />} />
-          <Route path="add" element={<AddCabang />} />
-          <Route path="Edit" element={<EditCabang />} />
-        </Route>
-        <Route path="list-izin">
-          <Route index element={<Leave />} />
-        </Route>
-        <Route path="reschedule">
-          <Route index element={<Reschedule />} />
-        </Route>
-        <Route path="kolam">
-          <Route index element={<Kolam />} />
-          <Route path="add" element={<EditKolam />} />
-          <Route path="Edit" element={<EditKolam />} />
-        </Route>
         <Route path="spesialisasi">
           <Route index element={<Specialization />} />
           <Route path="add" element={<EditSpecialization />} />
@@ -141,21 +123,6 @@ const HydroRoutes = () => {
           <Route index element={<Trainer />} />
           <Route path="add" element={<EditTrainer />} />
           <Route path="Edit" element={<EditTrainer />} />
-        </Route>
-        <Route path="cek-jadwal">
-          <Route index element={<CekJadwal />} />
-        </Route>
-        <Route path="rekap-bulanan">
-          <Route index element={<RekapBulanan />} />
-          <Route path="detailorderpelatih" element={<DetailOrder />} />
-        </Route>
-        <Route path="user">
-          <Route index element={<UMUser />} />
-          <Route path="add" element={<UMUserEdit />} />
-          <Route path="Edit" element={<UMUserEdit />} />
-        </Route>
-        <Route path="followup-perpanjang">
-          <Route index element={<FolloupPerpanjang />} />
         </Route>
         <Route index path="notifications" element={<NotificationPage />} />
         <Route path="*" element={<ErrorPage />} />

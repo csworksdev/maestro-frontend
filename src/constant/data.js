@@ -371,6 +371,42 @@ export const menuOpx = [
   // },
 ];
 
+export const menuHydro = [
+  {
+    isHeadr: true,
+    title: "Dashboard",
+  },
+  {
+    title: "Global Dashboard",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard",
+  },
+  {
+    title: "Hydro Chart",
+    icon: "heroicons-outline:chart-bar",
+    link: "chart",
+  },
+  {
+    isHeadr: true,
+    title: "Terapi",
+  },
+  {
+    title: "Pelatih",
+    icon: "heroicons-outline:users",
+    link: "trainer",
+  },
+  {
+    title: "Spesialisasi",
+    icon: "heroicons-outline:heart",
+    link: "spesialisasi",
+  },
+  // {
+  //   title: "Follow Up Perpanjang",
+  //   icon: "heroicons-outline:globe-americas",
+  //   link: "followup-perpanjang",
+  // },
+];
+
 export const menuAdmin = [
   {
     isHeadr: true,
