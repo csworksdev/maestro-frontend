@@ -6,23 +6,22 @@ import {
   isSupported as isMessagingSupported,
 } from "firebase/messaging";
 
-// Gunakan env vars supaya kredensial mudah diputar dan tidak hard-coded.
-const resolveConfigValue = (key, fallback = "") => {
-  const envKey = `VITE_FIREBASE_${key}`;
-  const value = import.meta.env?.[envKey];
-  if (value && typeof value === "string" && value.trim().length > 0) {
-    return value;
-  }
-  return fallback;
+const getFirebaseEnvValue = (key) => {
+  const value = import.meta.env?.[key];
+  return typeof value === "string" && value.trim().length > 0 ? value : "";
 };
 
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: getFirebaseEnvValue("VITE_FIREBASE_API_KEY"),
+  authDomain: getFirebaseEnvValue("VITE_FIREBASE_AUTH_DOMAIN"),
+  projectId: getFirebaseEnvValue("VITE_FIREBASE_PROJECT_ID"),
+  storageBucket: getFirebaseEnvValue("VITE_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: getFirebaseEnvValue("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: getFirebaseEnvValue("VITE_FIREBASE_APP_ID"),
+};
+
+const hasRequiredFirebaseConfig = () => {
+  return Object.values(firebaseConfig).every((value) => Boolean(value));
 };
 
 if (import.meta.env?.DEV) {
@@ -33,18 +32,25 @@ if (import.meta.env?.DEV) {
   if (missingKeys.length) {
     console.warn(
       `Firebase config is missing values for: ${missingKeys.join(
-        ", "
-      )}. Please provide VITE_FIREBASE_* entries in your environment.`
+        ", ",
+      )}. Please provide VITE_FIREBASE_* entries in your environment.`,
     );
   }
 }
 
-const firebaseApp = initializeApp(firebaseConfig);
+let firebaseApp = null;
+let messagingPromise = null;
 
-let messagingPromise;
+if (hasRequiredFirebaseConfig()) {
+  firebaseApp = initializeApp(firebaseConfig);
+}
 
 export const getMessagingInstance = () => {
   if (typeof window === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  if (!hasRequiredFirebaseConfig()) {
     return Promise.resolve(null);
   }
 
@@ -53,8 +59,11 @@ export const getMessagingInstance = () => {
       .then((supported) => {
         if (!supported) {
           console.warn(
-            "[FCM] Browser tidak mendukung Firebase Messaging (misal Safari iOS)."
+            "[FCM] Browser tidak mendukung Firebase Messaging (misal Safari iOS).",
           );
+          return null;
+        }
+        if (!firebaseApp) {
           return null;
         }
         return getMessaging(firebaseApp);
