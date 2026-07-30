@@ -20,8 +20,8 @@ const contractTypeOptions = [
   { value: "freelance", label: "Freelance" },
 ];
 
-const normalizeContractType = (value) => {
-  const normalized = String(value ?? "")
+const normalizeContractType = (value, fallback = "freelance") => {
+  const normalized = String(value ?? fallback ?? "")
     .trim()
     .toLowerCase()
     .replace(/[\s_-]/g, "");
@@ -29,11 +29,14 @@ const normalizeContractType = (value) => {
   if (normalized === "fulltime") return "fulltime";
   if (normalized === "hybrid") return "hybrid";
   if (normalized === "freelance") return "freelance";
+  if (normalized === "true") return "fulltime";
+  if (normalized === "false") return "freelance";
 
-  // if (isFulltime === true) return "Fulltime";
-  // if (isFulltime === false) return "Freelance";
-
-  return normmalized;
+  return fallback === true
+    ? "fulltime"
+    : fallback === false
+      ? "freelance"
+      : "hybrid";
 };
 
 const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
@@ -91,9 +94,16 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       if (data.reg_date)
         setValue("reg_date", DateTime.fromISO(data.reg_date).toJSDate());
       setSelectOption(data.is_active);
-      setMobileOption(data.is_fulltime);
+      setMobileOption(
+        typeof data.is_fulltime === "string"
+          ? normalizeContractType(data.is_fulltime) === "fulltime"
+          : Boolean(data.is_fulltime),
+      );
       setContractTypeOption(
-        normalizeContractType(data.contract_type_display ?? data.contract_type),
+        normalizeContractType(
+          data.contract_type_display ?? data.contract_type,
+          data.is_fulltime,
+        ),
       );
     }
   }, [isUpdate, data, setValue]);
@@ -129,33 +139,27 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     navigate(-1);
   };
 
-  const handleAdd = (data) => {
-    AddTrainer(data).then((res) => {
-      if (res.status) {
-        Swal.fire("Added!", "Your file has been added.", "success").then(() =>
-          // navigate(-1)
-          updatedData(data),
-        );
-      }
-    });
+  const handleAdd = async (data) => {
+    const res = await AddTrainer(data);
+    if (res.status) {
+      await Swal.fire("Added!", "Your file has been added.", "success");
+      updatedData?.(data);
+    }
   };
 
-  const handleUpdate = (data) => {
-    EditTrainer(data.trainer_id, data).then((res) => {
-      if (res.status) {
-        Swal.fire("Edited!", "Your file has been edited.", "success").then(() =>
-          // navigate(-1)
-          updatedData(data),
-        );
-      }
-    });
+  const handleUpdate = async (data) => {
+    const res = await EditTrainer(data.trainer_id, data);
+    if (res.status) {
+      await Swal.fire("Edited!", "Your file has been edited.", "success");
+      updatedData?.(data);
+    }
   };
 
   const handleOption = (e) => {
-    setSelectOption(e.target.value == "false" ? false : true);
+    setSelectOption(e.target.value !== "false");
   };
   const handleMobileOption = (e) => {
-    setMobileOption(e.target.value == "false" ? false : true);
+    setMobileOption(e.target.value !== "false");
   };
   const handleContractTypeOption = (e) => {
     setContractTypeOption(e.target.value);
@@ -169,17 +173,21 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     const updatedData = {
       ...data,
       fullname: newData.fullname,
-      dob: DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd"),
+      dob: newData.dob
+        ? DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd")
+        : "",
       gender: newData.gender,
       account_number: newData.account_number,
       precentage_fee: newData.precentage_fee,
-      is_fulltime: contractType === "Fulltime",
+      is_fulltime: contractType,
       contract_type: contractType,
       contract_type_display: contractType,
       is_active: selectOption,
       nickname: newData.nickname,
       bank_account: newData.bank_account,
-      reg_date: DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd"),
+      reg_date: newData.reg_date
+        ? DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd")
+        : "",
       branch: newData.branch,
       nik: "-",
     };

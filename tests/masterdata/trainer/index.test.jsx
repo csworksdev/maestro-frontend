@@ -99,7 +99,7 @@ describe("Trainer list page", () => {
     mockUseLoadingStore.mockReset();
 
     mockUseLoadingStore.mockImplementation((selector) =>
-      selector({ isLoading: false })
+      selector({ isLoading: false }),
     );
 
     mockUseQuery.mockImplementation(() => {
@@ -116,7 +116,7 @@ describe("Trainer list page", () => {
               is_active: true,
               branch_name: "Cabang A",
               reg_date: "2024-01-05",
-              is_fulltime: true,
+              is_fulltime: "fulltime",
               avatar: null,
             },
             {
@@ -128,7 +128,7 @@ describe("Trainer list page", () => {
               is_active: false,
               branch_name: "Cabang B",
               reg_date: "2025-02-10",
-              is_fulltime: false,
+              is_fulltime: "freelance",
               avatar: "https://example.com/trainer-b.jpg",
             },
           ],
@@ -177,7 +177,7 @@ describe("Trainer list page", () => {
 
     const user = userEvent.setup();
     await user.click(
-      await screen.findByRole("button", { name: "Lihat avatar Trainer B" })
+      await screen.findByRole("button", { name: "Lihat avatar Trainer B" }),
     );
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -189,7 +189,7 @@ describe("Trainer list page", () => {
 
     const user = userEvent.setup();
     await user.click(
-      await screen.findByRole("button", { name: "Edit Trainer A" })
+      await screen.findByRole("button", { name: "Edit Trainer A" }),
     );
 
     expect(mockNavigate).toHaveBeenCalledWith("Edit", {
@@ -218,7 +218,7 @@ describe("Trainer list page", () => {
 
     const user = userEvent.setup();
     await user.click(
-      await screen.findByRole("button", { name: "Hapus Trainer A" })
+      await screen.findByRole("button", { name: "Hapus Trainer A" }),
     );
 
     await waitFor(() => {
