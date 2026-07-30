@@ -204,7 +204,7 @@ describe("Trainer list page", () => {
           is_active: true,
           branch_name: "Cabang A",
           reg_date: "2024-01-05",
-          is_fulltime: true,
+          is_fulltime: "fulltime",
         }),
       },
     });
