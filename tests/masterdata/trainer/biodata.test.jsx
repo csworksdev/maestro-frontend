@@ -12,7 +12,7 @@ const { mockAddTrainer, mockEditTrainer, mockGetCabangAll } = vi.hoisted(
     mockAddTrainer: vi.fn(),
     mockEditTrainer: vi.fn(),
     mockGetCabangAll: vi.fn(),
-  })
+  }),
 );
 
 const mockSwalFire = vi.fn();
@@ -99,10 +99,7 @@ vi.mock("@/components/ui/Select", () => ({
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (
-          <option
-            key={option.value ?? option}
-            value={option.value ?? option}
-          >
+          <option key={option.value ?? option} value={option.value ?? option}>
             {option.label ?? option}
           </option>
         ))}
@@ -114,12 +111,7 @@ vi.mock("@/components/ui/Select", () => ({
 vi.mock("@/components/ui/Radio", () => ({
   default: ({ label, value, checked, onChange }) => (
     <label>
-      <input
-        type="radio"
-        value={value}
-        checked={checked}
-        onChange={onChange}
-      />
+      <input type="radio" value={value} checked={checked} onChange={onChange} />
       {label}
     </label>
   ),
@@ -155,10 +147,7 @@ describe("Trainer biodata form", () => {
     await user.type(screen.getByLabelText("Panggilan"), "TA");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
     await user.type(screen.getByLabelText("Tanggal Lahir"), "1990-01-01");
-    await user.type(
-      screen.getByLabelText("Tanggal Registrasi"),
-      "2024-01-05"
-    );
+    await user.type(screen.getByLabelText("Tanggal Registrasi"), "2024-01-05");
     await user.type(screen.getByLabelText("Bagi Hasil"), "10");
     await user.selectOptions(screen.getByLabelText("Cabang"), "1");
 
@@ -175,14 +164,24 @@ describe("Trainer biodata form", () => {
       gender: "L",
       precentage_fee: 10,
       is_active: false,
-      is_fulltime: false,
+      is_fulltime: "freelance",
       branch: "1",
       dob: "1990-01-01",
       reg_date: "2024-01-05",
     });
 
     await waitFor(() => {
-      expect(updatedData).toHaveBeenCalledWith(expect.objectContaining(payload));
+      expect(mockSwalFire).toHaveBeenCalledWith(
+        "Added!",
+        "Your file has been added.",
+        "success",
+      );
+    });
+
+    await waitFor(() => {
+      expect(updatedData).toHaveBeenCalledWith(
+        expect.objectContaining(payload),
+      );
     });
   });
 
@@ -210,7 +209,7 @@ describe("Trainer biodata form", () => {
           branch: "1",
         }}
         updatedData={updatedData}
-      />
+      />,
     );
 
     const user = userEvent.setup();
@@ -222,10 +221,7 @@ describe("Trainer biodata form", () => {
     await user.type(screen.getByLabelText("Bagi Hasil"), "15");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "P");
     await user.type(screen.getByLabelText("Tanggal Lahir"), "1989-02-01");
-    await user.type(
-      screen.getByLabelText("Tanggal Registrasi"),
-      "2024-02-01"
-    );
+    await user.type(screen.getByLabelText("Tanggal Registrasi"), "2024-02-01");
 
     await user.click(screen.getByRole("button", { name: /Update Trainer/i }));
 
@@ -241,14 +237,24 @@ describe("Trainer biodata form", () => {
       gender: "P",
       precentage_fee: 15,
       is_active: true,
-      is_fulltime: false,
+      is_fulltime: "freelance",
       branch: "1",
       dob: "1989-02-01",
       reg_date: "2024-02-01",
     });
 
     await waitFor(() => {
-      expect(updatedData).toHaveBeenCalledWith(expect.objectContaining(payload));
+      expect(mockSwalFire).toHaveBeenCalledWith(
+        "Edited!",
+        "Your file has been edited.",
+        "success",
+      );
+    });
+
+    await waitFor(() => {
+      expect(updatedData).toHaveBeenCalledWith(
+        expect.objectContaining(payload),
+      );
     });
   });
 });

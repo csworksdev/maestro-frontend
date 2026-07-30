@@ -94,8 +94,53 @@ const getTrainerLookupKeys = (trainer) =>
     .map(normalizeLookupKey)
     .filter(Boolean);
 
+const formatContractTypeDisplay = (value) => {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (normalized === "fulltime") return "Fulltime";
+  if (normalized === "hybrid") return "Hybrid";
+  if (normalized === "freelance") return "Freelance";
+  if (normalized === "true") return "Fulltime";
+  if (normalized === "false") return "Freelance";
+
+  return value || "-";
+};
+
+const normalizeContractTypeKey = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
 const getTrainerWorkTypeValue = (trainer) => {
-  return trainer?.contract_type_display;
+  const contractType =
+    trainer?.contract_type_display ||
+    trainer?.contract_type ||
+    (typeof trainer?.is_fulltime === "string"
+      ? trainer.is_fulltime
+      : trainer?.is_fulltime === true
+        ? "fulltime"
+        : trainer?.is_fulltime === false
+          ? "freelance"
+          : null);
+
+  if (!contractType) return "-";
+
+  const normalized = normalizeContractTypeKey(contractType);
+  if (
+    normalized === "fulltime" ||
+    normalized === "hybrid" ||
+    normalized === "freelance"
+  ) {
+    return normalized;
+  }
+  if (normalized === "true") return "fulltime";
+  if (normalized === "false") return "freelance";
+
+  return "-";
 };
 
 const collectScheduleWorkTypes = (value, result = {}) => {
@@ -398,11 +443,9 @@ const Trainer = () => {
                           <InfoItem
                             icon="heroicons-outline:briefcase"
                             label="Tipe Kerja"
-                            value={
-                              trainer?.contract_type_display ||
-                              trainer?.contract_type ||
-                              "-"
-                            }
+                            value={formatContractTypeDisplay(
+                              getTrainerWorkTypeValue(trainer),
+                            )}
                             className="col-span-2"
                           />
                           <InfoItem
