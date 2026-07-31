@@ -78,7 +78,7 @@ const getMembershipDuration = (regDate) => {
 
 const formatTrainerCapacity = (capacity) => {
   if (capacity === null || capacity === undefined || capacity === "") return "-";
-  return `${capacity} / Minggu`;
+  return `${capacity} Jam / Minggu`;
 };
 
 const normalizeLookupKey = (value) => {
