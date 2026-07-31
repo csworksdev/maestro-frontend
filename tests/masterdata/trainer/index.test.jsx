@@ -168,8 +168,8 @@ describe("Trainer list page", () => {
     expect(screen.getByText("Trainer B")).toBeInTheDocument();
     expect(screen.getByText("Fulltime")).toBeInTheDocument();
     expect(screen.getByText("Freelance")).toBeInTheDocument();
-    expect(screen.getByText("52 / Minggu")).toBeInTheDocument();
-    expect(screen.getByText("24 / Minggu")).toBeInTheDocument();
+    expect(screen.getByText("52 Jam / Minggu")).toBeInTheDocument();
+    expect(screen.getByText("24 Jam / Minggu")).toBeInTheDocument();
     expect(screen.getByText("05 Jan 2024")).toBeInTheDocument();
     expect(screen.getByText("10 Feb 2025")).toBeInTheDocument();
     expect(screen.getByText("2 tahun, 4 bulan, 10 hari")).toBeInTheDocument();
