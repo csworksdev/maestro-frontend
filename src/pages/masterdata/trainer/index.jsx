@@ -454,7 +454,7 @@ const Trainer = () => {
                           />
                           <InfoItem
                             icon="heroicons-outline:calendar"
-                            label="Kapasitas Jadwal Pelatih"
+                            label="Slot Melatih"
                             value={formatTrainerCapacity(
                               trainer?.capacity_per_week,
                             )}
