@@ -76,6 +76,11 @@ const getMembershipDuration = (regDate) => {
   return `${years} tahun, ${months} bulan, ${days} hari`;
 };
 
+const formatTrainerCapacity = (capacity) => {
+  if (capacity === null || capacity === undefined || capacity === "") return "-";
+  return `${capacity} Jam / Minggu`;
+};
+
 const normalizeLookupKey = (value) => {
   if (value === null || value === undefined) return "";
   return String(value).trim().toLowerCase();
@@ -191,7 +196,7 @@ const InfoItem = ({
   <div
     className={`rounded border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900 ${className}`}
   >
-    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+    <div className="mb-1 flex items-start gap-1.5 text-[11px] font-medium leading-snug text-slate-400">
       <Icon icon={icon} className="text-sm" />
       <span>{label}</span>
     </div>
@@ -446,7 +451,13 @@ const Trainer = () => {
                             value={formatContractTypeDisplay(
                               getTrainerWorkTypeValue(trainer),
                             )}
-                            className="col-span-2"
+                          />
+                          <InfoItem
+                            icon="heroicons-outline:calendar"
+                            label="Slot Melatih"
+                            value={formatTrainerCapacity(
+                              trainer?.capacity_per_week,
+                            )}
                           />
                           <InfoItem
                             icon="heroicons-outline:calendar-days"
