@@ -117,6 +117,7 @@ describe("Trainer list page", () => {
               branch_name: "Cabang A",
               reg_date: "2024-01-05",
               is_fulltime: "fulltime",
+              capacity_per_week: 52,
               avatar: null,
             },
             {
@@ -129,6 +130,7 @@ describe("Trainer list page", () => {
               branch_name: "Cabang B",
               reg_date: "2025-02-10",
               is_fulltime: "freelance",
+              capacity_per_week: 24,
               avatar: "https://example.com/trainer-b.jpg",
             },
           ],
@@ -159,13 +161,15 @@ describe("Trainer list page", () => {
     dateTimeNowSpy?.mockRestore();
   });
 
-  it("renders trainer cards with work type, registration date, and membership duration", async () => {
+  it("renders trainer cards with work type, weekly capacity, registration date, and membership duration", async () => {
     render(<Trainer />);
 
     expect(await screen.findByText("Trainer A")).toBeInTheDocument();
     expect(screen.getByText("Trainer B")).toBeInTheDocument();
     expect(screen.getByText("Fulltime")).toBeInTheDocument();
     expect(screen.getByText("Freelance")).toBeInTheDocument();
+    expect(screen.getByText("52 / Minggu")).toBeInTheDocument();
+    expect(screen.getByText("24 / Minggu")).toBeInTheDocument();
     expect(screen.getByText("05 Jan 2024")).toBeInTheDocument();
     expect(screen.getByText("10 Feb 2025")).toBeInTheDocument();
     expect(screen.getByText("2 tahun, 4 bulan, 10 hari")).toBeInTheDocument();
