@@ -20,12 +20,6 @@ const OkupansiPool = lazy(
   () => import("@/pages/newDashboard/operasional/okupansi/okupansi_pool"),
 );
 
-// Referensi
-const Cabang = lazy(() => import("@/pages/referensi/cabang"));
-const AddCabang = lazy(() => import("@/pages/referensi/cabang/edit"));
-const EditCabang = lazy(() => import("@/pages/referensi/cabang/edit"));
-const Kolam = lazy(() => import("@/pages/referensi/kolam"));
-const EditKolam = lazy(() => import("@/pages/referensi/kolam/edit"));
 const Specialization = lazy(() => import("@/pages/referensi/spesialisasi"));
 const EditSpecialization = lazy(
   () => import("@/pages/referensi/spesialisasi/edit"),
@@ -34,22 +28,6 @@ const EditSpecialization = lazy(
 // Master Data
 const Trainer = lazy(() => import("@/pages/masterdata/trainer"));
 const EditTrainer = lazy(() => import("@/pages/masterdata/trainer/edit"));
-
-// Order
-const Order = lazy(() => import("@/pages/order/active"));
-const DetailOrder = lazy(() => import("@/pages/order/active/detail"));
-const CekJadwal = lazy(() => import("@/pages/order/cekJadwal/cekJadwal"));
-
-// Pelatihan
-
-// User Management
-const UMUser = lazy(() => import("@/pages/usermanagement/user"));
-const UMUserEdit = lazy(() => import("@/pages/usermanagement/user/edit"));
-
-// Finance
-const RekapBulanan = lazy(
-  () => import("@/pages/finance/rekapBulanan/rekapBulanan"),
-);
 
 // Xendit
 
@@ -66,10 +44,7 @@ const DashboardDaily = lazy(
 );
 
 import { Routes } from "react-router-dom";
-const Leave = lazy(() => import("@/pages/izin/admin/leave"));
-const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
-const Reschedule = lazy(() => import("@/pages/reschedule/admin"));
 
 const HydroRoutes = () => {
   return (
