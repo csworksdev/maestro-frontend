@@ -83,6 +83,9 @@ const AdminRoutes = () => {
           <Route path="add" element={<EditSiswa />} />
           <Route path="Edit" element={<EditSiswa />} />
         </Route>
+        <Route path="kontakwati">
+          <Route index element={<KontakWati />} />
+        </Route>
         <Route path="promo">
           <Route index element={<Promo />} />
           <Route path="add" element={<EditPromo />} />
