@@ -9,27 +9,33 @@ permissions:
   pull-requests: write
 jobs:
   build_and_preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     environment: production
+    env:
+      CI: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       # Install Node.js
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
+          cache: pnpm
 
       # Install pnpm
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v6
         with:
-          version: 9   # atau versi sesuai package kamu
+          version: 10.17.1
           run_install: false
 
       # Install dependencies
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       # Build project
       - name: Build project
