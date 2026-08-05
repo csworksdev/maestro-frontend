@@ -1,16 +1,14 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
-import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
 import { CJGetPool } from "@/axios/schedule/cekJadwal";
-import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import Tooltip from "@/components/ui/Tooltip";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import PoolLoader from "@/components/PoolLoader";
 import { Tab } from "@headlessui/react";
 import { Icon } from "@iconify/react";
 import React, {
+  Suspense,
+  lazy,
   useCallback,
   useEffect,
   useMemo,
@@ -19,473 +17,25 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import AsyncSelect from "react-select/async";
-import CreateInvoice from "./addJadwal";
 import Modal from "@/components/ui/Modal";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
-import Dropdown from "@/components/ui/Dropdown";
-import WhatsAppButton from "@/components/custom/sendwhatsapp";
 import ApprovedRescheduleTable from "@/components/custom/ApprovedRescheduleTable";
-import Icons from "@/components/ui/Icon";
 import Select from "react-select";
-import Switch from "@/components/ui/Switch";
 import { toProperCase } from "@/utils";
 import { buildWsUrl } from "@/utils/wsUrl";
 import { PerpanjangOrder } from "@/axios/masterdata/order";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import { useQuery } from "@tanstack/react-query";
+import ScheduleTable from "./components/ScheduleTable";
+import {
+  buildCompletedScheduleIndex,
+  extractPayloadList,
+  getCompletedOrderKey,
+  getTrainerWorkStatus,
+} from "./utils/scheduleHelpers";
 
-const columnHeader = [
-  "Pelatih",
-  "06.00",
-  "07.00",
-  "08.00",
-  "09.00",
-  "10.00",
-  "11.00",
-  "12.00",
-  "13.00",
-  "14.00",
-  "15.00",
-  "16.00",
-  "17.00",
-  "18.00",
-  "19.00",
-];
-
-const checkProduct = (product) => {
-  switch (true) {
-    case product.includes("14"):
-      return "14";
-      break;
-    case product.includes("18"):
-      return "18";
-      break;
-    case product.includes("24"):
-      return "24";
-      break;
-    case product.includes("28"):
-      return "28";
-      break;
-    case product.includes("ter"):
-      return "Terapi";
-      break;
-    case product.includes("gr"):
-      return "Grup";
-      break;
-    case product.includes("baby"):
-      return "Baby";
-      break;
-    default:
-      return "Trial";
-      break;
-  }
-};
-
-const iconProduct = (product) => {
-  if (product === "p")
-    return <Icon icon="heroicons-outline:calendar-days" width="24" />;
-
-  let jumlahSiswa = checkProduct(product);
-
-  switch (jumlahSiswa) {
-    case "Grup":
-      return <Icon icon="heroicons-outline:user-group" width="24" />;
-      break;
-    case jumlahSiswa.includes("2"):
-      return <Icon icon="heroicons-outline:users" width="24" />;
-      break;
-
-    default:
-      return <Icon icon="heroicons-outline:user" width="24" />;
-      break;
-  }
-};
-
-const normalizeScheduleTime = (time) => {
-  if (time === null || time === undefined) return "";
-
-  const raw = String(time).trim();
-  const match = raw.match(/(\d{1,2})[:.](\d{2})/);
-  if (match) {
-    return `${match[1].padStart(2, "0")}.${match[2]}`;
-  }
-
-  const hourOnly = raw.match(/\b(\d{1,2})\b/);
-  return hourOnly ? `${hourOnly[1].padStart(2, "0")}.00` : raw;
-};
-
-const normalizeLookupKey = (value) => {
-  if (value === null || value === undefined) return "";
-  return String(value).trim().toLowerCase();
-};
-
-const getTrainerWorkStatus = (trainer) =>
-  trainer?.contract_type_display ??
-  trainer?.contractTypeDisplay ??
-  trainer?.contract_type ??
-  trainer?.contractType ??
-  (trainer?.is_fulltime === true
-    ? "Fulltime"
-    : trainer?.is_fulltime === false
-      ? "Freelance"
-      : "");
-
-const getTrainerWorkStatusClassName = (status) => {
-  const normalizedStatus = normalizeLookupKey(status);
-
-  if (normalizedStatus.includes("full")) {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-
-  if (
-    normalizedStatus.includes("free") ||
-    normalizedStatus.includes("part")
-  ) {
-    return "border-amber-200 bg-amber-50 text-amber-700";
-  }
-
-  return "border-slate-200 bg-white/80 text-slate-600";
-};
-
-const getScheduleTimeValue = (entry) =>
-  entry?.jam ??
-  entry?.time ??
-  entry?.start_time ??
-  entry?.startTime ??
-  entry?.schedule_time ??
-  entry?.scheduleTime ??
-  entry?.order_time ??
-  entry?.orderTime ??
-  entry?.hour;
-
-const getTrainerKeys = (entry) => {
-  const trainer =
-    entry?.trainer && typeof entry.trainer === "object" ? entry.trainer : null;
-
-  const values = [
-    entry?.trainer_id,
-    entry?.trainerId,
-    entry?.trainer_uuid,
-    entry?.coach_id,
-    typeof entry?.trainer === "string" ? entry.trainer : null,
-    trainer?.trainer_id,
-    trainer?.trainerId,
-    trainer?.id,
-    entry?.fullname,
-    entry?.full_name,
-    entry?.trainer_name,
-    entry?.trainerName,
-    entry?.nickname,
-    trainer?.fullname,
-    trainer?.full_name,
-    trainer?.name,
-    trainer?.nickname,
-  ];
-
-  return Array.from(new Set(values.map(normalizeLookupKey).filter(Boolean)));
-};
-
-const extractPayloadList = (response) => {
-  const unwrapPayload = (value) => {
-    if (!value || Array.isArray(value) || typeof value !== "object") {
-      return value;
-    }
-
-    const payloadKeys = [
-      "results",
-      "payload",
-      "message",
-      "completed_schedules",
-      "completedSchedules",
-      "completed_schedule",
-      "completedSchedule",
-      "schedules",
-      "orders",
-      "data",
-    ];
-
-    const hasEntryShape =
-      getTrainerKeys(value).length > 0 || getScheduleTimeValue(value);
-
-    if (hasEntryShape) {
-      return value;
-    }
-
-    const payloadKey = payloadKeys.find((key) => value[key] !== undefined);
-    return payloadKey ? unwrapPayload(value[payloadKey]) : value;
-  };
-
-  const data = response?.data ?? response;
-  const payload = unwrapPayload(data) ?? [];
-
-  if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === "object") {
-    return Object.entries(payload).map(([key, value]) => {
-      const keyIsTime =
-        /^\d{1,2}[:.]\d{2}/.test(key) ||
-        normalizeScheduleTime(key) !== key ||
-        /^\d{1,2}$/.test(key);
-
-      if (Array.isArray(value)) {
-        return keyIsTime
-          ? { jam: key, orders: value }
-          : { trainer_id: key, orders: value };
-      }
-
-      return value && typeof value === "object"
-        ? {
-            ...value,
-            ...(keyIsTime
-              ? { jam: value.jam ?? key }
-              : { trainer_id: value.trainer_id ?? key }),
-          }
-        : { trainer_id: key, value };
-    });
-  }
-
-  return [];
-};
-
-const getStudentNames = (order) => {
-  const value =
-    order?.student ??
-    order?.students ??
-    order?.siswa ??
-    order?.student_names ??
-    order?.studentNames ??
-    order?.student_name ??
-    order?.studentName;
-
-  const list = Array.isArray(value) ? value : value ? [value] : [];
-
-  return list
-    .map((item) => {
-      if (!item) return null;
-      if (typeof item === "string") return item;
-      return (
-        item.fullname ??
-        item.full_name ??
-        item.name ??
-        item.student_name ??
-        item.nickname ??
-        null
-      );
-    })
-    .filter(Boolean);
-};
-
-const getCompletedOrderKey = (order) => {
-  const students = getStudentNames(order).join("|");
-  return (
-    order?.order_id ??
-    order?.orderId ??
-    order?.id ??
-    `${students}-${order?.product ?? order?.product_name ?? ""}-${
-      order?.completed_date ?? order?.finish_date ?? order?.end_date ?? ""
-    }`
-  );
-};
-
-const hasCompletedOrderDetails = (order) =>
-  Boolean(
-    order?.order_id ||
-    order?.orderId ||
-    order?.id ||
-    order?.product ||
-    order?.product_name ||
-    order?.paket ||
-    order?.package_name ||
-    order?.completed_date ||
-    order?.finish_date ||
-    order?.end_date ||
-    order?.last_meet_date ||
-    getStudentNames(order).length,
-  );
-
-const addCompletedOrderToIndex = (index, trainerKeys, timeKey, order) => {
-  if (!timeKey || trainerKeys.length === 0) return;
-  if (!hasCompletedOrderDetails(order)) return;
-
-  trainerKeys.forEach((trainerKey) => {
-    if (!index[trainerKey]) {
-      index[trainerKey] = {};
-    }
-    if (!index[trainerKey][timeKey]) {
-      index[trainerKey][timeKey] = [];
-    }
-    index[trainerKey][timeKey].push(order);
-  });
-};
-
-const buildCompletedScheduleIndex = (items = []) => {
-  const index = {};
-
-  const walkEntry = (entry, fallbackTrainerKeys = [], fallbackTime = "") => {
-    if (!entry) return;
-
-    const trainerKeys = Array.from(
-      new Set([...fallbackTrainerKeys, ...getTrainerKeys(entry)]),
-    );
-    const timeKey =
-      normalizeScheduleTime(getScheduleTimeValue(entry)) || fallbackTime;
-
-    if (Array.isArray(entry?.datahari)) {
-      entry.datahari.forEach((day) => {
-        if (Array.isArray(day?.data)) {
-          day.data.forEach((slot) =>
-            walkEntry(slot, trainerKeys, normalizeScheduleTime(slot?.jam)),
-          );
-          return;
-        }
-
-        if (day?.data && typeof day.data === "object") {
-          Object.entries(day.data).forEach(([jam, orders]) => {
-            const slotTime = normalizeScheduleTime(jam);
-            const orderList = Array.isArray(orders) ? orders : [orders];
-            orderList.forEach((order) =>
-              walkEntry(order, trainerKeys, slotTime),
-            );
-          });
-        }
-      });
-      return;
-    }
-
-    const nestedCollections = [
-      entry?.orders,
-      entry?.schedules,
-      entry?.completed_schedule,
-      entry?.completedSchedule,
-      entry?.completed_schedules,
-      entry?.completedSchedules,
-      entry?.order_schedules,
-      entry?.orderSchedules,
-    ].filter(Array.isArray);
-
-    if (nestedCollections.length > 0) {
-      nestedCollections.forEach((collection) =>
-        collection.forEach((order) => walkEntry(order, trainerKeys, timeKey)),
-      );
-      return;
-    }
-
-    if (entry?.data && typeof entry.data === "object") {
-      if (Array.isArray(entry.data)) {
-        entry.data.forEach((slot) => walkEntry(slot, trainerKeys, timeKey));
-        return;
-      }
-
-      Object.entries(entry.data).forEach(([jam, orders]) => {
-        const slotTime = normalizeScheduleTime(jam);
-        const orderList = Array.isArray(orders) ? orders : [orders];
-        orderList.forEach((order) => walkEntry(order, trainerKeys, slotTime));
-      });
-      return;
-    }
-
-    addCompletedOrderToIndex(index, trainerKeys, timeKey, entry);
-  };
-
-  items.forEach((item) => walkEntry(item));
-  return index;
-};
-
-const getCompletedSchedulesForSlot = (index, trainer, time) => {
-  const timeKey = normalizeScheduleTime(time);
-  const seen = new Set();
-
-  return getTrainerKeys(trainer)
-    .flatMap((trainerKey) => index?.[trainerKey]?.[timeKey] ?? [])
-    .filter((order) => {
-      const key = getCompletedOrderKey(order);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-};
-
-const getCompletedScheduleProductLabel = (schedule) => {
-  const product =
-    schedule?.product ??
-    schedule?.product_name ??
-    schedule?.paket ??
-    schedule?.package_name ??
-    "";
-
-  if (!product) return "Paket";
-
-  const normalizedProduct = String(product).toLowerCase();
-  const shortLabel = checkProduct(normalizedProduct);
-
-  if (shortLabel === "Trial" && !normalizedProduct.includes("trial")) {
-    return toProperCase(String(product));
-  }
-
-  return shortLabel;
-};
-
-const formatCompletedScheduleDate = (dateValue) => {
-  if (!dateValue) return "";
-
-  const rawValue = String(dateValue);
-  const isoDate = DateTime.fromISO(rawValue);
-  if (isoDate.isValid) {
-    return isoDate.toFormat("dd LLL yyyy");
-  }
-
-  const slashDate = DateTime.fromFormat(rawValue, "dd/MM/yyyy");
-  if (slashDate.isValid) {
-    return slashDate.toFormat("dd LLL yyyy");
-  }
-
-  return rawValue;
-};
-
-const getLastMeetDateFromSchedule = (schedule) => {
-  const meets =
-    schedule?.p ??
-    schedule?.meetings ??
-    schedule?.order_meetings ??
-    schedule?.orderMeetings ??
-    [];
-
-  if (!Array.isArray(meets)) return "";
-
-  return [...meets]
-    .reverse()
-    .map(
-      (meet) =>
-        meet?.tgl ??
-        meet?.date ??
-        meet?.meet_date ??
-        meet?.meeting_date ??
-        meet?.training_date,
-    )
-    .find(Boolean);
-};
-
-const getCompletedScheduleOrderDate = (schedule) =>
-  schedule?.order_date ??
-  schedule?.orderDate ??
-  schedule?.created_at ??
-  schedule?.createdAt ??
-  schedule?.order?.order_date ??
-  schedule?.order?.orderDate ??
-  "";
-
-const getCompletedScheduleLastTrainingDate = (schedule) =>
-  schedule?.last_training_date ??
-  schedule?.lastTrainingDate ??
-  schedule?.last_meet_date ??
-  schedule?.lastMeetDate ??
-  schedule?.last_presence_date ??
-  schedule?.lastPresenceDate ??
-  schedule?.completed_date ??
-  schedule?.finish_date ??
-  schedule?.end_date ??
-  getLastMeetDateFromSchedule(schedule) ??
-  "";
+const CreateInvoice = lazy(() => import("./addJadwal"));
 
 const CekJadwal = () => {
   const daysOfWeek = [
@@ -498,7 +48,7 @@ const CekJadwal = () => {
     { name: "Minggu", data: [], total: 0 },
   ];
 
-  const { user_id, username, roles } = useAuthStore((state) => state.data);
+  const { user_id } = useAuthStore((state) => state.data);
   const [tabHari, setTabHari] = useState(() =>
     daysOfWeek.map((day) => ({ ...day })),
   );
@@ -507,9 +57,6 @@ const CekJadwal = () => {
   const [selectedIndex, setSelectedIndex] = useState();
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedDay, setSelectedDay] = useState();
-  const [jumlahSiswaPerKolam, setJumlahSiswaPerKolam] = useState([]);
-  const [jumlahSiswaPerhari, setJumlahSiswaPerhari] = useState([]);
-  const [jumlahPelatih, setJumlahPelatih] = useState([]);
   const [filterPelatih, setFilterPelatih] = useState([]);
   const [filteredPelatih, setFilteredPelatih] = useState("");
   const [filteredGender, setFilteredGender] = useState("");
@@ -631,28 +178,6 @@ const CekJadwal = () => {
     [],
   );
 
-  const visibleTrainerCount = useMemo(() => {
-    if (!jadwal.length) {
-      return 0;
-    }
-    return jadwal.filter((trainer) => {
-      const matchesTrainer =
-        !filteredPelatih || trainer.trainer_id === filteredPelatih;
-      const matchesGender =
-        !filteredGender || trainer.gender === filteredGender;
-      return matchesTrainer && matchesGender;
-    }).length;
-  }, [jadwal, filteredGender, filteredPelatih]);
-
-  const filteredTrainers = useMemo(() => {
-    if (!selectedPoolItem) {
-      return [];
-    }
-    return jadwal.filter((trainer) =>
-      trainer.kolam.includes(selectedPoolItem.value),
-    );
-  }, [jadwal, selectedPoolItem]);
-
   const completedScheduleIndex = useMemo(
     () => buildCompletedScheduleIndex(completedSchedules),
     [completedSchedules],
@@ -758,7 +283,7 @@ const CekJadwal = () => {
     [memoizedBranchOptions],
   );
 
-  const loadProduct = async (poolName) => {
+  const loadProduct = useCallback(async (poolName) => {
     try {
       const res = await getProdukPool(poolName);
 
@@ -766,7 +291,7 @@ const CekJadwal = () => {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, []);
 
   const fillBaseJadwalWithData = (baseJadwal, fillData) => {
     const updatedDatahari = baseJadwal.datahari.map((day) => {
@@ -1085,7 +610,7 @@ const CekJadwal = () => {
     }
   };
 
-  const handlePerpanjang = async (order_id, slot) => {
+  const handlePerpanjang = useCallback(async (order_id, slot) => {
     // Swal.fire({
     //   title: "Perpanjang paket ",
     //   text: `Siswa ${slot.student} akan diperpanjang ?`,
@@ -1143,459 +668,7 @@ const CekJadwal = () => {
         }
       });
     }
-  };
-
-  const GridKolamDetail = React.memo(({ item, pool }) => {
-    const selectedDay = daysOfWeek[selectedIndex]?.name;
-
-    const filteredDataHari =
-      item.datahari?.filter((x) => x.hari === selectedDay) || [];
-
-    return (
-      <>
-        {filteredDataHari.flatMap((timeSlot, i) =>
-          timeSlot.data.map((slotObj, jIdx) => {
-            const orders = Array.isArray(slotObj.orders) ? slotObj.orders : [];
-            const completedOrders = getCompletedSchedulesForSlot(
-              completedScheduleIndex,
-              item,
-              slotObj.jam,
-            );
-
-            // Jika free langsung render PelatihLibur
-
-            if (orders[0]?.is_free) {
-              return (
-                <div className="flex min-h-[56px] flex-col items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 p-1.5 shadow-sm shadow-rose-100/60">
-                  <CompletedScheduleHint schedules={completedOrders} />
-                  <PelatihLibur />
-                  {orders[orders.length - 1]?.is_pending_reschedule ? (
-                    <div>{orders[orders.length - 1]?.status}</div>
-                  ) : (
-                    <PelatihKosong
-                      pool={pool}
-                      trainer={item}
-                      hari={timeSlot.hari}
-                      jam={slotObj.jam}
-                    />
-                  )}
-                </div>
-              );
-            }
-
-            // Cek apakah ada slot di pool lain
-            const isOtherPoolSlot = (slot) =>
-              slot.order_id &&
-              slot.pool_name !== pool.label &&
-              Array.isArray(slot.p) &&
-              slot.p.every((item) => item.tgl === null);
-
-            const samePoolOrders = orders.filter(
-              (slot) => slot.order_id && slot.pool_name === pool.label,
-            );
-            const otherPoolOrders = orders.filter(isOtherPoolSlot);
-            const otherPoolNames = Array.from(
-              new Set(
-                otherPoolOrders.map((slot) => slot.pool_name).filter(Boolean),
-              ),
-            );
-
-            // Fungsi bantu: tentukan warna card
-            const getCardColor = (slot) => {
-              let cardColor =
-                "bg-white border-2 border-green-500 shadow-md shadow-lime-200/50";
-
-              const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
-              if (pLastRaw) {
-                const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
-                const diff = DateTime.now().diff(pLast, "days").days;
-
-                if (diff > 2)
-                  cardColor = "bg-red-200 shadow-md shadow-red-500/50";
-                else if (diff > 0)
-                  cardColor = "bg-yellow-500 shadow-md shadow-lime-500/50";
-              }
-
-              return cardColor;
-            };
-
-            const getSlotStatus = (slot) => {
-              const pLastRaw = slot.p?.[slot.p.length - 1]?.tgl;
-              if (!pLastRaw) {
-                return {
-                  label: "Aktif",
-                  className: "bg-emerald-500",
-                  textClassName: "text-emerald-700",
-                };
-              }
-
-              const pLast = DateTime.fromFormat(pLastRaw, "dd/MM/yyyy");
-              const diff = DateTime.now().diff(pLast, "days").days;
-
-              if (diff > 2) {
-                return {
-                  label: "Paket selesai Lewat dari 2 hari",
-                  className: "bg-red-500",
-                  textClassName: "text-red-700",
-                };
-              }
-              if (diff > 0) {
-                return {
-                  label: "Perlu follow up",
-                  className: "bg-yellow-500",
-                  textClassName: "text-yellow-700",
-                };
-              }
-
-              return {
-                label: "Aktif",
-                className: "bg-emerald-500",
-                textClassName: "text-emerald-700",
-              };
-            };
-
-            const renderOrderDetail = (slot, detailKey) => {
-              const students = slot.student?.filter(Boolean) ?? [];
-              const studentText = students.length
-                ? students.map(toProperCase).join(", ")
-                : "Tanpa nama siswa";
-              const status = getSlotStatus(slot);
-
-              return (
-                <div
-                  key={detailKey}
-                  className={`${getCardColor(slot)} rounded-lg border p-2.5 text-slate-700`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full border border-pink-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-pink-700 shadow-sm">
-                          {toProperCase(slot.admin)}
-                        </span>
-                        <Badge
-                          label={checkProduct(slot.product)}
-                          className="bg-primary-500 text-white justify-center text-[10px]"
-                        />
-                        {!checked ? (
-                          <PaymentStatusBadge status={slot.is_paid} />
-                        ) : null}
-                      </div>
-                      <div className="mt-2 text-xs font-semibold leading-relaxed text-slate-700">
-                        {studentText}
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
-                        {slot.frequency_per_week > 1 ? (
-                          <span>{slot.frequency_per_week}x / minggu</span>
-                        ) : null}
-                        <span
-                          className={`inline-flex items-center gap-1 font-semibold ${status.textClassName}`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${status.className}`}
-                          />
-                          {status.label}
-                        </span>
-                      </div>
-                      {slot?.is_paid !== "pending" && slot.p?.length ? (
-                        <div className="mt-2 grid grid-cols-2 gap-1 text-[10px] text-slate-600">
-                          {slot.p.slice(-4).map((pItem, idx) => (
-                            <span
-                              key={`${pItem.meet}-${idx}`}
-                              className="rounded bg-white/70 px-1.5 py-0.5"
-                            >
-                              P{pItem.meet}: {pItem.tgl || "-"}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="flex shrink-0 flex-col items-center gap-2">
-                      {user_id === "f7d9fff1-5455-4cb5-bb92-9bea6a61b447" && (
-                        <button
-                          onClick={() => {
-                            const text = `order_id = '${slot.order_id}'`;
-                            navigator.clipboard.writeText(text);
-                          }}
-                          className="rounded-full bg-white/80 p-1 text-blue-500 shadow-sm hover:text-blue-700"
-                        >
-                          <Icons
-                            icon="heroicons-outline:clipboard-copy"
-                            className="h-4 w-4"
-                          />
-                        </button>
-                      )}
-                      <PerpanjangPaket
-                        order_id={slot.order_id}
-                        slot={slot}
-                        buttonClassName="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-pink-600 shadow-sm transition hover:bg-pink-50"
-                        iconClassName="text-pink-600"
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            };
-
-            const renderSamePoolOrders = (slots, key) => {
-              if (!slots.length) return null;
-
-              const firstSlot = slots[0];
-              const products = Array.from(
-                new Set(slots.map((slot) => checkProduct(slot.product))),
-              );
-              const studentPreview =
-                firstSlot.student
-                  ?.filter(Boolean)
-                  .slice(0, 2)
-                  .map(toProperCase) ?? [];
-
-              return (
-                <Tooltip
-                  key={key}
-                  placement="top"
-                  arrow
-                  interactive
-                  theme="custom-light"
-                  maxWidth={420}
-                  content={
-                    <div className="w-[360px] max-w-[calc(100vw-48px)] text-left">
-                      <div className="mb-2 flex items-start justify-between gap-3 border-b border-slate-200 pb-2">
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">
-                            {slots.length > 1
-                              ? `${slots.length} jadwal di slot ini`
-                              : "Detail jadwal"}
-                          </div>
-                          <div className="text-[11px] text-slate-500">
-                            {toProperCase(item.nickname)} - {slotObj.jam}
-                          </div>
-                        </div>
-                        <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 ring-1 ring-primary-100">
-                          {products.join(", ")}
-                        </span>
-                      </div>
-                      <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
-                        {slots.map((slot, detailIndex) =>
-                          renderOrderDetail(slot, `${key}-${detailIndex}`),
-                        )}
-                      </div>
-                    </div>
-                  }
-                >
-                  <button
-                    type="button"
-                    className="mx-auto flex w-full max-w-[96px] items-center justify-center rounded-lg border border-primary-100 bg-white px-2 py-1.5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-                  >
-                    {/* <div className="flex items-center gap-1.5">
-                      <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[11px] font-semibold text-white">
-                        {slots.length}
-                      </span>
-                      <span className="text-[10px] font-semibold text-slate-600">
-                        jadwal
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-semibold text-slate-700">
-                      {products.join(", ")}
-                    </div> */}
-                    {studentPreview.length ? (
-                      <div className="line-clamp-2 text-[11px] font-semibold leading-[1.15] text-slate-600">
-                        {studentPreview.join(", ")}
-                      </div>
-                    ) : null}
-                  </button>
-                </Tooltip>
-              );
-            };
-
-            return (
-              <div
-                key={`${jIdx}-${i}-${jIdx}`}
-                className="flex min-h-[56px] flex-col justify-center gap-1.5"
-              >
-                {renderSamePoolOrders(samePoolOrders, `${i}-${jIdx}`)}
-
-                <CompletedScheduleHint schedules={completedOrders} />
-
-                {otherPoolOrders.length > 0 && (
-                  <PelatihAdaJadwal
-                    key={`other-${i}-${jIdx}`}
-                    poolNames={otherPoolNames}
-                    count={otherPoolOrders.length}
-                  />
-                )}
-
-                {orders[orders.length - 1]?.is_pending_reschedule ? (
-                  <PendingReschedule />
-                ) : (
-                  // <div>asd</div>
-                  <PelatihKosong
-                    pool={pool}
-                    trainer={item}
-                    hari={timeSlot.hari}
-                    jam={slotObj.jam}
-                  />
-                )}
-              </div>
-            );
-          }),
-        )}
-      </>
-    );
-  });
-
-  // const pesan = `Halo, Coach ${item.fullname} di kolam ${poolOption[selectedPool]?.label} hari ${timeSlot.hari} jam ${slotObj.jam} apakah bisa diisi jadwal ?`;
-
-  // return (
-  //   <>
-  //     <PelatihKosong
-  //       key={key}
-  //       pool={poolOption[selectedPool]}
-  //       trainer={item}
-  //       hari={timeSlot.hari}
-  //       jam={slotObj.jam}
-  //     />
-  //     {/* <WhatsAppButton phone={item.phone} pesan={pesan} /> */}
-  //   </>
-  // );
-
-  const GridKolamHeader = React.memo(({ item, trainers, day }) => {
-    let dataJadwal = jadwal.filter((trainer) => {
-      const matchesTrainer =
-        !filteredPelatih || trainer.trainer_id === filteredPelatih;
-      const matchesGender =
-        !filteredGender || trainer.gender === filteredGender;
-      return matchesTrainer && matchesGender;
-    });
-    const scrollContainerRef = useRef(null);
-    const [scrollHeight, setScrollHeight] = useState(null);
-
-    const updateScrollHeight = useCallback(() => {
-      if (!scrollContainerRef.current) return;
-      const { top } = scrollContainerRef.current.getBoundingClientRect();
-      const paddingBottom = 24;
-      const calculatedHeight = window.innerHeight - top - paddingBottom;
-      if (calculatedHeight > 0) {
-        setScrollHeight(Math.max(calculatedHeight, 200));
-      }
-    }, []);
-
-    useEffect(() => {
-      updateScrollHeight();
-      window.addEventListener("resize", updateScrollHeight);
-      return () => window.removeEventListener("resize", updateScrollHeight);
-    }, [updateScrollHeight]);
-
-    useEffect(() => {
-      updateScrollHeight();
-    }, [dataJadwal, updateScrollHeight]);
-
-    return (
-      <div className="w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-        {/* <div className="flex flex-col gap-3 border-b border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                Jadwal Pelatih
-              </h3>
-              <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-600 dark:bg-primary-500/10 dark:text-primary-300">
-                {day}
-              </span>
-            </div>
-            <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
-              {item.label} - {dataJadwal.length} pelatih tampil
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {legendItems.slice(0, 3).map((legend) => (
-              <span
-                key={legend.label}
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${legend.className}`}
-              >
-                <Icon icon={legend.icon} width="13" height="13" />
-                {legend.label}
-              </span>
-            ))}
-          </div>
-        </div> */}
-
-        <div className="overflow-x-auto bg-slate-50/70 dark:bg-slate-950/20">
-          <div className="min-w-[1200px]">
-            <div className="grid grid-cols-15 gap-2 w-full sticky top-0 z-20 bg-slate-100/95 backdrop-blur border-b border-slate-200/70 dark:bg-slate-900/95 dark:border-slate-700">
-              <div className="border-b border-slate-200/70 p-2 min-h-[40px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky left-0 top-0 bg-slate-100/95 z-30 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
-                Pelatih
-              </div>
-              {columnHeader.slice(1).map((header, i) => {
-                const jumlahPerJam = item.data[day][header];
-                return (
-                  <div
-                    key={i}
-                    className="border-b border-slate-200/70 p-2 min-h-[58px] text-center text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-center sticky top-0 bg-slate-100/95 z-20 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
-                  >
-                    {header}
-                    {/* {jumlahPerJam && (
-                      <>
-                        <br />({jumlahPerJam})
-                      </>
-                    )} */}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              ref={scrollContainerRef}
-              className="overflow-y-auto"
-              style={
-                scrollHeight ? { maxHeight: `${scrollHeight}px` } : undefined
-              }
-            >
-              {dataJadwal.map((de) => {
-                const workStatus = getTrainerWorkStatus(de);
-
-                return (
-                  <div
-                    key={de.trainer_id}
-                    className="grid grid-cols-15 gap-2 w-full border-b border-slate-100 px-2 py-1 transition hover:bg-white dark:border-slate-800 dark:hover:bg-slate-900/70"
-                  >
-                    <div
-                      className={`p-2 min-h-[78px] flex flex-col rounded-xl border border-white/50 shadow-sm sticky left-0 z-20 justify-center gap-1 ${
-                        de.gender === "L"
-                          ? "bg-blue-100 text-blue-900 ring-1 ring-blue-200/70"
-                          : "bg-pink-100 text-pink-900 ring-1 ring-pink-200/70"
-                      }`}
-                    >
-                      <span className="text-[clamp(8px,0.7vw,10px)] p-1 font-semibold leading-tight">
-                        {de.nickname && (
-                          <>
-                            {toProperCase(de.nickname)}
-                            <br />({de.total_order})
-                          </>
-                        )}
-                      </span>
-                      {workStatus && (
-                        <span
-                          className={`mx-1 inline-flex max-w-full items-center justify-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-none ${getTrainerWorkStatusClassName(
-                            workStatus,
-                          )}`}
-                          title={`Status kerja: ${workStatus}`}
-                        >
-                          {workStatus}
-                        </span>
-                      )}
-                    </div>
-
-                    <GridKolamDetail item={de} pool={item} />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  });
+  }, [poolOption, selectedBranch, selectedDay, selectedPool]);
 
   const gridKolam = (hari) => {
     const renderEmptyState = (title, description) => (
@@ -1649,10 +722,17 @@ const CekJadwal = () => {
             //   </div>
             // }
           >
-            <GridKolamHeader
-              item={selectedPoolItem}
-              trainers={filteredTrainers}
+            <ScheduleTable
+              pool={selectedPoolItem}
               day={hari}
+              jadwal={jadwal}
+              filteredPelatih={filteredPelatih}
+              filteredGender={filteredGender}
+              completedScheduleIndex={completedScheduleIndex}
+              checked={checked}
+              userId={user_id}
+              onCreateOrder={handleModal}
+              onPerpanjang={handlePerpanjang}
             />
           </Card>
         </div>
@@ -1665,7 +745,7 @@ const CekJadwal = () => {
     }
   };
 
-  const handleModal = ({ pool, jadwal, trainer, hari, jam }) => {
+  const handleModal = useCallback(({ pool, jadwal, trainer, hari, jam }) => {
     setDetailModalVisible(true);
     loadProduct(pool.value);
     setInputValue((prevParams) => ({
@@ -1678,95 +758,7 @@ const CekJadwal = () => {
       company_percentage: 100 - trainer.percent,
       branch: selectedBranch,
     }));
-  };
-
-  const PelatihKosong = React.memo(({ pool, jadwal, trainer, hari, jam }) => {
-    return (
-      <div className="flex justify-center items-center">
-        <Tooltip placement="top" arrow content="Buat Order">
-          <button
-            onClick={() => handleModal({ pool, jadwal, trainer, hari, jam })}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 hover:bg-emerald-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
-          >
-            <Icon
-              icon="heroicons-outline:plus"
-              width="12"
-              height="12"
-              className="text-emerald-600"
-            />
-          </button>
-        </Tooltip>
-      </div>
-    );
-  });
-
-  const PendingReschedule = () => {
-    return (
-      <div className="flex justify-center items-center">
-        <Tooltip placement="top" arrow content="Sedang menunggu reschedule">
-          <button className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-50 hover:bg-yellow-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300/70">
-            <Icon
-              icon="heroicons-outline:x-circle"
-              width="12"
-              height="12"
-              className="text-yellow-600"
-            />
-          </button>
-        </Tooltip>
-      </div>
-    );
-  };
-
-  const PerpanjangPaket = React.memo(
-    ({ order_id, slot, buttonClassName = "", iconClassName = "" }) => {
-      return (
-        <div className="flex justify-center items-center">
-          <Tooltip placement="top" arrow content="Perpanjang Paket">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                handlePerpanjang(order_id, slot);
-              }}
-              className={
-                buttonClassName ||
-                "p-2 rounded-full bg-pink-50 hover:bg-pink-100 transition duration-200 ease-in-out transform hover:scale-105 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300/70"
-              }
-            >
-              <Icon
-                icon="heroicons-outline:heart"
-                width="20"
-                height="20"
-                className={iconClassName || "text-pink-600"}
-              />
-            </button>
-          </Tooltip>
-        </div>
-      );
-    },
-  );
-
-  const legendItems = [
-    {
-      label: "Slot kosong (buat order)",
-      icon: "heroicons-outline:plus",
-      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    },
-    {
-      label: "Perpanjang paket",
-      icon: "heroicons-outline:heart",
-      className: "border-pink-200 bg-pink-50 text-pink-700",
-    },
-    {
-      label: "Jadwal di kolam lain",
-      icon: "heroicons-outline:hand-raised",
-      className: "border-slate-200 bg-slate-100 text-slate-600",
-    },
-    {
-      label: "Pelatih libur",
-      icon: "heroicons-outline:calendar-days",
-      className: "border-rose-200 bg-rose-50 text-rose-700",
-    },
-  ];
+  }, [loadProduct, selectedBranch]);
 
   const viewControls = (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -1977,7 +969,7 @@ const CekJadwal = () => {
                   </div>
                 </div>
 
-                <Tab.Panels key={JSON.stringify(jadwal)} className="mt-3">
+                <Tab.Panels className="mt-3">
                   {tabHari.map((item, index) => {
                     return (
                       <Tab.Panel key={index}>
@@ -2037,47 +1029,55 @@ const CekJadwal = () => {
           onClose={() => setDetailModalVisible(false)}
           className="max-w-5xl"
         >
-          <CreateInvoice
-            params={inputValue}
-            product={productList}
-            branch={selectedBranch}
-            reloadDataMaster={() => {
-              const currentPool = poolOption[selectedPool];
-              const dayName = daysOfWeek[selectedIndex]?.name;
-              if (selectedBranch && currentPool && dayName) {
-                loadSchedule(selectedBranch, currentPool.value, dayName);
-                loadCompletedSchedule(
-                  selectedBranch,
-                  currentPool.value,
-                  dayName,
+          <Suspense
+            fallback={
+              <div className="flex min-h-[240px] items-center justify-center">
+                <PoolLoader size="sm" />
+              </div>
+            }
+          >
+            <CreateInvoice
+              params={inputValue}
+              product={productList}
+              branch={selectedBranch}
+              reloadDataMaster={() => {
+                const currentPool = poolOption[selectedPool];
+                const dayName = daysOfWeek[selectedIndex]?.name;
+                if (selectedBranch && currentPool && dayName) {
+                  loadSchedule(selectedBranch, currentPool.value, dayName);
+                  loadCompletedSchedule(
+                    selectedBranch,
+                    currentPool.value,
+                    dayName,
+                  );
+                }
+                setPoolOption((prev) =>
+                  prev.map((item, index) =>
+                    index === selectedPool
+                      ? { ...item, filled: item.filled + 1 }
+                      : item,
+                  ),
                 );
-              }
-              setPoolOption((prev) =>
-                prev.map((item, index) =>
-                  index === selectedPool
-                    ? { ...item, filled: item.filled + 1 }
-                    : item,
-                ),
-              );
-              setTabHari((prev) =>
-                prev.map((item, index) =>
-                  index === selectedIndex
-                    ? {
-                        ...item,
-                        total: item.total + 1,
-                        data: {
-                          ...item.data,
-                          [inputValue.time]:
-                            (item.data[inputValue.time] || 0) + 1,
-                        },
-                      }
-                    : item,
-                ),
-              );
-              setReloadDone(true); // ✅ trigger setelah selesai update
-            }}
-            // isModalShow={() => setDetailModalVisible(false)}
-          />
+                setTabHari((prev) =>
+                  prev.map((item, index) =>
+                    index === selectedIndex
+                      ? {
+                          ...item,
+                          total: item.total + 1,
+                          data: {
+                            ...item.data,
+                            [inputValue.time]:
+                              (item.data[inputValue.time] || 0) + 1,
+                          },
+                        }
+                      : item,
+                  ),
+                );
+                setReloadDone(true); // ✅ trigger setelah selesai update
+              }}
+              // isModalShow={() => setDetailModalVisible(false)}
+            />
+          </Suspense>
         </Modal>
       )}
     </>
@@ -2085,235 +1085,3 @@ const CekJadwal = () => {
 };
 
 export default CekJadwal;
-
-const PelatihLibur = React.memo(() => {
-  return (
-    <div className="flex w-full justify-center">
-      <span className="inline-flex min-w-[60px] items-center justify-center rounded bg-white/75 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-rose-700 shadow-sm">
-        Libur
-      </span>
-    </div>
-  );
-});
-
-const PelatihAdaJadwal = React.memo(({ poolNames = [], count = 0 }) => {
-  const list = poolNames.length ? poolNames : ["kolam lain"];
-  const heading = count > 1 ? `Sudah ada ${count} jadwal` : "Sudah ada jadwal";
-  return (
-    <div className="flex justify-center items-center">
-      <Tooltip
-        placement="top"
-        arrow
-        content={
-          <div className="whitespace-pre-line text-sm text-white">
-            {`${heading}\n${list.join("\n")}`}
-          </div>
-        }
-      >
-        <div
-          className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 
-                        transition duration-200 ease-in-out shadow-sm cursor-default"
-        >
-          <Icon
-            icon="heroicons-outline:hand-raised"
-            width="20"
-            height="20"
-            className="text-slate-600"
-          />
-        </div>
-      </Tooltip>
-    </div>
-  );
-});
-
-const CompletedScheduleHint = React.memo(({ schedules = [] }) => {
-  if (!schedules.length) return null;
-
-  const visibleSchedules = schedules.slice(0, 5);
-  const hiddenCount = schedules.length - visibleSchedules.length;
-
-  return (
-    <div className="flex w-full justify-center">
-      <Tooltip
-        placement="top"
-        arrow
-        interactive
-        theme="custom-light"
-        maxWidth={420}
-        content={
-          <div className="w-[320px] max-w-[calc(100vw-48px)] text-left">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-1 pb-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <Icon
-                    icon="heroicons-outline:archive-box"
-                    width="17"
-                    height="17"
-                    className="shrink-0 text-sky-600"
-                  />
-                  <span>Latest slot ini</span>
-                </div>
-                <div className="mt-0.5 text-[11px] text-slate-500">
-                  Order selesai di pelatih dan jam yang sama.
-                </div>
-              </div>
-              <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">
-                {schedules.length}
-              </span>
-            </div>
-            <div className="mt-2 max-h-[260px] space-y-2 overflow-y-auto pr-1">
-              {visibleSchedules.map((schedule, index) => {
-                const students = getStudentNames(schedule);
-                const orderDate = getCompletedScheduleOrderDate(schedule);
-                const lastTrainingDate =
-                  getCompletedScheduleLastTrainingDate(schedule);
-
-                return (
-                  <div
-                    key={`${getCompletedOrderKey(schedule)}-${index}`}
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="inline-flex min-w-[38px] justify-center rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
-                        {getCompletedScheduleProductLabel(schedule)}
-                      </span>
-                      {lastTrainingDate ? (
-                        <span className="whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
-                          {formatCompletedScheduleDate(lastTrainingDate)}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-2 text-xs font-medium leading-snug text-slate-700">
-                      {students.length
-                        ? students.map((name) => toProperCase(name)).join(", ")
-                        : "Siswa tidak tersedia"}
-                    </div>
-                    <div className="mt-2 grid gap-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
-                      <div className="flex items-center justify-between gap-2">
-                        <span>Order</span>
-                        <span className="font-semibold text-slate-700">
-                          {orderDate
-                            ? formatCompletedScheduleDate(orderDate)
-                            : "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span>Latihan terakhir</span>
-                        <span className="font-semibold text-slate-700">
-                          {lastTrainingDate
-                            ? formatCompletedScheduleDate(lastTrainingDate)
-                            : "-"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {hiddenCount > 0 ? (
-              <div className="mt-2 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
-                +{hiddenCount} order lainnya
-              </div>
-            ) : null}
-          </div>
-        }
-      >
-        <div className="mx-auto flex w-[104px] max-w-full flex-col justify-center gap-1.5 overflow-hidden rounded-md border-2 border-sky-300 bg-sky-50 p-1.5 text-slate-700 shadow-md shadow-sky-200/60 transition hover:border-sky-400 hover:bg-white">
-          <Badge
-            label={`Riwayat`}
-            className="justify-center rounded-full border border-sky-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 shadow-sm"
-          />
-          {/* <Badge
-            label={getCompletedScheduleProductLabel(visibleSchedules[0])}
-            className="justify-center bg-primary-500 px-1.5 py-0.5 text-[9px] text-white"
-          />
-          <div className="space-y-0.5 text-[9px] font-medium leading-tight text-slate-600">
-            {getStudentNames(visibleSchedules[0]).length ? (
-              getStudentNames(visibleSchedules[0])
-                .slice(0, 2)
-                .map((name, index) => (
-                  <div key={`${name}-${index}`} className="break-words">
-                    {toProperCase(name)}
-                  </div>
-                ))
-            ) : (
-              <div className="break-words">Siswa tidak tersedia</div>
-            )}
-          </div>
-          <div className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
-            <span className="truncate">
-              {formatCompletedScheduleDate(
-                getCompletedScheduleLastTrainingDate(visibleSchedules[0]),
-              ) || "-"}
-            </span>
-            <Icon
-              icon="heroicons-outline:archive-box"
-              width="13"
-              height="13"
-              className="shrink-0 text-sky-600"
-            />
-          </div> */}
-        </div>
-      </Tooltip>
-    </div>
-  );
-});
-
-const STATUS_MAP = {
-  pending: {
-    label: "Pending",
-    className: "bg-amber-500 text-white",
-    icon: "heroicons-outline:banknotes",
-  },
-  paid: {
-    label: "Paid",
-    className: "bg-emerald-500 text-white",
-    icon: "heroicons-outline:banknotes",
-  },
-  // settled: {
-  //   label: "Settled",
-  //   className: "bg-white text-slate-800",
-  //   icon: "heroicons-outline:banknotes",
-  // },
-  expired: {
-    label: "Expired",
-    className: "bg-danger-500 text-white",
-    icon: "heroicons-outline:banknotes",
-  },
-};
-
-const PaymentStatusBadge = ({ status }) => {
-  const statusKey = status?.toLowerCase();
-  const { label, className, icon } = STATUS_MAP[statusKey] || {
-    label: status,
-    className: "bg-gray-300 text-white",
-    icon: "heroicons-outline:banknotes",
-  };
-
-  if (statusKey === "settled") return null;
-
-  return (
-    <Badge
-      label={label}
-      className={
-        className +
-        " animate-bounce justify-center text-[clamp(8px,0.7vw,10px)] p-1"
-      }
-      // icon={icon}
-    />
-  );
-};
-
-const AdminBadge = ({ admin }) => {
-  return (
-    <Badge
-      label={admin}
-      className="animate-bounce justify-center text-[clamp(9px,0.8vw,12px)] 
-                 px-3 py-1 rounded-full 
-                 bg-white text-pink-700 font-semibold 
-                 shadow-md shadow-pink-200 
-                 border border-pink-300
-                 hover:bg-pink-200 transition"
-    />
-  );
-};
