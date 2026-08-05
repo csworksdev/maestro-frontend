@@ -1,7 +1,7 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { getKolamAll, getKolamByBranch } from "@/axios/referensi/kolam";
-import { CJCompletedSchedule, CJGetPool } from "@/axios/schedule/cekJadwal";
+import { CJGetPool } from "@/axios/schedule/cekJadwal";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -187,8 +187,37 @@ const getTrainerKeys = (entry) => {
 };
 
 const extractPayloadList = (response) => {
-  const data = response?.data;
-  const payload = data?.results ?? data?.data ?? data?.payload ?? data ?? [];
+  const unwrapPayload = (value) => {
+    if (!value || Array.isArray(value) || typeof value !== "object") {
+      return value;
+    }
+
+    const payloadKeys = [
+      "results",
+      "payload",
+      "message",
+      "completed_schedules",
+      "completedSchedules",
+      "completed_schedule",
+      "completedSchedule",
+      "schedules",
+      "orders",
+      "data",
+    ];
+
+    const hasEntryShape =
+      getTrainerKeys(value).length > 0 || getScheduleTimeValue(value);
+
+    if (hasEntryShape) {
+      return value;
+    }
+
+    const payloadKey = payloadKeys.find((key) => value[key] !== undefined);
+    return payloadKey ? unwrapPayload(value[payloadKey]) : value;
+  };
+
+  const data = response?.data ?? response;
+  const payload = unwrapPayload(data) ?? [];
 
   if (Array.isArray(payload)) return payload;
   if (payload && typeof payload === "object") {
@@ -326,6 +355,8 @@ const buildCompletedScheduleIndex = (items = []) => {
     const nestedCollections = [
       entry?.orders,
       entry?.schedules,
+      entry?.completed_schedule,
+      entry?.completedSchedule,
       entry?.completed_schedules,
       entry?.completedSchedules,
       entry?.order_schedules,
@@ -497,7 +528,7 @@ const CekJadwal = () => {
     useState(false);
   const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
-  const completedScheduleRequestRef = useRef(0);
+  const completedScheduleSocketRef = useRef(null);
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -789,40 +820,6 @@ const CekJadwal = () => {
     setJadwal([...data]);
   };
 
-  const loadCompletedSchedule = async (_selectedBranch, poolName, dayName) => {
-    if (!_selectedBranch || !poolName || !dayName) {
-      setCompletedSchedules([]);
-      return;
-    }
-
-    const requestId = completedScheduleRequestRef.current + 1;
-    completedScheduleRequestRef.current = requestId;
-    setIsCompletedScheduleLoading(true);
-
-    try {
-      const response = await CJCompletedSchedule(
-        _selectedBranch,
-        poolName,
-        dayName,
-      );
-
-      if (completedScheduleRequestRef.current !== requestId) {
-        return;
-      }
-
-      setCompletedSchedules(extractPayloadList(response));
-    } catch (error) {
-      console.error("Failed to load completed schedules:", error);
-      if (completedScheduleRequestRef.current === requestId) {
-        setCompletedSchedules([]);
-      }
-    } finally {
-      if (completedScheduleRequestRef.current === requestId) {
-        setIsCompletedScheduleLoading(false);
-      }
-    }
-  };
-
   const closeScheduleSocket = () => {
     if (!scheduleSocketRef.current) {
       return;
@@ -841,6 +838,82 @@ const CekJadwal = () => {
     ) {
       ws.close(1000);
     }
+  };
+
+  const closeCompletedScheduleSocket = () => {
+    if (!completedScheduleSocketRef.current) {
+      return;
+    }
+
+    const ws = completedScheduleSocketRef.current;
+    completedScheduleSocketRef.current = null;
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onerror = null;
+    ws.onclose = null;
+
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
+      ws.close(1000);
+    }
+  };
+
+  const loadCompletedSchedule = (_selectedBranch, poolName, dayName) => {
+    closeCompletedScheduleSocket();
+
+    if (!_selectedBranch || !poolName || !dayName) {
+      setCompletedSchedules([]);
+      setIsCompletedScheduleLoading(false);
+      return;
+    }
+
+    setIsCompletedScheduleLoading(true);
+
+    const endpoint = `/ws/completed-schedule/?branch=${_selectedBranch}&pool=${poolName}&day=${dayName}`;
+    const wsUrl = buildWsUrl(endpoint);
+
+    if (!wsUrl) {
+      console.error("Unable to resolve completed schedule WebSocket URL");
+      setCompletedSchedules([]);
+      setIsCompletedScheduleLoading(false);
+      return;
+    }
+
+    const ws = new WebSocket(wsUrl);
+    completedScheduleSocketRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        setCompletedSchedules(extractPayloadList({ data: message }));
+      } catch (error) {
+        console.error(
+          "Failed to parse completed schedule websocket payload:",
+          error,
+        );
+        setCompletedSchedules([]);
+      } finally {
+        if (completedScheduleSocketRef.current === ws) {
+          setIsCompletedScheduleLoading(false);
+        }
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("Completed schedule websocket error:", error);
+      if (completedScheduleSocketRef.current === ws) {
+        setCompletedSchedules([]);
+        setIsCompletedScheduleLoading(false);
+      }
+    };
+
+    ws.onclose = () => {
+      if (completedScheduleSocketRef.current === ws) {
+        completedScheduleSocketRef.current = null;
+      }
+    };
   };
 
   const loadSchedule = async (_selectedBranch, poolName, dayName) => {
@@ -902,6 +975,7 @@ const CekJadwal = () => {
   useEffect(() => {
     return () => {
       closeScheduleSocket();
+      closeCompletedScheduleSocket();
     };
   }, []);
 
@@ -928,6 +1002,9 @@ const CekJadwal = () => {
   }, [selectedIndex]);
 
   const handleBranchChange = (option) => {
+    closeScheduleSocket();
+    closeCompletedScheduleSocket();
+
     if (!option) {
       setSelectedBranch(null);
       setPoolOption([]);
@@ -937,6 +1014,8 @@ const CekJadwal = () => {
       setFilteredPelatih("");
       setSelectedDay(undefined);
       setCompletedSchedules([]);
+      setIsScheduleLoading(false);
+      setIsCompletedScheduleLoading(false);
       return;
     }
 
@@ -949,6 +1028,8 @@ const CekJadwal = () => {
     setFilterPelatih([]);
     setFilteredPelatih("");
     setCompletedSchedules([]);
+    setIsScheduleLoading(false);
+    setIsCompletedScheduleLoading(false);
   };
 
   const handlePoolChange = (index) => {
