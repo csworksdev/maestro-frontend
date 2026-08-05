@@ -145,6 +145,7 @@ describe("Trainer biodata form", () => {
 
     await user.type(screen.getByLabelText("Nama Trainer"), "Trainer A");
     await user.type(screen.getByLabelText("Panggilan"), "TA");
+    await user.type(screen.getByLabelText("Phone"), "081234567890");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
     await user.type(screen.getByLabelText("Tanggal Lahir"), "1990-01-01");
     await user.type(screen.getByLabelText("Tanggal Registrasi"), "2024-01-05");
@@ -161,6 +162,7 @@ describe("Trainer biodata form", () => {
     expect(payload).toMatchObject({
       fullname: "Trainer A",
       nickname: "TA",
+      phone: "081234567890",
       gender: "L",
       precentage_fee: 10,
       is_active: false,
@@ -200,6 +202,7 @@ describe("Trainer biodata form", () => {
           trainer_id: 9,
           fullname: "Trainer Lama",
           nickname: "TL",
+          phone: "089876543210",
           gender: "P",
           dob: "1989-01-01",
           reg_date: "2024-01-01",
@@ -217,6 +220,8 @@ describe("Trainer biodata form", () => {
 
     await user.clear(screen.getByLabelText("Nama Trainer"));
     await user.type(screen.getByLabelText("Nama Trainer"), "Trainer Baru");
+    await user.clear(screen.getByLabelText("Phone"));
+    await user.type(screen.getByLabelText("Phone"), "081111111111");
     await user.clear(screen.getByLabelText("Bagi Hasil"));
     await user.type(screen.getByLabelText("Bagi Hasil"), "15");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "P");
@@ -234,6 +239,7 @@ describe("Trainer biodata form", () => {
     expect(payload).toMatchObject({
       trainer_id: 9,
       fullname: "Trainer Baru",
+      phone: "081111111111",
       gender: "P",
       precentage_fee: 15,
       is_active: true,

@@ -178,6 +178,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
         : "",
       gender: newData.gender,
       account_number: newData.account_number,
+      phone: newData.phone,
       precentage_fee: newData.precentage_fee,
       is_fulltime: contractType,
       contract_type: contractType,
@@ -228,6 +229,16 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
           register={register}
           error={errors.nickname?.message}
           defaultValue={isUpdate ? data.nickname : ""}
+          disabled={loading}
+        />
+        <Textinput
+          name="phone"
+          label="Phone"
+          type="text"
+          placeholder="Masukan nomor telepon"
+          register={register}
+          error={errors.phone?.message}
+          defaultValue={isUpdate ? data.phone : ""}
           disabled={loading}
         />
         <Select
