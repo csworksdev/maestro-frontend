@@ -7,6 +7,31 @@ import Card from "@/components/ui/Card";
 import { axiosConfig } from "@/axios/config";
 import { formatDistanceToNow } from "date-fns";
 
+const normalizeNotification = (notification) => {
+  if (!notification || typeof notification !== "object") {
+    return null;
+  }
+
+  const title = notification.title || notification.subject || "";
+  const message =
+    notification.message || notification.body || notification.notification_body || "";
+
+  if (!String(title).trim() && !String(message).trim()) {
+    return null;
+  }
+
+  return {
+    ...notification,
+    title: String(title || "Notification").trim(),
+    message: String(message || "").trim(),
+  };
+};
+
+const resolveNotificationList = (data) => {
+  const list = data?.notifications || data?.results || data;
+  return Array.isArray(list) ? list.map(normalizeNotification).filter(Boolean) : [];
+};
+
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
 
@@ -15,7 +40,7 @@ const NotificationPage = () => {
     async function load() {
       try {
         const res = await axiosConfig("/api/notifications/");
-        setNotifications(res.data.notifications || res.data); // tergantung DRF pagination
+        setNotifications(resolveNotificationList(res.data));
       } catch (err) {
         console.error("Notif fetch error", err);
       }
@@ -34,7 +59,7 @@ const NotificationPage = () => {
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <Menu as={Fragment}>
             {notifications?.map((item, i) => (
-              <Menu.Item key={i}>
+              <Menu.Item key={item.id || `${item.title}-${item.created_at || i}`}>
                 {({ active }) => (
                   <div
                     className={`${
@@ -45,14 +70,21 @@ const NotificationPage = () => {
                   >
                     <div className="flex ltr:text-left rtl:text-right">
                       <div className="flex-none ltr:mr-3 rtl:ml-3">
-                        <div className="h-8 w-8 bg-white rounded-full">
-                          <img
-                            src={item.image}
-                            alt=""
-                            className={`${
-                              active ? " border-white" : " border-transparent"
-                            } block w-full h-full object-cover rounded-full border`}
-                          />
+                        <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt=""
+                              className={`${
+                                active ? " border-white" : " border-transparent"
+                              } block w-full h-full object-cover rounded-full border`}
+                            />
+                          ) : (
+                            <Icon
+                              icon="heroicons-outline:bell"
+                              className="text-slate-500 text-lg"
+                            />
+                          )}
                         </div>
                       </div>
                       <div className="flex-1">

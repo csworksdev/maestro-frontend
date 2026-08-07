@@ -8,6 +8,64 @@ import { formatDistanceToNow } from "date-fns";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
 import { buildWsUrl } from "@/utils/wsUrl";
 
+const getNotificationKey = (notification) => {
+  if (!notification) {
+    return null;
+  }
+
+  if (notification.id != null) {
+    return `id:${notification.id}`;
+  }
+
+  const title = notification.title || "";
+  const message = notification.message || notification.body || "";
+  const createdAt = notification.created_at || "";
+  const targetUrl = notification.target_url || "";
+  const fingerprint = `${title}|${message}|${createdAt}|${targetUrl}`;
+
+  return fingerprint.replace(/\|/g, "").trim() ? `fp:${fingerprint}` : null;
+};
+
+const normalizeNotification = (notification) => {
+  if (!notification || typeof notification !== "object") {
+    return null;
+  }
+
+  const title = notification.title || notification.subject || "";
+  const message =
+    notification.message || notification.body || notification.notification_body || "";
+
+  if (!String(title).trim() && !String(message).trim()) {
+    return null;
+  }
+
+  return {
+    ...notification,
+    title: String(title || "Notification").trim(),
+    message: String(message || "").trim(),
+    is_read: Boolean(notification.is_read),
+  };
+};
+
+const mergeUniqueNotifications = (currentNotifications, incomingNotifications) => {
+  const normalizedIncoming = incomingNotifications
+    .map(normalizeNotification)
+    .filter(Boolean);
+  const existingKeys = new Set(currentNotifications.map(getNotificationKey).filter(Boolean));
+  const uniqueIncoming = normalizedIncoming.filter((notification) => {
+    const key = getNotificationKey(notification);
+    if (!key || existingKeys.has(key)) {
+      return false;
+    }
+    existingKeys.add(key);
+    return true;
+  });
+
+  return [...uniqueIncoming, ...currentNotifications];
+};
+
+const countUnread = (items) => items.filter((item) => !item.is_read).length;
+
 // helper untuk badge
 const NotifyLabel = ({ unread }) => {
   return (
@@ -29,6 +87,7 @@ const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
   const socketRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
   const navigate = useNavigate();
 
   const resolveInternalRoute = (targetUrl) => {
@@ -57,13 +116,56 @@ const Notification = () => {
       return undefined;
     }
 
+    const addIncomingNotifications = (incoming) => {
+      const incomingList = Array.isArray(incoming) ? incoming : [incoming];
+      setNotifications((prev) => {
+        const next = mergeUniqueNotifications(prev, incomingList);
+        setUnread(countUnread(next));
+        return next;
+      });
+    };
+
+    const handleSocketMessage = (event) => {
+      let payload;
+      try {
+        payload = JSON.parse(event.data);
+      } catch (error) {
+        console.warn("Ignored malformed notification payload:", event.data);
+        return;
+      }
+
+      if (payload.type === "notification.created") {
+        addIncomingNotifications(payload.notification);
+      }
+      if (payload.type === "notification.initial") {
+        addIncomingNotifications(payload.notifications || payload.notification);
+      }
+    };
+
     const openSocket = (tokenValue) => {
       const url = buildWsUrl(`/ws/notifications/?token=${tokenValue}`);
       if (!url) {
         console.error("Unable to resolve WebSocket URL for notifications");
         return null;
       }
-      return new WebSocket(url);
+
+      const socket = new WebSocket(url);
+      socket.onopen = () => {
+        // console.log("🔔 WS connected");
+      };
+      socket.onmessage = handleSocketMessage;
+      socket.onclose = () => {
+        reconnectTimerRef.current = setTimeout(() => {
+          if (socketRef.current?.readyState !== WebSocket.OPEN) {
+            const latestToken = getTokenFromCookie();
+            if (latestToken) {
+              socketRef.current = openSocket(latestToken);
+            }
+          }
+        }, 5000);
+      };
+
+      return socket;
     };
 
     socketRef.current = openSocket(token);
@@ -71,34 +173,10 @@ const Notification = () => {
       return undefined;
     }
 
-    socketRef.current.onopen = () => {
-      // console.log("🔔 WS connected");
-    };
-    socketRef.current.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
-      if (payload.type === "notification.created") {
-        const n = payload.notification;
-        setNotifications((prev) => [n, ...prev]);
-        setUnread((u) => u + 1);
-      }
-      if (payload.type === "notification.initial") {
-        setNotifications((prev) => [payload.notification, ...prev]);
-        setUnread((u) => u + 1);
-      }
-    };
-    socketRef.current.onclose = () => {
-      setTimeout(() => {
-        // auto reconnect
-        if (socketRef.current?.readyState !== WebSocket.OPEN) {
-          const latestToken = getTokenFromCookie();
-          if (latestToken) {
-            socketRef.current = openSocket(latestToken);
-          }
-        }
-      }, 5000);
-    };
-
     return () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
       socketRef.current?.close();
     };
   }, []);
