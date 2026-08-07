@@ -60,11 +60,10 @@ const LoginForm = () => {
         await requestAndSendToken(async (token) => {
           try {
             await axiosConfig.post(
-              "/api/notifikasi/save-token/",
+              "/auth/users/send_device_token/",
               {
-                token,
+                fcm_token: token,
                 device_type: "web",
-                origin: window.location.hostname,
               },
               {
                 headers: {
