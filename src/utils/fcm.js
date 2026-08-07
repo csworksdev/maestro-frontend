@@ -146,8 +146,8 @@ export const requestAndSendToken = async (onTokenSaved) => {
 
 export const sendTokenToBackend = async (fcmToken) => {
   try {
-    await axiosConfig.post("/api/notifikasi/save-token/", {
-      token: fcmToken,
+    await axiosConfig.post("/auth/users/send_device_token/", {
+      fcm_token: fcmToken,
       device_type: "web",
     });
     markTokenSentToBackend(fcmToken);
