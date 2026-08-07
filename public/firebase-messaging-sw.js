@@ -17,49 +17,80 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+const resolveNotificationContent = (payload = {}) => {
+  const notification = payload.notification || {};
+  const data = payload.data || {};
+  const title =
+    notification.title ||
+    data.title ||
+    data.notification_title ||
+    data.subject ||
+    "";
+  const body =
+    notification.body ||
+    data.body ||
+    data.message ||
+    data.notification_body ||
+    "";
+
+  return {
+    title: String(title || "").trim(),
+    body: String(body || "").trim(),
+    data,
+  };
+};
+
 messaging.onBackgroundMessage(function (payload) {
   console.log(
     "[firebase-messaging-sw.js] Received background message ",
     payload
   );
 
-  const { title, body } = payload.notification;
+  const { title, body, data } = resolveNotificationContent(payload);
+
+  if (!title && !body) {
+    console.warn("[firebase-messaging-sw.js] Ignored empty notification", payload);
+    return;
+  }
 
   const notificationOptions = {
-    body: body,
+    body,
     icon: "https://maestroswim.com/wp-content/uploads/2024/01/cropped-5D20BBFE-27FE-4582-A1D6-B64ABC55F5AE.png",
-    data: payload.data,
+    data,
   };
 
-  self.registration.showNotification(title, notificationOptions);
+  self.registration.showNotification(title || "Maestro Swim", notificationOptions);
 });
 
-self.addEventListener("push", function (event) {
-  const data = event.data.json();
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
 
-  // Jika tab aktif, kirim message ke tab, bukan showNotification
+  let targetUrl = "/";
+  try {
+    const candidate = new URL(
+      event.notification.data?.target_url || "/",
+      self.location.origin
+    );
+    if (candidate.origin === self.location.origin) {
+      targetUrl = `${candidate.pathname}${candidate.search}${candidate.hash}`;
+    }
+  } catch (error) {
+    console.warn("[firebase-messaging-sw.js] Ignored malformed target URL", error);
+  }
+
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        if (clientList.length > 0) {
-          // Kirim message ke tab aktif
-          clientList[0].postMessage(data);
-        } else {
-          // Tidak ada tab aktif, tampilkan notification biasa
-          self.registration.showNotification(data.title, {
-            body: data.body,
-            icon: "/icons/logo.png",
-            actions: [
-              {
-                action: "dismiss",
-                title: "Tutup",
-                icon: "/icons/close.png",
-              },
-            ],
-            data: data,
-          });
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.focus();
+          client.postMessage({ type: "notification.click", target_url: targetUrl });
+          return;
         }
-      })
+      }
+
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
   );
 });

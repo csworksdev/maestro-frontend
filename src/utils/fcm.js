@@ -4,8 +4,12 @@ import { axiosConfig } from "@/axios/config";
 import {
   deleteFcmTokenCookie,
   getFcmTokenCookie,
+  getAuthCookies,
   setFcmTokenCookie,
 } from "@/utils/authCookies";
+import { useAuthStore } from "@/redux/slicers/authSlice";
+
+const FCM_TOKEN_SENT_CONTEXT_KEY = "fcm_token_sent_context";
 
 const needsUserActivation = () =>
   typeof navigator !== "undefined" &&
@@ -40,6 +44,58 @@ export const requestNotificationPermissionSafely = async () => {
   }
 };
 
+const getCurrentUserIdentifier = () => {
+  const stateData = useAuthStore.getState().data;
+  const cookieData = getAuthCookies().data;
+  const userData = stateData?.user_id ? stateData : cookieData;
+
+  return (
+    userData?.user_id ||
+    userData?.id ||
+    userData?.username ||
+    userData?.user_name ||
+    "anonymous"
+  );
+};
+
+const getTokenSendContext = (token) => {
+  const host =
+    typeof window !== "undefined" ? window.location.hostname : "unknown-host";
+  return `${host}:${getCurrentUserIdentifier()}:${token}`;
+};
+
+const getLastTokenSendContext = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(FCM_TOKEN_SENT_CONTEXT_KEY);
+  } catch (error) {
+    console.warn("[FCM] Tidak bisa membaca localStorage:", error);
+    return null;
+  }
+};
+
+const setLastTokenSendContext = (context) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(FCM_TOKEN_SENT_CONTEXT_KEY, context);
+  } catch (error) {
+    console.warn("[FCM] Tidak bisa menyimpan localStorage:", error);
+  }
+};
+
+const shouldSendTokenToBackend = (token) =>
+  getLastTokenSendContext() !== getTokenSendContext(token);
+
+const markTokenSentToBackend = (token) => {
+  setLastTokenSendContext(getTokenSendContext(token));
+};
+
 // ✅ Cek permission dulu
 export const requestAndSendToken = async (onTokenSaved) => {
   const messaging = await getMessagingInstance();
@@ -72,7 +128,12 @@ export const requestAndSendToken = async (onTokenSaved) => {
           setFcmTokenCookie(currentToken);
         }
 
-        await tokenHandler(currentToken);
+        if (shouldSendTokenToBackend(currentToken)) {
+          const result = await tokenHandler(currentToken);
+          if (result !== false) {
+            markTokenSentToBackend(currentToken);
+          }
+        }
         return currentToken;
       } else {
         console.warn("⚠️ Tidak ada token.");
@@ -93,6 +154,7 @@ export const sendTokenToBackend = async (fcmToken) => {
       token: fcmToken,
       device_type: "web",
     });
+    markTokenSentToBackend(fcmToken);
     console.log("✅ Token FCM dikirim ke backend");
   } catch (err) {
     console.error(

@@ -78,6 +78,7 @@ const LoginForm = () => {
               "❌ Gagal simpan FCM token:",
               err.response?.data || err.message
             );
+            return false;
           }
         });
 
