@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Dropdown from "@/components/ui/Dropdown";
 import Icon from "@/components/ui/Icon";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu } from "@headlessui/react";
+import { Link } from "react-router-dom";
 import { axiosConfig } from "@/axios/config";
 import { formatDistanceToNow } from "date-fns";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
@@ -88,25 +87,15 @@ const Notification = () => {
   const [unread, setUnread] = useState(0);
   const socketRef = useRef(null);
   const reconnectTimerRef = useRef(null);
-  const navigate = useNavigate();
 
-  const resolveInternalRoute = (targetUrl) => {
-    if (!targetUrl || typeof window === "undefined") {
-      return null;
-    }
+  const orderedNotifications = useMemo(() => {
+    const getTime = (notification) => {
+      const time = new Date(notification.created_at).getTime();
+      return Number.isNaN(time) ? 0 : time;
+    };
 
-    try {
-      const candidate = new URL(targetUrl, window.location.origin);
-      if (candidate.origin !== window.location.origin) {
-        return null;
-      }
-
-      return `${candidate.pathname}${candidate.search}${candidate.hash}`;
-    } catch (error) {
-      console.warn("Ignored malformed notification target URL:", targetUrl);
-      return null;
-    }
-  };
+    return [...notifications].sort((a, b) => getTime(b) - getTime(a));
+  }, [notifications]);
 
   // buka websocket
   useEffect(() => {
@@ -181,23 +170,12 @@ const Notification = () => {
     };
   }, []);
 
-  const handleClickNotif = async (id, targetUrl) => {
+  const handleMarkAsRead = async (id) => {
     await axiosConfig.post("/api/notifications/" + id + "/mark_read/");
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
     setUnread((u) => (u > 0 ? u - 1 : 0));
-    if (targetUrl) {
-      const internalRoute = resolveInternalRoute(targetUrl);
-      if (internalRoute) {
-        navigate(internalRoute);
-      } else {
-        console.warn(
-          "Blocked navigation to external notification target:",
-          targetUrl
-        );
-      }
-    }
   };
 
   return (
@@ -221,38 +199,36 @@ const Notification = () => {
             No notifications
           </div>
         )}
-        {notifications.map((item, i) => (
-          <Menu.Item key={item.id || i}>
-            {({ active }) => (
-              <div
-                className={`${
-                  active
-                    ? "bg-slate-100 dark:bg-slate-700 dark:bg-opacity-70 text-slate-800"
-                    : "text-slate-600 dark:text-slate-300"
-                } block w-full px-4 py-2 text-sm  cursor-pointer`}
-                onClick={() =>
-                  !item.is_read && handleClickNotif(item.id, item.target_url)
-                }
-              >
-                <div className="flex">
-                  <div className="flex-1">
-                    <div className="font-medium">{item.title}</div>
-                    <div className="text-xs">{item.message}</div>
-                    <div className="text-slate-400 dark:text-slate-400 text-xs mt-1">
-                      {formatDistanceToNow(new Date(item.created_at), {
-                        addSuffix: true,
-                      })}
-                    </div>
-                  </div>
-                  {!item.is_read && (
-                    <div className="flex-0 pl-2">
-                      <span className="h-[10px] w-[10px] bg-danger-500 border border-white dark:border-slate-400 rounded-full inline-block"></span>
-                    </div>
-                  )}
+        {orderedNotifications.map((item, i) => (
+          <button
+            type="button"
+            key={item.id || i}
+            className="block w-full px-4 py-2 text-left text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-700 dark:hover:bg-opacity-70 cursor-pointer"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!item.is_read) {
+                handleMarkAsRead(item.id);
+              }
+            }}
+          >
+            <div className="flex">
+              <div className="flex-1">
+                <div className="font-medium">{item.title}</div>
+                <div className="text-xs">{item.message}</div>
+                <div className="text-slate-400 dark:text-slate-400 text-xs mt-1">
+                  {formatDistanceToNow(new Date(item.created_at), {
+                    addSuffix: true,
+                  })}
                 </div>
               </div>
-            )}
-          </Menu.Item>
+              {!item.is_read && (
+                <div className="flex-0 pl-2">
+                  <span className="h-[10px] w-[10px] bg-danger-500 border border-white dark:border-slate-400 rounded-full inline-block"></span>
+                </div>
+              )}
+            </div>
+          </button>
         ))}
       </div>
     </Dropdown>
