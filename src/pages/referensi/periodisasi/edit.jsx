@@ -42,7 +42,7 @@ const Edit = () => {
     AddPeriodisasi(data).then((res) => {
       if (res?.status)
         Swal.fire("Added!", "Your file has been Added.", "success").then(() =>
-          navigate(-1)
+          navigate(-1),
         );
     });
   };
@@ -52,7 +52,7 @@ const Edit = () => {
     EditPeriodisasi(data.periode_id, updatedData).then((res) => {
       if (res?.status)
         Swal.fire("Edited!", "Your file has been Edited.", "success").then(() =>
-          navigate(-1)
+          navigate(-1),
         );
     });
   };
@@ -110,48 +110,99 @@ const Edit = () => {
               // options={{ numeral: true, numeralPositiveOnly: true }}
               defaultValue={isUpdate ? data.month : ""}
             />
-            <div>
-              <label className="form-label" htmlFor="start_date">
-                Tanggal Mulai
-              </label>
-              <Flatpickr
-                defaultValue={isUpdate ? data.start_date : ""}
-                name="start_date"
-                options={{
-                  minDate: data.end_date - 30,
-                  disableMobile: true,
-                  allowInput: true,
-                  altInput: true,
-                  altFormat: "d F Y",
-                }}
-                className="py-2"
-                onChange={(date) => setValue("start_date", date[0])}
-              />
-              {errors.start_date && (
-                <p className="error-message">{errors.start_date.message}</p>
-              )}
+            <div className="flex flex-col gap-2">
+              <div>
+                <label className="form-label" htmlFor="start_date">
+                  Tanggal Mulai
+                </label>
+                <Flatpickr
+                  defaultValue={isUpdate ? data.start_date : ""}
+                  name="start_date"
+                  options={{
+                    minDate: data.end_date - 30,
+                    disableMobile: true,
+                    allowInput: true,
+                    altInput: true,
+                    altFormat: "d F Y",
+                  }}
+                  className="py-2"
+                  onChange={(date) => setValue("start_date", date[0])}
+                />
+                {errors.start_date && (
+                  <p className="error-message">{errors.start_date.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="form-label" htmlFor="presence_start_date">
+                  Tanggal Mulai Presensi
+                </label>
+                <Flatpickr
+                  defaultValue={isUpdate ? data.presence_start_date : ""}
+                  name="presence_start_date"
+                  options={{
+                    minDate: data.presence_end_date - 30,
+                    disableMobile: true,
+                    allowInput: true,
+                    altInput: true,
+                    altFormat: "d F Y",
+                  }}
+                  className="py-2"
+                  onChange={(date) => setValue("presence_start_date", date[0])}
+                />
+                {errors.presence_start_date && (
+                  <p className="error-message">
+                    {errors.presence_start_date.message}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="form-label" htmlFor="end_date">
-                Tanggal Selesai
-              </label>
-              <Flatpickr
-                defaultValue={isUpdate ? data.end_date : ""}
-                name="end_date"
-                options={{
-                  minDate: data.start_date,
-                  disableMobile: true,
-                  allowInput: true,
-                  altInput: true,
-                  altFormat: "d F Y",
-                }}
-                className="py-2"
-                onChange={(date) => setValue("end_date", date[0])}
-                readOnly={false}
-              />
-              {errors.end_date && (
-                <p className="error-message">{errors.end_date.message}</p>
-              )}
+            <div className="flex flex-col gap-2">
+              <div>
+                <label className="form-label" htmlFor="end_date">
+                  Tanggal Selesai
+                </label>
+                <Flatpickr
+                  defaultValue={isUpdate ? data.end_date : ""}
+                  name="end_date"
+                  options={{
+                    minDate: data.start_date,
+                    disableMobile: true,
+                    allowInput: true,
+                    altInput: true,
+                    altFormat: "d F Y",
+                  }}
+                  className="py-2"
+                  onChange={(date) => setValue("end_date", date[0])}
+                  readOnly={false}
+                />
+                {errors.end_date && (
+                  <p className="error-message">{errors.end_date.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="form-label" htmlFor="presence_end_date">
+                  Tanggal Selesai Presensi
+                </label>
+                <Flatpickr
+                  defaultValue={isUpdate ? data.presence_end_date : ""}
+                  name="presence_end_date"
+                  options={{
+                    minDate: data.presence_start_date,
+                    disableMobile: true,
+                    allowInput: true,
+                    altInput: true,
+                    altFormat: "d F Y",
+                  }}
+                  className="py-2"
+                  onChange={(date) => setValue("presence_end_date", date[0])}
+                  readOnly={false}
+                />
+                {errors.presence_end_date && (
+                  <p className="error-message">
+                    {errors.presence_end_date.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <div className="ltr:text-right rtl:text-left  space-x-3">

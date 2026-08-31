@@ -164,6 +164,20 @@ const Periodisasi = () => {
       },
     },
     {
+      Header: "Tanggal Mulai Presensi",
+      accessor: "presence_start_date",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
+      Header: "Tanggal Selesai Presensi",
+      accessor: "presence_end_date",
+      Cell: (row) => {
+        return <span>{row?.cell?.value}</span>;
+      },
+    },
+    {
       Header: "action",
       accessor: "action",
       id: "action",
