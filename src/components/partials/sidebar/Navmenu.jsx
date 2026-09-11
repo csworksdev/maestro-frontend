@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Collapse } from "react-collapse";
 import Icon from "@/components/ui/Icon";
 import { toggleActiveChat } from "@/pages/app/chat/store";
@@ -30,14 +30,20 @@ const Navmenu = ({ menus }) => {
   };
 
   const location = useLocation();
-  const locationName = location.pathname.replace("/", "");
+  const locationName = location.pathname.replace(/^\/+/, "");
   const [mobileMenu, setMobileMenu] = useMobileMenu();
   const dispatch = useDispatch();
 
   const isLocationMatch = (targetLocation) => {
+    if (!targetLocation || targetLocation === "#") {
+      return false;
+    }
+
+    const normalizedTarget = String(targetLocation || "").replace(/^\/+/, "");
+
     return (
-      locationName === targetLocation ||
-      locationName.startsWith(`${targetLocation}/`)
+      locationName === normalizedTarget ||
+      locationName.startsWith(`${normalizedTarget}/`)
     );
   };
 
@@ -94,7 +100,7 @@ const Navmenu = ({ menus }) => {
           className={`single-sidebar-menu 
             ${item.child ? "item-has-children" : ""}
             ${activeSubmenu === i ? "open" : ""}
-            ${locationName === item.link ? "menu-item-active" : ""}`}
+            ${isLocationMatch(item.link) ? "menu-item-active" : ""}`}
         >
           {/* Single menu without children */}
           {!item.child && !item.isHeadr && (

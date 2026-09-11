@@ -64,13 +64,13 @@ const Layout = () => {
 
       <MobileMenu
         className={`transition-all duration-150 py-4 ${
-          width < breakpoints.xl && mobileMenu
+          width <= breakpoints.xl && mobileMenu
             ? "left-0 visible opacity-100 z-[9999]"
             : "left-[-300px] invisible opacity-0 z-[-999]"
         }`}
       />
 
-      {width < breakpoints.xl && mobileMenu && (
+      {width <= breakpoints.xl && mobileMenu && (
         <div
           className="overlay bg-slate-900/50 backdrop-filter backdrop-blur-sm opacity-100 fixed inset-0 z-[999]"
           onClick={() => setMobileMenu(!mobileMenu)}

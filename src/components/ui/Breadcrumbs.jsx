@@ -6,6 +6,14 @@ import Icon from "@/components/ui/Icon";
 const Breadcrumbs = () => {
   const location = useLocation();
   const locationName = location.pathname.replace("/", "");
+  const careerRouteLabels = {
+    loker: "Loker",
+    rekruitmen: "Rekruitmen",
+    tahapan: "Tahapan",
+  };
+  const careerPath = location.pathname.split("/").filter(Boolean);
+  const isCareerRoute = careerPath[0] === "karir";
+  const careerPageLabel = careerRouteLabels[careerPath[1]] || "Karir";
 
   const [isHide, setIsHide] = useState(null);
   const [groupTitle, setGroupTitle] = useState("");
@@ -31,7 +39,15 @@ const Breadcrumbs = () => {
 
   return (
     <>
-      {!isHide ? (
+      {isCareerRoute ? (
+        <div className="md:mb-6 mb-4 flex items-center gap-3 text-sm font-semibold text-slate-500">
+          <NavLink to="/" className="text-primary-500" aria-label="Beranda">
+            <Icon icon="heroicons-outline:home" width={20} />
+          </NavLink>
+          <Icon icon="heroicons-outline:chevron-right" width={18} />
+          <span className="text-slate-600 dark:text-slate-300">{careerPageLabel}</span>
+        </div>
+      ) : !isHide ? (
         <div className="md:mb-6 mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <ul className="breadcrumbs">
             <li className="text-primary-500">

@@ -69,6 +69,14 @@ const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 const Reschedule = lazy(() => import("@/pages/reschedule/admin"));
+const Loker = lazy(() => import("@/pages/karir/loker"));
+const Rekruitmen = lazy(() => import("@/pages/karir/rekruitmen"));
+const RekruitmenDetail = lazy(() => import("@/pages/karir/rekruitmen/detail"));
+const Tahapan = lazy(() => import("@/pages/karir/tahapan"));
+const DashboardKarir = lazy(() => import("@/pages/karir/dashboard"));
+const UnderConstructionPage = lazy(
+  () => import("@/pages/utility/under-construction")
+);
 
 const OpxRoutes = () => {
   return (
@@ -156,6 +164,13 @@ const OpxRoutes = () => {
         </Route>
         <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
+        </Route>
+        <Route path="karir">
+          <Route path="dashboard" element={<DashboardKarir />} />
+          <Route path="loker" element={<Loker />} />
+          <Route path="rekruitmen" element={<Rekruitmen />} />
+          <Route path="rekruitmen/:applicationId" element={<RekruitmenDetail />} />
+          <Route path="tahapan" element={<Tahapan />} />
         </Route>
         <Route index path="notifications" element={<NotificationPage />} />
         <Route path="*" element={<ErrorPage />} />

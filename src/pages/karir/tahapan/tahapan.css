@@ -1,0 +1,167 @@
+.career-stages-page {
+  container: career-stages / inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+.career-stages-page *,
+.career-stages-page *::before,
+.career-stages-page *::after {
+  box-sizing: border-box;
+}
+
+.career-stages-table-hint {
+  display: none;
+}
+
+.career-stages-applicant > div:first-child > span {
+  max-width: 48%;
+  flex: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.career-stage-custom-input {
+  line-height: normal;
+}
+
+.career-stage-custom-input:is([type="date"], [type="time"]) {
+  display: flex;
+  align-items: center;
+  padding-block: 0;
+}
+
+.career-stage-custom-input:is([type="date"], [type="time"])::-webkit-date-and-time-value {
+  display: flex;
+  min-height: 100%;
+  align-items: center;
+  margin: 0;
+  text-align: left;
+}
+
+.career-stage-custom-input:is([type="date"], [type="time"])::-webkit-datetime-edit {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  align-items: center;
+  padding: 0;
+}
+
+.career-stage-custom-input:is([type="date"], [type="time"])::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+@container career-stages (min-width: 540px) {
+  .career-stages-filter-grid,
+  .career-stages-advanced-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container career-stages (min-width: 860px) {
+  .career-stages-filter-grid,
+  .career-stages-advanced-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container career-stages (min-width: 1280px) {
+  .career-stages-filter-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .career-stages-advanced-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container career-stages (max-width: 1279px) {
+  .career-stages-menu-list {
+    display: flex;
+    gap: 0.625rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline proximity;
+    scrollbar-width: thin;
+  }
+
+  .career-stages-menu-list > :not(.career-stages-menu-item) {
+    width: 100%;
+    flex: none;
+  }
+
+  .career-stages-menu-item {
+    width: clamp(13rem, 42vw, 18rem);
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .career-stages-table-hint {
+    display: block;
+  }
+}
+
+@container career-stages (max-width: 620px) {
+  .career-stages-menu-card > .card-header,
+  .career-stages-applicants-card > .card-header {
+    padding-inline: 1rem;
+  }
+
+  .career-stages-applicants-card > .card-body {
+    padding: 1rem;
+  }
+
+  .career-stages-advanced-grid label {
+    min-height: 2.5rem;
+  }
+
+  .career-stages-custom-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@container career-stages (max-width: 360px) {
+  .career-stages-filter-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .career-stages-applicant dl,
+  .career-stages-applicant > .grid:last-child {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .career-stages-modal {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+
+  .career-stages-modal > div:nth-child(2) {
+    padding: 1rem;
+  }
+
+  .career-stages-modal > div:last-child {
+    position: sticky;
+    bottom: 0;
+    flex-wrap: wrap;
+    background: inherit;
+  }
+
+  .career-stages-modal > div:last-child > * {
+    min-height: 2.75rem;
+    flex: 1 1 8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .career-stages-page *,
+  .career-stages-page *::before,
+  .career-stages-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
