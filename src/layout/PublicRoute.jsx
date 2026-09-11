@@ -1,8 +1,10 @@
 import { Navigate } from "react-router-dom";
+import { useIsAuthenticated } from "@/redux/slicers/authSlice";
 
-const isAuthenticated = () => !!localStorage.getItem("user");
 const PublicRoute = ({ children }) => {
-  if (isAuthenticated()) {
+  const isAuth = useIsAuthenticated();
+
+  if (isAuth) {
     return <Navigate to="/" />;
   }
 

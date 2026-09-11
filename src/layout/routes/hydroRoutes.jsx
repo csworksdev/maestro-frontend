@@ -5,6 +5,7 @@ import Layout from "../Layout";
 import AuthLayout from "../AuthLayout";
 import PublicRoute from "../PublicRoute";
 import AuthenticatedRoute from "../AuthenticatedRoute";
+import RoleMenuRouteFallback from "../RoleMenuRouteFallback";
 
 // Auth Pages
 
@@ -45,6 +46,74 @@ const DashboardDaily = lazy(
 
 import { Routes } from "react-router-dom";
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
+const RoleMenuBuilder = lazy(() => import("@/pages/usermanagement/role-menu"));
+const RoleUser = lazy(() => import("@/pages/usermanagement/role"));
+const EditRoleUser = lazy(() => import("@/pages/usermanagement/role/edit"));
+const PermissionBuilder = lazy(() => import("@/pages/usermanagement/permission"));
+const Department = lazy(() => import("@/pages/usermanagement/department"));
+const EditDepartment = lazy(() => import("@/pages/usermanagement/department/edit"));
+const Loker = lazy(() => import("@/pages/usermanagement/loker"));
+const EditLoker = lazy(() => import("@/pages/usermanagement/loker/edit"));
+const Rekruitmen = lazy(() => import("@/pages/usermanagement/rekruitmen"));
+const RekruitmenDetail = lazy(
+  () => import("@/pages/usermanagement/rekruitmen/detail"),
+);
+const RecruitmentStagePage = lazy(
+  () => import("@/pages/usermanagement/rekruitmen/stage"),
+);
+import { RECRUITMENT_STAGE_DEFINITIONS } from "@/pages/usermanagement/rekruitmen/stageConfig";
+
+const recruitmentStageRouteAliases = RECRUITMENT_STAGE_DEFINITIONS.flatMap(
+  (stage) => [
+    { path: stage.route, element: <RecruitmentStagePage stageKey={stage.key} /> },
+    {
+      path: `tahapan/${stage.route}`,
+      element: <RecruitmentStagePage stageKey={stage.key} />,
+    },
+  ],
+);
+
+const routeAliases = [
+  { path: "dashboard", element: <DashboardOperational /> },
+  { path: "dashboard/chart", element: <HydroDashboardChart /> },
+  { path: "dashboard/operasional/okupansi", element: <DashboardOkupansi /> },
+  {
+    path: "dashboard/operasional/okupansi/branch",
+    element: <OkupansiBranch />,
+  },
+  {
+    path: "dashboard/operasional/okupansi/branch/pool",
+    element: <OkupansiPool />,
+  },
+  { path: "chart", element: <HydroDashboardChart /> },
+  { path: "daily", element: <DashboardDaily /> },
+  { path: "spesialisasi", element: <Specialization /> },
+  { path: "spesialisasi/add", element: <EditSpecialization /> },
+  { path: "spesialisasi/Edit", element: <EditSpecialization /> },
+  { path: "trainer", element: <Trainer /> },
+  { path: "trainer/add", element: <EditTrainer /> },
+  { path: "trainer/Edit", element: <EditTrainer /> },
+  { path: "notifications", element: <NotificationPage /> },
+  { path: "role-menu", element: <RoleMenuBuilder /> },
+  { path: "role-user", element: <RoleUser /> },
+  { path: "role-user/add", element: <EditRoleUser /> },
+  { path: "role-user/Edit", element: <EditRoleUser /> },
+  { path: "permissions", element: <PermissionBuilder /> },
+  { path: "departments", element: <Department /> },
+  { path: "departments/add", element: <EditDepartment /> },
+  { path: "departments/Edit", element: <EditDepartment /> },
+  { path: "loker", element: <Loker /> },
+  { path: "loker/add", element: <EditLoker /> },
+  { path: "loker/Edit", element: <EditLoker /> },
+  { path: "jobs", element: <Loker /> },
+  { path: "jobs/add", element: <EditLoker /> },
+  { path: "jobs/Edit", element: <EditLoker /> },
+  { path: "rekruitmen", element: <Rekruitmen /> },
+  { path: "rekruitmen/detail/:applicationId", element: <RekruitmenDetail /> },
+  { path: "applications", element: <Rekruitmen /> },
+  { path: "applications/detail/:applicationId", element: <RekruitmenDetail /> },
+  ...recruitmentStageRouteAliases,
+];
 
 const HydroRoutes = () => {
   return (
@@ -100,7 +169,52 @@ const HydroRoutes = () => {
           <Route path="Edit" element={<EditTrainer />} />
         </Route>
         <Route index path="notifications" element={<NotificationPage />} />
-        <Route path="*" element={<ErrorPage />} />
+        <Route path="role-menu" element={<RoleMenuBuilder />} />
+        <Route path="role-user">
+          <Route index element={<RoleUser />} />
+          <Route path="add" element={<EditRoleUser />} />
+          <Route path="Edit" element={<EditRoleUser />} />
+        </Route>
+        <Route path="permissions" element={<PermissionBuilder />} />
+        <Route path="departments">
+          <Route index element={<Department />} />
+          <Route path="add" element={<EditDepartment />} />
+          <Route path="Edit" element={<EditDepartment />} />
+        </Route>
+        <Route path="loker">
+          <Route index element={<Loker />} />
+          <Route path="add" element={<EditLoker />} />
+          <Route path="Edit" element={<EditLoker />} />
+        </Route>
+        <Route path="rekruitmen">
+          <Route index element={<Rekruitmen />} />
+          <Route path="detail/:applicationId" element={<RekruitmenDetail />} />
+        </Route>
+        {RECRUITMENT_STAGE_DEFINITIONS.map((stage) => (
+          <Route
+            key={stage.key}
+            path={stage.route}
+            element={<RecruitmentStagePage stageKey={stage.key} />}
+          />
+        ))}
+        <Route path="tahapan">
+          {RECRUITMENT_STAGE_DEFINITIONS.map((stage) => (
+            <Route
+              key={stage.key}
+              path={stage.route}
+              element={<RecruitmentStagePage stageKey={stage.key} />}
+            />
+          ))}
+        </Route>
+        <Route
+          path="*"
+          element={
+            <RoleMenuRouteFallback
+              fallback={<ErrorPage />}
+              routeAliases={routeAliases}
+            />
+          }
+        />
       </Route>
     </Routes>
   );

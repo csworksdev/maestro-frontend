@@ -12,7 +12,6 @@ import store from "@/redux/store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { initializeTokenRefreshScheduler } from "@/axios/config";
 import { GlobalFilterProvider } from "./contexts/GlobalFilterContext";
 
 if ("serviceWorker" in navigator) {
@@ -26,7 +25,6 @@ if ("serviceWorker" in navigator) {
     });
 }
 
-initializeTokenRefreshScheduler();
 
 const queryClient = new QueryClient({
   defaultOptions: {

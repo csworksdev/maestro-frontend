@@ -1,9 +1,10 @@
 import { axiosConfig } from "../config";
-import { getSubdomain } from "@/redux/slicers/subdomainSlice";
+
+const ORDER_API_PREFIX = "/api";
 
 export const getOrderAll = async (data) => {
   try {
-    let response = await axiosConfig.get(getSubdomain() + "/order/", {
+    let response = await axiosConfig.get(`${ORDER_API_PREFIX}/order/`, {
       params: data,
     });
     return response;
@@ -14,7 +15,7 @@ export const getOrderAll = async (data) => {
 
 export const getOrderById = async (id) => {
   try {
-    let response = await axiosConfig.get(getSubdomain() + "/order/" + id + "/");
+    let response = await axiosConfig.get(`${ORDER_API_PREFIX}/order/${id}/`);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -25,7 +26,7 @@ export const migrasiOrderById = async (orderId, key, value, meet) => {
     const body = { order_id: orderId, key, value };
     if (meet !== undefined && meet !== null) body.meet = meet;
     let response = await axiosConfig.put(
-      getSubdomain() + "/order/migrasi/",
+      `${ORDER_API_PREFIX}/order/migrasi/`,
       body,
     );
     return response;
@@ -36,7 +37,7 @@ export const migrasiOrderById = async (orderId, key, value, meet) => {
 
 export const getOrderExpired = async (data) => {
   try {
-    let response = await axiosConfig.get(getSubdomain() + "/order/expired/", {
+    let response = await axiosConfig.get(`${ORDER_API_PREFIX}/order/expired/`, {
       params: data,
     });
     return response;
@@ -48,7 +49,7 @@ export const getOrderExpired = async (data) => {
 export const FindAvailableTrainer = async (data) => {
   try {
     let response = await axiosConfig.get(
-      getSubdomain() + "/orderfindtrainer/",
+      `${ORDER_API_PREFIX}/orderfindtrainer/`,
       {
         params: data,
       },
@@ -60,7 +61,7 @@ export const FindAvailableTrainer = async (data) => {
 };
 export const AddOrder = async (data) => {
   try {
-    let response = await axiosConfig.post(getSubdomain() + "/order/", data);
+    let response = await axiosConfig.post(`${ORDER_API_PREFIX}/order/`, data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -70,7 +71,7 @@ export const AddOrder = async (data) => {
 export const EditOrder = async (id, data) => {
   try {
     let response = await axiosConfig.put(
-      getSubdomain() + "/order/" + id + "/",
+      `${ORDER_API_PREFIX}/order/${id}/`,
       data,
     );
     return response;
@@ -82,7 +83,7 @@ export const EditOrder = async (id, data) => {
 export const DeleteOrder = async (id) => {
   try {
     const response = await axiosConfig.delete(
-      getSubdomain() + "/order/" + id + "/",
+      `${ORDER_API_PREFIX}/order/${id}/`,
     );
     return response;
   } catch (error) {
@@ -94,7 +95,7 @@ export const DeleteOrder = async (id) => {
 export const PerpanjangOrder = async (id, order_date) => {
   try {
     const response = await axiosConfig.post(
-      getSubdomain() + "/order/" + id + "/perpanjang/",
+      `${ORDER_API_PREFIX}/order/${id}/perpanjang/`,
       {
         order_date: order_date,
       },
@@ -109,7 +110,7 @@ export const PerpanjangOrder = async (id, order_date) => {
 export const getOrderFrequency = async (orderId) => {
   try {
     return await axiosConfig.get(
-      getSubdomain() + `/order/${orderId}/frequency/`,
+      `${ORDER_API_PREFIX}/order/${orderId}/frequency/`,
     );
   } catch (error) {
     console.error("Error fetching order frequency:", error);
@@ -120,7 +121,7 @@ export const getOrderFrequency = async (orderId) => {
 export const updateOrderFrequency = async (orderId, data) => {
   try {
     return await axiosConfig.post(
-      getSubdomain() + `/order/${orderId}/frequency/`,
+      `${ORDER_API_PREFIX}/order/${orderId}/frequency/`,
       data,
     );
   } catch (error) {
@@ -132,7 +133,7 @@ export const updateOrderFrequency = async (orderId, data) => {
 export const SettleOrder = async (orderId) => {
   try {
     return await axiosConfig.post(
-      getSubdomain() + `/order/${orderId}/settled/`,
+      `${ORDER_API_PREFIX}/order/${orderId}/settled/`,
     );
   } catch (error) {
     console.error("Error settling order:", error);

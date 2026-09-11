@@ -5,6 +5,7 @@ import Layout from "../Layout";
 import AuthLayout from "../AuthLayout";
 import PublicRoute from "../PublicRoute";
 import AuthenticatedRoute from "../AuthenticatedRoute";
+import RoleMenuRouteFallback from "../RoleMenuRouteFallback";
 
 // Auth Pages
 const LoginAdmin = lazy(() => import("@/pages/auth/login"));
@@ -57,6 +58,77 @@ const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 const RescheduleApprovedAdmin = lazy(
   () => import("@/pages/reschedule/admin/approved"),
 );
+const RoleMenuBuilder = lazy(() => import("@/pages/usermanagement/role-menu"));
+const RoleUser = lazy(() => import("@/pages/usermanagement/role"));
+const EditRoleUser = lazy(() => import("@/pages/usermanagement/role/edit"));
+const PermissionBuilder = lazy(() => import("@/pages/usermanagement/permission"));
+const Department = lazy(() => import("@/pages/usermanagement/department"));
+const EditDepartment = lazy(() => import("@/pages/usermanagement/department/edit"));
+const Loker = lazy(() => import("@/pages/usermanagement/loker"));
+const EditLoker = lazy(() => import("@/pages/usermanagement/loker/edit"));
+const Rekruitmen = lazy(() => import("@/pages/usermanagement/rekruitmen"));
+const RekruitmenDetail = lazy(
+  () => import("@/pages/usermanagement/rekruitmen/detail"),
+);
+const RecruitmentStagePage = lazy(
+  () => import("@/pages/usermanagement/rekruitmen/stage"),
+);
+import { RECRUITMENT_STAGE_DEFINITIONS } from "@/pages/usermanagement/rekruitmen/stageConfig";
+
+const recruitmentStageRouteAliases = RECRUITMENT_STAGE_DEFINITIONS.flatMap(
+  (stage) => [
+    { path: stage.route, element: <RecruitmentStagePage stageKey={stage.key} /> },
+    {
+      path: `tahapan/${stage.route}`,
+      element: <RecruitmentStagePage stageKey={stage.key} />,
+    },
+  ],
+);
+
+const routeAliases = [
+  { path: "dashboard", element: <DashboardSales /> },
+  { path: "siswa", element: <Siswa /> },
+  { path: "siswa/add", element: <EditSiswa /> },
+  { path: "siswa/Edit", element: <EditSiswa /> },
+  { path: "kontakwati", element: <KontakWati /> },
+  { path: "promo", element: <Promo /> },
+  { path: "promo/add", element: <EditPromo /> },
+  { path: "promo/Edit", element: <EditPromo /> },
+  { path: "order", element: <Order /> },
+  { path: "order/detail", element: <DetailOrder /> },
+  { path: "order/expired", element: <OrderExpired /> },
+  { path: "order/waitinglist", element: <Waitinglist /> },
+  { path: "cek-jadwal", element: <CekJadwal /> },
+  { path: "broadcast", element: <Broadcast /> },
+  { path: "xendit/transaction", element: <XenditTransaction /> },
+  { path: "xendit/invoice-history", element: <XenditInvoiceHistory /> },
+  {
+    path: "xendit/invoice-history/:invoice_id",
+    element: <XenditInvoiceHistoryPreview />,
+  },
+  { path: "xendit/balance", element: <XenditBalance /> },
+  { path: "list-izin", element: <Leave /> },
+  { path: "reschedule", element: <RescheduleApprovedAdmin /> },
+  { path: "role-menu", element: <RoleMenuBuilder /> },
+  { path: "role-user", element: <RoleUser /> },
+  { path: "role-user/add", element: <EditRoleUser /> },
+  { path: "role-user/Edit", element: <EditRoleUser /> },
+  { path: "permissions", element: <PermissionBuilder /> },
+  { path: "departments", element: <Department /> },
+  { path: "departments/add", element: <EditDepartment /> },
+  { path: "departments/Edit", element: <EditDepartment /> },
+  { path: "loker", element: <Loker /> },
+  { path: "loker/add", element: <EditLoker /> },
+  { path: "loker/Edit", element: <EditLoker /> },
+  { path: "jobs", element: <Loker /> },
+  { path: "jobs/add", element: <EditLoker /> },
+  { path: "jobs/Edit", element: <EditLoker /> },
+  { path: "rekruitmen", element: <Rekruitmen /> },
+  { path: "rekruitmen/detail/:applicationId", element: <RekruitmenDetail /> },
+  { path: "applications", element: <Rekruitmen /> },
+  { path: "applications/detail/:applicationId", element: <RekruitmenDetail /> },
+  ...recruitmentStageRouteAliases,
+];
 
 const AdminRoutes = () => {
   return (
@@ -138,8 +210,53 @@ const AdminRoutes = () => {
         {/* <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
         </Route> */}
+        <Route path="role-menu" element={<RoleMenuBuilder />} />
+        <Route path="role-user">
+          <Route index element={<RoleUser />} />
+          <Route path="add" element={<EditRoleUser />} />
+          <Route path="Edit" element={<EditRoleUser />} />
+        </Route>
+        <Route path="permissions" element={<PermissionBuilder />} />
+        <Route path="departments">
+          <Route index element={<Department />} />
+          <Route path="add" element={<EditDepartment />} />
+          <Route path="Edit" element={<EditDepartment />} />
+        </Route>
+        <Route path="loker">
+          <Route index element={<Loker />} />
+          <Route path="add" element={<EditLoker />} />
+          <Route path="Edit" element={<EditLoker />} />
+        </Route>
+        <Route path="rekruitmen">
+          <Route index element={<Rekruitmen />} />
+          <Route path="detail/:applicationId" element={<RekruitmenDetail />} />
+        </Route>
+        {RECRUITMENT_STAGE_DEFINITIONS.map((stage) => (
+          <Route
+            key={stage.key}
+            path={stage.route}
+            element={<RecruitmentStagePage stageKey={stage.key} />}
+          />
+        ))}
+        <Route path="tahapan">
+          {RECRUITMENT_STAGE_DEFINITIONS.map((stage) => (
+            <Route
+              key={stage.key}
+              path={stage.route}
+              element={<RecruitmentStagePage stageKey={stage.key} />}
+            />
+          ))}
+        </Route>
         {/* Fallback */}
-        <Route path="*" element={<ErrorPage />} />
+        <Route
+          path="*"
+          element={
+            <RoleMenuRouteFallback
+              fallback={<ErrorPage />}
+              routeAliases={routeAliases}
+            />
+          }
+        />
       </Route>
     </Routes>
   );

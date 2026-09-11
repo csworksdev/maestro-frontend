@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, NavLink } from "react-router-dom";
-// import { menuItems } from "@/constant/data";
 import Icon from "@/components/ui/Icon";
+import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Breadcrumbs = () => {
   const location = useLocation();
@@ -10,9 +10,12 @@ const Breadcrumbs = () => {
   const [isHide, setIsHide] = useState(null);
   const [groupTitle, setGroupTitle] = useState("");
 
-  const menuItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
+  const menuItems = useAuthStore((state) => state.menus);
 
   useEffect(() => {
+    setIsHide(null);
+    setGroupTitle("");
+
     const currentMenuItem = menuItems.find(
       (item) => item.link === locationName
     );
@@ -27,7 +30,7 @@ const Breadcrumbs = () => {
       setIsHide(currentChild?.isHide || false);
       setGroupTitle(currentChild?.title);
     }
-  }, [location, locationName]);
+  }, [location, locationName, menuItems]);
 
   return (
     <>

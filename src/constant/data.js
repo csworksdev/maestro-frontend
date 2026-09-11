@@ -19,14 +19,54 @@ export const menuSuperUser = [
         childtitle: "Role",
         childlink: "role",
       },
-      // {
-      //   childtitle: "Menu",
-      //   childlink: "menu",
-      // },
-      // {
-      //   childtitle: "Permissions",
-      //   childlink: "permissions",
-      // },
+      {
+        childtitle: "Role Menu",
+        childlink: "role-menu",
+      },
+      {
+        childtitle: "User Permission",
+        childlink: "permissions",
+      },
+      {
+        childtitle: "Department",
+        childlink: "departments",
+      },
+      {
+        childtitle: "Loker",
+        childlink: "loker",
+      },
+      {
+        childtitle: "Rekruitmen",
+        childlink: "rekruitmen",
+      },
+    ],
+  },
+  {
+    title: "Tahapan",
+    icon: "heroicons-outline:list-bullet",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Cek CV",
+        childlink: "cek-cv",
+      },
+      {
+        childtitle: "Interview User",
+        childlink: "interview-user",
+      },
+      {
+        childtitle: "Validasi Video Renang",
+        childlink: "validasi-video-renang",
+      },
+      {
+        childtitle: "Interview Owner",
+        childlink: "interview-owner",
+      },
+      {
+        childtitle: "Kontrak",
+        childlink: "kontrak",
+      },
     ],
   },
 ];
@@ -363,6 +403,59 @@ export const menuOpx = [
     title: "User",
     icon: "heroicons-outline:users",
     link: "user",
+  },
+  {
+    title: "Role Menu",
+    icon: "heroicons-outline:adjustments-horizontal",
+    link: "role-menu",
+  },
+  {
+    title: "User Permission",
+    icon: "heroicons-outline:shield-check",
+    link: "permissions",
+  },
+  {
+    title: "Department",
+    icon: "heroicons-outline:building-office-2",
+    link: "departments",
+  },
+  {
+    title: "Loker",
+    icon: "heroicons-outline:briefcase",
+    link: "loker",
+  },
+  {
+    title: "Rekruitmen",
+    icon: "heroicons-outline:clipboard-document-check",
+    link: "rekruitmen",
+  },
+  {
+    title: "Tahapan",
+    icon: "heroicons-outline:list-bullet",
+    isOpen: true,
+    isHide: true,
+    child: [
+      {
+        childtitle: "Cek CV",
+        childlink: "cek-cv",
+      },
+      {
+        childtitle: "Interview User",
+        childlink: "interview-user",
+      },
+      {
+        childtitle: "Validasi Video Renang",
+        childlink: "validasi-video-renang",
+      },
+      {
+        childtitle: "Interview Owner",
+        childlink: "interview-owner",
+      },
+      {
+        childtitle: "Kontrak",
+        childlink: "kontrak",
+      },
+    ],
   },
   // {
   //   title: "Follow Up Perpanjang",

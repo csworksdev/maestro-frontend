@@ -31,7 +31,9 @@ const coerceWsProtocol = (value) => {
 };
 
 export const resolveWsBaseUrl = () => {
-  const envValue = import.meta.env.VITE_API_WS;
+  const envValue = import.meta.env.DEV
+    ? import.meta.env.VITE_DEV_API_WS || import.meta.env.VITE_API_WS
+    : import.meta.env.VITE_API_WS;
   if (envValue && envValue.trim().length) {
     const normalized = coerceWsProtocol(envValue.trim());
     if (normalized) {
