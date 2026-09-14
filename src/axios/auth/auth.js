@@ -5,6 +5,7 @@ import {
   clearAllCookies,
   getCookie,
 } from "@/utils/authCookies";
+import { clearAccessCache } from "@/utils/accessControl";
 
 // export const login = async (data) => {
 //   try {
@@ -25,6 +26,7 @@ export const login = async (data) => {
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
+    throw error;
   }
 };
 
@@ -47,6 +49,7 @@ export const logout = async () => {
       localStorage.removeItem("persist:layout");
       localStorage.removeItem("persist:auth");
       localStorage.removeItem("menuItems");
+      clearAccessCache();
       clearAllCookies();
     }
     return response;
