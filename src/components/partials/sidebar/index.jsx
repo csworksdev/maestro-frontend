@@ -1,39 +1,39 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import SidebarLogo from "./Logo";
 import Navmenu from "./Navmenu";
-// import { menuItems } from "@/constant/data";
 import SimpleBar from "simplebar-react";
 import useSidebar from "@/hooks/useSidebar";
 import useSemiDark from "@/hooks/useSemiDark";
 import useSkin from "@/hooks/useSkin";
-import Menu from "@/constant/menu";
 import { useAuthStore } from "@/redux/slicers/authSlice";
+import { ensureRoleMenuPreviewItem } from "@/utils/sidebarPreviewMenu";
 
 const Sidebar = () => {
   const scrollableNodeRef = useRef(null);
   const [scroll, setScroll] = useState(false);
 
-  const data = useAuthStore((state) => state.data); // ✅ DI SINI BENAR
-
-  const roles = data?.roles;
-  const roleSignature = Array.isArray(roles)
-    ? roles.join("|")
-    : roles?.toString?.() || "";
-
-  const menuItems = useMemo(() => {
-    if (!roleSignature) {
-      return [];
-    }
-    return Menu(roles);
-  }, [Menu, roleSignature, roles]);
+  const menuItems = useAuthStore((state) => state.menus);
+  const roleMenuPreview = useAuthStore((state) => state.roleMenuPreview);
+  const roles = useAuthStore((state) => state.data?.roles);
+  const rawRoles = useAuthStore((state) => state.data?.raw_roles);
+  const roleIds = useAuthStore((state) => state.roleIds);
+  const sidebarMenuItems = useMemo(
+    () =>
+      ensureRoleMenuPreviewItem(
+        roleMenuPreview || menuItems,
+        rawRoles ?? roles,
+        roleIds,
+      ),
+    [menuItems, rawRoles, roleIds, roleMenuPreview, roles],
+  );
 
   useEffect(() => {
-    if (menuItems.length) {
-      localStorage.setItem("menuItems", JSON.stringify(menuItems));
+    if (sidebarMenuItems.length) {
+      localStorage.setItem("menuItems", JSON.stringify(sidebarMenuItems));
     } else {
       localStorage.removeItem("menuItems");
     }
-  }, [menuItems]);
+  }, [sidebarMenuItems]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,8 +96,8 @@ const Sidebar = () => {
           className="sidebar-menu px-4 h-[calc(100%-90px)] pb-7"
           scrollableNodeProps={{ ref: scrollableNodeRef }}
         >
-          {menuItems.length > 0 && (
-            <Navmenu menus={menuItems} onMenuClick={handleMenuClick} />
+          {sidebarMenuItems.length > 0 && (
+            <Navmenu menus={sidebarMenuItems} onMenuClick={handleMenuClick} />
           )}
         </SimpleBar>
       </div>

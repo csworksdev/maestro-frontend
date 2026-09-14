@@ -37,23 +37,26 @@ const IndeterminateCheckbox = React.forwardRef(
     }, [resolvedRef, indeterminate]);
 
     return (
-      <input
-        type="checkbox"
-        ref={resolvedRef}
-        {...rest}
-        onChange={(e) => {
-          rest.onChange?.(e);
+      <span className="flex h-5 w-full items-center justify-center">
+        <input
+          type="checkbox"
+          ref={resolvedRef}
+          {...rest}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(e) => {
+            rest.onChange?.(e);
 
-          if (e.target.checked) {
-            if (isHeader) {
-              onSelectionChange?.(rows);
-            } else if (rowId) {
-              onSelectionChange?.([rowId]);
+            if (e.target.checked) {
+              if (isHeader) {
+                onSelectionChange?.(rows);
+              } else if (rowId) {
+                onSelectionChange?.([rowId]);
+              }
             }
-          }
-        }}
-        className="table-checkbox"
-      />
+          }}
+          className="table-checkbox"
+        />
+      </span>
     );
   }
 );
@@ -68,11 +71,16 @@ const Table = ({
   isPagination = true,
   onSelectionChange,
   getRowClassName,
+  density: densityOverride,
+  showDensityControl = true,
+  allowHorizontalScroll = true,
+  actionColumnClassName = "w-36 min-w-[9rem]",
 }) => {
   const dispatch = useDispatch();
-  const density = useSelector(
+  const storeDensity = useSelector(
     (state) => state.layout?.tableDensity || "comfortable"
   );
+  const density = densityOverride || storeDensity;
   const userId = useAuthStore((state) => state.data?.user_id);
   const columns = useMemo(
     () =>
@@ -124,9 +132,21 @@ const Table = ({
   );
 
   const headerDensityClass =
-    density === "compact" ? "text-[11px] !px-4 !py-3" : "text-xs !px-6 !py-4";
+    density === "tight"
+      ? "text-[10px] !px-2 !py-2"
+      : density === "compact"
+      ? "text-[11px] !px-4 !py-3"
+      : "text-xs !px-6 !py-4";
   const cellDensityClass =
-    density === "compact" ? "text-xs !px-4 !py-2.5" : "text-sm !px-6 !py-4";
+    density === "tight"
+      ? "text-[11px] !px-2 !py-2"
+      : density === "compact"
+      ? "text-xs !px-4 !py-2.5"
+      : "text-sm !px-6 !py-4";
+  const scrollableBodyClass = allowHorizontalScroll
+    ? "overflow-x-auto"
+    : "min-w-0 overflow-x-hidden";
+  const mainTableClass = allowHorizontalScroll ? "min-w-full" : "w-full min-w-0";
 
   const tableInstance = useTable(
     {
@@ -149,6 +169,7 @@ const Table = ({
         hooks.visibleColumns.push((cols) => [
           {
             id: "selection",
+            width: "2.5rem",
             Header: ({ getToggleAllRowsSelectedProps, rows }) => (
               <IndeterminateCheckbox
                 {...getToggleAllRowsSelectedProps()}
@@ -321,7 +342,8 @@ const Table = ({
             return (
               <th
                 {...col.getHeaderProps(col.getSortByToggleProps())}
-                className={`table-th text-center text-wrap bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
+                style={{ width: col.width }}
+                className={`table-th text-center text-wrap break-words bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
                   col.canSort
                     ? "cursor-pointer select-none hover:text-slate-900 dark:hover:text-slate-100"
                     : ""
@@ -345,25 +367,35 @@ const Table = ({
     prepareRow(row);
     const { key, ...restRowProps } = row.getRowProps();
     const rowClassName = getRowClassName?.(row.original, row, idx) || "";
+    const handleRowClick = () => {
+      if (!isCheckbox || !row.toggleRowSelected) {
+        return;
+      }
+
+      row.toggleRowSelected(!row.isSelected);
+    };
 
     return (
       <tr
         {...restRowProps}
         key={idx}
+        onClick={handleRowClick}
         ref={(el) =>
           fixed
             ? (fixedRowsRef.current[idx] = el)
             : (scrollableRowsRef.current[idx] = el)
         }
         className={`group h-auto transition-colors ${
-          idx % 2 === 0
+          row.isSelected
+            ? "bg-primary-50 dark:bg-primary-500/10"
+            : idx % 2 === 0
             ? "bg-slate-50 dark:bg-slate-900"
             : "bg-white dark:bg-slate-800"
-        } hover:bg-primary-50 dark:hover:bg-slate-700 ${rowClassName}`}
+        } ${isCheckbox ? "cursor-pointer" : ""} hover:bg-primary-50 dark:hover:bg-slate-700 ${rowClassName}`}
       >
         {fixed ? (
           <td
-            className={`table-td text-nowrap align-middle ${cellDensityClass}`}
+            className={`table-td text-center text-nowrap align-middle ${cellDensityClass}`}
           >
             {row.cells.at(-1).render("Cell")}
           </td>
@@ -374,8 +406,9 @@ const Table = ({
               <td
                 key={key}
                 {...restCellProps}
-                style={{ textTransform: "none" }}
-                className={`table-td text-wrap align-middle transition-colors ${cellDensityClass}`}
+                className={`table-td ${bodyCellAlignClass} text-wrap break-words align-middle transition-colors ${
+                  cell.column.id === "selection" ? "!px-1" : ""
+                } ${cellDensityClass}`}
               >
                 {cell.render("Cell")}
               </td>
@@ -390,31 +423,35 @@ const Table = ({
     // <Card noborder className="overflow-hidden" bodyClass="p-4 sm:p-5">
     <div className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-            Tampilan
-          </span>
-          <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
-            {[
-              { id: "comfortable", label: "Lega" },
-              { id: "compact", label: "Ringkas" },
-            ].map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => dispatch(handleTableDensity(option.id))}
-                className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition ${
-                  density === option.id
-                    ? "bg-primary-500 text-white"
-                    : "text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-                }`}
-                aria-pressed={density === option.id}
-              >
-                {option.label}
-              </button>
-            ))}
+        {showDensityControl ? (
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+              Tampilan
+            </span>
+            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+              {[
+                { id: "comfortable", label: "Lega" },
+                { id: "compact", label: "Ringkas" },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => dispatch(handleTableDensity(option.id))}
+                  className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition ${
+                    density === option.id
+                      ? "bg-primary-500 text-white"
+                      : "text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                  }`}
+                  aria-pressed={density === option.id}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div />
+        )}
         <div className="flex items-center gap-2">
           <Dropdown
             label={
@@ -494,29 +531,22 @@ const Table = ({
           </Dropdown>
         </div>
       </div>
-      <div className="flex">
+      <div className="flex min-w-0">
         {/* Main Table */}
-        <div className="overflow-x-auto flex-grow scrollable-body">
+        <div className={`${scrollableBodyClass} flex-grow scrollable-body`}>
           <table
             {...getTableProps()}
-              className="table min-w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+              className={`table ${mainTableClass} table-fixed divide-y divide-slate-100 dark:divide-slate-700`}
             >
-              <thead className="border-b border-slate-100 dark:border-slate-800">
-                {headerGroups.map((hg, idx) => renderHeader(hg, idx, false))}
-              </thead>
-              <tbody
-                {...getTableBodyProps()}
-                className="divide-y divide-slate-100 dark:divide-slate-700"
-              >
-                {page.map((row, idx) => renderRow(row, idx, false))}
-              </tbody>
-            </table>
-          </div>
+              {page.map((row, idx) => renderRow(row, idx, false))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Fixed Actions */}
           {isAction && (
-            <div className="w-36 min-w-[9rem] border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body">
-              <table className="table w-36 min-w-[9rem] table-fixed">
+            <div className={`${actionColumnClassName} shrink-0 border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}>
+              <table className={`table ${actionColumnClassName} table-fixed`}>
                 <thead className="border-b border-slate-100 dark:border-slate-800">
                   {headerGroups.map((hg, idx) => renderHeader(hg, idx, true))}
                 </thead>
@@ -538,6 +568,9 @@ export default memo(Table, (prev, next) => {
     prev.listData?.results === next.listData?.results &&
     prev.listColumn === next.listColumn &&
     prev.handleSearch === next.handleSearch &&
-    prev.getRowClassName === next.getRowClassName
+    prev.getRowClassName === next.getRowClassName &&
+    prev.allowHorizontalScroll === next.allowHorizontalScroll &&
+    prev.actionColumnClassName === next.actionColumnClassName &&
+    prev.density === next.density
   );
 });
