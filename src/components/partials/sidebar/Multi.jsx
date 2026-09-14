@@ -1,34 +1,7 @@
 import Badge from "@/components/ui/Badge";
 import React from "react";
 import { Collapse } from "react-collapse";
-import { NavLink, useLocation } from "react-router-dom";
-
-const normalizePath = (value = "") =>
-  String(value || "")
-    .replace(/^\/+|\/+$/g, "")
-    .trim();
-
-const toNavPath = (value = "") => {
-  const path = String(value || "").trim();
-  if (!path || path === "#") return "#";
-  if (/^(https?:|mailto:|tel:)/i.test(path)) return path;
-  return path.startsWith("/") ? path : `/${path}`;
-};
-
-const isSidebarLinkActive = (pathname, ...targets) => {
-  const current = normalizePath(pathname);
-  if (!current) return false;
-
-  return targets.some((target) => {
-    const normalizedTarget = normalizePath(target);
-    if (!normalizedTarget) return false;
-
-    return (
-      current === normalizedTarget ||
-      current.startsWith(`${normalizedTarget}/`)
-    );
-  });
-};
+import { NavLink } from "react-router-dom";
 
 const LockLink = ({ to, children, item }) => {
   const { multiTitle, badge } = item;
@@ -50,49 +23,37 @@ const LockLink = ({ to, children, item }) => {
           </span>
         </span>
       ) : (
-        <NavLink to={toNavPath(to)}>{children}</NavLink>
+        <NavLink to={to}>{children}</NavLink>
       )}
     </>
   );
 };
 
 const Multilevel = ({ activeMultiMenu, j, subItem }) => {
-  const location = useLocation();
-
   return (
     <Collapse isOpened={activeMultiMenu === j}>
       <ul className="space-y-[14px] pl-4">
         {subItem?.multi_menu?.map((item, i) => (
           <li key={i} className=" first:pt-[14px]">
             <LockLink to={item.multiLink} item={item}>
-              {({ isActive }) => {
-                const isItemActive =
-                  isActive ||
-                  isSidebarLinkActive(
-                    location.pathname,
-                    item.multiLink,
-                    item.originalMultiLink,
-                  );
-
-                return (
+              {({ isActive }) => (
+                <span
+                  className={`${
+                    isActive
+                      ? " text-black dark:text-white font-medium"
+                      : "text-slate-600 dark:text-slate-300"
+                  } text-sm flex space-x-3 rtl:space-x-reverse items-center transition-all duration-150`}
+                >
                   <span
                     className={`${
-                      isItemActive
-                        ? " text-black dark:text-white font-medium"
-                        : "text-slate-600 dark:text-slate-300"
-                    } text-sm flex space-x-3 rtl:space-x-reverse items-center transition-all duration-150`}
-                  >
-                    <span
-                      className={`${
-                        isItemActive
-                          ? " bg-slate-900 dark:bg-slate-300 ring-4 ring-opacity-[15%] ring-black-500 dark:ring-slate-300 dark:ring-opacity-20"
-                          : ""
-                      } h-2 w-2 rounded-full border border-slate-600 dark:border-white inline-block flex-none`}
-                    ></span>
-                    <span className="flex-1">{item.multiTitle}</span>
-                  </span>
-                );
-              }}
+                      isActive
+                        ? " bg-slate-900 dark:bg-slate-300 ring-4 ring-opacity-[15%] ring-black-500 dark:ring-slate-300 dark:ring-opacity-20"
+                        : ""
+                    } h-2 w-2 rounded-full border border-slate-600 dark:border-white inline-block flex-none`}
+                  ></span>
+                  <span className="flex-1">{item.multiTitle}</span>
+                </span>
+              )}
             </LockLink>
           </li>
         ))}

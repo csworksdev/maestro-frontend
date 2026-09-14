@@ -170,6 +170,7 @@ const OrderActive = ({ is_finished = null }) => {
   ) => {
     try {
       setIsLoading(true);
+      setListData();
       const params = {
         page: page + 1,
         page_size: size,
@@ -190,32 +191,33 @@ const OrderActive = ({ is_finished = null }) => {
         params.filter_payment_status = activeFilters.filter_payment_status;
       }
 
-      const res = await getOrderAll(params);
-      if (!res?.data) {
-        throw new Error("Order response is empty");
-      }
+      getOrderAll(params)
+        .then((res) => {
+          const updateData = res.data.results.map((item) => ({
+            ...item,
+            listname: (item.students || [])
+              .map((i) => i.student_fullname)
+              .join(", "),
+            orderRegistrationStatus: getOrderRegistrationStatus(
+              item.students || [],
+            ),
+          }));
 
-      const results = Array.isArray(res.data.results) ? res.data.results : [];
-      const updateData = results.map((item) => ({
-        ...item,
-        listname: (item.students || [])
-          .map((i) => i.student_fullname)
-          .join(", "),
-        orderRegistrationStatus: getOrderRegistrationStatus(
-          item.students || [],
-        ),
-      }));
-
-      setListData({
-        ...res.data,
-        count: res.data.count ?? updateData.length,
-        results: updateData,
-      });
+          res = {
+            ...res,
+            data: {
+              ...res.data,
+              results: updateData,
+            },
+          };
+          setListData(res.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching order data:", error);
+        })
+        .finally(() => setIsLoading(false));
     } catch (error) {
-      console.error("Error fetching order data:", error);
-      setListData({ count: 0, results: [] });
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching data", error);
     }
   };
 

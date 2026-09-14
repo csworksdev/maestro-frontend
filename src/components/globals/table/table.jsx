@@ -71,16 +71,15 @@ const Table = ({
   isPagination = true,
   onSelectionChange,
   getRowClassName,
-  density: densityOverride,
-  showDensityControl = true,
-  allowHorizontalScroll = true,
-  actionColumnClassName = "w-36 min-w-[9rem]",
+  actionColumnClass = "w-36 min-w-[9rem]",
+  fitToContainer = false,
+  tableMinWidth,
+  bodyCellAlign = "left",
 }) => {
   const dispatch = useDispatch();
-  const storeDensity = useSelector(
+  const density = useSelector(
     (state) => state.layout?.tableDensity || "comfortable"
   );
-  const density = densityOverride || storeDensity;
   const userId = useAuthStore((state) => state.data?.user_id);
   const columns = useMemo(
     () =>
@@ -131,22 +130,18 @@ const Table = ({
     [columns, hiddenColumnIds, isColumnLocked]
   );
 
-  const headerDensityClass =
-    density === "tight"
-      ? "text-[10px] !px-2 !py-2"
-      : density === "compact"
-      ? "text-[11px] !px-4 !py-3"
-      : "text-xs !px-6 !py-4";
-  const cellDensityClass =
-    density === "tight"
-      ? "text-[11px] !px-2 !py-2"
-      : density === "compact"
-      ? "text-xs !px-4 !py-2.5"
-      : "text-sm !px-6 !py-4";
-  const scrollableBodyClass = allowHorizontalScroll
-    ? "overflow-x-auto"
-    : "min-w-0 overflow-x-hidden";
-  const mainTableClass = allowHorizontalScroll ? "min-w-full" : "w-full min-w-0";
+  const headerDensityClass = fitToContainer
+    ? "text-[11px] !px-3 !py-3"
+    : density === "compact"
+    ? "text-[11px] !px-4 !py-3"
+    : "text-xs !px-6 !py-4";
+  const cellDensityClass = fitToContainer
+    ? "text-xs !px-3 !py-3"
+    : density === "compact"
+    ? "text-xs !px-4 !py-2.5"
+    : "text-sm !px-6 !py-4";
+  const bodyCellAlignClass =
+    bodyCellAlign === "center" ? "text-center" : "text-left";
 
   const tableInstance = useTable(
     {
@@ -423,35 +418,31 @@ const Table = ({
     // <Card noborder className="overflow-hidden" bodyClass="p-4 sm:p-5">
     <div className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-        {showDensityControl ? (
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
-              Tampilan
-            </span>
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
-              {[
-                { id: "comfortable", label: "Lega" },
-                { id: "compact", label: "Ringkas" },
-              ].map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => dispatch(handleTableDensity(option.id))}
-                  className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition ${
-                    density === option.id
-                      ? "bg-primary-500 text-white"
-                      : "text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-                  }`}
-                  aria-pressed={density === option.id}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+            Tampilan
+          </span>
+          <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+            {[
+              { id: "comfortable", label: "Lega" },
+              { id: "compact", label: "Ringkas" },
+            ].map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => dispatch(handleTableDensity(option.id))}
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition ${
+                  density === option.id
+                    ? "bg-primary-500 text-white"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                }`}
+                aria-pressed={density === option.id}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-        ) : (
-          <div />
-        )}
+        </div>
         <div className="flex items-center gap-2">
           <Dropdown
             label={
@@ -531,12 +522,24 @@ const Table = ({
           </Dropdown>
         </div>
       </div>
-      <div className="flex min-w-0">
+      <div className="flex">
         {/* Main Table */}
-        <div className={`${scrollableBodyClass} flex-grow scrollable-body`}>
+        <div
+          className={`min-w-0 flex-grow scrollable-body ${
+            fitToContainer ? "overflow-x-hidden" : "overflow-x-auto"
+          }`}
+        >
           <table
             {...getTableProps()}
-              className={`table ${mainTableClass} table-fixed divide-y divide-slate-100 dark:divide-slate-700`}
+            className="table w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+            style={{ minWidth: fitToContainer ? undefined : tableMinWidth }}
+          >
+            <thead className="border-b border-slate-100 dark:border-slate-800">
+              {headerGroups.map((hg, idx) => renderHeader(hg, idx, false))}
+            </thead>
+            <tbody
+              {...getTableBodyProps()}
+              className="divide-y divide-slate-100 dark:divide-slate-700"
             >
               {page.map((row, idx) => renderRow(row, idx, false))}
             </tbody>
@@ -545,8 +548,8 @@ const Table = ({
 
         {/* Fixed Actions */}
           {isAction && (
-            <div className={`${actionColumnClassName} shrink-0 border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}>
-              <table className={`table ${actionColumnClassName} table-fixed`}>
+            <div className={`${actionColumnClass} flex-none border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}>
+              <table className={`table ${actionColumnClass} table-fixed`}>
                 <thead className="border-b border-slate-100 dark:border-slate-800">
                   {headerGroups.map((hg, idx) => renderHeader(hg, idx, true))}
                 </thead>
@@ -569,8 +572,9 @@ export default memo(Table, (prev, next) => {
     prev.listColumn === next.listColumn &&
     prev.handleSearch === next.handleSearch &&
     prev.getRowClassName === next.getRowClassName &&
-    prev.allowHorizontalScroll === next.allowHorizontalScroll &&
-    prev.actionColumnClassName === next.actionColumnClassName &&
-    prev.density === next.density
+    prev.actionColumnClass === next.actionColumnClass &&
+    prev.fitToContainer === next.fitToContainer &&
+    prev.tableMinWidth === next.tableMinWidth &&
+    prev.bodyCellAlign === next.bodyCellAlign
   );
 });

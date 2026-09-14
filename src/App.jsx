@@ -12,8 +12,6 @@ import OpxRoutes from "./layout/routes/operationalRoutes";
 import HydroRoutes from "./layout/routes/hydroRoutes";
 import { useFcmToken } from "./hooks/useFCMToken";
 import Redir from "./pages/redir";
-import { loadAuthenticatedAccess } from "./services/authAccess";
-import { useAuthStore } from "./redux/slicers/authSlice";
 import { useSubdomainStore } from "./redux/slicers/subdomainSlice";
 
 const LoginAdmin = lazy(() => import("@/pages/auth/login"));
@@ -26,8 +24,6 @@ const ErrorPage = lazy(() => import("./pages/404"));
 
 const App = () => {
   const subdomain = useSubdomainStore((state) => state.subdomain);
-  const isAuth = useAuthStore((state) => state.isAuth);
-  const access = useAuthStore((state) => state.access);
   // const isAuth = useSelector((state) => state.auth.isAuth);
 
   const { fcmToken, removeFcmToken } = useFcmToken();
@@ -38,12 +34,6 @@ const App = () => {
       // misalnya init WebSocket di sini
     }
   }, [fcmToken]);
-
-  useEffect(() => {
-    if (isAuth && access) {
-      loadAuthenticatedAccess();
-    }
-  }, [isAuth, access, subdomain]);
 
   const routesMap = {
     admin: <AdminRoutes />,
