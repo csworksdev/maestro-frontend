@@ -19,7 +19,6 @@ import { motion } from "framer-motion";
 import Info from "@/components/partials/info";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
 import { useAuthStore } from "@/redux/slicers/authSlice";
-import AccessRouteGuard from "./AccessRouteGuard";
 
 const Layout = () => {
   const { width, breakpoints } = useWidth();
@@ -65,13 +64,13 @@ const Layout = () => {
 
       <MobileMenu
         className={`transition-all duration-150 py-4 ${
-          width <= breakpoints.xl && mobileMenu
+          width < breakpoints.xl && mobileMenu
             ? "left-0 visible opacity-100 z-[9999]"
             : "left-[-300px] invisible opacity-0 z-[-999]"
         }`}
       />
 
-      {width <= breakpoints.xl && mobileMenu && (
+      {width < breakpoints.xl && mobileMenu && (
         <div
           className="overlay bg-slate-900/50 backdrop-filter backdrop-blur-sm opacity-100 fixed inset-0 z-[999]"
           onClick={() => setMobileMenu(!mobileMenu)}
@@ -106,10 +105,8 @@ const Layout = () => {
                   duration: 0.5,
                 }}
               >
-                <AccessRouteGuard>
-                  <Breadcrumbs />
-                  <Outlet />
-                </AccessRouteGuard>
+                <Breadcrumbs />
+                <Outlet />
               </motion.div>
             </Suspense>
           </div>

@@ -1,29 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, NavLink } from "react-router-dom";
+// import { menuItems } from "@/constant/data";
 import Icon from "@/components/ui/Icon";
-import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const Breadcrumbs = () => {
   const location = useLocation();
   const locationName = location.pathname.replace("/", "");
-  const careerRouteLabels = {
-    loker: "Loker",
-    rekruitmen: "Rekruitmen",
-    tahapan: "Tahapan",
-  };
-  const careerPath = location.pathname.split("/").filter(Boolean);
-  const isCareerRoute = careerPath[0] === "karir";
-  const careerPageLabel = careerRouteLabels[careerPath[1]] || "Karir";
 
   const [isHide, setIsHide] = useState(null);
   const [groupTitle, setGroupTitle] = useState("");
 
-  const menuItems = useAuthStore((state) => state.menus);
+  const menuItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
 
   useEffect(() => {
-    setIsHide(null);
-    setGroupTitle("");
-
     const currentMenuItem = menuItems.find(
       (item) => item.link === locationName
     );
@@ -38,19 +27,11 @@ const Breadcrumbs = () => {
       setIsHide(currentChild?.isHide || false);
       setGroupTitle(currentChild?.title);
     }
-  }, [location, locationName, menuItems]);
+  }, [location, locationName]);
 
   return (
     <>
-      {isCareerRoute ? (
-        <div className="md:mb-6 mb-4 flex items-center gap-3 text-sm font-semibold text-slate-500">
-          <NavLink to="/" className="text-primary-500" aria-label="Beranda">
-            <Icon icon="heroicons-outline:home" width={20} />
-          </NavLink>
-          <Icon icon="heroicons-outline:chevron-right" width={18} />
-          <span className="text-slate-600 dark:text-slate-300">{careerPageLabel}</span>
-        </div>
-      ) : !isHide ? (
+      {!isHide ? (
         <div className="md:mb-6 mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <ul className="breadcrumbs">
             <li className="text-primary-500">
