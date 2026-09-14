@@ -16,7 +16,7 @@ const Edit = () => {
 
   const FormValidationSchema = yup
     .object({
-      name: yup.string().required("Role name is required"),
+      role_name: yup.string().required("Role name is required"),
     })
     .required();
 
@@ -34,7 +34,7 @@ const Edit = () => {
   };
 
   const handleAdd = (data) => {
-    AddRoles({ name: data.name })
+    AddRoles(data)
       .then((res) => {
         if (res) {
           Swal.fire("Added!", "Role has been added.", "success").then(() =>
@@ -48,7 +48,7 @@ const Edit = () => {
   };
 
   const handleUpdate = (updatedData) => {
-    EditRoles(data.id, updatedData)
+    EditRoles(data.role_id, updatedData)
       .then((res) => {
         if (res) {
           Swal.fire("Edited!", "Role has been edited.", "success").then(() =>
@@ -64,7 +64,7 @@ const Edit = () => {
   const onSubmit = (newdata) => {
     const updatedData = {
       ...data,
-      name: newdata.name,
+      role_name: newdata.role_name,
     };
     if (isUpdate) {
       handleUpdate(updatedData);
@@ -75,17 +75,17 @@ const Edit = () => {
 
   return (
     <div>
-      <Card title={isUpdate ? "Update Role User" : "Add Role User"}>
+      <Card title={isUpdate ? "Update Role" : "Add Role"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Textinput
-            name="name"
+            name="role_name"
             label="Role"
-            id="name"
+            id="role_name"
             type="text"
             placeholder="Enter Name"
             register={register}
-            error={errors.name}
-            defaultValue={isUpdate ? data.name : ""}
+            error={errors.role_name}
+            defaultValue={isUpdate ? data.role_name : ""}
           />
           <div className="ltr:text-right rtl:text-left space-x-3">
             <button

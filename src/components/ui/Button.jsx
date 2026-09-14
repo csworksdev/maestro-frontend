@@ -24,7 +24,6 @@ function Button({
         <button
           type={type}
           onClick={onClick}
-          disabled={disabled || isLoading}
           className={`btn btn inline-flex justify-center   ${
             isLoading ? " pointer-events-none" : ""
           }

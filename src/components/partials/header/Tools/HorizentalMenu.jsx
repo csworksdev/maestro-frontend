@@ -3,11 +3,9 @@ import React from "react";
 import Icon from "@/components/ui/Icon";
 import { Link } from "react-router-dom";
 import { NavLink } from "react-router-dom";
-import { useAuthStore } from "@/redux/slicers/authSlice";
 
 const HorizentalMenu = () => {
-  const menuItems = useAuthStore((state) => state.menus);
-
+  let menuItems = JSON.parse(localStorage.getItem("menuItems"));
   return (
     <div className="main-menu">
       <ul>
@@ -52,7 +50,7 @@ const HorizentalMenu = () => {
               <ul className="sub-menu">
                 {item.child.map((childitem, index) => (
                   <li key={index}>
-                    <Link to={childitem.childlink || childitem.link || "#"}>
+                    <Link to={childitem.link}>
                       <div className="flex space-x-2 items-start rtl:space-x-reverse">
                         <Icon
                           icon={childitem.childicon}

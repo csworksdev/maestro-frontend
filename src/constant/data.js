@@ -19,54 +19,14 @@ export const menuSuperUser = [
         childtitle: "Role",
         childlink: "role",
       },
-      {
-        childtitle: "Role Menu",
-        childlink: "role-menu",
-      },
-      {
-        childtitle: "User Permission",
-        childlink: "permissions",
-      },
-      {
-        childtitle: "Department",
-        childlink: "departments",
-      },
-      {
-        childtitle: "Loker",
-        childlink: "loker",
-      },
-      {
-        childtitle: "Rekruitmen",
-        childlink: "rekruitmen",
-      },
-    ],
-  },
-  {
-    title: "Tahapan",
-    icon: "heroicons-outline:list-bullet",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Cek CV",
-        childlink: "cek-cv",
-      },
-      {
-        childtitle: "Interview User",
-        childlink: "interview-user",
-      },
-      {
-        childtitle: "Validasi Video Renang",
-        childlink: "validasi-video-renang",
-      },
-      {
-        childtitle: "Interview Owner",
-        childlink: "interview-owner",
-      },
-      {
-        childtitle: "Kontrak",
-        childlink: "kontrak",
-      },
+      // {
+      //   childtitle: "Menu",
+      //   childlink: "menu",
+      // },
+      // {
+      //   childtitle: "Permissions",
+      //   childlink: "permissions",
+      // },
     ],
   },
 ];
@@ -405,57 +365,28 @@ export const menuOpx = [
     link: "user",
   },
   {
-    title: "Role Menu",
-    icon: "heroicons-outline:adjustments-horizontal",
-    link: "role-menu",
+    isHeadr: true,
+    title: "KARIR",
   },
   {
-    title: "User Permission",
-    icon: "heroicons-outline:shield-check",
-    link: "permissions",
-  },
-  {
-    title: "Department",
-    icon: "heroicons-outline:building-office-2",
-    link: "departments",
+    title: "Dashboard Karir",
+    icon: "heroicons-outline:home",
+    link: "/karir/dashboard",
   },
   {
     title: "Loker",
     icon: "heroicons-outline:briefcase",
-    link: "loker",
+    link: "/karir/loker",
   },
   {
     title: "Rekruitmen",
     icon: "heroicons-outline:clipboard-document-check",
-    link: "rekruitmen",
+    link: "/karir/rekruitmen",
   },
   {
     title: "Tahapan",
-    icon: "heroicons-outline:list-bullet",
-    isOpen: true,
-    isHide: true,
-    child: [
-      {
-        childtitle: "Cek CV",
-        childlink: "cek-cv",
-      },
-      {
-        childtitle: "Interview User",
-        childlink: "interview-user",
-      },
-      {
-        childtitle: "Validasi Video Renang",
-        childlink: "validasi-video-renang",
-      },
-      {
-        childtitle: "Interview Owner",
-        childlink: "interview-owner",
-      },
-      {
-        childtitle: "Kontrak",
-        childlink: "kontrak",
-      },
-    ],
+    icon: "heroicons-outline:squares-2x2",
+    link: "/karir/tahapan",
   },
   // {
   //   title: "Follow Up Perpanjang",
