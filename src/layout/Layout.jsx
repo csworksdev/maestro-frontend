@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import Info from "@/components/partials/info";
 import useScrollRestoration from "@/hooks/useScrollRestoration";
 import { useAuthStore } from "@/redux/slicers/authSlice";
+import AccessRouteGuard from "./AccessRouteGuard";
 
 const Layout = () => {
   const { width, breakpoints } = useWidth();
@@ -105,8 +106,10 @@ const Layout = () => {
                   duration: 0.5,
                 }}
               >
-                <Breadcrumbs />
-                <Outlet />
+                <AccessRouteGuard>
+                  <Breadcrumbs />
+                  <Outlet />
+                </AccessRouteGuard>
               </motion.div>
             </Suspense>
           </div>

@@ -7,13 +7,14 @@ import * as yup from "yup";
 
 import Textinput from "@/components/ui/Textinput";
 import Button from "@/components/ui/Button";
-import { setUser } from "@/redux/slicers/authSlice";
+import { logOut, setUser } from "@/redux/slicers/authSlice";
 import { login } from "@/axios/auth/auth";
 
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import { requestAndSendToken } from "@/utils/fcm";
 import { axiosConfig } from "@/axios/config";
+import { loadAuthenticatedAccess } from "@/services/authAccess";
 
 const schema = yup.object({
   username: yup.string().required("Username is required"),
@@ -49,6 +50,19 @@ const LoginForm = () => {
       if (response.data) {
         // Simpan token ke store global
         setUser({ refresh, access, data, rememberMe: NewData.rememberMe });
+        const accessResult = await loadAuthenticatedAccess({ force: true });
+
+        if (!accessResult || accessResult.accessError) {
+          logOut();
+          await Swal.fire({
+            icon: "error",
+            title: "Backend access belum terhubung",
+            text:
+              accessResult?.accessErrorMessage ||
+              "Gagal memuat menu atau permission dari backend. Silakan coba lagi.",
+          });
+          return;
+        }
 
         // ✅ Simpan presence default
         localStorage.setItem(

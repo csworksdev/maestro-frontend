@@ -6,10 +6,13 @@ describe("normalizeUserRoles", () => {
     expect(normalizeUserRoles(["Coach", "Hydro"], "hydro")).toBe("Hydro");
   });
 
-  it("keeps Superuser as a privileged role even when other domain roles are present", () => {
-    expect(normalizeUserRoles(["Coach", "Superuser"], "hydro")).toBe(
-      "Superuser",
-    );
+  it("maps Superuser to the current domain menu role", () => {
+    expect(normalizeUserRoles(["Coach", "Superuser"], "hydro")).toBe("Hydro");
+  });
+
+  it("maps Superuser to Opx menu in opx domain", () => {
+    expect(normalizeUserRoles(["Superuser"], "opx")).toBe("Opx");
+    expect(normalizeUserRoles(["Opx", "Superuser"], "opx")).toBe("Opx");
   });
 
   it("returns an empty value when no role matches the current domain", () => {
