@@ -48,10 +48,24 @@ const MutasiSiswaModal = ({
     typeof window !== "undefined" ? window.document.body : null;
 
   const pendingMeets = useMemo(
-    () =>
-      (currentOrder.detail || [])
-        .filter((d) => !d.is_presence)
-        .map((d) => ({ value: d.meet, label: `Pertemuan ${d.meet}` })),
+    () => {
+      const uniqueMeets = new Set();
+
+      (currentOrder.detail || []).forEach((detail) => {
+        if (detail.is_presence) {
+          return;
+        }
+
+        const meet = Number(detail.meet);
+        if (Number.isFinite(meet) && meet > 0) {
+          uniqueMeets.add(meet);
+        }
+      });
+
+      return Array.from(uniqueMeets)
+        .sort((a, b) => a - b)
+        .map((meet) => ({ value: meet, label: `Pertemuan ${meet}` }));
+    },
     [currentOrder.detail],
   );
 
