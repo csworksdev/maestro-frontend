@@ -12,6 +12,7 @@ import TableAction from "@/components/globals/table/tableAction";
 
 const Roles = () => {
   const navigate = useNavigate();
+  const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [listData, setListData] = useState({ count: 0, results: [] });
@@ -42,22 +43,13 @@ const Roles = () => {
         page_size: size,
         search: query,
       };
-      const response = await getRolesAll(params);
-      const responseData = response?.data || {};
-      setListData({
-        count: responseData.count || 0,
-        next: responseData.next,
-        previous: responseData.previous,
-        results: Array.isArray(responseData.results)
-          ? responseData.results
-          : [],
-      });
+      getRolesAll(params)
+        .then((res) => {
+          setListData(res.data);
+        })
+        .finally(() => setIsLoading(false));
     } catch (error) {
       console.error("Error fetching data", error);
-      setListData({ count: 0, results: [] });
-      Swal.fire("Error!", "Gagal mengambil data role user.", "error");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -89,8 +81,8 @@ const Roles = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        DeleteRoles(e.id).then((res) => {
-          if (res?.status) {
+        DeleteRoles(e.role_id).then((res) => {
+          if (res.status) {
             Swal.fire("Deleted!", "Your file has been deleted.", "success");
             fetchData(pageIndex, pageSize, searchQuery);
           }
@@ -111,9 +103,9 @@ const Roles = () => {
   const COLUMNS = [
     {
       Header: "Roles",
-      accessor: "name",
+      accessor: "role_name",
       Cell: (row) => {
-        return <span>{row?.cell?.value || "-"}</span>;
+        return <span>{row?.cell?.value}</span>;
       },
     },
     {
@@ -140,7 +132,7 @@ const Roles = () => {
   return (
     <div className="grid grid-cols-1 justify-end">
       <Card
-        title="Role User"
+        title="Roles"
         headerslot={
           <Button className="btn-primary ">
             <Link to="add" isupdate="false">

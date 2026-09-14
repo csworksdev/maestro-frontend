@@ -1,6 +1,7 @@
-import React, { useMemo, useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 
 import Navmenu from "./Navmenu";
+// import { menuItems } from "@/constant/data";
 import SimpleBar from "simplebar-react";
 import useSemiDark from "@/hooks/useSemiDark";
 import useSkin from "@/hooks/useSkin";
@@ -12,35 +13,34 @@ import Icon from "@/components/ui/Icon";
 // import images
 import MobileLogo from "@/assets/images/logo/logo.png";
 import MobileLogoWhite from "@/assets/images/logo/logo-c-white.svg";
+import svgRabitImage from "@/assets/images/svg/rabit.svg";
 import { performLogout, useAuthStore } from "@/redux/slicers/authSlice";
-import { ensureRoleMenuPreviewItem } from "@/utils/sidebarPreviewMenu";
+import Menu from "@/constant/menu";
 
 const MobileMenu = ({ className = "custom-class" }) => {
   const scrollableNodeRef = useRef();
   const [scroll, setScroll] = useState(false);
-  const { username } = useAuthStore((state) => state.data);
-  const menuItems = useAuthStore((state) => state.menus);
-  const roleMenuPreview = useAuthStore((state) => state.roleMenuPreview);
-  const roles = useAuthStore((state) => state.data?.roles);
-  const rawRoles = useAuthStore((state) => state.data?.raw_roles);
-  const roleIds = useAuthStore((state) => state.roleIds);
-  const sidebarMenuItems = useMemo(
-    () =>
-      ensureRoleMenuPreviewItem(
-        roleMenuPreview || menuItems,
-        rawRoles ?? roles,
-        roleIds,
-      ),
-    [menuItems, rawRoles, roleIds, roleMenuPreview, roles],
-  );
+  const { user_id, username, roles } = useAuthStore((state) => state.data);
+
+  // const roles = data?.roles;
+  const roleSignature = Array.isArray(roles)
+    ? roles.join("|")
+    : roles?.toString?.() || "";
+
+  const menuItems = useMemo(() => {
+    if (!roleSignature) {
+      return [];
+    }
+    return Menu(roles);
+  }, [Menu, roleSignature, roles]);
 
   useEffect(() => {
-    if (sidebarMenuItems.length) {
-      localStorage.setItem("menuItems", JSON.stringify(sidebarMenuItems));
+    if (menuItems.length) {
+      localStorage.setItem("menuItems", JSON.stringify(menuItems));
     } else {
       localStorage.removeItem("menuItems");
     }
-  }, [sidebarMenuItems]);
+  }, [menuItems]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,7 +98,7 @@ const MobileMenu = ({ className = "custom-class" }) => {
         className="sidebar-menu px-4 h-[calc(100%-80px)]"
         scrollableNodeProps={{ ref: scrollableNodeRef }}
       >
-        {sidebarMenuItems.length > 0 && <Navmenu menus={sidebarMenuItems} />}
+        {menuItems.length > 0 && <Navmenu menus={menuItems} />}
         <div className="bg-slate-900 mb-24 lg:mb-10 mt-24 p-4 relative text-center rounded-2xl text-white">
           <button
             onClick={() => {
