@@ -44,13 +44,21 @@ const MobileMenu = ({ className = "custom-class" }) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (scrollableNodeRef.current.scrollTop > 0) {
+      if (scrollableNodeRef.current?.scrollTop > 0) {
         setScroll(true);
       } else {
         setScroll(false);
       }
     };
-    scrollableNodeRef.current.addEventListener("scroll", handleScroll);
+    const node = scrollableNodeRef.current;
+    if (node) {
+      node.addEventListener("scroll", handleScroll);
+    }
+    return () => {
+      if (node) {
+        node.removeEventListener("scroll", handleScroll);
+      }
+    };
   }, [scrollableNodeRef]);
 
   const [isSemiDark] = useSemiDark();
@@ -95,7 +103,8 @@ const MobileMenu = ({ className = "custom-class" }) => {
         }`}
       ></div>
       <SimpleBar
-        className="sidebar-menu px-4 h-[calc(100%-80px)]"
+        className="sidebar-menu px-4"
+        style={{ height: "calc(100% - 80px)" }}
         scrollableNodeProps={{ ref: scrollableNodeRef }}
       >
         {menuItems.length > 0 && <Navmenu menus={menuItems} />}

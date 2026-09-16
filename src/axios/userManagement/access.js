@@ -1,68 +1,159 @@
-import { axiosConfig, axiosAccessMutationConfig } from "../config";
-import {
-  AddMenus,
-  DeleteMenus,
-  EditMenus,
-  getMenusAll,
-} from "./menu";
-import {
-  AddPermissions,
-  DeletePermissions,
-  EditPermissions,
-  getPermissionsAll,
-} from "./permission";
-import { getRolesAll } from "./role";
+import { axiosAccessMutationConfig, axiosConfig } from "../config";
 
-export const getMenuCatalog = getMenusAll;
-export const createMenuCatalog = AddMenus;
-export const updateMenuCatalog = EditMenus;
-export const deleteMenuCatalog = DeleteMenus;
-
-export const getPermissionCatalog = getPermissionsAll;
-export const createPermission = AddPermissions;
-export const updatePermission = EditPermissions;
-export const deletePermission = DeletePermissions;
-
-export const getAppRoles = getRolesAll;
-
-export const getAccessRoles = async (params, config = {}) => {
-  const response = await axiosAccessMutationConfig.get("/api/roles/", {
+export const getAccessRoles = async (params) => {
+  const response = await axiosAccessMutationConfig.get("/auth/roles/", {
     params,
-    ...config,
   });
   return response;
 };
 
-export const getRolePermissionsByRoleId = async (
-  roleId,
-  params,
-  config = {},
-) => {
-  const response = await axiosConfig.get(`/auth/roles/${roleId}/permissions/`, {
+export const getAppRoles = async (params) => {
+  const response = await axiosConfig.get("/auth/roles/", {
     params,
-    ...config,
   });
   return response;
 };
 
-export const getAppRolePermissionsByRoleId = async (
-  roleId,
-  params,
-  config = {},
-) => {
+export const getAuthenticatedMenus = async (params) => {
+  const response = await axiosConfig.get("/auth/users/menus/", {
+    params,
+  });
+  return response;
+};
+
+export const getAuthenticatedPermissions = async (params) => {
+  const response = await axiosConfig.get("/auth/users/permissions/", {
+    params,
+  });
+  return response;
+};
+
+export const getRoleMenusByRoleId = async (roleId, params) => {
   const response = await axiosAccessMutationConfig.get(
-    `/api/roles/${roleId}/permissions/`,
+    `/auth/roles/${roleId}/menus/`,
     {
       params,
-      ...config,
     },
   );
   return response;
 };
 
-export const syncRolePermissionsByRoleId = async (roleId, permissions) => {
-  const response = await axiosConfig.put(`/auth/roles/${roleId}/permissions/`, {
-    permissions,
+export const getAppRoleMenusByRoleId = async (roleId, params) => {
+  const response = await axiosConfig.get(`/auth/roles/${roleId}/menus/`, {
+    params,
   });
+  return response;
+};
+
+export const getRolePermissionsByRoleId = async (roleId, params) => {
+  const response = await axiosAccessMutationConfig.get(
+    `/auth/roles/${roleId}/permissions/`,
+    {
+      params,
+    },
+  );
+  return response;
+};
+
+export const getAppRolePermissionsByRoleId = async (roleId, params) => {
+  const response = await axiosConfig.get(
+    `/auth/roles/${roleId}/permissions/`,
+    {
+      params,
+    },
+  );
+  return response;
+};
+
+export const getMenuCatalog = async (params) => {
+  const response = await axiosAccessMutationConfig.get("/auth/menus/", {
+    params,
+  });
+  return response;
+};
+
+export const getPermissionCatalog = async (params) => {
+  const response = await axiosAccessMutationConfig.get("/auth/permissions/", {
+    params,
+  });
+  return response;
+};
+
+export const createPermission = async (data) => {
+  const response = await axiosAccessMutationConfig.post("/auth/permissions/", data);
+  return response;
+};
+
+export const updatePermission = async (permissionId, data) => {
+  const response = await axiosAccessMutationConfig.put(
+    `/auth/permissions/${permissionId}/`,
+    data,
+  );
+  return response;
+};
+
+export const deletePermission = async (permissionId) => {
+  const response = await axiosAccessMutationConfig.delete(
+    `/auth/permissions/${permissionId}/`,
+  );
+  return response;
+};
+
+export const createMenuCatalog = async (data) => {
+  const response = await axiosAccessMutationConfig.post("/auth/menus/", data);
+  return response;
+};
+
+export const updateMenuCatalog = async (menuId, data) => {
+  const response = await axiosAccessMutationConfig.put(
+    `/auth/menus/${menuId}/`,
+    data,
+  );
+  return response;
+};
+
+export const deleteMenuCatalog = async (menuId) => {
+  const response = await axiosAccessMutationConfig.delete(`/auth/menus/${menuId}/`);
+  return response;
+};
+
+export const addRoleMenuByRoleId = async (roleId, data) => {
+  const response = await axiosAccessMutationConfig.post(
+    `/auth/roles/${roleId}/menus/`,
+    data,
+  );
+  return response;
+};
+
+export const updateRoleMenuByRoleId = async (roleId, groupMenuId, data) => {
+  const response = await axiosAccessMutationConfig.put(
+    `/auth/roles/${roleId}/menus/${groupMenuId}/`,
+    data,
+  );
+  return response;
+};
+
+export const deleteRoleMenuByRoleId = async (roleId, groupMenuId) => {
+  const response = await axiosAccessMutationConfig.delete(
+    `/auth/roles/${roleId}/menus/${groupMenuId}/`,
+  );
+  return response;
+};
+
+export const reorderRoleMenusByRoleId = async (roleId, items) => {
+  const response = await axiosAccessMutationConfig.post(
+    `/auth/roles/${roleId}/menus/reorder/`,
+    items,
+  );
+  return response;
+};
+
+export const syncRolePermissionsByRoleId = async (roleId, permissionIds) => {
+  const response = await axiosAccessMutationConfig.post(
+    `/auth/roles/${roleId}/permissions/sync/`,
+    {
+      permission_ids: permissionIds,
+    },
+  );
   return response;
 };
