@@ -7,13 +7,14 @@ import * as yup from "yup";
 
 import Textinput from "@/components/ui/Textinput";
 import Button from "@/components/ui/Button";
-import { setUser } from "@/redux/slicers/authSlice";
+import { logOut, setUser } from "@/redux/slicers/authSlice";
 import { login } from "@/axios/auth/auth";
 
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import { requestAndSendToken } from "@/utils/fcm";
 import { axiosConfig } from "@/axios/config";
+import { loadAuthenticatedAccess } from "@/services/authAccess";
 
 const schema = yup.object({
   username: yup.string().required("Username is required"),
@@ -49,11 +50,24 @@ const LoginForm = () => {
       if (response.data) {
         // Simpan token ke store global
         setUser({ refresh, access, data, rememberMe: NewData.rememberMe });
+        const accessResult = await loadAuthenticatedAccess({ force: true });
+
+        if (!accessResult || accessResult.accessError) {
+          logOut();
+          await Swal.fire({
+            icon: "error",
+            title: "Backend access belum terhubung",
+            text:
+              accessResult?.accessErrorMessage ||
+              "Gagal memuat menu atau permission dari backend. Silakan coba lagi.",
+          });
+          return;
+        }
 
         // ✅ Simpan presence default
         localStorage.setItem(
           "presenceSelected",
-          DateTime.now().toFormat("c") - 1
+          DateTime.now().toFormat("c") - 1,
         );
 
         // ✅ Kirim FCM token setelah login berhasil
@@ -69,13 +83,13 @@ const LoginForm = () => {
                 headers: {
                   Authorization: `Bearer ${access}`,
                 },
-              }
+              },
             );
             // console.log("✅ FCM token disimpan di server");
           } catch (err) {
             console.error(
               "❌ Gagal simpan FCM token:",
-              err.response?.data || err.message
+              err.response?.data || err.message,
             );
             return false;
           }
@@ -123,7 +137,7 @@ const LoginForm = () => {
     };
 
     const timeouts = [0, 80, 160, 320, 640].map((delay) =>
-      setTimeout(syncAutofillValues, delay)
+      setTimeout(syncAutofillValues, delay),
     );
     const intervalId = setInterval(syncAutofillValues, 500);
 

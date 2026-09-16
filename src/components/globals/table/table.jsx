@@ -25,7 +25,7 @@ import {
 const IndeterminateCheckbox = React.forwardRef(
   (
     { indeterminate, isHeader, rows, rowId, onSelectionChange, ...rest },
-    ref
+    ref,
   ) => {
     const defaultRef = React.useRef();
     const resolvedRef = ref || defaultRef;
@@ -55,7 +55,7 @@ const IndeterminateCheckbox = React.forwardRef(
         className="table-checkbox"
       />
     );
-  }
+  },
 );
 
 const Table = ({
@@ -75,7 +75,7 @@ const Table = ({
 }) => {
   const dispatch = useDispatch();
   const density = useSelector(
-    (state) => state.layout?.tableDensity || "comfortable"
+    (state) => state.layout?.tableDensity || "comfortable",
   );
   const userId = useAuthStore((state) => state.data?.user_id);
   const columns = useMemo(
@@ -87,7 +87,7 @@ const Table = ({
           (typeof col.accessor === "string" ? col.accessor : `col_${index}`),
         width: col.width || 120,
       })),
-    [listColumn]
+    [listColumn],
   );
 
   const data = useMemo(() => listData?.results ?? [], [listData]);
@@ -115,34 +115,30 @@ const Table = ({
       column.sticky === "right" ||
       column.id === "action" ||
       column.accessor === "action",
-    []
+    [],
   );
 
   const visibleColumns = useMemo(
     () =>
       columns.filter(
         (column) =>
-          isColumnLocked(column) || !hiddenColumnIds.includes(column.id)
+          isColumnLocked(column) || !hiddenColumnIds.includes(column.id),
       ),
-    [columns, hiddenColumnIds, isColumnLocked]
+    [columns, hiddenColumnIds, isColumnLocked],
   );
 
   const headerDensityClass = fitToContainer
     ? "text-[11px] !px-3 !py-3"
     : density === "compact"
-    ? "text-[11px] !px-4 !py-3"
-    : "text-xs !px-6 !py-4";
+      ? "text-[11px] !px-4 !py-3"
+      : "text-xs !px-6 !py-4";
   const cellDensityClass = fitToContainer
     ? "text-xs !px-3 !py-3"
     : density === "compact"
-    ? "text-xs !px-4 !py-2.5"
-    : "text-sm !px-6 !py-4";
+      ? "text-xs !px-4 !py-2.5"
+      : "text-sm !px-6 !py-4";
   const bodyCellAlignClass =
     bodyCellAlign === "center" ? "text-center" : "text-left";
-  const headerDensityClass =
-    density === "compact" ? "text-[11px] !px-4 !py-3" : "text-xs !px-6 !py-4";
-  const cellDensityClass =
-    density === "compact" ? "text-xs !px-4 !py-2.5" : "text-sm !px-6 !py-4";
 
   const tableInstance = useTable(
     {
@@ -184,7 +180,7 @@ const Table = ({
           ...cols,
         ]);
       }
-    }
+    },
   );
 
   const {
@@ -350,7 +346,7 @@ const Table = ({
                 </div>
               </th>
             );
-          }
+          },
         )
       )}
     </tr>
@@ -391,7 +387,7 @@ const Table = ({
                 key={key}
                 {...restCellProps}
                 style={{ textTransform: "none" }}
-                className={`table-td text-wrap align-middle transition-colors ${cellDensityClass}`}
+                className={`table-td text-wrap align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass}`}
               >
                 {cell.render("Cell")}
               </td>
@@ -470,9 +466,9 @@ const Table = ({
                       key={column.id}
                       className={`flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition ${
                         locked
-                            ? "cursor-not-allowed text-slate-400"
-                            : "cursor-pointer text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-                        }`}
+                          ? "cursor-not-allowed text-slate-400"
+                          : "cursor-pointer text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                      }`}
                     >
                       <span className="flex items-center gap-2">
                         <input
@@ -486,7 +482,7 @@ const Table = ({
                             setHiddenColumnIds((prev) =>
                               prev.includes(column.id)
                                 ? prev.filter((id) => id !== column.id)
-                                : [...prev, column.id]
+                                : [...prev, column.id],
                             );
                           }}
                           className="table-checkbox"
@@ -528,37 +524,26 @@ const Table = ({
             <tbody
               {...getTableBodyProps()}
               className="divide-y divide-slate-100 dark:divide-slate-700"
-        <div className="overflow-x-auto flex-grow scrollable-body">
-          <table
-            {...getTableProps()}
-              className="table min-w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
             >
+              {page.map((row, idx) => renderRow(row, idx, false))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Fixed Actions */}
+        {isAction && (
+          <div
+            className={`${actionColumnClass} flex-none border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}
+          >
+            <table className={`table ${actionColumnClass} table-fixed`}>
               <thead className="border-b border-slate-100 dark:border-slate-800">
-                {headerGroups.map((hg, idx) => renderHeader(hg, idx, false))}
+                {headerGroups.map((hg, idx) => renderHeader(hg, idx, true))}
               </thead>
-              <tbody
-                {...getTableBodyProps()}
-                className="divide-y divide-slate-100 dark:divide-slate-700"
-              >
-                {page.map((row, idx) => renderRow(row, idx, false))}
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                {page.map((row, idx) => renderRow(row, idx, true))}
               </tbody>
             </table>
           </div>
-
-        {/* Fixed Actions */}
-          {isAction && (
-            <div className={`${actionColumnClass} flex-none border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}>
-              <table className={`table ${actionColumnClass} table-fixed`}>
-            <div className="w-36 min-w-[9rem] border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body">
-              <table className="table w-36 min-w-[9rem] table-fixed">
-                <thead className="border-b border-slate-100 dark:border-slate-800">
-                  {headerGroups.map((hg, idx) => renderHeader(hg, idx, true))}
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                  {page.map((row, idx) => renderRow(row, idx, true))}
-                </tbody>
-              </table>
-            </div>
         )}
       </div>
     </div>
@@ -576,7 +561,7 @@ export default memo(Table, (prev, next) => {
     prev.actionColumnClass === next.actionColumnClass &&
     prev.fitToContainer === next.fitToContainer &&
     prev.tableMinWidth === next.tableMinWidth &&
-    prev.bodyCellAlign === next.bodyCellAlign
+    prev.bodyCellAlign === next.bodyCellAlign &&
     prev.getRowClassName === next.getRowClassName
   );
 });
