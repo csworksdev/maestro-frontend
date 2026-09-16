@@ -2,7 +2,16 @@ import axios from "axios";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
 import { logOut, setUser, useAuthStore } from "@/redux/slicers/authSlice";
 
-const baseURL = import.meta.env.VITE_API_URL;
+const ABSOLUTE_URL_REGEX = /^(https?:|data:|blob:)/i;
+const DEV_API_PROXY_PREFIX = "/__api";
+const DEV_ACCESS_API_PROXY_PREFIX = "/__access-api";
+const NGROK_SKIP_BROWSER_WARNING_HEADER = "ngrok-skip-browser-warning";
+const baseURL = import.meta.env.DEV
+  ? DEV_API_PROXY_PREFIX
+  : import.meta.env.VITE_API_URL;
+const accessMutationBaseURL = import.meta.env.DEV
+  ? DEV_ACCESS_API_PROXY_PREFIX
+  : import.meta.env.VITE_ACCESS_API_URL || import.meta.env.VITE_API_URL;
 
 // Helper ambil token
 const getToken = () => {
@@ -222,40 +231,65 @@ export const axiosConfig = axios.create({
   withCredentials: false, // penting: karena pakai JWT, bukan cookie
 });
 
-// Request interceptor → inject token
-axiosConfig.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+export const axiosAccessMutationConfig = axios.create({
+  baseURL: accessMutationBaseURL,
+  withCredentials: false,
+});
 
-// refresh token
-axiosConfig.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const newAccess = await refreshAccessToken();
-
-        // update header request lama
-        originalRequest.headers["Authorization"] = `Bearer ${newAccess}`;
-
-        return axiosConfig(originalRequest);
-      } catch (err) {
-        logOut();
-        return Promise.reject(err);
+const applyAuthInterceptors = (client) => {
+  // Request interceptor → inject token
+  client.interceptors.request.use(
+    (config) => {
+      if (
+        import.meta.env.DEV &&
+        typeof config.url === "string" &&
+        config.url &&
+        !config.url.startsWith("/") &&
+        !ABSOLUTE_URL_REGEX.test(config.url)
+      ) {
+        config.url = `/${config.url}`;
       }
-    }
 
-    return Promise.reject(error);
-  }
-);
+      if (import.meta.env.DEV) {
+        config.headers = config.headers || {};
+        config.headers[NGROK_SKIP_BROWSER_WARNING_HEADER] = "true";
+      }
+
+      const token = getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // refresh token
+  client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          const newAccess = await refreshAccessToken();
+
+          // update header request lama
+          originalRequest.headers["Authorization"] = `Bearer ${newAccess}`;
+
+          return client(originalRequest);
+        } catch (err) {
+          logOut();
+          return Promise.reject(err);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+};
+
+applyAuthInterceptors(axiosConfig);
+applyAuthInterceptors(axiosAccessMutationConfig);

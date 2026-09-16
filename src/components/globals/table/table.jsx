@@ -68,6 +68,10 @@ const Table = ({
   isPagination = true,
   onSelectionChange,
   getRowClassName,
+  actionColumnClass = "w-36 min-w-[9rem]",
+  fitToContainer = false,
+  tableMinWidth,
+  bodyCellAlign = "left",
 }) => {
   const dispatch = useDispatch();
   const density = useSelector(
@@ -123,6 +127,18 @@ const Table = ({
     [columns, hiddenColumnIds, isColumnLocked]
   );
 
+  const headerDensityClass = fitToContainer
+    ? "text-[11px] !px-3 !py-3"
+    : density === "compact"
+    ? "text-[11px] !px-4 !py-3"
+    : "text-xs !px-6 !py-4";
+  const cellDensityClass = fitToContainer
+    ? "text-xs !px-3 !py-3"
+    : density === "compact"
+    ? "text-xs !px-4 !py-2.5"
+    : "text-sm !px-6 !py-4";
+  const bodyCellAlignClass =
+    bodyCellAlign === "center" ? "text-center" : "text-left";
   const headerDensityClass =
     density === "compact" ? "text-[11px] !px-4 !py-3" : "text-xs !px-6 !py-4";
   const cellDensityClass =
@@ -496,6 +512,22 @@ const Table = ({
       </div>
       <div className="flex">
         {/* Main Table */}
+        <div
+          className={`min-w-0 flex-grow scrollable-body ${
+            fitToContainer ? "overflow-x-hidden" : "overflow-x-auto"
+          }`}
+        >
+          <table
+            {...getTableProps()}
+            className="table w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+            style={{ minWidth: fitToContainer ? undefined : tableMinWidth }}
+          >
+            <thead className="border-b border-slate-100 dark:border-slate-800">
+              {headerGroups.map((hg, idx) => renderHeader(hg, idx, false))}
+            </thead>
+            <tbody
+              {...getTableBodyProps()}
+              className="divide-y divide-slate-100 dark:divide-slate-700"
         <div className="overflow-x-auto flex-grow scrollable-body">
           <table
             {...getTableProps()}
@@ -515,6 +547,8 @@ const Table = ({
 
         {/* Fixed Actions */}
           {isAction && (
+            <div className={`${actionColumnClass} flex-none border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}>
+              <table className={`table ${actionColumnClass} table-fixed`}>
             <div className="w-36 min-w-[9rem] border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body">
               <table className="table w-36 min-w-[9rem] table-fixed">
                 <thead className="border-b border-slate-100 dark:border-slate-800">
@@ -538,6 +572,11 @@ export default memo(Table, (prev, next) => {
     prev.listData?.results === next.listData?.results &&
     prev.listColumn === next.listColumn &&
     prev.handleSearch === next.handleSearch &&
+    prev.getRowClassName === next.getRowClassName &&
+    prev.actionColumnClass === next.actionColumnClass &&
+    prev.fitToContainer === next.fitToContainer &&
+    prev.tableMinWidth === next.tableMinWidth &&
+    prev.bodyCellAlign === next.bodyCellAlign
     prev.getRowClassName === next.getRowClassName
   );
 });

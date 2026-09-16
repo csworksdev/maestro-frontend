@@ -364,6 +364,30 @@ export const menuOpx = [
     icon: "heroicons-outline:users",
     link: "user",
   },
+  {
+    isHeadr: true,
+    title: "KARIR",
+  },
+  {
+    title: "Dashboard Karir",
+    icon: "heroicons-outline:home",
+    link: "/karir/dashboard",
+  },
+  {
+    title: "Loker",
+    icon: "heroicons-outline:briefcase",
+    link: "/karir/loker",
+  },
+  {
+    title: "Rekruitmen",
+    icon: "heroicons-outline:clipboard-document-check",
+    link: "/karir/rekruitmen",
+  },
+  {
+    title: "Tahapan",
+    icon: "heroicons-outline:squares-2x2",
+    link: "/karir/tahapan",
+  },
   // {
   //   title: "Follow Up Perpanjang",
   //   icon: "heroicons-outline:globe-americas",

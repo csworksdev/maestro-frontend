@@ -57,6 +57,11 @@ const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
 const RescheduleApprovedAdmin = lazy(
   () => import("@/pages/reschedule/admin/approved"),
 );
+const DashboardKarir = lazy(() => import("@/pages/karir/dashboard"));
+const Loker = lazy(() => import("@/pages/karir/loker"));
+const Rekruitmen = lazy(() => import("@/pages/karir/rekruitmen"));
+const RekruitmenDetail = lazy(() => import("@/pages/karir/rekruitmen/detail"));
+const Tahapan = lazy(() => import("@/pages/karir/tahapan"));
 
 const AdminRoutes = () => {
   return (
