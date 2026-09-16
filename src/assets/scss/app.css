@@ -72,8 +72,8 @@
   }
   .table-checkbox {
     @apply relative before:flex before:flex-col before:items-center before:justify-center   
-  before:w-[18px] before:h-[18px] before:m-[-0.7px] before:bg-slate-100 dark:before:bg-slate-500  before:absolute
-    before:inset-0 before:rounded w-4 h-4 rounded checked:before:bg-slate-900 
+  before:w-[18px] before:h-[18px] before:m-[-0.7px] before:bg-white dark:before:bg-slate-800 before:absolute
+    before:inset-0 before:rounded before:border-2 before:border-slate-300 before:shadow-sm dark:before:border-slate-500 w-4 h-4 rounded checked:before:border-slate-900 checked:before:bg-slate-900 
     checked:before:content-[url("https://api.iconify.design/heroicons-outline/check.svg?color=white")] checked:before:leading-[10px]
     checked:before:ring-2 checked:before:ring-black-500
     checked:before:ring-offset-2 checked:before:dark:ring-slate-700 
@@ -1434,7 +1434,9 @@
   .settings-enter-active {
     opacity: 1;
     transform: translateX(0);
-    transition: opacity 300ms, transform 300ms;
+    transition:
+      opacity 300ms,
+      transform 300ms;
   }
   .settings-exit {
     opacity: 1;
@@ -1442,7 +1444,9 @@
   .settings-exit-active {
     opacity: 0;
     transform: scale(0.9);
-    transition: opacity 300ms, transform 300ms;
+    transition:
+      opacity 300ms,
+      transform 300ms;
   }
   .page-content {
     @apply md:pt-6 md:pb-[37px] md:px-6 pt-[15px] px-[15px] pb-24;
@@ -1664,7 +1668,9 @@
   .profileAnimation-enter-active {
     opacity: 1;
     transform: translateX(-120px);
-    transition: opacity 300ms, transform 300ms;
+    transition:
+      opacity 300ms,
+      transform 300ms;
   }
   .profileAnimation-exit {
     opacity: 1;
@@ -1672,7 +1678,9 @@
   .profileAnimation-exit-active {
     opacity: 0;
     transform: translateX(-100%);
-    transition: opacity 300ms, transform 300ms;
+    transition:
+      opacity 300ms,
+      transform 300ms;
   }
   .slide-in-left-enter {
     opacity: 0;
@@ -1681,7 +1689,9 @@
   .slide-in-left-enter-active {
     opacity: 1;
     transform: translateX(0);
-    transition: opacity 300ms, transform 300ms;
+    transition:
+      opacity 300ms,
+      transform 300ms;
   }
   .slide-in-left-exit {
     opacity: 1;
@@ -1689,7 +1699,9 @@
   .slide-in-left-exit-active {
     opacity: 0;
     transform: scale(0.9);
-    transition: opacity 300ms, transform 300ms;
+    transition:
+      opacity 300ms,
+      transform 300ms;
   }
   .dashcode-app .react-calendar {
     @apply w-full bg-white border-none;

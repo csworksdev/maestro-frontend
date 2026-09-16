@@ -28,7 +28,7 @@ const Header = ({ className = "custom-class" }) => {
   // };
 
   const handleCollapse = () => {
-    if (width >= breakpoints.xl) {
+    if (width > breakpoints.xl) {
       setMenuCollapsed(!collapsed);
     }
   };
@@ -71,8 +71,8 @@ const Header = ({ className = "custom-class" }) => {
           {/* For Vertical Layout */}
           {menuType === "vertical" && (
             <div className="flex items-center md:space-x-4 space-x-2 rtl:space-x-reverse">
-              {/* Show the collapse button only if width >= breakpoints.xl */}
-              {width >= breakpoints.xl && (
+              {/* Match the desktop sidebar breakpoint in Layout. */}
+              {width > breakpoints.xl && (
                 <button
                   className="text-xl text-slate-900 dark:text-white"
                   onClick={handleCollapse}
@@ -84,9 +84,9 @@ const Header = ({ className = "custom-class" }) => {
                   )}
                 </button>
               )}
-              {width < breakpoints.xl && <Logo />}
+              {width <= breakpoints.xl && <Logo />}
               {/* Open mobile menu handler */}
-              {width < breakpoints.xl && width >= breakpoints.md && (
+              {width <= breakpoints.xl && width > breakpoints.md && (
                 <div
                   className="cursor-pointer text-slate-900 dark:text-white text-2xl"
                   onClick={() => setMobileMenu(!mobileMenu)}
@@ -115,7 +115,7 @@ const Header = ({ className = "custom-class" }) => {
           )}
 
           {/* Horizontal Main Menu */}
-          {menuType === "horizontal" && width >= breakpoints.xl && (
+          {menuType === "horizontal" && width > breakpoints.xl && (
             <HorizentalMenu />
           )}
 

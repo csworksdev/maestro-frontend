@@ -71,10 +71,10 @@ const parseNumber = (value) => {
 };
 
 const configuredIntervalMinutes = parseNumber(
-  import.meta.env.VITE_TOKEN_REFRESH_INTERVAL_MINUTES
+  import.meta.env.VITE_TOKEN_REFRESH_INTERVAL_MINUTES,
 );
 const configuredIntervalMs = parseNumber(
-  import.meta.env.VITE_TOKEN_REFRESH_INTERVAL_MS
+  import.meta.env.VITE_TOKEN_REFRESH_INTERVAL_MS,
 );
 
 let autoRefreshIntervalMs = null;
@@ -90,7 +90,7 @@ const AUTO_REFRESH_INTERVAL_MS =
     : null;
 
 const refreshBufferSeconds = parseNumber(
-  import.meta.env.VITE_TOKEN_REFRESH_BUFFER_SECONDS
+  import.meta.env.VITE_TOKEN_REFRESH_BUFFER_SECONDS,
 );
 const REFRESH_BUFFER_MS =
   (refreshBufferSeconds != null ? refreshBufferSeconds : 60) * 1000;
@@ -112,8 +112,8 @@ const decodeJwtPayload = (token) => {
       typeof atob === "function"
         ? atob(padded)
         : typeof Buffer !== "undefined"
-        ? Buffer.from(padded, "base64").toString("utf-8")
-        : null;
+          ? Buffer.from(padded, "base64").toString("utf-8")
+          : null;
 
     return decoded ? JSON.parse(decoded) : null;
   } catch (error) {
@@ -167,7 +167,7 @@ const computeNextRefreshDelay = () => {
   }
 
   const validDelays = delays.filter(
-    (delay) => Number.isFinite(delay) && delay > 0
+    (delay) => Number.isFinite(delay) && delay > 0,
   );
 
   if (!validDelays.length) {
@@ -261,7 +261,7 @@ const applyAuthInterceptors = (client) => {
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   // refresh token
@@ -287,7 +287,7 @@ const applyAuthInterceptors = (client) => {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 };
 
