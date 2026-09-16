@@ -165,13 +165,6 @@ const OpxRoutes = () => {
         <Route path="followup-perpanjang">
           <Route index element={<FolloupPerpanjang />} />
         </Route>
-        <Route path="karir">
-          <Route path="dashboard" element={<DashboardKarir />} />
-          <Route path="loker" element={<Loker />} />
-          <Route path="rekruitmen" element={<Rekruitmen />} />
-          <Route path="rekruitmen/:applicationId" element={<RekruitmenDetail />} />
-          <Route path="tahapan" element={<Tahapan />} />
-        </Route>
         <Route index path="notifications" element={<NotificationPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Route>

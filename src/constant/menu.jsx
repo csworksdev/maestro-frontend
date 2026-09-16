@@ -23,15 +23,6 @@ const getMenuByRole = (role = "") => {
       return [...menuChief];
     case "Hydro":
       return [...menuHydro];
-    case "Superuser":
-      return [
-        ...menuChief,
-        ...menuSuperUser,
-        ...menuOpx,
-        ...menuAdminNew,
-        ...menuFinance,
-        ...menuHydro,
-      ];
     default:
       return [
         ...menuChief,

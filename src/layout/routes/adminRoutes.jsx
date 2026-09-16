@@ -138,13 +138,6 @@ const AdminRoutes = () => {
         <Route path="reschedule">
           <Route index element={<RescheduleApprovedAdmin />} />
         </Route>
-        <Route path="karir">
-          <Route path="dashboard" element={<DashboardKarir />} />
-          <Route path="loker" element={<Loker />} />
-          <Route path="rekruitmen" element={<Rekruitmen />} />
-          <Route path="rekruitmen/:applicationId" element={<RekruitmenDetail />} />
-          <Route path="tahapan" element={<Tahapan />} />
-        </Route>
         //#endregion
         {/* Followup Perpanjang */}
         {/* <Route path="followup-perpanjang">
