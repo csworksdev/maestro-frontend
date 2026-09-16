@@ -6,10 +6,7 @@ import {
   removeFcmToken as removeFcmTokenUtil,
   requestNotificationPermissionSafely,
 } from "@/utils/fcm";
-import {
-  getFcmTokenCookie,
-  setFcmTokenCookie,
-} from "@/utils/authCookies";
+import { getFcmTokenCookie, setFcmTokenCookie } from "@/utils/authCookies";
 
 export const useFcmToken = () => {
   const [fcmToken, setFcmToken] = useState(getFcmTokenCookie());
@@ -19,9 +16,6 @@ export const useFcmToken = () => {
       try {
         const messaging = await getMessagingInstance();
         if (!messaging) {
-          console.warn(
-            "[FCM] Browser ini tidak mendukung push notification web."
-          );
           return;
         }
 

@@ -37,26 +37,23 @@ const IndeterminateCheckbox = React.forwardRef(
     }, [resolvedRef, indeterminate]);
 
     return (
-      <span className="flex h-5 w-full items-center justify-center">
-        <input
-          type="checkbox"
-          ref={resolvedRef}
-          {...rest}
-          onClick={(event) => event.stopPropagation()}
-          onChange={(e) => {
-            rest.onChange?.(e);
+      <input
+        type="checkbox"
+        ref={resolvedRef}
+        {...rest}
+        onChange={(e) => {
+          rest.onChange?.(e);
 
-            if (e.target.checked) {
-              if (isHeader) {
-                onSelectionChange?.(rows);
-              } else if (rowId) {
-                onSelectionChange?.([rowId]);
-              }
+          if (e.target.checked) {
+            if (isHeader) {
+              onSelectionChange?.(rows);
+            } else if (rowId) {
+              onSelectionChange?.([rowId]);
             }
-          }}
-          className="table-checkbox"
-        />
-      </span>
+          }
+        }}
+        className="table-checkbox"
+      />
     );
   }
 );
@@ -142,6 +139,10 @@ const Table = ({
     : "text-sm !px-6 !py-4";
   const bodyCellAlignClass =
     bodyCellAlign === "center" ? "text-center" : "text-left";
+  const headerDensityClass =
+    density === "compact" ? "text-[11px] !px-4 !py-3" : "text-xs !px-6 !py-4";
+  const cellDensityClass =
+    density === "compact" ? "text-xs !px-4 !py-2.5" : "text-sm !px-6 !py-4";
 
   const tableInstance = useTable(
     {
@@ -164,7 +165,6 @@ const Table = ({
         hooks.visibleColumns.push((cols) => [
           {
             id: "selection",
-            width: "2.5rem",
             Header: ({ getToggleAllRowsSelectedProps, rows }) => (
               <IndeterminateCheckbox
                 {...getToggleAllRowsSelectedProps()}
@@ -337,8 +337,7 @@ const Table = ({
             return (
               <th
                 {...col.getHeaderProps(col.getSortByToggleProps())}
-                style={{ width: col.width }}
-                className={`table-th text-center text-wrap break-words bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
+                className={`table-th text-center text-wrap bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
                   col.canSort
                     ? "cursor-pointer select-none hover:text-slate-900 dark:hover:text-slate-100"
                     : ""
@@ -362,35 +361,25 @@ const Table = ({
     prepareRow(row);
     const { key, ...restRowProps } = row.getRowProps();
     const rowClassName = getRowClassName?.(row.original, row, idx) || "";
-    const handleRowClick = () => {
-      if (!isCheckbox || !row.toggleRowSelected) {
-        return;
-      }
-
-      row.toggleRowSelected(!row.isSelected);
-    };
 
     return (
       <tr
         {...restRowProps}
         key={idx}
-        onClick={handleRowClick}
         ref={(el) =>
           fixed
             ? (fixedRowsRef.current[idx] = el)
             : (scrollableRowsRef.current[idx] = el)
         }
         className={`group h-auto transition-colors ${
-          row.isSelected
-            ? "bg-primary-50 dark:bg-primary-500/10"
-            : idx % 2 === 0
+          idx % 2 === 0
             ? "bg-slate-50 dark:bg-slate-900"
             : "bg-white dark:bg-slate-800"
-        } ${isCheckbox ? "cursor-pointer" : ""} hover:bg-primary-50 dark:hover:bg-slate-700 ${rowClassName}`}
+        } hover:bg-primary-50 dark:hover:bg-slate-700 ${rowClassName}`}
       >
         {fixed ? (
           <td
-            className={`table-td text-center text-nowrap align-middle ${cellDensityClass}`}
+            className={`table-td text-nowrap align-middle ${cellDensityClass}`}
           >
             {row.cells.at(-1).render("Cell")}
           </td>
@@ -401,9 +390,8 @@ const Table = ({
               <td
                 key={key}
                 {...restCellProps}
-                className={`table-td ${bodyCellAlignClass} text-wrap break-words align-middle transition-colors ${
-                  cell.column.id === "selection" ? "!px-1" : ""
-                } ${cellDensityClass}`}
+                style={{ textTransform: "none" }}
+                className={`table-td text-wrap align-middle transition-colors ${cellDensityClass}`}
               >
                 {cell.render("Cell")}
               </td>
@@ -540,16 +528,29 @@ const Table = ({
             <tbody
               {...getTableBodyProps()}
               className="divide-y divide-slate-100 dark:divide-slate-700"
+        <div className="overflow-x-auto flex-grow scrollable-body">
+          <table
+            {...getTableProps()}
+              className="table min-w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
             >
-              {page.map((row, idx) => renderRow(row, idx, false))}
-            </tbody>
-          </table>
-        </div>
+              <thead className="border-b border-slate-100 dark:border-slate-800">
+                {headerGroups.map((hg, idx) => renderHeader(hg, idx, false))}
+              </thead>
+              <tbody
+                {...getTableBodyProps()}
+                className="divide-y divide-slate-100 dark:divide-slate-700"
+              >
+                {page.map((row, idx) => renderRow(row, idx, false))}
+              </tbody>
+            </table>
+          </div>
 
         {/* Fixed Actions */}
           {isAction && (
             <div className={`${actionColumnClass} flex-none border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body`}>
               <table className={`table ${actionColumnClass} table-fixed`}>
+            <div className="w-36 min-w-[9rem] border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 fixed-body">
+              <table className="table w-36 min-w-[9rem] table-fixed">
                 <thead className="border-b border-slate-100 dark:border-slate-800">
                   {headerGroups.map((hg, idx) => renderHeader(hg, idx, true))}
                 </thead>
@@ -576,5 +577,6 @@ export default memo(Table, (prev, next) => {
     prev.fitToContainer === next.fitToContainer &&
     prev.tableMinWidth === next.tableMinWidth &&
     prev.bodyCellAlign === next.bodyCellAlign
+    prev.getRowClassName === next.getRowClassName
   );
 });

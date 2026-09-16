@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Collapse } from "react-collapse";
 import Icon from "@/components/ui/Icon";
 import { toggleActiveChat } from "@/pages/app/chat/store";
@@ -31,6 +32,7 @@ const Navmenu = ({ menus }) => {
 
   const location = useLocation();
   const locationName = location.pathname.replace(/^\/+/, "");
+  const locationName = location.pathname.replace("/", "");
   const [mobileMenu, setMobileMenu] = useMobileMenu();
   const dispatch = useDispatch();
 
@@ -44,6 +46,9 @@ const Navmenu = ({ menus }) => {
     return (
       locationName === normalizedTarget ||
       locationName.startsWith(`${normalizedTarget}/`)
+    return (
+      locationName === targetLocation ||
+      locationName.startsWith(`${targetLocation}/`)
     );
   };
 
@@ -101,6 +106,7 @@ const Navmenu = ({ menus }) => {
             ${item.child ? "item-has-children" : ""}
             ${activeSubmenu === i ? "open" : ""}
             ${isLocationMatch(item.link) ? "menu-item-active" : ""}`}
+            ${locationName === item.link ? "menu-item-active" : ""}`}
         >
           {/* Single menu without children */}
           {!item.child && !item.isHeadr && (
