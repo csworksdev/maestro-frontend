@@ -50,12 +50,19 @@ const isTechnicalMessage = (text) => {
 
   return (
     value.length > 400 ||
-    /(?:<!doctype|<html|<body|<style|traceback|stack trace|operationalerror|programmingerror|integrityerror|databaseerror|django version|exception type|exception value|request method|request url|python executable|python version|python path|server time|psycopg|sqlstate|connection to server|localhost|127\.0\.0\.1|\/site-packages\/|\.py,? line \d+)/i.test(value) ||
-    /^(?:error|exception|failed|failure|fetch|network|timeout|request|axios|typeerror|syntaxerror|cannot read|undefined|null|format|internal server|bad gateway|service unavailable|gateway timeout|request failed|load failed|econn|err_|not found|no data|unauthorized|forbidden|something went wrong|server error)/i.test(value)
+    /(?:<!doctype|<html|<body|<style|traceback|stack trace|operationalerror|programmingerror|integrityerror|databaseerror|django version|exception type|exception value|request method|request url|python executable|python version|python path|server time|psycopg|sqlstate|connection to server|localhost|127\.0\.0\.1|\/site-packages\/|\.py,? line \d+)/i.test(
+      value,
+    ) ||
+    /^(?:error|exception|failed|failure|fetch|network|timeout|request|axios|typeerror|syntaxerror|cannot read|undefined|null|format|internal server|bad gateway|service unavailable|gateway timeout|request failed|load failed|econn|err_|not found|no data|unauthorized|forbidden|something went wrong|server error)/i.test(
+      value,
+    )
   );
 };
 
-const getCareerErrorMessage = (error, fallback = "Data belum dapat ditampilkan. Silakan coba lagi.") => {
+const getCareerErrorMessage = (
+  error,
+  fallback = "Data belum dapat ditampilkan. Silakan coba lagi.",
+) => {
   const data = error?.response?.data ?? error?.data ?? error;
   const status = error?.response?.status;
   const errorCode = String(error?.code || "").toUpperCase();
@@ -64,7 +71,10 @@ const getCareerErrorMessage = (error, fallback = "Data belum dapat ditampilkan. 
     data?.message || data?.detail || data?.error || data?.errors || data;
   const rawText = stringifyValue(message).trim();
   const text = translateCareerMessage(
-    rawText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+    rawText
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
   );
 
   if (status === 400) {
@@ -84,7 +94,11 @@ const getCareerErrorMessage = (error, fallback = "Data belum dapat ditampilkan. 
     return "Data yang diminta tidak ditemukan.";
   }
 
-  if (status === 408 || errorCode === "ECONNABORTED" || errorCode === "ETIMEDOUT") {
+  if (
+    status === 408 ||
+    errorCode === "ECONNABORTED" ||
+    errorCode === "ETIMEDOUT"
+  ) {
     return "Server membutuhkan waktu terlalu lama untuk merespons. Silakan coba lagi.";
   }
 
@@ -96,7 +110,10 @@ const getCareerErrorMessage = (error, fallback = "Data belum dapat ditampilkan. 
     return "Server sedang mengalami gangguan. Silakan coba lagi beberapa saat.";
   }
 
-  if (errorCode === "ERR_NETWORK" || (error?.isAxiosError && !error?.response)) {
+  if (
+    errorCode === "ERR_NETWORK" ||
+    (error?.isAxiosError && !error?.response)
+  ) {
     return "Tidak dapat terhubung ke server. Periksa koneksi Anda lalu coba lagi.";
   }
 

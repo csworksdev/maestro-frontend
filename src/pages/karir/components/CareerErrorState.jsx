@@ -16,7 +16,9 @@ function CareerErrorState({
       className={`flex w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 text-center dark:border-slate-700 dark:bg-slate-800/70 ${compact ? "min-h-0 py-5" : "min-h-[190px] py-10"} ${className}`}
       role="alert"
     >
-      <span className={`${compact ? "mb-3 h-10 w-10" : "mb-4 h-12 w-12"} inline-flex items-center justify-center rounded-full bg-warning-500/10 text-warning-600 dark:text-warning-400`}>
+      <span
+        className={`${compact ? "mb-3 h-10 w-10" : "mb-4 h-12 w-12"} inline-flex items-center justify-center rounded-full bg-warning-500/10 text-warning-600 dark:text-warning-400`}
+      >
         <Icon icon="heroicons-outline:exclamation-triangle" width={25} />
       </span>
       <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">

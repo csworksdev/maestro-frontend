@@ -12,7 +12,7 @@ describe("getCareerErrorMessage", () => {
     };
 
     expect(getCareerErrorMessage(error)).toBe(
-      "Server sedang mengalami gangguan. Silakan coba lagi beberapa saat."
+      "Server sedang mengalami gangguan. Silakan coba lagi beberapa saat.",
     );
   });
 
@@ -24,7 +24,7 @@ describe("getCareerErrorMessage", () => {
     };
 
     expect(getCareerErrorMessage(error)).toBe(
-      "Tidak dapat terhubung ke server. Periksa koneksi Anda lalu coba lagi."
+      "Tidak dapat terhubung ke server. Periksa koneksi Anda lalu coba lagi.",
     );
   });
 
@@ -47,7 +47,7 @@ describe("getCareerErrorMessage", () => {
     };
 
     expect(getCareerErrorMessage(error, "Data loker gagal dimuat.")).toBe(
-      "Data loker gagal dimuat."
+      "Data loker gagal dimuat.",
     );
   });
 });

@@ -232,7 +232,10 @@ const normalizeCustomFields = (fields) =>
     .filter((field) => field.key && field.label);
 
 const getStageCustomValues = (stage) =>
-  stage?.custom_field_values || stage?.custom_fields_values || stage?.custom_data || {};
+  stage?.custom_field_values ||
+  stage?.custom_fields_values ||
+  stage?.custom_data ||
+  {};
 
 const getPaginatedResults = (payload) => {
   if (Array.isArray(payload)) {
@@ -240,17 +243,26 @@ const getPaginatedResults = (payload) => {
   }
 
   if (Array.isArray(payload?.results)) {
-    return { count: payload.count ?? payload.results.length, results: payload.results };
+    return {
+      count: payload.count ?? payload.results.length,
+      results: payload.results,
+    };
   }
 
   if (Array.isArray(payload?.data)) {
-    return { count: payload.count ?? payload.data.length, results: payload.data };
+    return {
+      count: payload.count ?? payload.data.length,
+      results: payload.data,
+    };
   }
 
   return { count: 0, results: [] };
 };
 
-const normalizeValue = (value) => String(value || "").trim().toLowerCase();
+const normalizeValue = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
 const toBoolean = (value) =>
   value === true ||
@@ -282,11 +294,10 @@ const openNativePicker = (input) => {
 const normalizeDepartments = (payload) => {
   const { results } = getPaginatedResults(payload);
 
-  return results
-    .map((department) => ({
-      value: department.department_id,
-      label: department.name,
-    }));
+  return results.map((department) => ({
+    value: department.department_id,
+    label: department.name,
+  }));
 };
 
 const optionFromBranch = (branch) => ({
@@ -341,7 +352,12 @@ const optionFromDisplayFields = (items, valueKey, labelKey) => {
     });
 };
 
-const matchesOption = (selectedValue, currentValue, currentLabel, selectedLabel) => {
+const matchesOption = (
+  selectedValue,
+  currentValue,
+  currentLabel,
+  selectedLabel,
+) => {
   if (!selectedValue) {
     return true;
   }
@@ -362,12 +378,15 @@ const matchesMultiOption = (selectedValues, currentValue) => {
     return true;
   }
 
-  return selectedValues.map(normalizeValue).includes(normalizeValue(currentValue));
+  return selectedValues
+    .map(normalizeValue)
+    .includes(normalizeValue(currentValue));
 };
 
 const normalizeStages = (payload) => {
   const { count, results } = getPaginatedResults(payload);
-  const mappedResults = results.map((stage) => ({
+  const mappedResults = results
+    .map((stage) => ({
       id: stage.stage_id,
       departmentId: stage.department,
       departmentName: stage.department_name || "-",
@@ -376,7 +395,8 @@ const normalizeStages = (payload) => {
       description: stage.description || "-",
       customFields: normalizeCustomFields(stage.custom_fields),
       raw: stage,
-    })).sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0));
+    }))
+    .sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0));
   return {
     count,
     results: mappedResults,
@@ -384,14 +404,18 @@ const normalizeStages = (payload) => {
 };
 
 const stageToneClass = {
-  green: "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+  green:
+    "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
   blue: "border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300",
   yellow: "border-warning-200 bg-warning-500/10 text-warning-600",
-  orange: "border-orange-200 bg-orange-500/10 text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300",
+  orange:
+    "border-orange-200 bg-orange-500/10 text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300",
   red: "border-danger-200 bg-danger-500/10 text-danger-600",
-  slate: "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
+  slate:
+    "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
   pink: "border-pink-100 bg-pink-50 text-pink-600 dark:border-pink-500/20 dark:bg-pink-500/10 dark:text-pink-300",
-  purple: "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
+  purple:
+    "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
   teal: "border-teal-100 bg-teal-50 text-teal-600 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-300",
 };
 
@@ -607,12 +631,7 @@ const CheckboxGroup = ({ title, options, selectedValues, onChange }) => (
   </div>
 );
 
-const ActionTooltipButton = ({
-  tooltip,
-  icon,
-  className,
-  onClick,
-}) => (
+const ActionTooltipButton = ({ tooltip, icon, className, onClick }) => (
   <Tooltip
     content={tooltip}
     placement="top"
@@ -783,15 +802,21 @@ const Tahapan = () => {
         if (searchQuery) params.search = searchQuery;
         if (jobFilter) params.filter_job_id = jobFilter;
         if (branchFilter) params.filter_branch_id = branchFilter;
-        if (contractSystemFilter) params.filter_contract_system = contractSystemFilter;
+        if (contractSystemFilter)
+          params.filter_contract_system = contractSystemFilter;
         if (statusFilter) params.filter_status = statusFilter;
         if (workingFilter) params.filter_is_working = workingFilter;
         if (genderFilter.length) params.filter_gender = genderFilter.join(",");
-        if (maritalStatusFilter.length) params.filter_marital_status = maritalStatusFilter.join(",");
-        if (religionFilter.length) params.filter_religion = religionFilter.join(",");
-        if (educationLevelFilter.length) params.filter_education_level = educationLevelFilter.join(",");
-        if (educationStatusFilter.length) params.filter_education_status = educationStatusFilter.join(",");
-        if (coachExperienceFilter.length) params.filter_coach_experience = coachExperienceFilter.join(",");
+        if (maritalStatusFilter.length)
+          params.filter_marital_status = maritalStatusFilter.join(",");
+        if (religionFilter.length)
+          params.filter_religion = religionFilter.join(",");
+        if (educationLevelFilter.length)
+          params.filter_education_level = educationLevelFilter.join(",");
+        if (educationStatusFilter.length)
+          params.filter_education_status = educationStatusFilter.join(",");
+        if (coachExperienceFilter.length)
+          params.filter_coach_experience = coachExperienceFilter.join(",");
         if (sourceFilter.length) params.filter_source = sourceFilter.join(",");
 
         const res = await getCareerApplications(params);
@@ -821,7 +846,7 @@ const Tahapan = () => {
     }
 
     const selectedDepartmentOption = departmentOptions.find(
-      (option) => option.value === departmentId
+      (option) => option.value === departmentId,
     );
 
     return jobOptions.filter((job) =>
@@ -829,22 +854,23 @@ const Tahapan = () => {
         departmentId,
         job.department,
         job.departmentName,
-        selectedDepartmentOption?.label
-      )
+        selectedDepartmentOption?.label,
+      ),
     );
   }, [departmentId, departmentOptions, jobOptions]);
 
   const selectedDepartment = departmentOptions.find(
-    (department) => department.value === departmentId
+    (department) => department.value === departmentId,
   );
   const stages = stagesQuery.data?.results ?? [];
   const activeStage = stages.find((stage) => stage.id === activeStageId);
   const normalizedActiveStageName = normalizeValue(activeStage?.name).replace(
     /[_-]+/g,
-    " "
+    " ",
   );
   const showDocumentColumn =
-    Number(activeStage?.stageOrder) === 1 || normalizedActiveStageName === "cek cv";
+    Number(activeStage?.stageOrder) === 1 ||
+    normalizedActiveStageName === "cek cv";
 
   useEffect(() => {
     if (!departmentId || !stages.length) {
@@ -879,22 +905,32 @@ const Tahapan = () => {
         genderDisplay: application.gender_display || application.gender || "-",
         maritalStatus: application.marital_status,
         maritalStatusDisplay:
-          application.marital_status_display || application.marital_status || "-",
+          application.marital_status_display ||
+          application.marital_status ||
+          "-",
         religion: application.religion,
         religionDisplay:
           application.religion_display || application.religion || "-",
         educationLevel: application.education_level,
         educationLevelDisplay:
-          application.education_level_display || application.education_level || "-",
+          application.education_level_display ||
+          application.education_level ||
+          "-",
         educationStatus: application.education_status,
         educationStatusDisplay:
-          application.education_status_display || application.education_status || "-",
+          application.education_status_display ||
+          application.education_status ||
+          "-",
         contractSystem: application.contract_system,
         contractSystemDisplay:
-          application.contract_system_display || application.contract_system || "-",
+          application.contract_system_display ||
+          application.contract_system ||
+          "-",
         coachExperience: application.coach_experience,
         coachExperienceDisplay:
-          application.coach_experience_display || application.coach_experience || "-",
+          application.coach_experience_display ||
+          application.coach_experience ||
+          "-",
         source: application.source,
         sourceDisplay: application.source_display || application.source || "-",
         isWorking: toBoolean(application.is_working),
@@ -920,7 +956,7 @@ const Tahapan = () => {
   const applicantsByStage = useMemo(() => {
     const selectedJob = jobOptions.find((option) => option.value === jobFilter);
     const selectedBranch = branchOptions.find(
-      (option) => option.value === branchFilter
+      (option) => option.value === branchFilter,
     );
 
     const filteredResults = mappedApplications.filter((application) => {
@@ -933,38 +969,53 @@ const Tahapan = () => {
           jobFilter,
           application.jobId,
           application.jobTitle,
-          selectedJob?.label
+          selectedJob?.label,
         ) &&
         matchesOption(
           branchFilter,
           application.branchId,
           application.branchName,
-          selectedBranch?.label
+          selectedBranch?.label,
         ) &&
         matchesOption(
           contractSystemFilter,
           application.contractSystem,
           application.contractSystemDisplay,
-          contractSystemOptions.find((option) => option.value === contractSystemFilter)?.label
+          contractSystemOptions.find(
+            (option) => option.value === contractSystemFilter,
+          )?.label,
         ) &&
         matchesOption(
           statusFilter,
           application.applicationStatus,
           application.applicationStatusDisplay,
-          applicationStatusOptions.find((option) => option.value === statusFilter)?.label
+          applicationStatusOptions.find(
+            (option) => option.value === statusFilter,
+          )?.label,
         ) &&
         matchesOption(
           workingFilter,
           application.isWorking,
-          application.isWorking === true ? "Ya" : application.isWorking === false ? "Tidak" : "",
-          workingOptions.find((option) => option.value === workingFilter)?.label
+          application.isWorking === true
+            ? "Ya"
+            : application.isWorking === false
+              ? "Tidak"
+              : "",
+          workingOptions.find((option) => option.value === workingFilter)
+            ?.label,
         ) &&
         matchesMultiOption(genderFilter, application.gender) &&
         matchesMultiOption(maritalStatusFilter, application.maritalStatus) &&
         matchesMultiOption(religionFilter, application.religion) &&
         matchesMultiOption(educationLevelFilter, application.educationLevel) &&
-        matchesMultiOption(educationStatusFilter, application.educationStatus) &&
-        matchesMultiOption(coachExperienceFilter, application.coachExperience) &&
+        matchesMultiOption(
+          educationStatusFilter,
+          application.educationStatus,
+        ) &&
+        matchesMultiOption(
+          coachExperienceFilter,
+          application.coachExperience,
+        ) &&
         matchesMultiOption(sourceFilter, application.source)
       );
     });
@@ -1014,21 +1065,25 @@ const Tahapan = () => {
       contractSystems: optionFromDisplayFields(
         mappedApplications,
         "contractSystem",
-        "contractSystemDisplay"
+        "contractSystemDisplay",
       ),
       statuses: optionFromDisplayFields(
         mappedApplications,
         "applicationStatus",
-        "applicationStatusDisplay"
+        "applicationStatusDisplay",
       ),
       coachExperiences: optionFromDisplayFields(
         mappedApplications,
         "coachExperience",
-        "coachExperienceDisplay"
+        "coachExperienceDisplay",
       ),
-      sources: optionFromDisplayFields(mappedApplications, "source", "sourceDisplay"),
+      sources: optionFromDisplayFields(
+        mappedApplications,
+        "source",
+        "sourceDisplay",
+      ),
     }),
-    [mappedApplications]
+    [mappedApplications],
   );
 
   const activeFilterCount = [
@@ -1048,7 +1103,10 @@ const Tahapan = () => {
   ].filter(Boolean).length;
 
   const selectOptions = {
-    departments: [{ value: "", label: "Pilih department" }, ...departmentOptions],
+    departments: [
+      { value: "", label: "Pilih department" },
+      ...departmentOptions,
+    ],
     jobs: [{ value: "", label: "Semua loker" }, ...filteredJobOptions],
     branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
     contractSystems: [
@@ -1062,7 +1120,10 @@ const Tahapan = () => {
     working: [{ value: "", label: "Semua kondisi" }, ...workingOptions],
   };
 
-  const pageCount = Math.max(1, Math.ceil((applicantsByStage.count || 0) / pageSize));
+  const pageCount = Math.max(
+    1,
+    Math.ceil((applicantsByStage.count || 0) / pageSize),
+  );
   const safePageIndex = Math.min(pageIndex, pageCount - 1);
   const pagedApplicants = useMemo(() => {
     const start = safePageIndex * pageSize;
@@ -1105,7 +1166,7 @@ const Tahapan = () => {
     setter((current) =>
       current.includes(value)
         ? current.filter((item) => item !== value)
-        : [...current, value]
+        : [...current, value],
     );
     resetToFirstPage();
   };
@@ -1138,7 +1199,11 @@ const Tahapan = () => {
 
   const openCreateStageModal = () => {
     if (!departmentId) {
-      Swal.fire("Pilih department", "Pilih department terlebih dahulu.", "info");
+      Swal.fire(
+        "Pilih department",
+        "Pilih department terlebih dahulu.",
+        "info",
+      );
       return;
     }
 
@@ -1200,13 +1265,14 @@ const Tahapan = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Tahapan gagal ditambahkan."),
-        "error"
+        "error",
       );
     },
   });
 
   const editStageMutation = useMutation({
-    mutationFn: ({ stageId, data }) => editCareerStage(departmentId, stageId, data),
+    mutationFn: ({ stageId, data }) =>
+      editCareerStage(departmentId, stageId, data),
     onSuccess: () => {
       closeStageModal();
       invalidateStages();
@@ -1216,7 +1282,7 @@ const Tahapan = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Tahapan gagal diperbarui."),
-        "error"
+        "error",
       );
     },
   });
@@ -1232,7 +1298,7 @@ const Tahapan = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Tahapan gagal dihapus."),
-        "error"
+        "error",
       );
     },
   });
@@ -1245,8 +1311,8 @@ const Tahapan = () => {
           action === "reject"
             ? "failed"
             : action === "skip"
-            ? "skipped"
-            : "passed",
+              ? "skipped"
+              : "passed",
         notes: notes.trim(),
       };
 
@@ -1261,7 +1327,7 @@ const Tahapan = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Tahapan pelamar gagal diproses."),
-        "error"
+        "error",
       );
     },
   });
@@ -1423,7 +1489,7 @@ const Tahapan = () => {
       const draftKey = getCustomDataDraftKey(customDataApplication.id, field.key);
       const hasDraft = Object.prototype.hasOwnProperty.call(
         customDataDrafts,
-        draftKey
+        draftKey,
       );
       const value = hasDraft
         ? customDataDrafts[draftKey]
@@ -1516,7 +1582,7 @@ const Tahapan = () => {
     setStageForm((current) => ({
       ...current,
       custom_fields: current.custom_fields.map((field, itemIndex) =>
-        itemIndex === index ? { ...field, ...updates } : field
+        itemIndex === index ? { ...field, ...updates } : field,
       ),
     }));
   };
@@ -1525,7 +1591,7 @@ const Tahapan = () => {
     setStageForm((current) => ({
       ...current,
       custom_fields: current.custom_fields.filter(
-        (_, itemIndex) => itemIndex !== index
+        (_, itemIndex) => itemIndex !== index,
       ),
     }));
   };
@@ -1594,33 +1660,41 @@ const Tahapan = () => {
                   hasCustomFieldValue(row.original.customFieldValues?.[field.key])
                 );
 
-                return (
-                  <div className="flex min-w-0 flex-col items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openCustomDataModal(row.original)}
-                      title={hasCustomData ? "Edit data tahapan" : "Isi data tahapan"}
-                      aria-label={hasCustomData ? "Edit data tahapan" : "Isi data tahapan"}
-                      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-left transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
+              return (
+                <div className="flex min-w-0 flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openCustomDataModal(row.original)}
+                    title={
+                      hasCustomData ? "Edit data tahapan" : "Isi data tahapan"
+                    }
+                    aria-label={
+                      hasCustomData ? "Edit data tahapan" : "Isi data tahapan"
+                    }
+                    className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-left transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
+                      hasCustomData
+                        ? "border-success-200 bg-success-50 text-success-700 hover:border-success-300 hover:bg-success-100 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300 dark:hover:bg-success-500/20"
+                        : "border-primary-200 bg-primary-50 text-primary-700 hover:border-primary-300 hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
+                    }`}
+                  >
+                    <Icon
+                      icon={
                         hasCustomData
-                          ? "border-success-200 bg-success-50 text-success-700 hover:border-success-300 hover:bg-success-100 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300 dark:hover:bg-success-500/20"
-                          : "border-primary-200 bg-primary-50 text-primary-700 hover:border-primary-300 hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
-                      }`}
-                    >
-                      <Icon
-                        icon={hasCustomData ? "heroicons-outline:pencil-alt" : "heroicons-outline:plus"}
-                        width={15}
-                      />
-                      <span>
-                        <span className="block text-xs font-bold">
-                          {hasCustomData ? "Edit Data" : "Isi Data"}
-                        </span>
-                        <span className="block text-[10px] font-semibold opacity-70">
-                          {hasCustomData
-                            ? `${filledFieldCount}/${customFields.length} field terisi`
-                            : "Belum diisi"}
-                        </span>
+                          ? "heroicons-outline:pencil-alt"
+                          : "heroicons-outline:plus"
+                      }
+                      width={15}
+                    />
+                    <span>
+                      <span className="block text-xs font-bold">
+                        {hasCustomData ? "Edit Data" : "Isi Data"}
                       </span>
+                      <span className="block text-[10px] font-semibold opacity-70">
+                        {hasCustomData
+                          ? `${filledFieldCount}/${customFields.length} field terisi`
+                          : "Belum diisi"}
+                      </span>
+                    </span>
                     </button>
                     {savedFields.length ? (
                       <div className="w-full min-w-0 space-y-1 rounded-md bg-slate-50 px-2.5 py-2 text-left dark:bg-slate-800/70">
@@ -1667,65 +1741,65 @@ const Tahapan = () => {
             },
           ]
         : [];
-      const documentColumn = showDocumentColumn
-        ? [
-            {
-              Header: "Cek CV",
-              accessor: "documents",
-              width: 170,
-              Cell: ({ row }) => {
-                const cvLink = row.original.uploadCv;
-                const certificateLinks =
-                  row.original.uploadSertificates.filter(isValidUrl);
-                const hasCv = isValidUrl(cvLink);
+    const documentColumn = showDocumentColumn
+      ? [
+          {
+            Header: "Cek CV",
+            accessor: "documents",
+            width: 170,
+            Cell: ({ row }) => {
+              const cvLink = row.original.uploadCv;
+              const certificateLinks =
+                row.original.uploadSertificates.filter(isValidUrl);
+              const hasCv = isValidUrl(cvLink);
 
-                if (!hasCv && !certificateLinks.length) {
-                  return (
-                    <span className="text-sm font-semibold text-slate-400">
-                      -
-                    </span>
-                  );
-                }
-
+              if (!hasCv && !certificateLinks.length) {
                 return (
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    {hasCv && (
-                      <a
-                        href={cvLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(event) => event.stopPropagation()}
-                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:border-primary-200 hover:bg-primary-100"
-                        title="Lihat CV"
-                      >
-                        <Icon icon="heroicons-outline:document-text" width={15} />
-                        CV
-                      </a>
-                    )}
-                    {certificateLinks.map((link, index) => (
-                      <a
-                        key={`${link}-${index}`}
-                        href={link}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(event) => event.stopPropagation()}
-                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-600 transition hover:border-emerald-200 hover:bg-emerald-100"
-                        title={`Lihat sertifikat ${index + 1}`}
-                      >
-                        <Icon icon="heroicons-outline:paper-clip" width={15} />
-                        {certificateLinks.length > 1
-                          ? `S${index + 1}`
-                          : "Sertifikat"}
-                      </a>
-                    ))}
-                  </div>
+                  <span className="text-sm font-semibold text-slate-400">
+                    -
+                  </span>
                 );
-              },
-            },
-          ]
-        : [];
+              }
 
-      return [
+              return (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {hasCv && (
+                    <a
+                      href={cvLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:border-primary-200 hover:bg-primary-100"
+                      title="Lihat CV"
+                    >
+                      <Icon icon="heroicons-outline:document-text" width={15} />
+                      CV
+                    </a>
+                  )}
+                  {certificateLinks.map((link, index) => (
+                    <a
+                      key={`${link}-${index}`}
+                      href={link}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-600 transition hover:border-emerald-200 hover:bg-emerald-100"
+                      title={`Lihat sertifikat ${index + 1}`}
+                    >
+                      <Icon icon="heroicons-outline:paper-clip" width={15} />
+                      {certificateLinks.length > 1
+                        ? `S${index + 1}`
+                        : "Sertifikat"}
+                    </a>
+                  ))}
+                </div>
+              );
+            },
+          },
+        ]
+      : [];
+
+    return [
       {
         Header: "Nama",
         accessor: "name",
@@ -1737,7 +1811,10 @@ const Tahapan = () => {
             </p>
             {row.original.phoneNumber !== "-" ? (
               <a
-                href={row.original.whatsappLink || getWhatsappHref(row.original.phoneNumber)}
+                href={
+                  row.original.whatsappLink ||
+                  getWhatsappHref(row.original.phoneNumber)
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="mt-1 inline-block text-xs font-semibold text-success-600 hover:underline"
@@ -1774,7 +1851,9 @@ const Tahapan = () => {
         accessor: "genderDisplay",
         width: 120,
         Cell: ({ row }) => (
-          <Badge tone={genderTone(row.original.gender)}>{row.original.genderDisplay}</Badge>
+          <Badge tone={genderTone(row.original.gender)}>
+            {row.original.genderDisplay}
+          </Badge>
         ),
       },
       {
@@ -1828,23 +1907,21 @@ const Tahapan = () => {
           </div>
         ),
       },
-      ];
-    },
-    [
-      activeStage?.customFields,
-      activeStageId,
-      customDataDrafts,
-      navigate,
-      showDocumentColumn,
-    ]
-  );
+    ];
+  }, [
+    activeStage?.customFields,
+    activeStageId,
+    customDataDrafts,
+    navigate,
+    showDocumentColumn,
+  ]);
   const tahapanTableMinWidth = activeStage?.customFields?.length
     ? showDocumentColumn
       ? "1270px"
       : "1100px"
     : showDocumentColumn
-    ? "1230px"
-    : "1060px";
+      ? "1230px"
+      : "1060px";
 
   return (
     <div className="career-stages-page min-w-0 space-y-5">
@@ -1869,7 +1946,9 @@ const Tahapan = () => {
                 aria-expanded={isAdvancedFiltersOpen}
               >
                 <Icon icon="heroicons-outline:adjustments" width={16} />
-                {isAdvancedFiltersOpen ? "Sembunyikan Filter" : "Filter Lanjutan"}
+                {isAdvancedFiltersOpen
+                  ? "Sembunyikan Filter"
+                  : "Filter Lanjutan"}
               </button>
               <button
                 type="button"
@@ -1955,7 +2034,10 @@ const Tahapan = () => {
               />
               <CheckboxGroup
                 title="Pengalaman Coach"
-                options={mergeOptions(coachExperienceOptions, dynamicOptions.coachExperiences)}
+                options={mergeOptions(
+                  coachExperienceOptions,
+                  dynamicOptions.coachExperiences,
+                )}
                 selectedValues={coachExperienceFilter}
                 onChange={toggleMultiFilter(setCoachExperienceFilter)}
               />
@@ -1971,7 +2053,10 @@ const Tahapan = () => {
       </Card>
 
       <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
-        <Card className="career-stages-menu-card min-w-0 overflow-hidden" bodyClass="p-0">
+        <Card
+          className="career-stages-menu-card min-w-0 overflow-hidden"
+          bodyClass="p-0"
+        >
           <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -2116,22 +2201,26 @@ const Tahapan = () => {
             </div>
           </div>
 
-          {!stagesQuery.isError && !applicationsQuery.isError && (
-            jobsOptionsQuery.isError || branchesQuery.isError
-          ) && (
-            <CareerErrorState
-              compact
-              className="mb-5"
-              title="Sebagian filter belum tersedia"
-              error={jobsOptionsQuery.error || branchesQuery.error}
-              fallback="Pilihan loker atau cabang belum dapat dimuat."
-              onRetry={() => Promise.allSettled([
-                jobsOptionsQuery.refetch(),
-                branchesQuery.refetch(),
-              ])}
-              isRetrying={jobsOptionsQuery.isFetching || branchesQuery.isFetching}
-            />
-          )}
+          {!stagesQuery.isError &&
+            !applicationsQuery.isError &&
+            (jobsOptionsQuery.isError || branchesQuery.isError) && (
+              <CareerErrorState
+                compact
+                className="mb-5"
+                title="Sebagian filter belum tersedia"
+                error={jobsOptionsQuery.error || branchesQuery.error}
+                fallback="Pilihan loker atau cabang belum dapat dimuat."
+                onRetry={() =>
+                  Promise.allSettled([
+                    jobsOptionsQuery.refetch(),
+                    branchesQuery.refetch(),
+                  ])
+                }
+                isRetrying={
+                  jobsOptionsQuery.isFetching || branchesQuery.isFetching
+                }
+              />
+            )}
 
           {departmentsQuery.isError ? (
             <CareerErrorState
@@ -2150,11 +2239,15 @@ const Tahapan = () => {
             <CareerErrorState
               error={stagesQuery.error}
               fallback="Data tahapan belum dapat dimuat. Silakan coba lagi."
-              onRetry={() => Promise.allSettled([
-                stagesQuery.refetch(),
-                applicationsQuery.refetch(),
-              ])}
-              isRetrying={stagesQuery.isFetching || applicationsQuery.isFetching}
+              onRetry={() =>
+                Promise.allSettled([
+                  stagesQuery.refetch(),
+                  applicationsQuery.refetch(),
+                ])
+              }
+              isRetrying={
+                stagesQuery.isFetching || applicationsQuery.isFetching
+              }
             />
           ) : applicationsQuery.isError ? (
             <CareerErrorState
@@ -2176,7 +2269,8 @@ const Tahapan = () => {
                     hasCustomFieldValue(application.customFieldValues?.[field.key])
                   ).length;
                   const hasCustomData = filledFieldCount > 0;
-                  const certificateLinks = application.uploadSertificates.filter(isValidUrl);
+                  const certificateLinks =
+                    application.uploadSertificates.filter(isValidUrl);
                   const hasCv = isValidUrl(application.uploadCv);
 
                   return (
@@ -2191,7 +2285,10 @@ const Tahapan = () => {
                           </h4>
                           {application.phoneNumber !== "-" ? (
                             <a
-                              href={application.whatsappLink || getWhatsappHref(application.phoneNumber)}
+                              href={
+                                application.whatsappLink ||
+                                getWhatsappHref(application.phoneNumber)
+                              }
                               target="_blank"
                               rel="noreferrer"
                               className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-success-600"
@@ -2210,20 +2307,36 @@ const Tahapan = () => {
 
                       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-slate-100 pt-3 text-xs dark:border-slate-800">
                         <div className="min-w-0">
-                          <dt className="font-semibold text-slate-400">Loker</dt>
-                          <dd className="mt-1 break-words font-bold text-slate-600 dark:text-slate-300">{application.jobTitle}</dd>
+                          <dt className="font-semibold text-slate-400">
+                            Loker
+                          </dt>
+                          <dd className="mt-1 break-words font-bold text-slate-600 dark:text-slate-300">
+                            {application.jobTitle}
+                          </dd>
                         </div>
                         <div className="min-w-0">
-                          <dt className="font-semibold text-slate-400">Cabang</dt>
-                          <dd className="mt-1 break-words font-bold text-slate-600 dark:text-slate-300">{application.branchName}</dd>
+                          <dt className="font-semibold text-slate-400">
+                            Cabang
+                          </dt>
+                          <dd className="mt-1 break-words font-bold text-slate-600 dark:text-slate-300">
+                            {application.branchName}
+                          </dd>
                         </div>
                         <div className="min-w-0">
-                          <dt className="font-semibold text-slate-400">Gender</dt>
-                          <dd className="mt-1 font-bold text-slate-600 dark:text-slate-300">{application.genderDisplay}</dd>
+                          <dt className="font-semibold text-slate-400">
+                            Gender
+                          </dt>
+                          <dd className="mt-1 font-bold text-slate-600 dark:text-slate-300">
+                            {application.genderDisplay}
+                          </dd>
                         </div>
                         <div className="min-w-0">
-                          <dt className="font-semibold text-slate-400">Status pekerjaan</dt>
-                          <dd className="mt-1 break-words font-bold text-slate-600 dark:text-slate-300">{application.contractSystemDisplay}</dd>
+                          <dt className="font-semibold text-slate-400">
+                            Status pekerjaan
+                          </dt>
+                          <dd className="mt-1 break-words font-bold text-slate-600 dark:text-slate-300">
+                            {application.contractSystemDisplay}
+                          </dd>
                         </div>
                       </dl>
 
@@ -2235,33 +2348,85 @@ const Tahapan = () => {
                               onClick={() => openCustomDataModal(application)}
                               className={`inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border px-3 text-xs font-bold ${hasCustomData ? "border-success-200 bg-success-50 text-success-700" : "border-primary-200 bg-primary-50 text-primary-700"}`}
                             >
-                              <Icon icon={hasCustomData ? "heroicons-outline:pencil-alt" : "heroicons-outline:plus"} width={15} />
-                              {hasCustomData ? `Data ${filledFieldCount}/${customFields.length}` : "Isi data"}
+                              <Icon
+                                icon={
+                                  hasCustomData
+                                    ? "heroicons-outline:pencil-alt"
+                                    : "heroicons-outline:plus"
+                                }
+                                width={15}
+                              />
+                              {hasCustomData
+                                ? `Data ${filledFieldCount}/${customFields.length}`
+                                : "Isi data"}
                             </button>
                           )}
                           {showDocumentColumn && hasCv && (
-                            <a href={application.uploadCv} target="_blank" rel="noreferrer" className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600">
-                              <Icon icon="heroicons-outline:document-text" width={15} /> CV
+                            <a
+                              href={application.uploadCv}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600"
+                            >
+                              <Icon
+                                icon="heroicons-outline:document-text"
+                                width={15}
+                              />{" "}
+                              CV
                             </a>
                           )}
-                          {showDocumentColumn && certificateLinks.map((link, index) => (
-                            <a key={`${link}-${index}`} href={link} target="_blank" rel="noreferrer" className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-600">
-                              <Icon icon="heroicons-outline:paper-clip" width={15} />
-                              {certificateLinks.length > 1 ? `Sertifikat ${index + 1}` : "Sertifikat"}
-                            </a>
-                          ))}
+                          {showDocumentColumn &&
+                            certificateLinks.map((link, index) => (
+                              <a
+                                key={`${link}-${index}`}
+                                href={link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-600"
+                              >
+                                <Icon
+                                  icon="heroicons-outline:paper-clip"
+                                  width={15}
+                                />
+                                {certificateLinks.length > 1
+                                  ? `Sertifikat ${index + 1}`
+                                  : "Sertifikat"}
+                              </a>
+                            ))}
                         </div>
                       )}
 
                       <div className="mt-4 grid grid-cols-3 gap-2">
-                        <button type="button" onClick={() => openProcessModal(application, "next")} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-success-100 bg-success-50 px-2 text-xs font-bold text-success-600">
-                          <Icon icon="heroicons-outline:check-circle" width={16} /> Lanjut
+                        <button
+                          type="button"
+                          onClick={() => openProcessModal(application, "next")}
+                          className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-success-100 bg-success-50 px-2 text-xs font-bold text-success-600"
+                        >
+                          <Icon
+                            icon="heroicons-outline:check-circle"
+                            width={16}
+                          />{" "}
+                          Lanjut
                         </button>
-                        <button type="button" onClick={() => openProcessModal(application, "reject")} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-danger-100 bg-danger-50 px-2 text-xs font-bold text-danger-600">
-                          <Icon icon="heroicons-outline:x-circle" width={16} /> Tolak
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openProcessModal(application, "reject")
+                          }
+                          className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-danger-100 bg-danger-50 px-2 text-xs font-bold text-danger-600"
+                        >
+                          <Icon icon="heroicons-outline:x-circle" width={16} />{" "}
+                          Tolak
                         </button>
-                        <button type="button" onClick={() => navigate(`/karir/rekruitmen/${application.id}`)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                          <Icon icon="heroicons-outline:eye" width={16} /> Detail
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/karir/rekruitmen/${application.id}`)
+                          }
+                          className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                          <Icon icon="heroicons-outline:eye" width={16} />{" "}
+                          Detail
                         </button>
                       </div>
                     </article>
@@ -2297,7 +2462,9 @@ const Tahapan = () => {
                 canPreviousPage={safePageIndex > 0}
                 canNextPage={safePageIndex < pageCount - 1}
                 gotoPage={(page) => setPageIndex(page)}
-                previousPage={() => setPageIndex((page) => Math.max(0, page - 1))}
+                previousPage={() =>
+                  setPageIndex((page) => Math.max(0, page - 1))
+                }
                 nextPage={() =>
                   setPageIndex((page) => Math.min(pageCount - 1, page + 1))
                 }
@@ -2349,7 +2516,9 @@ const Tahapan = () => {
               <input
                 required
                 value={stageForm.name}
-                onChange={(event) => updateStageForm("name", event.target.value)}
+                onChange={(event) =>
+                  updateStageForm("name", event.target.value)
+                }
                 className="form-control h-11"
                 placeholder="Contoh: Interview HR"
               />
@@ -2390,7 +2559,8 @@ const Tahapan = () => {
                   Form tambahan stage
                 </p>
                 <p className="mt-1 text-xs font-medium text-slate-400">
-                  Field ini akan muncul saat data pelamar diproses pada stage ini.
+                  Field ini akan muncul saat data pelamar diproses pada stage
+                  ini.
                 </p>
               </div>
               <button
@@ -2530,13 +2700,14 @@ const Tahapan = () => {
               const isTimeField = field.type === "time";
               const isUploadField = field.type === "upload";
               const usesNativePicker = isDateField || isTimeField;
-              const value = customDataApplication?.customFieldValues?.[field.key];
+              const value =
+                customDataApplication?.customFieldValues?.[field.key];
               const draftKey = customDataApplication
                 ? getCustomDataDraftKey(customDataApplication.id, field.key)
                 : "";
               const fieldValue = Object.prototype.hasOwnProperty.call(
                 customDataDrafts,
-                draftKey
+                draftKey,
               )
                 ? customDataDrafts[draftKey]
                 : value || "";
@@ -2661,14 +2832,16 @@ const Tahapan = () => {
                   ) : (
                   <div className="relative">
                     <input
-                      type={isDateField ? "date" : isTimeField ? "time" : "text"}
+                      type={
+                        isDateField ? "date" : isTimeField ? "time" : "text"
+                      }
                       value={fieldValue}
                       onChange={(event) =>
                         customDataApplication &&
                         handleCustomDataChange(
                           customDataApplication,
                           field,
-                          event.target.value
+                          event.target.value,
                         )
                       }
                       onFocus={(event) => {
@@ -2691,8 +2864,8 @@ const Tahapan = () => {
                       <button
                         type="button"
                         onClick={(event) => {
-                          const input = event.currentTarget
-                            .previousElementSibling;
+                          const input =
+                            event.currentTarget.previousElementSibling;
                           input?.focus();
                           openNativePicker(input);
                         }}
@@ -2725,8 +2898,8 @@ const Tahapan = () => {
           processForm.action === "reject"
             ? "Tolak Pelamar"
             : processForm.action === "skip"
-            ? "Lewati Tahapan"
-            : "Lanjut Tahap Selanjutnya"
+              ? "Lewati Tahapan"
+              : "Lanjut Tahap Selanjutnya"
         }
         className="career-stages-modal max-w-xl"
         centered
@@ -2743,15 +2916,15 @@ const Tahapan = () => {
                 processForm.action === "reject"
                   ? "Tolak"
                   : processForm.action === "skip"
-                  ? "Lewati"
-                  : "Lanjutkan"
+                    ? "Lewati"
+                    : "Lanjutkan"
               }
               className={
                 processForm.action === "reject"
                   ? "btn-danger"
                   : processForm.action === "skip"
-                  ? "btn-warning"
-                  : "btn-success"
+                    ? "btn-warning"
+                    : "btn-success"
               }
               onClick={() => processFormRef.current?.requestSubmit()}
               isLoading={processApplicationMutation.isPending}
@@ -2769,7 +2942,8 @@ const Tahapan = () => {
               {processingApplication?.name || "-"}
             </p>
             <p className="mt-1 text-xs font-semibold text-slate-500">
-              {activeStage?.name || "-"} - {processingApplication?.jobTitle || "-"}
+              {activeStage?.name || "-"} -{" "}
+              {processingApplication?.jobTitle || "-"}
             </p>
           </div>
 

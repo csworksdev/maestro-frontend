@@ -49,7 +49,7 @@ const serializeCookie = (name, value, options = {}) => {
     segments.push("Secure");
   } else if (requestedSecure && !httpsContext && import.meta.env?.DEV) {
     console.warn(
-      `Skipping Secure flag for cookie "${name}" because HTTPS is not enabled.`
+      `Skipping Secure flag for cookie "${name}" because HTTPS is not enabled.`,
     );
   }
 
@@ -60,7 +60,7 @@ export const setCookie = (
   name,
   value,
   days = COOKIE_LIFETIME_DAYS,
-  options = {}
+  options = {},
 ) => {
   if (!isBrowser()) return;
 
@@ -79,7 +79,9 @@ export const setCookie = (
 export const getCookie = (name) => {
   if (!isBrowser()) return null;
   const match = document.cookie.match(
-    new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\]\/+^])/g, "\\$1")}=([^;]*)`)
+    new RegExp(
+      `(?:^|; )${name.replace(/([.$?*|{}()[\]\/+^])/g, "\\$1")}=([^;]*)`,
+    ),
   );
   return match ? decodeURIComponent(match[1]) : null;
 };
@@ -99,8 +101,65 @@ export const AUTH_COOKIE_KEYS = {
   data: "user_data",
 };
 
+export const AUTH_STORAGE_KEY = "maestro_auth";
 export const REMEMBER_ME_COOKIE = "remember_me";
 export const FCM_TOKEN_COOKIE = "fcm_token";
+
+const getBrowserStorage = (type) => {
+  if (typeof window === "undefined") return null;
+  try {
+    const storage = window[type];
+    const testKey = "__auth_storage_test__";
+    storage.setItem(testKey, "1");
+    storage.removeItem(testKey);
+    return storage;
+  } catch {
+    return null;
+  }
+};
+
+const parseStoredAuth = (storage) => {
+  if (!storage) return null;
+  try {
+    const rawValue = storage.getItem(AUTH_STORAGE_KEY);
+    return rawValue ? JSON.parse(rawValue) : null;
+  } catch (error) {
+    console.error("Failed to parse stored auth data:", error);
+    storage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
+};
+
+const getStoredAuth = () => {
+  const localAuth = parseStoredAuth(getBrowserStorage("localStorage"));
+  if (localAuth) return localAuth;
+  return parseStoredAuth(getBrowserStorage("sessionStorage"));
+};
+
+const setStoredAuth = (authData, remember = true) => {
+  const localStorage = getBrowserStorage("localStorage");
+  const sessionStorage = getBrowserStorage("sessionStorage");
+  const targetStorage = remember ? localStorage : sessionStorage;
+  const fallbackStorage = remember ? sessionStorage : localStorage;
+
+  if (!targetStorage) return;
+
+  try {
+    targetStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+    fallbackStorage?.removeItem(AUTH_STORAGE_KEY);
+  } catch (error) {
+    console.error("Failed to persist auth data:", error);
+  }
+};
+
+const clearStoredAuth = () => {
+  try {
+    getBrowserStorage("localStorage")?.removeItem(AUTH_STORAGE_KEY);
+    getBrowserStorage("sessionStorage")?.removeItem(AUTH_STORAGE_KEY);
+  } catch (error) {
+    console.error("Failed to clear stored auth data:", error);
+  }
+};
 
 export const getRememberMeCookie = () => {
   const value = getCookie(REMEMBER_ME_COOKIE);
@@ -108,10 +167,7 @@ export const getRememberMeCookie = () => {
   return value === "1";
 };
 
-export const setRememberMeCookie = (
-  remember,
-  days = COOKIE_LIFETIME_DAYS
-) => {
+export const setRememberMeCookie = (remember, days = COOKIE_LIFETIME_DAYS) => {
   if (!isBrowser()) return;
   const options = { sameSite: "Strict", secure: true };
   if (remember) {
@@ -124,6 +180,13 @@ export const setRememberMeCookie = (
 export const setAuthCookies = ({ access, refresh, data }, options = {}) => {
   const { days = COOKIE_LIFETIME_DAYS } = options;
   const secureCookieOptions = { sameSite: "Strict", secure: true };
+  const storedAuth = getStoredAuth() || {};
+  const authData = {
+    access: access ?? storedAuth.access ?? "",
+    refresh: refresh ?? storedAuth.refresh ?? "",
+    data: data ?? storedAuth.data ?? null,
+  };
+  const remember = days !== null;
 
   if (access)
     setCookie(AUTH_COOKIE_KEYS.access, access, days, secureCookieOptions);
@@ -134,20 +197,25 @@ export const setAuthCookies = ({ access, refresh, data }, options = {}) => {
       sameSite: "Lax",
       secure: true,
     });
+
+  setStoredAuth(authData, remember);
 };
 
 export const clearAuthCookies = () => {
   Object.values(AUTH_COOKIE_KEYS).forEach((key) =>
-    deleteCookie(key, { sameSite: "Strict", secure: true })
+    deleteCookie(key, { sameSite: "Strict", secure: true }),
   );
   deleteCookie(REMEMBER_ME_COOKIE, { sameSite: "Strict", secure: true });
+  clearStoredAuth();
 };
 
 export const getAuthCookies = () => {
-  const access = getCookie(AUTH_COOKIE_KEYS.access) || "";
-  const refresh = getCookie(AUTH_COOKIE_KEYS.refresh) || "";
+  const storedAuth = getStoredAuth() || {};
+  const access = getCookie(AUTH_COOKIE_KEYS.access) || storedAuth.access || "";
+  const refresh =
+    getCookie(AUTH_COOKIE_KEYS.refresh) || storedAuth.refresh || "";
   const rawData = getCookie(AUTH_COOKIE_KEYS.data);
-  let data = null;
+  let data = storedAuth.data || null;
 
   if (rawData) {
     try {
@@ -169,6 +237,7 @@ export const clearAllCookies = () => {
     if (!name) return;
     deleteCookie(name.trim());
   });
+  clearStoredAuth();
 };
 
 export const getFcmTokenCookie = () => getCookie(FCM_TOKEN_COOKIE);

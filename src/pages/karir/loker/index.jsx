@@ -139,7 +139,10 @@ const getPaginatedResults = (payload) => {
   }
 
   const namedResults =
-    payload?.jobs || payload?.items || payload?.departments || payload?.branches;
+    payload?.jobs ||
+    payload?.items ||
+    payload?.departments ||
+    payload?.branches;
   if (Array.isArray(namedResults)) {
     return {
       count: payload.count ?? namedResults.length,
@@ -165,7 +168,13 @@ const getLabel = (item, type) => {
   }
 
   const typeNameKey = type ? `${type}_name` : null;
-  return item.name || item.title || item[typeNameKey] || item.label || getId(item, type);
+  return (
+    item.name ||
+    item.title ||
+    item[typeNameKey] ||
+    item.label ||
+    getId(item, type)
+  );
 };
 
 const normalizeDepartments = (payload) => {
@@ -193,7 +202,10 @@ const normalizeBranches = (payload) => {
 const formatStatus = (status) =>
   status === "published" ? "Published" : "Draft";
 
-const normalizeFilterValue = (value) => String(value || "").trim().toLowerCase();
+const normalizeFilterValue = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
 const matchesSelectedOption = ({
   selectedValue,
@@ -262,7 +274,7 @@ const Loker = () => {
         acc[item.value] = item.label;
         return acc;
       }, {}),
-    [departmentOptions]
+    [departmentOptions],
   );
 
   const branchLookup = useMemo(
@@ -271,7 +283,7 @@ const Loker = () => {
         acc[item.value] = item.label;
         return acc;
       }, {}),
-    [branchOptions]
+    [branchOptions],
   );
 
   const jobsQuery = useQuery({
@@ -305,45 +317,42 @@ const Loker = () => {
 
   const listData = useMemo(() => {
     const payload = jobsQuery.data ?? { count: 0, results: [] };
-    const mappedResults = payload.results.filter(
-      (job) => job && typeof job === "object"
-    ).map((job) => {
-      const id = job.job_id || getId(job, "job");
-      const departmentId =
-        job.department_id || getId(job.department, "department");
-      const branchId = job.branch_id || getId(job.branch, "branch");
-      const status = String(job.status || "draft").toLowerCase();
-      const departmentLabel =
-        typeof job.department === "object"
-          ? getLabel(job.department, "department")
-          : "";
-      const branchLabel =
-        typeof job.branch === "object" ? getLabel(job.branch, "branch") : "";
+    const mappedResults = payload.results
+      .filter((job) => job && typeof job === "object")
+      .map((job) => {
+        const id = job.job_id || getId(job, "job");
+        const departmentId =
+          job.department_id || getId(job.department, "department");
+        const branchId = job.branch_id || getId(job.branch, "branch");
+        const status = String(job.status || "draft").toLowerCase();
+        const departmentLabel =
+          typeof job.department === "object"
+            ? getLabel(job.department, "department")
+            : "";
+        const branchLabel =
+          typeof job.branch === "object" ? getLabel(job.branch, "branch") : "";
 
-      return {
-        id,
-        departmentId,
-        branchId,
-        departmentName:
-          job.department_name ||
-          departmentLabel ||
-          departmentLookup[departmentId] ||
-          "-",
-        branchName:
-          job.branch_name ||
-          branchLabel ||
-          branchLookup[branchId] ||
-          "-",
-        title: job.title || "-",
-        slug: job.slug || "",
-        description: job.description || "",
-        requirements: job.requirements || "",
-        benefits: job.benefits || "",
-        status,
-        statusDisplay: job.status_display || formatStatus(status),
-        raw: job,
-      };
-    });
+        return {
+          id,
+          departmentId,
+          branchId,
+          departmentName:
+            job.department_name ||
+            departmentLabel ||
+            departmentLookup[departmentId] ||
+            "-",
+          branchName:
+            job.branch_name || branchLabel || branchLookup[branchId] || "-",
+          title: job.title || "-",
+          slug: job.slug || "",
+          description: job.description || "",
+          requirements: job.requirements || "",
+          benefits: job.benefits || "",
+          status,
+          statusDisplay: job.status_display || formatStatus(status),
+          raw: job,
+        };
+      });
 
     const filteredResults = mappedResults.filter(
       (job) =>
@@ -358,7 +367,7 @@ const Loker = () => {
           selectedLabel: branchLookup[branchFilter],
           currentValue: job.branchId,
           currentLabel: job.branchName,
-        })
+        }),
     );
     const hasClientFilter = Boolean(departmentFilter || branchFilter);
 
@@ -403,7 +412,7 @@ const Loker = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Loker gagal ditambahkan."),
-        "error"
+        "error",
       );
     },
   });
@@ -419,7 +428,7 @@ const Loker = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Loker gagal diperbarui."),
-        "error"
+        "error",
       );
     },
   });
@@ -431,7 +440,11 @@ const Loker = () => {
       Swal.fire("Berhasil", "Loker berhasil dihapus.", "success");
     },
     onError: (error) => {
-      Swal.fire("Gagal", getErrorMessage(error, "Loker gagal dihapus."), "error");
+      Swal.fire(
+        "Gagal",
+        getErrorMessage(error, "Loker gagal dihapus."),
+        "error",
+      );
     },
   });
 
@@ -445,7 +458,7 @@ const Loker = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Status loker gagal diperbarui."),
-        "error"
+        "error",
       );
     },
   });
@@ -676,7 +689,7 @@ const Loker = () => {
         },
       },
     ],
-    [deleteCareerJobMutation.isPending, updateStatusMutation.isPending]
+    [deleteCareerJobMutation.isPending, updateStatusMutation.isPending],
   );
 
   const filterSelectClass =
@@ -768,20 +781,25 @@ const Loker = () => {
           </button>
         </div>
 
-        {!jobsQuery.isError && (departmentsQuery.isError || branchesQuery.isError) && (
-          <CareerErrorState
-            compact
-            className="mb-5"
-            title="Sebagian filter belum tersedia"
-            error={departmentsQuery.error || branchesQuery.error}
-            fallback="Pilihan departemen atau cabang belum dapat dimuat."
-            onRetry={() => Promise.allSettled([
-              departmentsQuery.refetch(),
-              branchesQuery.refetch(),
-            ])}
-            isRetrying={departmentsQuery.isFetching || branchesQuery.isFetching}
-          />
-        )}
+        {!jobsQuery.isError &&
+          (departmentsQuery.isError || branchesQuery.isError) && (
+            <CareerErrorState
+              compact
+              className="mb-5"
+              title="Sebagian filter belum tersedia"
+              error={departmentsQuery.error || branchesQuery.error}
+              fallback="Pilihan departemen atau cabang belum dapat dimuat."
+              onRetry={() =>
+                Promise.allSettled([
+                  departmentsQuery.refetch(),
+                  branchesQuery.refetch(),
+                ])
+              }
+              isRetrying={
+                departmentsQuery.isFetching || branchesQuery.isFetching
+              }
+            />
+          )}
 
         {jobsQuery.isLoading ? (
           <SkeletionTable />
@@ -789,11 +807,13 @@ const Loker = () => {
           <CareerErrorState
             error={jobsQuery.error}
             fallback="Data loker belum dapat dimuat. Silakan coba lagi."
-            onRetry={() => Promise.allSettled([
-              jobsQuery.refetch(),
-              departmentsQuery.refetch(),
-              branchesQuery.refetch(),
-            ])}
+            onRetry={() =>
+              Promise.allSettled([
+                jobsQuery.refetch(),
+                departmentsQuery.refetch(),
+                branchesQuery.refetch(),
+              ])
+            }
             isRetrying={jobsQuery.isFetching}
           />
         ) : (
@@ -810,19 +830,29 @@ const Loker = () => {
                       <h2 className="min-w-0 flex-1 break-words text-sm font-bold leading-5 text-slate-800 dark:text-slate-100">
                         {job.title}
                       </h2>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${isPublished ? "bg-success-500/10 text-success-600" : "border border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"}`}>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${isPublished ? "bg-success-500/10 text-success-600" : "border border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"}`}
+                      >
                         {job.statusDisplay}
                       </span>
                     </div>
 
                     <dl className="mt-4 grid grid-cols-1 gap-3 text-xs min-[380px]:grid-cols-2">
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Departemen</dt>
-                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">{job.departmentName}</dd>
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Departemen
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {job.departmentName}
+                        </dd>
                       </div>
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Cabang</dt>
-                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">{job.branchName}</dd>
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Cabang
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {job.branchName}
+                        </dd>
                       </div>
                     </dl>
 
@@ -834,16 +864,38 @@ const Loker = () => {
                     </div>
 
                     <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-                      <button type="button" onClick={() => openEditModal(job)} disabled={isMutating} className="career-loker-mobile-action border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(job)}
+                        disabled={isMutating}
+                        className="career-loker-mobile-action border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300"
+                      >
                         <Icon icon="heroicons:pencil-square" width={17} />
                         <span>Edit</span>
                       </button>
-                      <button type="button" onClick={() => handleDelete(job)} disabled={isMutating} className="career-loker-mobile-action border-danger-100 bg-danger-50 text-danger-600 dark:border-danger-500/20 dark:bg-danger-500/10 dark:text-danger-300">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(job)}
+                        disabled={isMutating}
+                        className="career-loker-mobile-action border-danger-100 bg-danger-50 text-danger-600 dark:border-danger-500/20 dark:bg-danger-500/10 dark:text-danger-300"
+                      >
                         <Icon icon="heroicons-outline:trash" width={17} />
                         <span>Hapus</span>
                       </button>
-                      <button type="button" onClick={() => handleToggleStatus(job)} disabled={isMutating} className={`career-loker-mobile-action ${isPublished ? "border-amber-100 bg-amber-50 text-amber-600 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" : "border-success-100 bg-success-50 text-success-600 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300"}`}>
-                        <Icon icon={isPublished ? "heroicons-outline:archive-box" : "heroicons-outline:arrow-up-tray"} width={17} />
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(job)}
+                        disabled={isMutating}
+                        className={`career-loker-mobile-action ${isPublished ? "border-amber-100 bg-amber-50 text-amber-600 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" : "border-success-100 bg-success-50 text-success-600 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300"}`}
+                      >
+                        <Icon
+                          icon={
+                            isPublished
+                              ? "heroicons-outline:archive-box"
+                              : "heroicons-outline:arrow-up-tray"
+                          }
+                          width={17}
+                        />
                         <span>{isPublished ? "Jadi Draft" : "Publish"}</span>
                       </button>
                     </div>
@@ -929,7 +981,9 @@ const Loker = () => {
               <select
                 required
                 value={form.department}
-                onChange={(event) => updateForm("department", event.target.value)}
+                onChange={(event) =>
+                  updateForm("department", event.target.value)
+                }
                 className="form-control h-11"
               >
                 <option value="">Pilih department</option>

@@ -37,15 +37,24 @@ export const getCareerDashboardJobs = (params, options = {}) => {
 };
 
 export const getCareerDashboardApplications = (params, options = {}) => {
-  return axiosConfig.get("/api/career/dashboard/applications/", { ...options, params });
+  return axiosConfig.get("/api/career/dashboard/applications/", {
+    ...options,
+    params,
+  });
 };
 
 export const getCareerDashboardDepartments = (params, options = {}) => {
-  return axiosConfig.get("/api/career/dashboard/departments/", { ...options, params });
+  return axiosConfig.get("/api/career/dashboard/departments/", {
+    ...options,
+    params,
+  });
 };
 
 export const getCareerDashboardBranches = (params, options = {}) => {
-  return axiosConfig.get("/api/career/dashboard/branches/", { ...options, params });
+  return axiosConfig.get("/api/career/dashboard/branches/", {
+    ...options,
+    params,
+  });
 };
 
 export const getCareerApplications = (params) => {
@@ -61,17 +70,20 @@ export const startCareerApplication = (id) => {
 };
 
 export const processCareerApplicationStage = (id, data) => {
-  return axiosConfig.post(`/api/career/applications/${id}/stage-process/`, data);
+  return axiosConfig.post(
+    `/api/career/applications/${id}/stage-process/`,
+    data,
+  );
 };
 
 export const saveCareerApplicationStageCustomData = (
   applicationId,
   stageId,
-  customData
+  customData,
 ) => {
   return axiosConfig.post(
     `/api/career/applications/${applicationId}/stages/${stageId}/custom-data/`,
-    { custom_data: customData }
+    { custom_data: customData },
   );
 };
 
@@ -122,14 +134,14 @@ export const startCareerApplications = (data) => {
 export const createCareerApplicationTrainer = (applicationId) => {
   return axiosConfig.post(
     `/api/career/applications/${applicationId}/create-trainer/`,
-    { application_id: [applicationId] }
+    { application_id: [applicationId] },
   );
 };
 
 export const createCareerApplicationTrainersBulk = (data) => {
   return axiosConfig.post(
     "/api/career/applications/create-trainer-bulk/",
-    data
+    data,
   );
 };
 
@@ -146,7 +158,10 @@ export const addCareerStage = (departmentId, data) => {
 };
 
 export const editCareerStage = (departmentId, stageId, data) => {
-  return axiosConfig.put(`/api/career/stages/${departmentId}/${stageId}/`, data);
+  return axiosConfig.put(
+    `/api/career/stages/${departmentId}/${stageId}/`,
+    data,
+  );
 };
 
 export const deleteCareerStage = (departmentId, stageId) => {

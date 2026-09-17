@@ -1,13 +1,20 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import {
-  getCareerDashboard, getCareerDashboardJobs, getCareerDashboardApplications,
-  getCareerDashboardDepartments, getCareerDashboardBranches, getDepartments, getBranches,
+  getCareerDashboard,
+  getCareerDashboardJobs,
+  getCareerDashboardApplications,
+  getCareerDashboardDepartments,
+  getCareerDashboardBranches,
+  getDepartments,
+  getBranches,
 } from "@/axios/career/jobs";
 import { filterParams, readDashboard, readList } from "./data";
 
 const endpoints = [
-  ["summary", getCareerDashboard], ["jobs", getCareerDashboardJobs],
-  ["applications", getCareerDashboardApplications], ["departments", getCareerDashboardDepartments],
+  ["summary", getCareerDashboard],
+  ["jobs", getCareerDashboardJobs],
+  ["applications", getCareerDashboardApplications],
+  ["departments", getCareerDashboardDepartments],
   ["branches", getCareerDashboardBranches],
 ];
 
@@ -16,7 +23,10 @@ async function loadOptions(fetcher, type, signal) {
   let page = 1;
   let received = 0;
   while (true) {
-    const response = await fetcher({ page, page_size: 100, ordering: "name" }, { signal });
+    const response = await fetcher(
+      { page, page_size: 100, ordering: "name" },
+      { signal },
+    );
     const payload = response.data;
     const rows = readList(payload, `${type}s`);
     rows.forEach((row) => {
@@ -25,8 +35,11 @@ async function loadOptions(fetcher, type, signal) {
       if (value && label) options.set(value, { value, label });
     });
     received += rows.length;
-    const pagination = payload?.data && !Array.isArray(payload.data) ? payload.data : payload;
-    const hasNext = pagination?.next || (pagination?.count != null && received < Number(pagination.count));
+    const pagination =
+      payload?.data && !Array.isArray(payload.data) ? payload.data : payload;
+    const hasNext =
+      pagination?.next ||
+      (pagination?.count != null && received < Number(pagination.count));
     if (!hasNext || rows.length === 0) break;
     page += 1;
   }
@@ -40,7 +53,9 @@ export default function useCareerDashboard(filters) {
       queryKey: ["careerDashboard", name, params],
       queryFn: async ({ signal }) => {
         const data = readDashboard(await fetcher(params, { signal }));
-        return ["departments", "branches"].includes(name) ? readList(data, name) : data;
+        return ["departments", "branches"].includes(name)
+          ? readList(data, name)
+          : data;
       },
       staleTime: 60_000,
       retry: 1,
@@ -60,9 +75,15 @@ export default function useCareerDashboard(filters) {
     retry: 1,
   });
   return {
-    ...Object.fromEntries(endpoints.map(([name], index) => [name, queries[index]])),
-    departmentOptions: departments, branchOptions: branches,
+    ...Object.fromEntries(
+      endpoints.map(([name], index) => [name, queries[index]]),
+    ),
+    departmentOptions: departments,
+    branchOptions: branches,
     isFetching: queries.some((query) => query.isFetching),
-    refresh: () => Promise.allSettled([...queries, departments, branches].map((query) => query.refetch())),
+    refresh: () =>
+      Promise.allSettled(
+        [...queries, departments, branches].map((query) => query.refetch()),
+      ),
   };
 }

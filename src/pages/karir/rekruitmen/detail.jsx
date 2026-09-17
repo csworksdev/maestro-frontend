@@ -23,18 +23,21 @@ const normalizeHref = (value) => {
   return markdownUrl?.[1] || text;
 };
 
-const normalizeValue = (value) => String(value || "").trim().toLowerCase();
+const normalizeValue = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
 const isAcceptedApplication = (application) =>
   [application?.status, application?.status_display].some((value) =>
-    ["accepted", "diterima"].includes(normalizeValue(value))
+    ["accepted", "diterima"].includes(normalizeValue(value)),
   );
 
 const isRejectedApplication = (application) =>
   [application?.status, application?.status_display].some((value) =>
     ["rejected", "ditolak", "failed", "not_passed", "declined"].includes(
-      normalizeValue(value)
-    )
+      normalizeValue(value),
+    ),
   );
 
 const toBoolean = (value) =>
@@ -95,7 +98,10 @@ const valueOrDash = (value) => {
 };
 
 const getStageCustomData = (stage) =>
-  stage?.custom_data || stage?.custom_field_values || stage?.custom_fields_values || {};
+  stage?.custom_data ||
+  stage?.custom_field_values ||
+  stage?.custom_fields_values ||
+  {};
 
 const formatCustomDataLabel = (value) =>
   String(value || "")
@@ -161,9 +167,11 @@ const normalizeStoredFile = (value) => {
 const stageToneClass = {
   green: "border-success-200 bg-success-500/10 text-success-600",
   yellow: "border-warning-200 bg-warning-500/10 text-warning-600",
-  orange: "border-orange-200 bg-orange-500/10 text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300",
+  orange:
+    "border-orange-200 bg-orange-500/10 text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300",
   red: "border-danger-200 bg-danger-500/10 text-danger-600",
-  slate: "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
+  slate:
+    "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
 };
 
 const getStageTone = (status) => {
@@ -218,7 +226,9 @@ const getStageLabel = (stage) => {
 
 const getCurrentApplicationStage = (stages) =>
   stages.find((stage) =>
-    ["pending", "in_progress", "progress"].includes(normalizeValue(stage.status))
+    ["pending", "in_progress", "progress"].includes(
+      normalizeValue(stage.status),
+    ),
   ) || stages.at(-1);
 
 const getStageId = (stage) => stage?.stage || stage?.stage_id;
@@ -287,7 +297,7 @@ const RekruitmenDetail = () => {
   const application = applicationQuery.data || {};
   const certificateLinks = application?.upload_sertificates || [];
   const stages = [...(application?.stages || [])].sort(
-    (a, b) => (a.stage_order || 0) - (b.stage_order || 0)
+    (a, b) => (a.stage_order || 0) - (b.stage_order || 0),
   );
   const currentApplicationStage = getCurrentApplicationStage(stages);
   const swimmingStyles = application?.swimming_styles_display?.join(", ");
@@ -307,21 +317,23 @@ const RekruitmenDetail = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["careerApplication", applicationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["careerApplication", applicationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["careerApplications"] });
       Swal.fire(
         "Berhasil",
         normalizeValue(application.status) === "pending"
           ? "Pelamar berhasil dimasukkan ke tahap pertama."
           : "Tahap rekrutmen berhasil diproses.",
-        "success"
+        "success",
       );
     },
     onError: (error) => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Tahap rekrutmen gagal diproses."),
-        "error"
+        "error",
       );
     },
   });
@@ -334,8 +346,9 @@ const RekruitmenDetail = () => {
         const res = await startCareerApplication(applicationId);
         const startedApplication = getApplicationPayload(res.data);
         stageId =
-          getStageId(getCurrentApplicationStage(startedApplication.stages || [])) ||
-          stageId;
+          getStageId(
+            getCurrentApplicationStage(startedApplication.stages || []),
+          ) || stageId;
       }
 
       return processCareerApplicationStage(applicationId, {
@@ -344,7 +357,9 @@ const RekruitmenDetail = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["careerApplication", applicationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["careerApplication", applicationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["careerApplications"] });
       Swal.fire("Berhasil", "Pelamar berhasil ditolak.", "success");
     },
@@ -352,7 +367,7 @@ const RekruitmenDetail = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Pelamar gagal ditolak."),
-        "error"
+        "error",
       );
     },
   });
@@ -360,15 +375,21 @@ const RekruitmenDetail = () => {
   const createTrainerMutation = useMutation({
     mutationFn: () => createCareerApplicationTrainer(applicationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["careerApplication", applicationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["careerApplication", applicationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["careerApplications"] });
-      Swal.fire("Berhasil", "Pelamar berhasil ditambahkan sebagai pelatih.", "success");
+      Swal.fire(
+        "Berhasil",
+        "Pelamar berhasil ditambahkan sebagai pelatih.",
+        "success",
+      );
     },
     onError: (error) => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Pelamar gagal ditambahkan sebagai pelatih."),
-        "error"
+        "error",
       );
     },
   });
@@ -395,7 +416,7 @@ const RekruitmenDetail = () => {
       Swal.fire(
         "Sudah terdaftar sebagai pelatih",
         "Pelamar ini sudah terdaftar sebagai pelatih.",
-        "info"
+        "info",
       );
       return;
     }
@@ -497,7 +518,9 @@ const RekruitmenDetail = () => {
               onClick={handleProcessApplication}
               disabled={isActionProcessing}
             >
-              {processApplicationMutation.isPending ? "Memproses..." : "Mulai Tahap"}
+              {processApplicationMutation.isPending
+                ? "Memproses..."
+                : "Mulai Tahap"}
             </ActionButton>
           )}
           {isAccepted && !isTrainer && (
@@ -506,7 +529,9 @@ const RekruitmenDetail = () => {
               onClick={handleCreateTrainer}
               disabled={isActionProcessing}
             >
-              {createTrainerMutation.isPending ? "Memproses..." : "Jadikan Pelatih"}
+              {createTrainerMutation.isPending
+                ? "Memproses..."
+                : "Jadikan Pelatih"}
             </ActionButton>
           )}
           {isTrainer && (
@@ -573,7 +598,10 @@ const RekruitmenDetail = () => {
           <Field label="Gender" value={application.gender_display} />
           <Field label="Usia" value={calculateAge(application.birth_date)} />
           <Field label="Tempat Lahir" value={application.birth_place} />
-          <Field label="Tanggal Lahir" value={formatDate(application.birth_date)} />
+          <Field
+            label="Tanggal Lahir"
+            value={formatDate(application.birth_date)}
+          />
           <Field
             label="Status Pernikahan"
             value={application.marital_status_display}
@@ -598,9 +626,18 @@ const RekruitmenDetail = () => {
 
         <Section title="Pendidikan">
           <div className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2">
-            <Field label="Jenjang" value={application.education_level_display} />
-            <Field label="Status" value={application.education_status_display} />
-            <Field label="Universitas" value={application.education_university} />
+            <Field
+              label="Jenjang"
+              value={application.education_level_display}
+            />
+            <Field
+              label="Status"
+              value={application.education_status_display}
+            />
+            <Field
+              label="Universitas"
+              value={application.education_university}
+            />
             <Field label="Jurusan" value={application.education_major} />
             <Field
               label="Tahun Lulus"
@@ -611,7 +648,10 @@ const RekruitmenDetail = () => {
 
         <Section title="Pengalaman & Preferensi">
           <div className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2">
-            <Field label="Sistem Kerja" value={application.contract_system_display} />
+            <Field
+              label="Sistem Kerja"
+              value={application.contract_system_display}
+            />
             <Field
               label="Pengalaman Coach"
               value={application.coach_experience_display}
@@ -660,11 +700,13 @@ const RekruitmenDetail = () => {
           {stages.length ? (
             stages.map((stage) => {
               const tone = getStageTone(stage.status);
-              const customDataEntries = Object.entries(getStageCustomData(stage)).filter(
+              const customDataEntries = Object.entries(
+                getStageCustomData(stage),
+              ).filter(
                 ([, value]) =>
                   value !== null &&
                   value !== undefined &&
-                  String(value).trim() !== ""
+                  String(value).trim() !== "",
               );
 
               return (

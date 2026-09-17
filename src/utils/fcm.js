@@ -26,12 +26,9 @@ export const requestNotificationPermissionSafely = async () => {
     return "granted";
   }
 
-  if (
-    Notification.permission === "default" &&
-    needsUserActivation()
-  ) {
+  if (Notification.permission === "default" && needsUserActivation()) {
     console.warn(
-      "[FCM] Browser memerlukan interaksi user (klik/tap) sebelum memunculkan prompt notifikasi."
+      "[FCM] Browser memerlukan interaksi user (klik/tap) sebelum memunculkan prompt notifikasi.",
     );
     return "default";
   }
@@ -100,7 +97,6 @@ const markTokenSentToBackend = (token) => {
 export const requestAndSendToken = async (onTokenSaved) => {
   const messaging = await getMessagingInstance();
   if (!messaging) {
-    console.warn("[FCM] Browser ini tidak mendukung push notification web.");
     return null;
   }
 
@@ -159,7 +155,7 @@ export const sendTokenToBackend = async (fcmToken) => {
   } catch (err) {
     console.error(
       "❌ Gagal kirim token FCM ke backend:",
-      err.response?.data || err.message
+      err.response?.data || err.message,
     );
   }
 };

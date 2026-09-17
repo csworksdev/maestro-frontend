@@ -28,17 +28,26 @@ const getPaginatedResults = (payload) => {
   }
 
   if (Array.isArray(payload?.results)) {
-    return { count: payload.count ?? payload.results.length, results: payload.results };
+    return {
+      count: payload.count ?? payload.results.length,
+      results: payload.results,
+    };
   }
 
   if (Array.isArray(payload?.data)) {
-    return { count: payload.count ?? payload.data.length, results: payload.data };
+    return {
+      count: payload.count ?? payload.data.length,
+      results: payload.data,
+    };
   }
 
   return { count: 0, results: [] };
 };
 
-const normalizeValue = (value) => String(value || "").trim().toLowerCase();
+const normalizeValue = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
 const getSafeFailureMessage = (message, fallback = "Tidak dapat diproses.") =>
   getErrorMessage({ response: { data: { message } } }, fallback);
@@ -50,7 +59,7 @@ const toBoolean = (value) =>
 
 const isAcceptedApplication = (application) =>
   [application?.status, application?.statusDisplay].some((value) =>
-    ["accepted", "diterima"].includes(normalizeValue(value))
+    ["accepted", "diterima"].includes(normalizeValue(value)),
   );
 
 const isTrainerApplication = (application) =>
@@ -59,8 +68,8 @@ const isTrainerApplication = (application) =>
 const isRejectedApplication = (application) =>
   [application?.status, application?.statusDisplay].some((value) =>
     ["rejected", "ditolak", "failed", "not_passed", "declined"].includes(
-      normalizeValue(value)
-    )
+      normalizeValue(value),
+    ),
   );
 
 const isRejectableApplication = (application) =>
@@ -141,7 +150,12 @@ const optionFromDisplayFields = (items, valueKey, labelKey) => {
     });
 };
 
-const matchesOption = (selectedValue, currentValue, currentLabel, selectedLabel) => {
+const matchesOption = (
+  selectedValue,
+  currentValue,
+  currentLabel,
+  selectedLabel,
+) => {
   if (!selectedValue) {
     return true;
   }
@@ -162,7 +176,9 @@ const matchesMultiOption = (selectedValues, currentValue) => {
     return true;
   }
 
-  return selectedValues.map(normalizeValue).includes(normalizeValue(currentValue));
+  return selectedValues
+    .map(normalizeValue)
+    .includes(normalizeValue(currentValue));
 };
 
 const matchesAnyOption = (selectedValue, options) => {
@@ -171,7 +187,7 @@ const matchesAnyOption = (selectedValue, options) => {
   }
 
   return options.some(({ value, label, selectedLabel }) =>
-    matchesOption(selectedValue, value, label, selectedLabel)
+    matchesOption(selectedValue, value, label, selectedLabel),
   );
 };
 
@@ -269,15 +285,19 @@ const workingOptions = [
 ];
 
 const badgeToneClass = {
-  green: "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+  green:
+    "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
   blue: "border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300",
   pink: "border-pink-100 bg-pink-50 text-pink-600 dark:border-pink-500/20 dark:bg-pink-500/10 dark:text-pink-300",
-  purple: "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
-  orange: "border-orange-100 bg-orange-50 text-orange-600 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300",
+  purple:
+    "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
+  orange:
+    "border-orange-100 bg-orange-50 text-orange-600 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300",
   teal: "border-teal-100 bg-teal-50 text-teal-600 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-300",
   red: "border-danger-200 bg-danger-500/10 text-danger-600",
   yellow: "border-warning-200 bg-warning-500/10 text-warning-600",
-  slate: "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
+  slate:
+    "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
 };
 
 const genderTone = (gender) => {
@@ -362,7 +382,9 @@ const statusIcon = (status) => {
 
 const getCurrentApplicationStage = (stages = []) =>
   stages.find((stage) =>
-    ["pending", "in_progress", "progress"].includes(normalizeValue(stage.status))
+    ["pending", "in_progress", "progress"].includes(
+      normalizeValue(stage.status),
+    ),
   ) || stages.at(-1);
 
 const getStageId = (stage) => stage?.stage || stage?.stage_id;
@@ -509,17 +531,16 @@ const Rekruitmen = () => {
     }
 
     const selectedDepartment = departmentOptions.find(
-      (option) => option.value === departmentFilter
+      (option) => option.value === departmentFilter,
     );
 
-    return jobOptions.filter(
-      (job) =>
-        matchesOption(
-          departmentFilter,
-          job.department,
-          job.departmentName,
-          selectedDepartment?.label
-        )
+    return jobOptions.filter((job) =>
+      matchesOption(
+        departmentFilter,
+        job.department,
+        job.departmentName,
+        selectedDepartment?.label,
+      ),
     );
   }, [departmentFilter, departmentOptions, jobOptions]);
 
@@ -529,7 +550,7 @@ const Rekruitmen = () => {
         acc[item.value] = item.label;
         return acc;
       }, {}),
-    [departmentOptions]
+    [departmentOptions],
   );
 
   const jobLookup = useMemo(
@@ -538,7 +559,7 @@ const Rekruitmen = () => {
         acc[item.value] = item.label;
         return acc;
       }, {}),
-    [jobOptions]
+    [jobOptions],
   );
 
   const branchLookup = useMemo(
@@ -547,7 +568,7 @@ const Rekruitmen = () => {
         acc[item.value] = item.label;
         return acc;
       }, {}),
-    [branchOptions]
+    [branchOptions],
   );
 
   const activeFilterCount = [
@@ -598,15 +619,21 @@ const Rekruitmen = () => {
       if (departmentFilter) params.filter_department_id = departmentFilter;
       if (jobFilter) params.filter_job_id = jobFilter;
       if (branchFilter) params.filter_branch_id = branchFilter;
-      if (contractSystemFilter) params.filter_contract_system = contractSystemFilter;
+      if (contractSystemFilter)
+        params.filter_contract_system = contractSystemFilter;
       if (statusFilter) params.filter_status = statusFilter;
       if (workingFilter) params.filter_is_working = workingFilter;
       if (genderFilter.length) params.filter_gender = genderFilter.join(",");
-      if (maritalStatusFilter.length) params.filter_marital_status = maritalStatusFilter.join(",");
-      if (religionFilter.length) params.filter_religion = religionFilter.join(",");
-      if (educationLevelFilter.length) params.filter_education_level = educationLevelFilter.join(",");
-      if (educationStatusFilter.length) params.filter_education_status = educationStatusFilter.join(",");
-      if (coachExperienceFilter.length) params.filter_coach_experience = coachExperienceFilter.join(",");
+      if (maritalStatusFilter.length)
+        params.filter_marital_status = maritalStatusFilter.join(",");
+      if (religionFilter.length)
+        params.filter_religion = religionFilter.join(",");
+      if (educationLevelFilter.length)
+        params.filter_education_level = educationLevelFilter.join(",");
+      if (educationStatusFilter.length)
+        params.filter_education_status = educationStatusFilter.join(",");
+      if (coachExperienceFilter.length)
+        params.filter_coach_experience = coachExperienceFilter.join(",");
       if (sourceFilter.length) params.filter_source = sourceFilter.join(",");
 
       const res = await getCareerApplications(params);
@@ -642,22 +669,32 @@ const Rekruitmen = () => {
         genderDisplay: application.gender_display || application.gender || "-",
         maritalStatus: application.marital_status,
         maritalStatusDisplay:
-          application.marital_status_display || application.marital_status || "-",
+          application.marital_status_display ||
+          application.marital_status ||
+          "-",
         religion: application.religion,
         religionDisplay:
           application.religion_display || application.religion || "-",
         educationLevel: application.education_level,
         educationLevelDisplay:
-          application.education_level_display || application.education_level || "-",
+          application.education_level_display ||
+          application.education_level ||
+          "-",
         educationStatus: application.education_status,
         educationStatusDisplay:
-          application.education_status_display || application.education_status || "-",
+          application.education_status_display ||
+          application.education_status ||
+          "-",
         contractSystem: application.contract_system,
         contractSystemDisplay:
-          application.contract_system_display || application.contract_system || "-",
+          application.contract_system_display ||
+          application.contract_system ||
+          "-",
         coachExperience: application.coach_experience,
         coachExperienceDisplay:
-          application.coach_experience_display || application.coach_experience || "-",
+          application.coach_experience_display ||
+          application.coach_experience ||
+          "-",
         source: application.source,
         sourceDisplay: application.source_display || application.source || "-",
         status: application.status,
@@ -694,30 +731,34 @@ const Rekruitmen = () => {
       contractSystems: optionFromDisplayFields(
         mappedApplications,
         "contractSystem",
-        "contractSystemDisplay"
+        "contractSystemDisplay",
       ),
       statuses: optionFromDisplayFields(
         mappedApplications,
         "status",
-        "statusDisplay"
+        "statusDisplay",
       ),
       coachExperiences: optionFromDisplayFields(
         mappedApplications,
         "coachExperience",
-        "coachExperienceDisplay"
+        "coachExperienceDisplay",
       ),
-      sources: optionFromDisplayFields(mappedApplications, "source", "sourceDisplay"),
+      sources: optionFromDisplayFields(
+        mappedApplications,
+        "source",
+        "sourceDisplay",
+      ),
     }),
-    [mappedApplications]
+    [mappedApplications],
   );
 
   const listData = useMemo(() => {
     const selectedDepartment = departmentOptions.find(
-      (option) => option.value === departmentFilter
+      (option) => option.value === departmentFilter,
     );
     const selectedJob = jobOptions.find((option) => option.value === jobFilter);
     const selectedBranch = branchOptions.find(
-      (option) => option.value === branchFilter
+      (option) => option.value === branchFilter,
     );
 
     const filteredResults = mappedApplications.filter(
@@ -727,45 +768,60 @@ const Rekruitmen = () => {
           departmentFilter,
           application.departmentId,
           application.departmentName,
-          selectedDepartment?.label
+          selectedDepartment?.label,
         ) &&
         matchesOption(
           jobFilter,
           application.jobId,
           application.jobTitle,
-          selectedJob?.label
+          selectedJob?.label,
         ) &&
         matchesOption(
           branchFilter,
           application.branchId,
           application.branchName,
-          selectedBranch?.label
+          selectedBranch?.label,
         ) &&
         matchesOption(
           contractSystemFilter,
           application.contractSystem,
           application.contractSystemDisplay,
-          contractSystemOptions.find((option) => option.value === contractSystemFilter)?.label
+          contractSystemOptions.find(
+            (option) => option.value === contractSystemFilter,
+          )?.label,
         ) &&
         matchesOption(
           statusFilter,
           application.status,
           application.statusDisplay,
-          applicationStatusOptions.find((option) => option.value === statusFilter)?.label
+          applicationStatusOptions.find(
+            (option) => option.value === statusFilter,
+          )?.label,
         ) &&
         matchesOption(
           workingFilter,
           application.isWorking,
-          application.isWorking === true ? "Ya" : application.isWorking === false ? "Tidak" : "",
-          workingOptions.find((option) => option.value === workingFilter)?.label
+          application.isWorking === true
+            ? "Ya"
+            : application.isWorking === false
+              ? "Tidak"
+              : "",
+          workingOptions.find((option) => option.value === workingFilter)
+            ?.label,
         ) &&
         matchesMultiOption(genderFilter, application.gender) &&
         matchesMultiOption(maritalStatusFilter, application.maritalStatus) &&
         matchesMultiOption(religionFilter, application.religion) &&
         matchesMultiOption(educationLevelFilter, application.educationLevel) &&
-        matchesMultiOption(educationStatusFilter, application.educationStatus) &&
-        matchesMultiOption(coachExperienceFilter, application.coachExperience) &&
-        matchesMultiOption(sourceFilter, application.source)
+        matchesMultiOption(
+          educationStatusFilter,
+          application.educationStatus,
+        ) &&
+        matchesMultiOption(
+          coachExperienceFilter,
+          application.coachExperience,
+        ) &&
+        matchesMultiOption(sourceFilter, application.source),
     );
 
     const hasClientFilter = activeFilterCount > 0 || Boolean(searchQuery);
@@ -773,7 +829,7 @@ const Rekruitmen = () => {
     return {
       count: hasClientFilter
         ? filteredResults.length
-        : applicationsQuery.data?.count ?? mappedApplications.length,
+        : (applicationsQuery.data?.count ?? mappedApplications.length),
       results: hasClientFilter ? filteredResults : mappedApplications,
     };
   }, [
@@ -822,7 +878,7 @@ const Rekruitmen = () => {
     setter((current) =>
       current.includes(value)
         ? current.filter((item) => item !== value)
-        : [...current, value]
+        : [...current, value],
     );
     resetToFirstPage();
   };
@@ -851,16 +907,18 @@ const Rekruitmen = () => {
       .map((item) =>
         typeof item === "string"
           ? listData.results.find((application) => application.id === item)
-          : item?.original
+          : item?.original,
       )
       .filter(Boolean);
-    const ids = [...new Set(rows.map((application) => application.id).filter(Boolean))];
+    const ids = [
+      ...new Set(rows.map((application) => application.id).filter(Boolean)),
+    ];
 
     setSelectedApplicationIds(ids);
     setSelectedApplications(
       ids
         .map((id) => rows.find((application) => application.id === id))
-        .filter(Boolean)
+        .filter(Boolean),
     );
   };
 
@@ -869,12 +927,12 @@ const Rekruitmen = () => {
     setSelectedApplicationIds((current) =>
       isSelected
         ? current.filter((id) => id !== application.id)
-        : [...current, application.id]
+        : [...current, application.id],
     );
     setSelectedApplications((current) =>
       isSelected
         ? current.filter((item) => item.id !== application.id)
-        : [...current, application]
+        : [...current, application],
     );
   };
 
@@ -886,7 +944,9 @@ const Rekruitmen = () => {
 
   const startSelectedApplicationsMutation = useMutation({
     mutationFn: async (applications) => {
-      const ids = applications.map((application) => application.id).filter(Boolean);
+      const ids = applications
+        .map((application) => application.id)
+        .filter(Boolean);
       return {
         applications,
         response: await startCareerApplications({ application_ids: ids }),
@@ -902,19 +962,22 @@ const Rekruitmen = () => {
 
       if (failed.length) {
         const applicationNames = new Map(
-          applications.map((application) => [application.id, application.name])
+          applications.map((application) => [application.id, application.name]),
         );
         const failureDetails = failed
           .map((item) => {
-            const name = applicationNames.get(item.application_id) || item.application_id;
+            const name =
+              applicationNames.get(item.application_id) || item.application_id;
             return `${name}: ${getSafeFailureMessage(item.message)}`;
           })
           .join("\n");
 
         Swal.fire(
-          failed.length === applications.length ? "Tidak dapat diproses" : "Sebagian gagal",
+          failed.length === applications.length
+            ? "Tidak dapat diproses"
+            : "Sebagian gagal",
           failureDetails,
-          "warning"
+          "warning",
         );
         return;
       }
@@ -922,7 +985,7 @@ const Rekruitmen = () => {
       Swal.fire(
         "Berhasil",
         "Pelamar terpilih berhasil dimasukkan ke tahap rekrutmen.",
-        "success"
+        "success",
       );
     },
     onError: (error) => {
@@ -931,9 +994,12 @@ const Rekruitmen = () => {
         Swal.fire(
           "Tidak dapat diproses",
           failed
-            .map((item) => `${item.application_id}: ${getSafeFailureMessage(item.message)}`)
+            .map(
+              (item) =>
+                `${item.application_id}: ${getSafeFailureMessage(item.message)}`,
+            )
             .join("\n"),
-          "warning"
+          "warning",
         );
         return;
       }
@@ -941,7 +1007,7 @@ const Rekruitmen = () => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Pelamar terpilih gagal diproses."),
-        "error"
+        "error",
       );
     },
   });
@@ -949,7 +1015,9 @@ const Rekruitmen = () => {
   const rejectSelectedApplicationsMutation = useMutation({
     mutationFn: async (applications) => {
       const pendingIds = applications
-        .filter((application) => normalizeValue(application.status) === "pending")
+        .filter(
+          (application) => normalizeValue(application.status) === "pending",
+        )
         .map((application) => application.id)
         .filter(Boolean);
 
@@ -961,25 +1029,21 @@ const Rekruitmen = () => {
         applications.map((application) =>
           processCareerApplicationStage(
             application.id,
-            buildStageProcessPayload(application.stageId, "failed")
-          )
-        )
+            buildStageProcessPayload(application.stageId, "failed"),
+          ),
+        ),
       );
     },
     onSuccess: () => {
       clearSelection();
       queryClient.invalidateQueries({ queryKey: ["careerApplications"] });
-      Swal.fire(
-        "Berhasil",
-        "Pelamar terpilih berhasil ditolak.",
-        "success"
-      );
+      Swal.fire("Berhasil", "Pelamar terpilih berhasil ditolak.", "success");
     },
     onError: (error) => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Pelamar terpilih gagal ditolak."),
-        "error"
+        "error",
       );
     },
   });
@@ -999,11 +1063,14 @@ const Rekruitmen = () => {
       if (result.status === "error" || failed.length) {
         const failureMessage = failed.length
           ? failed
-              .map((item) => `${item.application_id}: ${getSafeFailureMessage(item.message, "Gagal dibuat.")}`)
+              .map(
+                (item) =>
+                  `${item.application_id}: ${getSafeFailureMessage(item.message, "Gagal dibuat.")}`,
+              )
               .join("\n")
           : getSafeFailureMessage(
               result.message,
-              "Sebagian pelamar gagal ditambahkan sebagai pelatih."
+              "Sebagian pelamar gagal ditambahkan sebagai pelatih.",
             );
         Swal.fire("Tidak dapat diproses", failureMessage, "warning");
         return;
@@ -1012,37 +1079,43 @@ const Rekruitmen = () => {
       Swal.fire(
         "Berhasil",
         "Pelamar diterima berhasil ditambahkan sebagai pelatih.",
-        "success"
+        "success",
       );
     },
     onError: (error) => {
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Pelamar gagal ditambahkan sebagai pelatih."),
-        "error"
+        "error",
       );
     },
   });
 
   const handleCreateTrainersBulk = () => {
     if (!selectedApplications.length) {
-      Swal.fire("Pilih pelamar", "Checklist pelamar diterima yang ingin ditambahkan.", "info");
+      Swal.fire(
+        "Pilih pelamar",
+        "Checklist pelamar diterima yang ingin ditambahkan.",
+        "info",
+      );
       return;
     }
 
-    const acceptedApplications = selectedApplications.filter(isAcceptedApplication);
+    const acceptedApplications = selectedApplications.filter(
+      isAcceptedApplication,
+    );
 
     if (!acceptedApplications.length) {
       Swal.fire(
         "Tidak dapat diproses",
         "Pilih pelamar dengan status Diterima terlebih dahulu.",
-        "info"
+        "info",
       );
       return;
     }
 
     const trainerCandidates = acceptedApplications.filter(
-      (application) => !isTrainerApplication(application)
+      (application) => !isTrainerApplication(application),
     );
 
     if (!trainerCandidates.length) {
@@ -1051,7 +1124,7 @@ const Rekruitmen = () => {
         `Pelamar berikut sudah terdaftar sebagai pelatih:\n\n${acceptedApplications
           .map((application) => application.name)
           .join("\n")}`,
-        "info"
+        "info",
       );
       return;
     }
@@ -1074,19 +1147,23 @@ const Rekruitmen = () => {
 
   const handleStartSelectedApplications = () => {
     if (!selectedApplications.length) {
-      Swal.fire("Pilih pelamar", "Checklist pelamar yang ingin diproses.", "info");
+      Swal.fire(
+        "Pilih pelamar",
+        "Checklist pelamar yang ingin diproses.",
+        "info",
+      );
       return;
     }
 
     const pendingApplications = selectedApplications.filter(
-      (application) => normalizeValue(application.status) === "pending"
+      (application) => normalizeValue(application.status) === "pending",
     );
 
     if (!pendingApplications.length) {
       Swal.fire(
         "Tidak dapat diproses",
         "Hanya lamaran dengan status Pending yang dapat diproses.",
-        "warning"
+        "warning",
       );
       return;
     }
@@ -1109,12 +1186,16 @@ const Rekruitmen = () => {
 
   const handleRejectSelectedApplications = () => {
     if (!selectedApplications.length) {
-      Swal.fire("Pilih pelamar", "Checklist pelamar yang ingin ditolak.", "info");
+      Swal.fire(
+        "Pilih pelamar",
+        "Checklist pelamar yang ingin ditolak.",
+        "info",
+      );
       return;
     }
 
     const rejectableApplications = selectedApplications.filter(
-      isRejectableApplication
+      isRejectableApplication,
     );
 
     if (!rejectableApplications.length) {
@@ -1142,21 +1223,22 @@ const Rekruitmen = () => {
     rejectSelectedApplicationsMutation.isPending ||
     createTrainersBulkMutation.isPending;
 
-  const selectedAcceptedApplications = selectedApplications.filter(isAcceptedApplication);
+  const selectedAcceptedApplications = selectedApplications.filter(
+    isAcceptedApplication,
+  );
   const selectedTrainerCandidates = selectedAcceptedApplications.filter(
-    (application) => !isTrainerApplication(application)
+    (application) => !isTrainerApplication(application),
   );
-  const selectedRegisteredTrainers = selectedAcceptedApplications.filter(
-    isTrainerApplication
-  );
+  const selectedRegisteredTrainers =
+    selectedAcceptedApplications.filter(isTrainerApplication);
   const selectedRejectedApplications = selectedApplications.filter(
-    isRejectedApplication
+    isRejectedApplication,
   );
   const selectedRejectableApplications = selectedApplications.filter(
-    isRejectableApplication
+    isRejectableApplication,
   );
   const selectedPendingCandidates = selectedApplications.filter(
-    (application) => normalizeValue(application.status) === "pending"
+    (application) => normalizeValue(application.status) === "pending",
   );
 
   const columns = useMemo(
@@ -1176,7 +1258,10 @@ const Rekruitmen = () => {
               </p>
               {row.original.phoneNumber !== "-" ? (
                 <a
-                  href={row.original.whatsappLink || getWhatsappHref(row.original.phoneNumber)}
+                  href={
+                    row.original.whatsappLink ||
+                    getWhatsappHref(row.original.phoneNumber)
+                  }
                   target="_blank"
                   rel="noreferrer"
                   className="mt-1 block truncate whitespace-nowrap text-xs font-medium text-success-600 hover:underline"
@@ -1261,11 +1346,14 @@ const Rekruitmen = () => {
         ),
       },
     ],
-    [navigate]
+    [navigate],
   );
 
   const selectOptions = {
-    departments: [{ value: "", label: "Semua department" }, ...departmentOptions],
+    departments: [
+      { value: "", label: "Semua department" },
+      ...departmentOptions,
+    ],
     jobs: [{ value: "", label: "Semua loker" }, ...filteredJobOptions],
     branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
     contractSystems: [
@@ -1347,7 +1435,9 @@ const Rekruitmen = () => {
                 aria-expanded={isAdvancedFiltersOpen}
               >
                 <Icon icon="heroicons-outline:adjustments" width={16} />
-                {isAdvancedFiltersOpen ? "Sembunyikan Filter" : "Filter Lanjutan"}
+                {isAdvancedFiltersOpen
+                  ? "Sembunyikan Filter"
+                  : "Filter Lanjutan"}
               </button>
             </div>
           </div>
@@ -1425,7 +1515,10 @@ const Rekruitmen = () => {
               />
               <CheckboxGroup
                 title="Pengalaman Coach"
-                options={mergeOptions(coachExperienceOptions, dynamicOptions.coachExperiences)}
+                options={mergeOptions(
+                  coachExperienceOptions,
+                  dynamicOptions.coachExperiences,
+                )}
                 selectedValues={coachExperienceFilter}
                 onChange={toggleMultiFilter(setCoachExperienceFilter)}
               />
@@ -1458,84 +1551,84 @@ const Rekruitmen = () => {
       </Modal>
 
       <Card
-          title="Rekruitmen"
-          bodyClass="p-4 sm:p-6"
-          className="career-recruitment-card min-w-0 overflow-hidden"
-          headerslot={
-            <div className="career-recruitment-bulk-actions flex min-w-0 flex-wrap items-center gap-2">
-              {selectedApplications.length > 0 && (
-                <div className="mr-1 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  <span>{selectedPendingCandidates.length} Pending</span>
-                  <span className="text-slate-300 dark:text-slate-600">|</span>
-                  <span>{selectedAcceptedApplications.length} Diterima</span>
-                </div>
-              )}
-              {selectedTrainerCandidates.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleCreateTrainersBulk}
-                  disabled={isBatchProcessing}
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-success-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-success-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Icon icon="heroicons-outline:user-add" width={18} />
-                  {createTrainersBulkMutation.isPending
-                    ? "Memproses..."
-                    : `Jadikan Pelatih (${selectedTrainerCandidates.length})`}
-                </button>
-              )}
-              {selectedRegisteredTrainers.length > 0 && (
+        title="Rekruitmen"
+        bodyClass="p-4 sm:p-6"
+        className="career-recruitment-card min-w-0 overflow-hidden"
+        headerslot={
+          <div className="career-recruitment-bulk-actions flex min-w-0 flex-wrap items-center gap-2">
+            {selectedApplications.length > 0 && (
+              <div className="mr-1 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span>{selectedPendingCandidates.length} Pending</span>
+                <span className="text-slate-300 dark:text-slate-600">|</span>
+                <span>{selectedAcceptedApplications.length} Diterima</span>
+              </div>
+            )}
+            {selectedTrainerCandidates.length > 0 && (
+              <button
+                type="button"
+                onClick={handleCreateTrainersBulk}
+                disabled={isBatchProcessing}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-success-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-success-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon icon="heroicons-outline:user-add" width={18} />
+                {createTrainersBulkMutation.isPending
+                  ? "Memproses..."
+                  : `Jadikan Pelatih (${selectedTrainerCandidates.length})`}
+              </button>
+            )}
+            {selectedRegisteredTrainers.length > 0 && (
+              <button
+                type="button"
+                disabled
+                className="inline-flex min-h-[44px] cursor-not-allowed items-center justify-center gap-2 rounded-md border border-success-200 bg-success-50 px-4 text-sm font-bold text-success-600 opacity-70 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300"
+                title="Pelamar sudah terdaftar sebagai pelatih"
+              >
+                <Icon icon="heroicons-outline:badge-check" width={18} />
+                {selectedRegisteredTrainers.length > 1
+                  ? `Pelatih (${selectedRegisteredTrainers.length})`
+                  : "Pelatih"}
+              </button>
+            )}
+            {selectedPendingCandidates.length > 0 && (
+              <button
+                type="button"
+                onClick={handleStartSelectedApplications}
+                disabled={isBatchProcessing}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-success-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-success-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon icon="heroicons-outline:check-circle" width={18} />
+                {startSelectedApplicationsMutation.isPending
+                  ? "Memproses..."
+                  : `Mulai Tahap (${selectedPendingCandidates.length})`}
+              </button>
+            )}
+            {selectedRejectableApplications.length > 0 && (
+              <button
+                type="button"
+                onClick={handleRejectSelectedApplications}
+                disabled={isBatchProcessing}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-danger-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-danger-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon icon="heroicons-outline:x-circle" width={18} />
+                {rejectSelectedApplicationsMutation.isPending
+                  ? "Memproses..."
+                  : `Tolak (${selectedRejectableApplications.length})`}
+              </button>
+            )}
+            {selectedRejectedApplications.length > 0 &&
+              selectedRejectableApplications.length === 0 && (
                 <button
                   type="button"
                   disabled
-                  className="inline-flex min-h-[44px] cursor-not-allowed items-center justify-center gap-2 rounded-md border border-success-200 bg-success-50 px-4 text-sm font-bold text-success-600 opacity-70 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300"
-                  title="Pelamar sudah terdaftar sebagai pelatih"
-                >
-                  <Icon icon="heroicons-outline:badge-check" width={18} />
-                  {selectedRegisteredTrainers.length > 1
-                    ? `Pelatih (${selectedRegisteredTrainers.length})`
-                    : "Pelatih"}
-                </button>
-              )}
-              {selectedPendingCandidates.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleStartSelectedApplications}
-                  disabled={isBatchProcessing}
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-success-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-success-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Icon icon="heroicons-outline:check-circle" width={18} />
-                  {startSelectedApplicationsMutation.isPending
-                    ? "Memproses..."
-                    : `Mulai Tahap (${selectedPendingCandidates.length})`}
-                </button>
-              )}
-              {selectedRejectableApplications.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleRejectSelectedApplications}
-                  disabled={isBatchProcessing}
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-danger-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-danger-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-[44px] cursor-not-allowed items-center justify-center gap-2 rounded-md border border-danger-200 bg-danger-50 px-4 text-sm font-bold text-danger-600 opacity-70 dark:border-danger-500/30 dark:bg-danger-500/10 dark:text-danger-300"
                 >
                   <Icon icon="heroicons-outline:x-circle" width={18} />
-                  {rejectSelectedApplicationsMutation.isPending
-                    ? "Memproses..."
-                    : `Tolak (${selectedRejectableApplications.length})`}
+                  {selectedRejectedApplications.length > 1
+                    ? `Ditolak (${selectedRejectedApplications.length})`
+                    : "Ditolak"}
                 </button>
               )}
-              {selectedRejectedApplications.length > 0 &&
-                selectedRejectableApplications.length === 0 && (
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex min-h-[44px] cursor-not-allowed items-center justify-center gap-2 rounded-md border border-danger-200 bg-danger-50 px-4 text-sm font-bold text-danger-600 opacity-70 dark:border-danger-500/30 dark:bg-danger-500/10 dark:text-danger-300"
-                  >
-                    <Icon icon="heroicons-outline:x-circle" width={18} />
-                    {selectedRejectedApplications.length > 1
-                      ? `Ditolak (${selectedRejectedApplications.length})`
-                      : "Ditolak"}
-                  </button>
-                )}
-            </div>
+          </div>
           }
         >
           {selectedApplicationIds.length ? (
@@ -1544,155 +1637,210 @@ const Rekruitmen = () => {
             </div>
           ) : null}
 
-          {!applicationsQuery.isError && (
-            departmentsQuery.isError || jobsOptionsQuery.isError || branchesQuery.isError
-          ) && (
+        {!applicationsQuery.isError &&
+          (departmentsQuery.isError ||
+            jobsOptionsQuery.isError ||
+            branchesQuery.isError) && (
             <CareerErrorState
               compact
               className="mb-5"
               title="Sebagian filter belum tersedia"
-              error={departmentsQuery.error || jobsOptionsQuery.error || branchesQuery.error}
+              error={
+                departmentsQuery.error ||
+                jobsOptionsQuery.error ||
+                branchesQuery.error
+              }
               fallback="Pilihan filter pelamar belum dapat dimuat."
-              onRetry={() => Promise.allSettled([
-                departmentsQuery.refetch(),
-                jobsOptionsQuery.refetch(),
-                branchesQuery.refetch(),
-              ])}
-              isRetrying={departmentsQuery.isFetching || jobsOptionsQuery.isFetching || branchesQuery.isFetching}
+              onRetry={() =>
+                Promise.allSettled([
+                  departmentsQuery.refetch(),
+                  jobsOptionsQuery.refetch(),
+                  branchesQuery.refetch(),
+                ])
+              }
+              isRetrying={
+                departmentsQuery.isFetching ||
+                jobsOptionsQuery.isFetching ||
+                branchesQuery.isFetching
+              }
             />
           )}
 
-          {applicationsQuery.isLoading ? (
-            <SkeletionTable />
-          ) : applicationsQuery.isError ? (
-            <CareerErrorState
-              error={applicationsQuery.error}
-              fallback="Data pelamar belum dapat dimuat. Silakan coba lagi."
-              onRetry={() => Promise.allSettled([
+        {applicationsQuery.isLoading ? (
+          <SkeletionTable />
+        ) : applicationsQuery.isError ? (
+          <CareerErrorState
+            error={applicationsQuery.error}
+            fallback="Data pelamar belum dapat dimuat. Silakan coba lagi."
+            onRetry={() =>
+              Promise.allSettled([
                 applicationsQuery.refetch(),
                 departmentsQuery.refetch(),
                 jobsOptionsQuery.refetch(),
                 branchesQuery.refetch(),
-              ])}
-              isRetrying={applicationsQuery.isFetching}
-            />
-          ) : (
-            <>
-              <div className="space-y-3 md:hidden" aria-label="Daftar pelamar">
-                {listData.results.map((application) => {
-                  const isSelected = selectedApplicationIds.includes(application.id);
-                  return (
-                    <article
-                      key={application.id}
-                      className={`rounded-xl border p-4 shadow-sm transition ${isSelected ? "border-primary-300 bg-primary-50 dark:border-primary-500/50 dark:bg-primary-500/10" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}
-                    >
-                      <div className="flex min-w-0 items-start gap-3">
-                        <label className="flex min-h-[44px] shrink-0 cursor-pointer items-start pt-1" aria-label={`Pilih ${application.name}`}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleMobileSelection(application)}
-                            className="h-5 w-5 rounded border-slate-300 text-primary-500 focus:ring-primary-500"
-                          />
-                        </label>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <h2 className="break-words text-sm font-bold leading-5 text-slate-800 dark:text-slate-100">{application.name}</h2>
-                              {application.phoneNumber !== "-" && (
-                                <a href={application.whatsappLink || getWhatsappHref(application.phoneNumber)} target="_blank" rel="noreferrer" className="mt-1 inline-block break-all text-xs font-semibold text-success-600 hover:underline">
-                                  {application.phoneNumber}
-                                </a>
-                              )}
-                            </div>
-                            <Badge tone={statusTone(application.status)} icon={statusIcon(application.status)}>
-                              {application.statusDisplay}
+              ])
+            }
+            isRetrying={applicationsQuery.isFetching}
+          />
+        ) : (
+          <>
+            <div className="space-y-3 md:hidden" aria-label="Daftar pelamar">
+              {listData.results.map((application) => {
+                const isSelected = selectedApplicationIds.includes(
+                  application.id,
+                );
+                return (
+                  <article
+                    key={application.id}
+                    className={`rounded-xl border p-4 shadow-sm transition ${isSelected ? "border-primary-300 bg-primary-50 dark:border-primary-500/50 dark:bg-primary-500/10" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <label
+                        className="flex min-h-[44px] shrink-0 cursor-pointer items-start pt-1"
+                        aria-label={`Pilih ${application.name}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleMobileSelection(application)}
+                          className="h-5 w-5 rounded border-slate-300 text-primary-500 focus:ring-primary-500"
+                        />
+                      </label>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <h2 className="break-words text-sm font-bold leading-5 text-slate-800 dark:text-slate-100">
+                              {application.name}
+                            </h2>
+                            {application.phoneNumber !== "-" && (
+                              <a
+                                href={
+                                  application.whatsappLink ||
+                                  getWhatsappHref(application.phoneNumber)
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-1 inline-block break-all text-xs font-semibold text-success-600 hover:underline"
+                              >
+                                {application.phoneNumber}
+                              </a>
+                            )}
+                          </div>
+                          <Badge
+                            tone={statusTone(application.status)}
+                            icon={statusIcon(application.status)}
+                          >
+                            {application.statusDisplay}
+                          </Badge>
+                        </div>
+
+                        {isTrainerApplication(application) && (
+                          <div className="mt-2">
+                            <Badge
+                              tone="green"
+                              icon="heroicons-outline:check-circle"
+                            >
+                              Pelatih
                             </Badge>
                           </div>
-
-                          {isTrainerApplication(application) && (
-                            <div className="mt-2"><Badge tone="green" icon="heroicons-outline:check-circle">Pelatih</Badge></div>
-                          )}
-                        </div>
+                        )}
                       </div>
+                    </div>
 
-                      <dl className="mt-4 grid grid-cols-1 gap-3 text-xs min-[380px]:grid-cols-2">
-                        <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                          <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Loker</dt>
-                          <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">{application.jobTitle}</dd>
-                        </div>
-                        <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                          <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Cabang</dt>
-                          <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">{application.branchName}</dd>
-                        </div>
-                        <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                          <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Gender</dt>
-                          <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">{application.genderDisplay}</dd>
-                        </div>
-                        <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                          <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Status pekerjaan</dt>
-                          <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">{application.contractSystemDisplay}</dd>
-                        </div>
-                      </dl>
+                    <dl className="mt-4 grid grid-cols-1 gap-3 text-xs min-[380px]:grid-cols-2">
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Loker
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.jobTitle}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Cabang
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.branchName}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Gender
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.genderDisplay}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Status pekerjaan
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.contractSystemDisplay}
+                        </dd>
+                      </div>
+                    </dl>
 
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/karir/rekruitmen/${application.id}`)}
-                        className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-4 text-sm font-bold text-primary-600 transition hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300"
-                      >
-                        <Icon icon="heroicons-outline:eye" width={18} />
-                        Lihat detail
-                      </button>
-                    </article>
-                  );
-                })}
-              </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/karir/rekruitmen/${application.id}`)
+                      }
+                      className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-4 text-sm font-bold text-primary-600 transition hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300"
+                    >
+                      <Icon icon="heroicons-outline:eye" width={18} />
+                      Lihat detail
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
 
-              <div className="hidden min-w-0 md:block">
-                <p className="career-recruitment-table-hint mb-3 items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
-                  <Icon icon="heroicons-outline:arrows-right-left" width={17} />
-                  Geser tabel ke samping untuk melihat semua informasi.
-                </p>
-                <Table
-                  key={selectionResetKey}
-                  tableId="karir-rekruitmen-table"
-                  listData={listData}
-                  listColumn={columns}
-                  isAction
-                  isCheckbox
-                  onSelectionChange={handleSelectionChange}
-                  actionColumnClass="w-36 min-w-[9rem]"
-                  bodyCellAlign="center"
-                  tableMinWidth="860px"
-                />
-              </div>
-
-              {listData.results.length === 0 && (
-                <div className="rounded-b-lg border-x border-b border-slate-200 bg-white px-4 py-10 text-center text-sm font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                  Tidak ada pelamar yang sesuai dengan filter.
-                </div>
-              )}
-
-              <PaginationComponent
-                pageSize={pageSize}
-                pageIndex={safePageIndex}
-                pageCount={pageCount}
-                canPreviousPage={safePageIndex > 0}
-                canNextPage={safePageIndex < pageCount - 1}
-                gotoPage={(page) => setPageIndex(page)}
-                previousPage={() => setPageIndex((page) => Math.max(0, page - 1))}
-                nextPage={() =>
-                  setPageIndex((page) => Math.min(pageCount - 1, page + 1))
-                }
-                setPageSize={(size) => {
-                  setPageSize(size);
-                  resetToFirstPage();
-                }}
+            <div className="hidden min-w-0 md:block">
+              <p className="career-recruitment-table-hint mb-3 items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                <Icon icon="heroicons-outline:arrows-right-left" width={17} />
+                Geser tabel ke samping untuk melihat semua informasi.
+              </p>
+              <Table
+                key={selectionResetKey}
+                tableId="karir-rekruitmen-table"
+                listData={listData}
+                listColumn={columns}
+                isAction
+                isCheckbox
+                onSelectionChange={handleSelectionChange}
+                actionColumnClass="w-36 min-w-[9rem]"
+                bodyCellAlign="center"
+                tableMinWidth="860px"
               />
-            </>
-          )}
-      </Card>
+            </div>
 
+            {listData.results.length === 0 && (
+              <div className="rounded-b-lg border-x border-b border-slate-200 bg-white px-4 py-10 text-center text-sm font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                Tidak ada pelamar yang sesuai dengan filter.
+              </div>
+            )}
+
+            <PaginationComponent
+              pageSize={pageSize}
+              pageIndex={safePageIndex}
+              pageCount={pageCount}
+              canPreviousPage={safePageIndex > 0}
+              canNextPage={safePageIndex < pageCount - 1}
+              gotoPage={(page) => setPageIndex(page)}
+              previousPage={() => setPageIndex((page) => Math.max(0, page - 1))}
+              nextPage={() =>
+                setPageIndex((page) => Math.min(pageCount - 1, page + 1))
+              }
+              setPageSize={(size) => {
+                setPageSize(size);
+                resetToFirstPage();
+              }}
+            />
+          </>
+        )}
+      </Card>
     </div>
   );
 };

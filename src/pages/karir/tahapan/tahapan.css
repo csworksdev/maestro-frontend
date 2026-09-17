@@ -36,7 +36,10 @@
   padding-block: 0;
 }
 
-.career-stage-custom-input:is([type="date"], [type="time"])::-webkit-date-and-time-value {
+.career-stage-custom-input:is(
+    [type="date"],
+    [type="time"]
+  )::-webkit-date-and-time-value {
   display: flex;
   min-height: 100%;
   align-items: center;
@@ -44,7 +47,10 @@
   text-align: left;
 }
 
-.career-stage-custom-input:is([type="date"], [type="time"])::-webkit-datetime-edit {
+.career-stage-custom-input:is(
+    [type="date"],
+    [type="time"]
+  )::-webkit-datetime-edit {
   display: flex;
   min-width: 0;
   height: 100%;
@@ -52,7 +58,10 @@
   padding: 0;
 }
 
-.career-stage-custom-input:is([type="date"], [type="time"])::-webkit-datetime-edit-fields-wrapper {
+.career-stage-custom-input:is(
+    [type="date"],
+    [type="time"]
+  )::-webkit-datetime-edit-fields-wrapper {
   display: flex;
   height: 100%;
   align-items: center;
