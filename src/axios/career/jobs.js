@@ -1,5 +1,9 @@
 import { axiosConfig } from "../config";
 
+const storageApiBaseUrl = String(
+  import.meta.env.VITE_STORAGE_API_URL || ""
+).replace(/\/$/, "");
+
 export const getCareerJobs = (params) => {
   return axiosConfig.get("/api/career/jobs/", { params });
 };
@@ -69,6 +73,46 @@ export const saveCareerApplicationStageCustomData = (
     `/api/career/applications/${applicationId}/stages/${stageId}/custom-data/`,
     { custom_data: customData }
   );
+};
+
+export const uploadCareerApplicationAttachment = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", "career/applications/attachments");
+
+  const storageUrl = import.meta.env.DEV
+    ? "/__storage_api/api/storage/"
+    : storageApiBaseUrl
+    ? `${storageApiBaseUrl}/api/storage/`
+    : "/api/storage/";
+
+  return axiosConfig.post(storageUrl, formData, {
+    ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "ngrok-skip-browser-warning": "true",
+    },
+  });
+};
+
+export const deleteCareerApplicationAttachment = (fileKey) => {
+  const storageUrl = import.meta.env.DEV
+    ? "/__storage_api/api/storage/"
+    : storageApiBaseUrl
+    ? `${storageApiBaseUrl}/api/storage/`
+    : "/api/storage/";
+
+  const formData = new FormData();
+  formData.append("file_key", fileKey);
+
+  return axiosConfig.delete(storageUrl, {
+    ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "ngrok-skip-browser-warning": "true",
+    },
+  });
 };
 
 export const startCareerApplications = (data) => {

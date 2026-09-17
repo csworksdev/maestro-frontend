@@ -25,6 +25,11 @@
   line-height: normal;
 }
 
+/* Modal aplikasi menggunakan z-index 99999; konfirmasi harus berada di atasnya. */
+.swal2-container.career-stage-delete-confirmation {
+  z-index: 100000 !important;
+}
+
 .career-stage-custom-input:is([type="date"], [type="time"]) {
   display: flex;
   align-items: center;

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
+import Modal from "@/components/ui/Modal";
 import Table from "@/components/globals/table/table";
 import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -456,6 +457,7 @@ const Rekruitmen = () => {
   const [selectedApplications, setSelectedApplications] = useState([]);
   const [selectionResetKey, setSelectionResetKey] = useState(0);
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const resetToFirstPage = () => {
     setPageIndex(0);
@@ -1279,20 +1281,65 @@ const Rekruitmen = () => {
 
   return (
     <div className="career-recruitment-page min-w-0 space-y-5">
-      <Card bodyClass="p-4 sm:p-5" className="min-w-0 overflow-hidden">
+      <div className="career-recruitment-toolbar flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <button
+          type="button"
+          onClick={() => setIsFilterModalOpen(true)}
+          className="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2.5 rounded-md border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          aria-label={`Buka filter pelamar${activeFilterCount ? `, ${activeFilterCount} filter aktif` : ""}`}
+        >
+          <Icon icon="heroicons-outline:adjustments-horizontal" width={19} />
+          Filter
+          {activeFilterCount > 0 && (
+            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-600 px-1 text-[11px] font-bold text-white dark:bg-slate-500">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        <div className="relative w-full sm:max-w-2xl">
+          <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <Icon icon="heroicons-outline:search" width={20} />
+          </div>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleSearch();
+            }}
+            placeholder="Pencarian"
+            aria-label="Cari pelamar"
+            className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          />
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+          >
+            <Icon icon="heroicons-outline:search" width={16} />
+            Cari
+          </button>
+        </div>
+      </div>
+
+      <Modal
+        title="Filter Pelamar"
+        activeModal={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        className="max-w-5xl"
+        scrollContent
+      >
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Filter Pelamar
-              </h3>
-              <p className="mt-1 text-sm font-semibold text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 {activeFilterCount
                   ? `${activeFilterCount} filter aktif`
                   : "Gunakan filter untuk menyaring data pelamar."}
               </p>
             </div>
-            <div className="career-recruitment-filter-actions grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
+            <div className="career-recruitment-filter-actions flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsAdvancedFiltersOpen((current) => !current)}
@@ -1301,14 +1348,6 @@ const Rekruitmen = () => {
               >
                 <Icon icon="heroicons-outline:adjustments" width={16} />
                 {isAdvancedFiltersOpen ? "Sembunyikan Filter" : "Filter Lanjutan"}
-              </button>
-              <button
-                type="button"
-                onClick={handleResetFilter}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-slate-100 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
-              >
-                <Icon icon="heroicons-outline:arrow-path" width={16} />
-                Reset
               </button>
             </div>
           </div>
@@ -1398,8 +1437,25 @@ const Rekruitmen = () => {
               />
             </div>
           )}
+          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end dark:border-slate-700">
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+            >
+              <Icon icon="heroicons-outline:arrow-path" width={17} />
+              Reset Filter
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsFilterModalOpen(false)}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary-500 px-5 text-sm font-bold text-white transition hover:bg-primary-600"
+            >
+              Terapkan Filter
+            </button>
+          </div>
         </div>
-      </Card>
+      </Modal>
 
       <Card
           title="Rekruitmen"
@@ -1482,41 +1538,11 @@ const Rekruitmen = () => {
             </div>
           }
         >
-          <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="w-full max-w-xl">
-            <div className="relative">
-              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon icon="heroicons-outline:search" width={20} />
-              </div>
-              <input
-                type="search"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
-                placeholder="Cari pelamar"
-                className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-              />
-              <button
-                type="button"
-                onClick={handleSearch}
-                className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600"
-              >
-                <Icon icon="heroicons-outline:search" width={16} />
-                Cari
-              </button>
+          {selectedApplicationIds.length ? (
+            <div className="mb-5 text-sm font-semibold text-slate-500">
+              {selectedApplicationIds.length} pelamar dipilih
             </div>
-            </div>
-
-            {selectedApplicationIds.length ? (
-              <div className="text-sm font-semibold text-slate-500">
-                {selectedApplicationIds.length} pelamar dipilih
-              </div>
-            ) : null}
-          </div>
+          ) : null}
 
           {!applicationsQuery.isError && (
             departmentsQuery.isError || jobsOptionsQuery.isError || branchesQuery.isError

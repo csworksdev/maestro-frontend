@@ -1,5 +1,8 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import ReactQuill from "react-quill";
+import DOMPurify from "dompurify";
+import "react-quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -45,6 +48,72 @@ const stripHtml = (value) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+const serializeRichText = (value) =>
+  DOMPurify.sanitize(String(value || ""), {
+    USE_PROFILES: { html: true },
+  })
+    .replace(/<p><br\s*\/?><\/p>/gi, "<br>")
+    .trim();
+
+const richTextModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ align: [] }, "blockquote"],
+    ["link"],
+    ["clean"],
+  ],
+};
+
+const richTextFormats = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "list",
+  "bullet",
+  "align",
+  "blockquote",
+  "link",
+];
+
+const RichTextField = ({ label, value, onChange, placeholder }) => (
+  <div className="career-rich-text-field">
+    <span className="form-label">{label}</span>
+    <ReactQuill
+      theme="snow"
+      value={value}
+      onChange={onChange}
+      modules={richTextModules}
+      formats={richTextFormats}
+      placeholder={placeholder}
+      className="career-rich-text-editor"
+    />
+  </div>
+);
+
+const RichTextContent = ({ value, emptyText = "-" }) => {
+  const safeHtml = DOMPurify.sanitize(String(value || ""), {
+    USE_PROFILES: { html: true },
+  });
+
+  if (!stripHtml(safeHtml)) {
+    return <span>{emptyText}</span>;
+  }
+
+  return (
+    <div
+      className="ql-editor career-rich-text-preview"
+      dangerouslySetInnerHTML={{ __html: safeHtml }}
+    />
+  );
+};
 
 const getPaginatedResults = (payload) => {
   if (Array.isArray(payload)) {
@@ -430,14 +499,34 @@ const Loker = () => {
     branch: form.branch,
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
-    description: form.description,
-    requirements: form.requirements,
-    benefits: form.benefits,
+    // React Quill values are persisted as HTML strings so formatting remains
+    // available to every frontend consuming the career jobs API.
+    description: serializeRichText(form.description),
+    requirements: serializeRichText(form.requirements),
+    benefits: serializeRichText(form.benefits),
     status: form.status,
   });
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    const emptyRichTextFields = [
+      ["Deskripsi", form.description],
+      ["Requirements", form.requirements],
+      ["Benefits", form.benefits],
+    ]
+      .filter(([, value]) => !stripHtml(value))
+      .map(([label]) => label);
+
+    if (emptyRichTextFields.length) {
+      Swal.fire(
+        "Form belum lengkap",
+        `${emptyRichTextFields.join(", ")} wajib diisi.`,
+        "warning"
+      );
+      return;
+    }
+
     const payload = buildPayload();
 
     if (editingJob) {
@@ -517,9 +606,9 @@ const Loker = () => {
         accessor: "description",
         width: "42%",
         Cell: ({ cell }) => (
-          <p className="w-full max-w-[min(42rem,100%)] text-left leading-5 text-slate-600 dark:text-slate-300">
-            {stripHtml(cell.value) || "-"}
-          </p>
+          <div className="w-full max-w-[min(42rem,100%)] text-left text-slate-600 dark:text-slate-300">
+            <RichTextContent value={cell.value} />
+          </div>
         ),
       },
       {
@@ -737,9 +826,12 @@ const Loker = () => {
                       </div>
                     </dl>
 
-                    <p className="mt-3 line-clamp-3 break-words text-xs leading-5 text-slate-500 dark:text-slate-300">
-                      {stripHtml(job.description) || "Belum ada deskripsi."}
-                    </p>
+                    <div className="mt-3 break-words text-xs text-slate-500 dark:text-slate-300">
+                      <RichTextContent
+                        value={job.description}
+                        emptyText="Belum ada deskripsi."
+                      />
+                    </div>
 
                     <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
                       <button type="button" onClick={() => openEditModal(job)} disabled={isMutating} className="career-loker-mobile-action border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300">
@@ -808,6 +900,7 @@ const Loker = () => {
         className="career-loker-modal max-w-4xl"
         centered
         scrollContent
+        lazy
         footerContent={
           <>
             <Button
@@ -889,38 +982,26 @@ const Loker = () => {
             </label>
           </div>
 
-          <label className="block">
-            <span className="form-label">Deskripsi</span>
-            <textarea
-              required
-              value={form.description}
-              onChange={(event) => updateForm("description", event.target.value)}
-              className="form-control min-h-[100px] py-3 sm:min-h-[120px]"
-              placeholder="Tuliskan deskripsi pekerjaan. HTML diperbolehkan jika diperlukan."
-            />
-          </label>
+          <RichTextField
+            label="Deskripsi"
+            value={form.description}
+            onChange={(value) => updateForm("description", value)}
+            placeholder="Tuliskan deskripsi pekerjaan."
+          />
 
-          <label className="block">
-            <span className="form-label">Requirements</span>
-            <textarea
-              required
-              value={form.requirements}
-              onChange={(event) => updateForm("requirements", event.target.value)}
-              className="form-control min-h-[100px] py-3 sm:min-h-[120px]"
-              placeholder="Tuliskan requirement pekerjaan. HTML diperbolehkan jika diperlukan."
-            />
-          </label>
+          <RichTextField
+            label="Requirements"
+            value={form.requirements}
+            onChange={(value) => updateForm("requirements", value)}
+            placeholder="Tuliskan requirement pekerjaan."
+          />
 
-          <label className="block">
-            <span className="form-label">Benefits</span>
-            <textarea
-              required
-              value={form.benefits}
-              onChange={(event) => updateForm("benefits", event.target.value)}
-              className="form-control min-h-[100px] py-3 sm:min-h-[120px]"
-              placeholder="Tuliskan benefit pekerjaan. HTML diperbolehkan jika diperlukan."
-            />
-          </label>
+          <RichTextField
+            label="Benefits"
+            value={form.benefits}
+            onChange={(value) => updateForm("benefits", value)}
+            placeholder="Tuliskan benefit pekerjaan."
+          />
         </form>
       </Modal>
     </div>

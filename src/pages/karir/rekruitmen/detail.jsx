@@ -106,6 +106,58 @@ const formatCustomDataLabel = (value) =>
 
 const isUrl = (value) => /^https?:\/\//i.test(String(value || ""));
 
+const MEDIA_BASE_URL = "https://media.maestroswim.com";
+const isStoredFileKey = (value) =>
+  /^(?:\/?career\/|\/?file\/)/i.test(String(value || ""));
+const getStoredFileUrl = (value) =>
+  isUrl(value)
+    ? value
+    : `${MEDIA_BASE_URL}/${String(value || "").replace(/^\/+/, "")}`;
+
+const normalizeStoredFile = (value) => {
+  if (!value) return { key: "", url: "" };
+
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!text || text === "[object Object]") return { key: "", url: "" };
+
+    if (text.startsWith("{") && text.endsWith("}")) {
+      try {
+        return normalizeStoredFile(JSON.parse(text));
+      } catch {
+        // It is a regular string, not serialized JSON.
+      }
+    }
+
+    if (isUrl(text)) {
+      const markerIndex = text.indexOf("/career/");
+      return {
+        key: markerIndex >= 0 ? text.slice(markerIndex + 1) : "",
+        url: text,
+      };
+    }
+
+    return isStoredFileKey(text)
+      ? { key: text.replace(/^\/+/, ""), url: getStoredFileUrl(text) }
+      : { key: "", url: "" };
+  }
+
+  if (typeof value !== "object") return { key: "", url: "" };
+
+  const rawKey = value.key ?? value.file_key;
+  const rawUrl = value.url ?? value.file_url;
+  const key = typeof rawKey === "string" ? rawKey.trim().replace(/^\/+/, "") : "";
+  const url = typeof rawUrl === "string" ? rawUrl.trim() : "";
+  if (key || url) return { key, url: url || getStoredFileUrl(key) };
+
+  for (const nestedValue of Object.values(value)) {
+    const nested = normalizeStoredFile(nestedValue);
+    if (nested.key || nested.url) return nested;
+  }
+
+  return { key: "", url: "" };
+};
+
 const stageToneClass = {
   green: "border-success-200 bg-success-500/10 text-success-600",
   yellow: "border-warning-200 bg-warning-500/10 text-warning-600",
@@ -624,13 +676,23 @@ const RekruitmenDetail = () => {
                     <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {stage.stage_name || "-"}
                     </h4>
-                    <p className="mt-2 text-sm font-semibold text-slate-500">
-                      {stage.notes || "-"}
-                    </p>
+                    <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 dark:bg-slate-800">
+                      <p className="text-[10px] font-bold uppercase text-slate-400">
+                        Catatan
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-xs font-semibold text-slate-600 dark:text-slate-200">
+                        {stage.notes || "Belum ada catatan"}
+                      </p>
+                    </div>
                     {customDataEntries.length ? (
                       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {customDataEntries.map(([key, value]) => {
-                          const textValue = String(value);
+                          const storedFile = normalizeStoredFile(value);
+                          const isFileValue = Boolean(storedFile.url);
+                          const textValue = isFileValue ? storedFile.url : String(value);
+                          const hrefValue = isFileValue
+                            ? storedFile.url
+                            : getStoredFileUrl(textValue);
 
                           return (
                             <div
@@ -640,9 +702,9 @@ const RekruitmenDetail = () => {
                               <p className="text-[10px] font-bold uppercase text-slate-400">
                                 {formatCustomDataLabel(key)}
                               </p>
-                              {isUrl(textValue) ? (
+                              {isFileValue || isUrl(textValue) || isStoredFileKey(textValue) ? (
                                 <a
-                                  href={textValue}
+                                  href={hrefValue}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="mt-1 block truncate text-xs font-bold text-primary-500 hover:underline"
