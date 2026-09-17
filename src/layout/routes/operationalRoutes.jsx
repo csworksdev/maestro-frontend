@@ -55,6 +55,7 @@ const Department = lazy(() => import("@/pages/usermanagement/department"));
 const EditDepartment = lazy(
   () => import("@/pages/usermanagement/department/edit"),
 );
+const DashboardRekruitmen = lazy(() => import("@/pages/karir/dashboard/index"));
 // const Loker = lazy(() => import("@/pages/usermanagement/loker"));
 // const EditLoker = lazy(() => import("@/pages/usermanagement/loker/edit"));
 // const Rekruitmen = lazy(() => import("@/pages/usermanagement/rekruitmen"));
@@ -142,6 +143,7 @@ const routeAliases = [
   { path: "departments", element: <Department /> },
   { path: "departments/add", element: <EditDepartment /> },
   { path: "departments/Edit", element: <EditDepartment /> },
+  { path: "dashboard-rekrutmen", element: <DashboardRekruitmen /> },
   { path: "loker", element: <Loker /> },
   { path: "loker/add", element: <EditLoker /> },
   { path: "loker/Edit", element: <EditLoker /> },

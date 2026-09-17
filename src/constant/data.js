@@ -420,6 +420,15 @@ export const menuOpx = [
     link: "departments",
   },
   {
+    isHeadr: true,
+    title: "Rekrutmen",
+  },
+  {
+    title: "Dashboard Rekruitmen",
+    icon: "heroicons-outline:chart-pie",
+    link: "dashboard-rekrutmen",
+  },
+  {
     title: "Loker",
     icon: "heroicons-outline:briefcase",
     link: "loker",
