@@ -7,15 +7,24 @@ import {
   requestNotificationPermissionSafely,
 } from "@/utils/fcm";
 import { getFcmTokenCookie, setFcmTokenCookie } from "@/utils/authCookies";
+import { useIsAuthenticated } from "@/redux/slicers/authSlice";
 
 export const useFcmToken = () => {
   const [fcmToken, setFcmToken] = useState(getFcmTokenCookie());
+  const isAuthenticated = useIsAuthenticated();
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
     const fetchToken = async () => {
       try {
         const messaging = await getMessagingInstance();
         if (!messaging) {
+          console.warn(
+            "[FCM] Browser ini tidak mendukung push notification web.",
+          );
           return;
         }
 
@@ -50,7 +59,7 @@ export const useFcmToken = () => {
     };
 
     fetchToken();
-  }, []);
+  }, [isAuthenticated]);
 
   const removeFcmToken = async () => {
     try {

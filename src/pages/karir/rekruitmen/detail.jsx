@@ -152,7 +152,8 @@ const normalizeStoredFile = (value) => {
 
   const rawKey = value.key ?? value.file_key;
   const rawUrl = value.url ?? value.file_url;
-  const key = typeof rawKey === "string" ? rawKey.trim().replace(/^\/+/, "") : "";
+  const key =
+    typeof rawKey === "string" ? rawKey.trim().replace(/^\/+/, "") : "";
   const url = typeof rawUrl === "string" ? rawUrl.trim() : "";
   if (key || url) return { key, url: url || getStoredFileUrl(key) };
 
@@ -731,7 +732,9 @@ const RekruitmenDetail = () => {
                         {customDataEntries.map(([key, value]) => {
                           const storedFile = normalizeStoredFile(value);
                           const isFileValue = Boolean(storedFile.url);
-                          const textValue = isFileValue ? storedFile.url : String(value);
+                          const textValue = isFileValue
+                            ? storedFile.url
+                            : String(value);
                           const hrefValue = isFileValue
                             ? storedFile.url
                             : getStoredFileUrl(textValue);
@@ -744,7 +747,9 @@ const RekruitmenDetail = () => {
                               <p className="text-[10px] font-bold uppercase text-slate-400">
                                 {formatCustomDataLabel(key)}
                               </p>
-                              {isFileValue || isUrl(textValue) || isStoredFileKey(textValue) ? (
+                              {isFileValue ||
+                              isUrl(textValue) ||
+                              isStoredFileKey(textValue) ? (
                                 <a
                                   href={hrefValue}
                                   target="_blank"

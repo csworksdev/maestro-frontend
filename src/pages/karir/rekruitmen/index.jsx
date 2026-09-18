@@ -1629,13 +1629,13 @@ const Rekruitmen = () => {
                 </button>
               )}
           </div>
-          }
-        >
-          {selectedApplicationIds.length ? (
-            <div className="mb-5 text-sm font-semibold text-slate-500">
-              {selectedApplicationIds.length} pelamar dipilih
-            </div>
-          ) : null}
+        }
+      >
+        {selectedApplicationIds.length ? (
+          <div className="mb-5 text-sm font-semibold text-slate-500">
+            {selectedApplicationIds.length} pelamar dipilih
+          </div>
+        ) : null}
 
         {!applicationsQuery.isError &&
           (departmentsQuery.isError ||
