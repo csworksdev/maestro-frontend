@@ -7,33 +7,12 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const isDevelopment = mode !== "production";
-  const apiTarget = isDevelopment
-    ? env.VITE_DEV_API_URL || env.VITE_API_URL
-    : env.VITE_API_URL;
-  const accessApiTarget = isDevelopment
-    ? env.VITE_DEV_ACCESS_API_URL || apiTarget
-    : env.VITE_ACCESS_API_URL || apiTarget;
-  const backendProxy = apiTarget
-    ? {
-        target: apiTarget,
-        changeOrigin: true,
-        secure: true,
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
-    : undefined;
-  const accessBackendProxy = accessApiTarget
-    ? {
-        target: accessApiTarget,
-        changeOrigin: true,
-        secure: true,
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
-    : undefined;
+  const apiProxyTarget =
+    mode === "development"
+      ? env.VITE_DEV_API_URL || env.VITE_API_URL
+      : env.VITE_API_URL;
+  const storageProxyTarget =
+    env.VITE_STORAGE_API_URL || "https://woven-affecting-accuracy.ngrok-free.dev";
 
   return {
     resolve: {
@@ -61,35 +40,28 @@ export default defineConfig(({ mode }) => {
         : []),
     ],
     server: {
-      host: true,
+      host: "127.0.0.1",
       port: 3001,
       open: false,
       strictPort: true,
-      proxy: backendProxy
-        ? {
-            "/__api": {
-              ...backendProxy,
-              rewrite: (requestPath) => requestPath.replace(/^\/__api/, ""),
-            },
-            ...(accessBackendProxy
-              ? {
-                  "/__access-api": {
-                    ...accessBackendProxy,
-                    rewrite: (requestPath) =>
-                      requestPath.replace(/^\/__access-api/, ""),
-                  },
-                }
-              : {}),
-            "/api": backendProxy,
-            "/auth": backendProxy,
-            "/hydro": backendProxy,
-            "/opx": backendProxy,
-            "/report": backendProxy,
-            "/wati": backendProxy,
-            "/xendit": backendProxy,
-            "/orderdetail": backendProxy,
-          }
-        : undefined,
+      proxy: {
+        "/__api": {
+          target: apiProxyTarget,
+          changeOrigin: true,
+          rewrite: (proxyPath) => proxyPath.replace(/^\/__api/, ""),
+        },
+        "/__storage_api": {
+          target: storageProxyTarget,
+          changeOrigin: true,
+          secure: true,
+          rewrite: (proxyPath) => proxyPath.replace(/^\/__storage_api/, ""),
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyRequest) => {
+              proxyRequest.setHeader("ngrok-skip-browser-warning", "true");
+            });
+          },
+        },
+      },
       watch: {
         usePolling: true,
         interval: 500,

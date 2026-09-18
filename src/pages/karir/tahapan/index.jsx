@@ -15,6 +15,7 @@ import getErrorMessage from "@/utils/careerErrorMessage";
 import "./tahapan.css";
 import {
   addCareerStage,
+  deleteCareerApplicationAttachment,
   deleteCareerStage,
   editCareerStage,
   getBranches,
@@ -24,6 +25,7 @@ import {
   getDepartments,
   processCareerApplicationStage,
   saveCareerApplicationStageCustomData,
+  uploadCareerApplicationAttachment,
 } from "@/axios/career/jobs";
 
 const emptyStageForm = {
@@ -42,7 +44,169 @@ const customFieldTypes = [
   { value: "text", label: "Teks" },
   { value: "date", label: "Tanggal" },
   { value: "time", label: "Jam" },
+  { value: "upload", label: "Upload" },
 ];
+
+const MEDIA_BASE_URL = "https://media.maestroswim.com";
+const MAX_UPLOAD_BYTES = 900 * 1024;
+
+const getMediaUrl = (fileKey) => {
+  if (!fileKey) return "";
+  if (/^https?:\/\//i.test(fileKey)) return fileKey;
+  return `${MEDIA_BASE_URL}/${String(fileKey).replace(/^\/+/, "")}`;
+};
+
+const normalizeStoredFile = (value) => {
+  if (!value) return { key: "", url: "" };
+
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!text || text === "[object Object]") return { key: "", url: "" };
+
+    if (text.startsWith("{") && text.endsWith("}")) {
+      try {
+        return normalizeStoredFile(JSON.parse(text));
+      } catch {
+        // Continue as a regular key when the value is not valid JSON.
+      }
+    }
+
+    if (/^https?:\/\//i.test(text)) {
+      const marker = "/career/";
+      const markerIndex = text.indexOf(marker);
+      return {
+        key: markerIndex >= 0 ? text.slice(markerIndex + 1) : "",
+        url: text,
+      };
+    }
+
+    return { key: text, url: getMediaUrl(text) };
+  }
+
+  if (typeof value === "object") {
+    if (value.data) {
+      const nested = normalizeStoredFile(value.data);
+      if (nested.key || nested.url) return nested;
+    }
+
+    const rawKey = value.key ?? value.file_key;
+    const rawUrl = value.url ?? value.file_url;
+    const nestedKey =
+      rawKey && typeof rawKey === "object" ? normalizeStoredFile(rawKey) : null;
+    const nestedUrl =
+      rawUrl && typeof rawUrl === "object" ? normalizeStoredFile(rawUrl) : null;
+    const key = nestedKey?.key || nestedUrl?.key || String(rawKey || "").trim();
+    const url = nestedUrl?.url || nestedKey?.url || String(rawUrl || "").trim();
+
+    const normalized = {
+      key: key === "[object Object]" ? "" : key,
+      url:
+        url && url !== "[object Object]"
+          ? url
+          : key && key !== "[object Object]"
+          ? getMediaUrl(key)
+          : "",
+    };
+
+    if (normalized.key || normalized.url) return normalized;
+
+    // Be tolerant of API serializers which wrap the file one level deeper.
+    for (const nestedValue of Object.values(value)) {
+      if (nestedValue === value) continue;
+      const nested = normalizeStoredFile(nestedValue);
+      if (nested.key || nested.url) return nested;
+    }
+
+    return normalized;
+  }
+
+  return { key: "", url: "" };
+};
+
+const hasCustomFieldValue = (value) => {
+  if (value && typeof value === "object") {
+    const file = normalizeStoredFile(value);
+    return Boolean(file.url || file.key);
+  }
+  return Boolean(String(value || "").trim());
+};
+
+const getCustomFieldDisplay = (value) => {
+  if (value && typeof value === "object") {
+    const { url } = normalizeStoredFile(value);
+    return { text: url, href: url };
+  }
+
+  const text = String(value || "");
+  return {
+    text,
+    href: /^https?:\/\//i.test(text) ? text : "",
+  };
+};
+
+const loadImageFile = (file) =>
+  new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Gambar tidak dapat dibaca."));
+    };
+    image.src = objectUrl;
+  });
+
+const canvasToBlob = (canvas, type, quality) =>
+  new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Gambar gagal dikompresi."))),
+      type,
+      quality
+    );
+  });
+
+const prepareUploadFile = async (file) => {
+  if (file.size <= MAX_UPLOAD_BYTES) return file;
+
+  if (!file.type.startsWith("image/")) {
+    const error = new Error("Ukuran file maksimal 900 KB.");
+    error.userMessage = true;
+    throw error;
+  }
+
+  const image = await loadImageFile(file);
+  const initialScale = Math.min(
+    1,
+    Math.sqrt(MAX_UPLOAD_BYTES / file.size) * 0.85,
+    2000 / Math.max(image.naturalWidth, image.naturalHeight)
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * initialScale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * initialScale));
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  let blob;
+  for (const quality of [0.82, 0.7, 0.58, 0.46]) {
+    blob = await canvasToBlob(canvas, "image/jpeg", quality);
+    if (blob.size <= MAX_UPLOAD_BYTES) break;
+  }
+
+  if (!blob || blob.size > MAX_UPLOAD_BYTES) {
+    const error = new Error("Gambar masih terlalu besar setelah dikompresi.");
+    error.userMessage = true;
+    throw error;
+  }
+
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "attachment";
+  return new File([blob], `${baseName}.jpg`, {
+    type: "image/jpeg",
+    lastModified: Date.now(),
+  });
+};
 
 const createCustomFieldDraft = (field = {}) => ({
   _localId:
@@ -546,6 +710,8 @@ const Tahapan = () => {
   const [isCustomDataModalOpen, setIsCustomDataModalOpen] = useState(false);
   const [customDataApplication, setCustomDataApplication] = useState(null);
   const [customDataDrafts, setCustomDataDrafts] = useState({});
+  const [customFileUploads, setCustomFileUploads] = useState({});
+  const [isSubmittingCustomData, setIsSubmittingCustomData] = useState(false);
 
   const resetToFirstPage = () => {
     setPageIndex(0);
@@ -1180,13 +1346,6 @@ const Tahapan = () => {
       closeCustomDataModal();
       invalidatePipeline();
     },
-    onError: (error) => {
-      Swal.fire(
-        "Gagal",
-        getErrorMessage(error, "Data tahapan gagal disimpan."),
-        "error",
-      );
-    },
   });
 
   const getCustomDataDraftKey = (applicationId, fieldKey) =>
@@ -1200,6 +1359,7 @@ const Tahapan = () => {
   const closeCustomDataModal = () => {
     setIsCustomDataModalOpen(false);
     setCustomDataApplication(null);
+    setCustomFileUploads({});
   };
 
   const handleCustomDataChange = (application, field, value) => {
@@ -1207,7 +1367,111 @@ const Tahapan = () => {
     setCustomDataDrafts((current) => ({ ...current, [draftKey]: value }));
   };
 
-  const handleSubmitCustomData = () => {
+  const handleCustomFileSelect = async (application, field, file) => {
+    if (!file) return;
+
+    const draftKey = getCustomDataDraftKey(application.id, field.key);
+    setCustomFileUploads((current) => ({
+      ...current,
+      [draftKey]: { isPreparing: true, fileName: file.name, error: "" },
+    }));
+
+    try {
+      const preparedFile = await prepareUploadFile(file);
+      setCustomFileUploads((current) => ({
+        ...current,
+        [draftKey]: {
+          isPreparing: false,
+          pendingFile: preparedFile,
+          fileName: preparedFile.name,
+          error: "",
+        },
+      }));
+    } catch (error) {
+      setCustomFileUploads((current) => ({
+        ...current,
+        [draftKey]: {
+          isPreparing: false,
+          fileName: file.name,
+          error: error?.userMessage
+            ? error.message
+            : error?.response?.status === 413
+            ? "Ukuran file terlalu besar. Maksimal 900 KB."
+            : getErrorMessage(error, "File gagal diupload."),
+        },
+      }));
+    }
+  };
+
+  const handleCustomFileDelete = async (application, field, fieldValue) => {
+    const draftKey = getCustomDataDraftKey(application.id, field.key);
+    const uploadState = customFileUploads[draftKey] || {};
+
+    const confirmation = await Swal.fire({
+      title: "Hapus file?",
+      text: uploadState.pendingFile
+        ? "File yang sudah dipilih akan dibatalkan."
+        : "File akan dihapus dari penyimpanan dan tidak dapat dikembalikan.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, hapus",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#ef4444",
+      reverseButtons: true,
+      customClass: {
+        container: "career-stage-delete-confirmation",
+      },
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    if (uploadState.pendingFile) {
+      setCustomFileUploads((current) => {
+        const next = { ...current };
+        delete next[draftKey];
+        return next;
+      });
+      return;
+    }
+
+    const fileKey = normalizeStoredFile(fieldValue).key;
+    if (!fileKey) return;
+
+    setCustomFileUploads((current) => ({
+      ...current,
+      [draftKey]: { ...uploadState, isDeleting: true, error: "" },
+    }));
+
+    try {
+      await deleteCareerApplicationAttachment(fileKey);
+      await saveCareerApplicationStageCustomData(
+        application.id,
+        activeStageId,
+        {
+          ...(application.customFieldValues || {}),
+          [field.key]: "",
+        }
+      );
+      handleCustomDataChange(application, field, "");
+      invalidatePipeline();
+      setCustomFileUploads((current) => {
+        const next = { ...current };
+        delete next[draftKey];
+        return next;
+      });
+    } catch (error) {
+      setCustomFileUploads((current) => ({
+        ...current,
+        [draftKey]: {
+          ...uploadState,
+          isDeleting: false,
+          error: getErrorMessage(error, "File gagal dihapus."),
+        },
+      }));
+    }
+  };
+
+  const handleSubmitCustomData = async () => {
     if (!customDataApplication || !activeStage) {
       return;
     }
@@ -1215,11 +1479,14 @@ const Tahapan = () => {
     const customData = { ...(customDataApplication.customFieldValues || {}) };
     const draftKeys = [];
 
+    if (Object.values(customFileUploads).some((upload) => upload?.isPreparing)) {
+      Swal.fire("File sedang diproses", "Tunggu sebentar lalu coba kembali.", "info");
+      return;
+    }
+
     for (const field of activeStage.customFields || []) {
-      const draftKey = getCustomDataDraftKey(
-        customDataApplication.id,
-        field.key,
-      );
+      if (!field.required) continue;
+      const draftKey = getCustomDataDraftKey(customDataApplication.id, field.key);
       const hasDraft = Object.prototype.hasOwnProperty.call(
         customDataDrafts,
         draftKey,
@@ -1227,22 +1494,72 @@ const Tahapan = () => {
       const value = hasDraft
         ? customDataDrafts[draftKey]
         : customData[field.key] || "";
+      const pendingFile = customFileUploads[draftKey]?.pendingFile;
+      const hasValue = pendingFile || hasCustomFieldValue(value);
 
-      if (field.required && !String(value).trim()) {
+      if (!hasValue) {
         Swal.fire("Lengkapi data", `${field.label} wajib diisi.`, "info");
         return;
       }
-
-      customData[field.key] = value;
-      draftKeys.push(draftKey);
     }
 
-    customDataMutation.mutate({
-      applicationId: customDataApplication.id,
-      stageId: activeStageId,
-      customData,
-      draftKeys,
-    });
+    setIsSubmittingCustomData(true);
+    const uploadedFileKeys = [];
+    try {
+      for (const field of activeStage.customFields || []) {
+        const draftKey = getCustomDataDraftKey(customDataApplication.id, field.key);
+        const hasDraft = Object.prototype.hasOwnProperty.call(
+          customDataDrafts,
+          draftKey
+        );
+        let value = hasDraft
+          ? customDataDrafts[draftKey]
+          : customData[field.key] || "";
+        const pendingFile = customFileUploads[draftKey]?.pendingFile;
+
+        if (field.type === "upload" && pendingFile) {
+          const response = await uploadCareerApplicationAttachment(pendingFile);
+          const uploadData = response?.data?.data || response?.data || {};
+          if (!uploadData.file_key) {
+            throw new Error("Response upload tidak memiliki file_key.");
+          }
+          value = {
+            key: uploadData.file_key,
+            url: uploadData.file_url || getMediaUrl(uploadData.file_key),
+          };
+          uploadedFileKeys.push(uploadData.file_key);
+        }
+
+        const hasValue = hasCustomFieldValue(value);
+        if (field.required && !hasValue) {
+          Swal.fire("Lengkapi data", `${field.label} wajib diisi.`, "info");
+          return;
+        }
+
+        customData[field.key] = value;
+        draftKeys.push(draftKey);
+      }
+
+      await customDataMutation.mutateAsync({
+        applicationId: customDataApplication.id,
+        stageId: activeStageId,
+        customData,
+        draftKeys,
+      });
+    } catch (error) {
+      await Promise.allSettled(
+        uploadedFileKeys.map((fileKey) =>
+          deleteCareerApplicationAttachment(fileKey)
+        )
+      );
+      const message =
+        error?.response?.status === 413
+          ? "Ukuran file terlalu besar. Maksimal 900 KB."
+          : getErrorMessage(error, "File gagal diupload atau data gagal disimpan.");
+      Swal.fire("Gagal", message, "error");
+    } finally {
+      setIsSubmittingCustomData(false);
+    }
   };
 
   const isStageMutating =
@@ -1325,26 +1642,23 @@ const Tahapan = () => {
     });
   };
 
-  const columns = useMemo(() => {
-    const customFields = activeStage?.customFields || [];
-    const customDataColumn = customFields.length
-      ? [
-          {
-            Header: "Data Tahapan",
-            accessor: "customFieldValues",
-            width: 290,
-            Cell: ({ row }) => {
-              const filledFieldCount = customFields.filter((field) =>
-                String(
-                  row.original.customFieldValues?.[field.key] || "",
-                ).trim(),
-              ).length;
-              const hasCustomData = filledFieldCount > 0;
-              const savedFields = customFields.filter((field) =>
-                String(
-                  row.original.customFieldValues?.[field.key] || "",
-                ).trim(),
-              );
+  const columns = useMemo(
+    () => {
+      const customFields = activeStage?.customFields || [];
+      const customDataColumn = customFields.length
+        ? [
+            {
+              Header: "Data Tahapan",
+              accessor: "customFieldValues",
+              width: 290,
+              Cell: ({ row }) => {
+                const filledFieldCount = customFields.filter((field) =>
+                  hasCustomFieldValue(row.original.customFieldValues?.[field.key])
+                ).length;
+                const hasCustomData = filledFieldCount > 0;
+                const savedFields = customFields.filter((field) =>
+                  hasCustomFieldValue(row.original.customFieldValues?.[field.key])
+                );
 
               return (
                 <div className="flex min-w-0 flex-col items-center gap-2">
@@ -1381,53 +1695,52 @@ const Tahapan = () => {
                           : "Belum diisi"}
                       </span>
                     </span>
-                  </button>
-                  {savedFields.length ? (
-                    <div className="w-full min-w-0 space-y-1 rounded-md bg-slate-50 px-2.5 py-2 text-left dark:bg-slate-800/70">
-                      {savedFields.map((field) => {
-                        const value = String(
-                          row.original.customFieldValues[field.key],
-                        );
-                        const isLink = /^https?:\/\//i.test(value);
+                    </button>
+                    {savedFields.length ? (
+                      <div className="w-full min-w-0 space-y-1 rounded-md bg-slate-50 px-2.5 py-2 text-left dark:bg-slate-800/70">
+                        {savedFields.map((field) => {
+                          const { text, href } = getCustomFieldDisplay(
+                            row.original.customFieldValues[field.key]
+                          );
 
-                        return (
-                          <div key={field.key} className="min-w-0">
-                            <p
-                              className="truncate text-[9px] font-bold uppercase tracking-wide text-slate-400"
-                              title={field.label}
-                            >
-                              {field.label}
-                            </p>
-                            {isLink ? (
-                              <a
-                                href={value}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(event) => event.stopPropagation()}
-                                className="block max-w-full truncate text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-300"
-                                title={value}
-                              >
-                                {value}
-                              </a>
-                            ) : (
+                          return (
+                            <div key={field.key} className="min-w-0">
                               <p
-                                className="break-words text-[11px] font-semibold text-slate-600 dark:text-slate-300"
-                                title={value}
+                                className="truncate text-[9px] font-bold uppercase tracking-wide text-slate-400"
+                                title={field.label}
                               >
-                                {value}
+                                {field.label}
                               </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              );
+                              {href ? (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(event) => event.stopPropagation()}
+                                  className="block max-w-full truncate text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-300"
+                                  title={text}
+                                >
+                                  {text}
+                                </a>
+                              ) : (
+                                <p
+                                  className="break-words text-[11px] font-semibold text-slate-600 dark:text-slate-300"
+                                  title={text}
+                                >
+                                  {text}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              },
             },
-          },
-        ]
-      : [];
+          ]
+        : [];
     const documentColumn = showDocumentColumn
       ? [
           {
@@ -1748,7 +2061,7 @@ const Tahapan = () => {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Menu Tahapan
+                  Tahapan Pelamar
                 </h3>
                 <p className="mt-1 text-sm font-semibold text-slate-400">
                   {stages.length} stage
@@ -1953,9 +2266,7 @@ const Tahapan = () => {
                 {pagedApplicants.results.map((application) => {
                   const customFields = activeStage?.customFields || [];
                   const filledFieldCount = customFields.filter((field) =>
-                    String(
-                      application.customFieldValues?.[field.key] || "",
-                    ).trim(),
+                    hasCustomFieldValue(application.customFieldValues?.[field.key])
                   ).length;
                   const hasCustomData = filledFieldCount > 0;
                   const certificateLinks =
@@ -2301,8 +2612,10 @@ const Tahapan = () => {
                         field.type === "date"
                           ? "Contoh: Tanggal Interview"
                           : field.type === "time"
-                            ? "Contoh: Jam Interview"
-                            : "Contoh: Link Zoom"
+                          ? "Contoh: Jam Interview"
+                          : field.type === "upload"
+                          ? "Contoh: Upload KTP"
+                          : "Contoh: Link Zoom"
                       }
                     />
                   </label>
@@ -2364,7 +2677,10 @@ const Tahapan = () => {
             text="Selesai"
             className="btn-primary"
             onClick={handleSubmitCustomData}
-            isLoading={customDataMutation.isPending}
+            isLoading={customDataMutation.isPending || isSubmittingCustomData}
+            disabled={Object.values(customFileUploads).some(
+              (upload) => upload?.isPreparing || upload?.isDeleting
+            ) || isSubmittingCustomData}
           />
         }
       >
@@ -2382,6 +2698,7 @@ const Tahapan = () => {
             {activeStage?.customFields?.map((field) => {
               const isDateField = field.type === "date";
               const isTimeField = field.type === "time";
+              const isUploadField = field.type === "upload";
               const usesNativePicker = isDateField || isTimeField;
               const value =
                 customDataApplication?.customFieldValues?.[field.key];
@@ -2394,6 +2711,11 @@ const Tahapan = () => {
               )
                 ? customDataDrafts[draftKey]
                 : value || "";
+              const uploadState = customFileUploads[draftKey] || {};
+              const storedFile = normalizeStoredFile(fieldValue);
+              const storedFileKey = storedFile.key;
+              const storedFileUrl = storedFile.url;
+              const isFileBusy = uploadState.isPreparing || uploadState.isDeleting;
 
               return (
                 <div
@@ -2409,9 +2731,105 @@ const Tahapan = () => {
                       {field.required ? " *" : ""}
                     </span>
                     <span className="flex-none rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-400 dark:bg-slate-800">
-                      {isDateField ? "Tanggal" : isTimeField ? "Jam" : "Teks"}
+                      {isDateField
+                        ? "Tanggal"
+                        : isTimeField
+                        ? "Jam"
+                        : isUploadField
+                        ? "Upload"
+                        : "Teks"}
                     </span>
                   </span>
+                  {isUploadField ? (
+                    <div className="space-y-2">
+                      <label className={`flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-600 transition dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 ${isFileBusy || isSubmittingCustomData ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600"}`}>
+                        <Icon
+                          icon={
+                            isFileBusy
+                              ? "heroicons-outline:arrow-path"
+                              : "heroicons-outline:arrow-up-tray"
+                          }
+                          width={18}
+                          className={isFileBusy ? "animate-spin" : ""}
+                        />
+                        {uploadState.isPreparing
+                          ? "Menyiapkan file..."
+                          : uploadState.isDeleting
+                          ? "Menghapus file..."
+                          : uploadState.pendingFile || storedFileKey
+                          ? "Ganti file"
+                          : "Pilih file"}
+                        <input
+                          type="file"
+                          className="sr-only"
+                          disabled={isFileBusy || isSubmittingCustomData}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file && customDataApplication) {
+                              handleCustomFileSelect(customDataApplication, field, file);
+                            }
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                      {uploadState.pendingFile ? (
+                        <div className="flex min-w-0 items-center gap-2 rounded-md bg-warning-50 px-3 py-2 text-xs font-bold text-warning-700 dark:bg-warning-500/10 dark:text-warning-300">
+                          <Icon icon="heroicons-outline:paper-clip" width={16} />
+                          <span className="min-w-0 flex-1 truncate">
+                            {uploadState.fileName}
+                            <span className="ml-1 font-semibold">(siap diupload)</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCustomFileDelete(
+                                customDataApplication,
+                                field,
+                                fieldValue
+                              )
+                            }
+                            className="flex-none text-danger-500 hover:text-danger-600"
+                            aria-label="Hapus file pilihan"
+                          >
+                            <Icon icon="heroicons-outline:trash" width={16} />
+                          </button>
+                        </div>
+                      ) : storedFileKey ? (
+                        <div className="flex min-w-0 items-center gap-2 rounded-md bg-success-50 px-3 py-2 text-xs font-bold text-success-600 dark:bg-success-500/10 dark:text-success-300">
+                          <Icon icon="heroicons-outline:paper-clip" width={16} />
+                          <a
+                            href={storedFileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="min-w-0 flex-1 break-all hover:underline"
+                            title={storedFileUrl}
+                          >
+                            {storedFileUrl}
+                          </a>
+                          <button
+                            type="button"
+                            disabled={isFileBusy || isSubmittingCustomData}
+                            onClick={() =>
+                              handleCustomFileDelete(
+                                customDataApplication,
+                                field,
+                                fieldValue
+                              )
+                            }
+                            className="flex-none text-danger-500 hover:text-danger-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label="Hapus file tersimpan"
+                          >
+                            <Icon icon="heroicons-outline:trash" width={16} />
+                          </button>
+                        </div>
+                      ) : null}
+                      {uploadState.error ? (
+                        <p className="text-xs font-semibold text-danger-500">
+                          {uploadState.error}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
                   <div className="relative">
                     <input
                       type={
@@ -2465,6 +2883,7 @@ const Tahapan = () => {
                       </button>
                     ) : null}
                   </div>
+                  )}
                 </div>
               );
             })}

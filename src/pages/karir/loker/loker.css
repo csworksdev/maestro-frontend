@@ -34,6 +34,88 @@
   display: none;
 }
 
+.career-rich-text-field .form-label {
+  display: block;
+}
+
+.career-rich-text-editor {
+  border-radius: 8px;
+  background: #fff;
+}
+
+.career-rich-text-editor .ql-toolbar.ql-snow {
+  border-color: #e2e8f0;
+  border-radius: 8px 8px 0 0;
+}
+
+.career-rich-text-editor .ql-container.ql-snow {
+  min-height: 130px;
+  border-color: #e2e8f0;
+  border-radius: 0 0 8px 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.career-rich-text-editor .ql-editor {
+  min-height: 130px;
+}
+
+.career-rich-text-editor:focus-within {
+  box-shadow: 0 0 0 2px rgb(59 130 246 / 20%);
+}
+
+.dark .career-rich-text-editor {
+  background: #0f172a;
+}
+
+.dark .career-rich-text-editor :is(.ql-toolbar.ql-snow, .ql-container.ql-snow) {
+  border-color: #334155;
+}
+
+.dark .career-rich-text-editor .ql-editor {
+  color: #e2e8f0;
+}
+
+.dark .career-rich-text-editor .ql-editor.ql-blank::before {
+  color: #64748b;
+}
+
+.dark .career-rich-text-editor .ql-stroke {
+  stroke: #cbd5e1;
+}
+
+.dark .career-rich-text-editor .ql-fill {
+  fill: #cbd5e1;
+}
+
+.dark .career-rich-text-editor .ql-picker {
+  color: #cbd5e1;
+}
+
+.career-rich-text-preview.ql-editor {
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit;
+  text-transform: none !important;
+}
+
+.career-rich-text-preview.ql-editor * {
+  font-family: inherit;
+  font-size: inherit;
+  text-transform: none !important;
+}
+
+.career-rich-text-preview :is(p, ol, ul, blockquote) + :is(p, ol, ul, blockquote) {
+  margin-top: 0.4rem;
+}
+
 @container career-loker (max-width: 1050px) {
   .career-loker-table-hint {
     display: flex;
