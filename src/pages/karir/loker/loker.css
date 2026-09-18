@@ -112,7 +112,9 @@
   text-transform: none !important;
 }
 
-.career-rich-text-preview :is(p, ol, ul, blockquote) + :is(p, ol, ul, blockquote) {
+.career-rich-text-preview
+  :is(p, ol, ul, blockquote)
+  + :is(p, ol, ul, blockquote) {
   margin-top: 0.4rem;
 }
 

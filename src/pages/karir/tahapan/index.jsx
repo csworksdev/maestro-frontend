@@ -104,8 +104,8 @@ const normalizeStoredFile = (value) => {
         url && url !== "[object Object]"
           ? url
           : key && key !== "[object Object]"
-          ? getMediaUrl(key)
-          : "",
+            ? getMediaUrl(key)
+            : "",
     };
 
     if (normalized.key || normalized.url) return normalized;
@@ -162,9 +162,10 @@ const loadImageFile = (file) =>
 const canvasToBlob = (canvas, type, quality) =>
   new Promise((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Gambar gagal dikompresi."))),
+      (blob) =>
+        blob ? resolve(blob) : reject(new Error("Gambar gagal dikompresi.")),
       type,
-      quality
+      quality,
     );
   });
 
@@ -181,7 +182,7 @@ const prepareUploadFile = async (file) => {
   const initialScale = Math.min(
     1,
     Math.sqrt(MAX_UPLOAD_BYTES / file.size) * 0.85,
-    2000 / Math.max(image.naturalWidth, image.naturalHeight)
+    2000 / Math.max(image.naturalWidth, image.naturalHeight),
   );
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(image.naturalWidth * initialScale));
@@ -1396,8 +1397,8 @@ const Tahapan = () => {
           error: error?.userMessage
             ? error.message
             : error?.response?.status === 413
-            ? "Ukuran file terlalu besar. Maksimal 900 KB."
-            : getErrorMessage(error, "File gagal diupload."),
+              ? "Ukuran file terlalu besar. Maksimal 900 KB."
+              : getErrorMessage(error, "File gagal diupload."),
         },
       }));
     }
@@ -1450,7 +1451,7 @@ const Tahapan = () => {
         {
           ...(application.customFieldValues || {}),
           [field.key]: "",
-        }
+        },
       );
       handleCustomDataChange(application, field, "");
       invalidatePipeline();
@@ -1479,14 +1480,23 @@ const Tahapan = () => {
     const customData = { ...(customDataApplication.customFieldValues || {}) };
     const draftKeys = [];
 
-    if (Object.values(customFileUploads).some((upload) => upload?.isPreparing)) {
-      Swal.fire("File sedang diproses", "Tunggu sebentar lalu coba kembali.", "info");
+    if (
+      Object.values(customFileUploads).some((upload) => upload?.isPreparing)
+    ) {
+      Swal.fire(
+        "File sedang diproses",
+        "Tunggu sebentar lalu coba kembali.",
+        "info",
+      );
       return;
     }
 
     for (const field of activeStage.customFields || []) {
       if (!field.required) continue;
-      const draftKey = getCustomDataDraftKey(customDataApplication.id, field.key);
+      const draftKey = getCustomDataDraftKey(
+        customDataApplication.id,
+        field.key,
+      );
       const hasDraft = Object.prototype.hasOwnProperty.call(
         customDataDrafts,
         draftKey,
@@ -1507,10 +1517,13 @@ const Tahapan = () => {
     const uploadedFileKeys = [];
     try {
       for (const field of activeStage.customFields || []) {
-        const draftKey = getCustomDataDraftKey(customDataApplication.id, field.key);
+        const draftKey = getCustomDataDraftKey(
+          customDataApplication.id,
+          field.key,
+        );
         const hasDraft = Object.prototype.hasOwnProperty.call(
           customDataDrafts,
-          draftKey
+          draftKey,
         );
         let value = hasDraft
           ? customDataDrafts[draftKey]
@@ -1549,13 +1562,16 @@ const Tahapan = () => {
     } catch (error) {
       await Promise.allSettled(
         uploadedFileKeys.map((fileKey) =>
-          deleteCareerApplicationAttachment(fileKey)
-        )
+          deleteCareerApplicationAttachment(fileKey),
+        ),
       );
       const message =
         error?.response?.status === 413
           ? "Ukuran file terlalu besar. Maksimal 900 KB."
-          : getErrorMessage(error, "File gagal diupload atau data gagal disimpan.");
+          : getErrorMessage(
+              error,
+              "File gagal diupload atau data gagal disimpan.",
+            );
       Swal.fire("Gagal", message, "error");
     } finally {
       setIsSubmittingCustomData(false);
@@ -1642,23 +1658,26 @@ const Tahapan = () => {
     });
   };
 
-  const columns = useMemo(
-    () => {
-      const customFields = activeStage?.customFields || [];
-      const customDataColumn = customFields.length
-        ? [
-            {
-              Header: "Data Tahapan",
-              accessor: "customFieldValues",
-              width: 290,
-              Cell: ({ row }) => {
-                const filledFieldCount = customFields.filter((field) =>
-                  hasCustomFieldValue(row.original.customFieldValues?.[field.key])
-                ).length;
-                const hasCustomData = filledFieldCount > 0;
-                const savedFields = customFields.filter((field) =>
-                  hasCustomFieldValue(row.original.customFieldValues?.[field.key])
-                );
+  const columns = useMemo(() => {
+    const customFields = activeStage?.customFields || [];
+    const customDataColumn = customFields.length
+      ? [
+          {
+            Header: "Data Tahapan",
+            accessor: "customFieldValues",
+            width: 290,
+            Cell: ({ row }) => {
+              const filledFieldCount = customFields.filter((field) =>
+                hasCustomFieldValue(
+                  row.original.customFieldValues?.[field.key],
+                ),
+              ).length;
+              const hasCustomData = filledFieldCount > 0;
+              const savedFields = customFields.filter((field) =>
+                hasCustomFieldValue(
+                  row.original.customFieldValues?.[field.key],
+                ),
+              );
 
               return (
                 <div className="flex min-w-0 flex-col items-center gap-2">
@@ -1695,52 +1714,52 @@ const Tahapan = () => {
                           : "Belum diisi"}
                       </span>
                     </span>
-                    </button>
-                    {savedFields.length ? (
-                      <div className="w-full min-w-0 space-y-1 rounded-md bg-slate-50 px-2.5 py-2 text-left dark:bg-slate-800/70">
-                        {savedFields.map((field) => {
-                          const { text, href } = getCustomFieldDisplay(
-                            row.original.customFieldValues[field.key]
-                          );
+                  </button>
+                  {savedFields.length ? (
+                    <div className="w-full min-w-0 space-y-1 rounded-md bg-slate-50 px-2.5 py-2 text-left dark:bg-slate-800/70">
+                      {savedFields.map((field) => {
+                        const { text, href } = getCustomFieldDisplay(
+                          row.original.customFieldValues[field.key],
+                        );
 
-                          return (
-                            <div key={field.key} className="min-w-0">
-                              <p
-                                className="truncate text-[9px] font-bold uppercase tracking-wide text-slate-400"
-                                title={field.label}
+                        return (
+                          <div key={field.key} className="min-w-0">
+                            <p
+                              className="truncate text-[9px] font-bold uppercase tracking-wide text-slate-400"
+                              title={field.label}
+                            >
+                              {field.label}
+                            </p>
+                            {href ? (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(event) => event.stopPropagation()}
+                                className="block max-w-full truncate text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-300"
+                                title={text}
                               >
-                                {field.label}
+                                {text}
+                              </a>
+                            ) : (
+                              <p
+                                className="break-words text-[11px] font-semibold text-slate-600 dark:text-slate-300"
+                                title={text}
+                              >
+                                {text}
                               </p>
-                              {href ? (
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(event) => event.stopPropagation()}
-                                  className="block max-w-full truncate text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-300"
-                                  title={text}
-                                >
-                                  {text}
-                                </a>
-                              ) : (
-                                <p
-                                  className="break-words text-[11px] font-semibold text-slate-600 dark:text-slate-300"
-                                  title={text}
-                                >
-                                  {text}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              },
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              );
             },
-          ]
-        : [];
+          },
+        ]
+      : [];
     const documentColumn = showDocumentColumn
       ? [
           {
@@ -2266,7 +2285,9 @@ const Tahapan = () => {
                 {pagedApplicants.results.map((application) => {
                   const customFields = activeStage?.customFields || [];
                   const filledFieldCount = customFields.filter((field) =>
-                    hasCustomFieldValue(application.customFieldValues?.[field.key])
+                    hasCustomFieldValue(
+                      application.customFieldValues?.[field.key],
+                    ),
                   ).length;
                   const hasCustomData = filledFieldCount > 0;
                   const certificateLinks =
@@ -2612,10 +2633,10 @@ const Tahapan = () => {
                         field.type === "date"
                           ? "Contoh: Tanggal Interview"
                           : field.type === "time"
-                          ? "Contoh: Jam Interview"
-                          : field.type === "upload"
-                          ? "Contoh: Upload KTP"
-                          : "Contoh: Link Zoom"
+                            ? "Contoh: Jam Interview"
+                            : field.type === "upload"
+                              ? "Contoh: Upload KTP"
+                              : "Contoh: Link Zoom"
                       }
                     />
                   </label>
@@ -2678,9 +2699,11 @@ const Tahapan = () => {
             className="btn-primary"
             onClick={handleSubmitCustomData}
             isLoading={customDataMutation.isPending || isSubmittingCustomData}
-            disabled={Object.values(customFileUploads).some(
-              (upload) => upload?.isPreparing || upload?.isDeleting
-            ) || isSubmittingCustomData}
+            disabled={
+              Object.values(customFileUploads).some(
+                (upload) => upload?.isPreparing || upload?.isDeleting,
+              ) || isSubmittingCustomData
+            }
           />
         }
       >
@@ -2715,7 +2738,8 @@ const Tahapan = () => {
               const storedFile = normalizeStoredFile(fieldValue);
               const storedFileKey = storedFile.key;
               const storedFileUrl = storedFile.url;
-              const isFileBusy = uploadState.isPreparing || uploadState.isDeleting;
+              const isFileBusy =
+                uploadState.isPreparing || uploadState.isDeleting;
 
               return (
                 <div
@@ -2734,15 +2758,17 @@ const Tahapan = () => {
                       {isDateField
                         ? "Tanggal"
                         : isTimeField
-                        ? "Jam"
-                        : isUploadField
-                        ? "Upload"
-                        : "Teks"}
+                          ? "Jam"
+                          : isUploadField
+                            ? "Upload"
+                            : "Teks"}
                     </span>
                   </span>
                   {isUploadField ? (
                     <div className="space-y-2">
-                      <label className={`flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-600 transition dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 ${isFileBusy || isSubmittingCustomData ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600"}`}>
+                      <label
+                        className={`flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-600 transition dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 ${isFileBusy || isSubmittingCustomData ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600"}`}
+                      >
                         <Icon
                           icon={
                             isFileBusy
@@ -2755,10 +2781,10 @@ const Tahapan = () => {
                         {uploadState.isPreparing
                           ? "Menyiapkan file..."
                           : uploadState.isDeleting
-                          ? "Menghapus file..."
-                          : uploadState.pendingFile || storedFileKey
-                          ? "Ganti file"
-                          : "Pilih file"}
+                            ? "Menghapus file..."
+                            : uploadState.pendingFile || storedFileKey
+                              ? "Ganti file"
+                              : "Pilih file"}
                         <input
                           type="file"
                           className="sr-only"
@@ -2766,7 +2792,11 @@ const Tahapan = () => {
                           onChange={(event) => {
                             const file = event.target.files?.[0];
                             if (file && customDataApplication) {
-                              handleCustomFileSelect(customDataApplication, field, file);
+                              handleCustomFileSelect(
+                                customDataApplication,
+                                field,
+                                file,
+                              );
                             }
                             event.target.value = "";
                           }}
@@ -2774,10 +2804,15 @@ const Tahapan = () => {
                       </label>
                       {uploadState.pendingFile ? (
                         <div className="flex min-w-0 items-center gap-2 rounded-md bg-warning-50 px-3 py-2 text-xs font-bold text-warning-700 dark:bg-warning-500/10 dark:text-warning-300">
-                          <Icon icon="heroicons-outline:paper-clip" width={16} />
+                          <Icon
+                            icon="heroicons-outline:paper-clip"
+                            width={16}
+                          />
                           <span className="min-w-0 flex-1 truncate">
                             {uploadState.fileName}
-                            <span className="ml-1 font-semibold">(siap diupload)</span>
+                            <span className="ml-1 font-semibold">
+                              (siap diupload)
+                            </span>
                           </span>
                           <button
                             type="button"
@@ -2785,7 +2820,7 @@ const Tahapan = () => {
                               handleCustomFileDelete(
                                 customDataApplication,
                                 field,
-                                fieldValue
+                                fieldValue,
                               )
                             }
                             className="flex-none text-danger-500 hover:text-danger-600"
@@ -2796,7 +2831,10 @@ const Tahapan = () => {
                         </div>
                       ) : storedFileKey ? (
                         <div className="flex min-w-0 items-center gap-2 rounded-md bg-success-50 px-3 py-2 text-xs font-bold text-success-600 dark:bg-success-500/10 dark:text-success-300">
-                          <Icon icon="heroicons-outline:paper-clip" width={16} />
+                          <Icon
+                            icon="heroicons-outline:paper-clip"
+                            width={16}
+                          />
                           <a
                             href={storedFileUrl}
                             target="_blank"
@@ -2813,7 +2851,7 @@ const Tahapan = () => {
                               handleCustomFileDelete(
                                 customDataApplication,
                                 field,
-                                fieldValue
+                                fieldValue,
                               )
                             }
                             className="flex-none text-danger-500 hover:text-danger-600 disabled:cursor-not-allowed disabled:opacity-50"
@@ -2830,59 +2868,61 @@ const Tahapan = () => {
                       ) : null}
                     </div>
                   ) : (
-                  <div className="relative">
-                    <input
-                      type={
-                        isDateField ? "date" : isTimeField ? "time" : "text"
-                      }
-                      value={fieldValue}
-                      onChange={(event) =>
-                        customDataApplication &&
-                        handleCustomDataChange(
-                          customDataApplication,
-                          field,
-                          event.target.value,
-                        )
-                      }
-                      onFocus={(event) => {
-                        if (usesNativePicker) {
-                          openNativePicker(event.currentTarget);
+                    <div className="relative">
+                      <input
+                        type={
+                          isDateField ? "date" : isTimeField ? "time" : "text"
                         }
-                      }}
-                      onClick={(event) => {
-                        if (usesNativePicker) {
-                          openNativePicker(event.currentTarget);
+                        value={fieldValue}
+                        onChange={(event) =>
+                          customDataApplication &&
+                          handleCustomDataChange(
+                            customDataApplication,
+                            field,
+                            event.target.value,
+                          )
                         }
-                      }}
-                      placeholder={`Masukkan ${field.label.toLowerCase()}`}
-                      className={`form-control career-stage-custom-input h-11 w-full min-w-0 rounded-md text-sm [color-scheme:light] dark:[color-scheme:dark] ${
-                        usesNativePicker ? "cursor-pointer pr-11" : ""
-                      }`}
-                      required={field.required}
-                    />
-                    {usesNativePicker ? (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          const input =
-                            event.currentTarget.previousElementSibling;
-                          input?.focus();
-                          openNativePicker(input);
-                        }}
-                        className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-primary-500 dark:hover:bg-slate-800"
-                        aria-label={isTimeField ? "Pilih jam" : "Pilih tanggal"}
-                      >
-                        <Icon
-                          icon={
-                            isTimeField
-                              ? "heroicons-outline:clock"
-                              : "heroicons-outline:calendar"
+                        onFocus={(event) => {
+                          if (usesNativePicker) {
+                            openNativePicker(event.currentTarget);
                           }
-                          width={17}
-                        />
-                      </button>
-                    ) : null}
-                  </div>
+                        }}
+                        onClick={(event) => {
+                          if (usesNativePicker) {
+                            openNativePicker(event.currentTarget);
+                          }
+                        }}
+                        placeholder={`Masukkan ${field.label.toLowerCase()}`}
+                        className={`form-control career-stage-custom-input h-11 w-full min-w-0 rounded-md text-sm [color-scheme:light] dark:[color-scheme:dark] ${
+                          usesNativePicker ? "cursor-pointer pr-11" : ""
+                        }`}
+                        required={field.required}
+                      />
+                      {usesNativePicker ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            const input =
+                              event.currentTarget.previousElementSibling;
+                            input?.focus();
+                            openNativePicker(input);
+                          }}
+                          className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-primary-500 dark:hover:bg-slate-800"
+                          aria-label={
+                            isTimeField ? "Pilih jam" : "Pilih tanggal"
+                          }
+                        >
+                          <Icon
+                            icon={
+                              isTimeField
+                                ? "heroicons-outline:clock"
+                                : "heroicons-outline:calendar"
+                            }
+                            width={17}
+                          />
+                        </button>
+                      ) : null}
+                    </div>
                   )}
                 </div>
               );

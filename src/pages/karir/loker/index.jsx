@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactQuill from "react-quill";
 import DOMPurify from "dompurify";
-import "react-quill/dist/quill.snow.css";
+import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -535,7 +535,7 @@ const Loker = () => {
       Swal.fire(
         "Form belum lengkap",
         `${emptyRichTextFields.join(", ")} wajib diisi.`,
-        "warning"
+        "warning",
       );
       return;
     }
