@@ -136,3 +136,6 @@ dist
 .firebase/hosting*
 .vscode/launch.json
 src/axios/config/index.js
+
+
+.DS_Store
