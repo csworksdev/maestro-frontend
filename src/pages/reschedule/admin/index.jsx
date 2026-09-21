@@ -759,9 +759,11 @@ const Reschedule = () => {
 
       <Card
         title="Daftar Pengajuan"
+        className="reschedule-list-card min-w-0"
+        bodyClass="min-w-0 p-4 sm:p-6"
         headerslot={
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+            <div className="inline-flex max-w-full flex-wrap rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
               {statusOptions.map((status) => (
                 <button
                   key={status.value}
@@ -777,7 +779,7 @@ const Reschedule = () => {
                 </button>
               ))}
             </div>
-            <div className="relative">
+            <div className="relative min-w-0 flex-1 sm:flex-none">
               <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
                 <Icon
                   icon="heroicons-outline:magnifying-glass"
@@ -788,7 +790,7 @@ const Reschedule = () => {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Cari siswa/pelatih"
-                className="h-9 w-56 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-300 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                className="h-9 w-full min-w-0 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-300 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:w-56"
               />
             </div>
             <button
@@ -822,6 +824,7 @@ const Reschedule = () => {
               tableId={"reschedule-admin-table"}
               listData={tableData}
               listColumn={columns}
+              tableMinWidth="1500px"
               isAction={false}
               isCheckbox={false}
               isPagination={false}

@@ -1,8 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import ReactQuill from "react-quill";
-import DOMPurify from "dompurify";
-import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -15,14 +12,21 @@ import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
 import {
+  hasCareerRichText,
+  isCareerRichTextPreserved,
+  sanitizeCareerRichText,
+} from "@/utils/careerRichText";
+import {
   addCareerJob,
   deleteCareerJob,
   editCareerJob,
+  getCareerJob,
   getBranches,
   getCareerJobs,
   getDepartments,
   updateCareerJobStatus,
 } from "@/axios/career/jobs";
+import CareerRichTextField from "./CareerRichTextField";
 import "./loker.css";
 
 const emptyForm = {
@@ -43,73 +47,16 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const stripHtml = (value) =>
-  String(value || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const serializeRichText = (value) =>
-  DOMPurify.sanitize(String(value || ""), {
-    USE_PROFILES: { html: true },
-  })
-    .replace(/<p><br\s*\/?><\/p>/gi, "<br>")
-    .trim();
-
-const richTextModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ color: [] }, { background: [] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ align: [] }, "blockquote"],
-    ["link"],
-    ["clean"],
-  ],
-};
-
-const richTextFormats = [
-  "header",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "color",
-  "background",
-  "list",
-  "bullet",
-  "align",
-  "blockquote",
-  "link",
-];
-
-const RichTextField = ({ label, value, onChange, placeholder }) => (
-  <div className="career-rich-text-field">
-    <span className="form-label">{label}</span>
-    <ReactQuill
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={richTextModules}
-      formats={richTextFormats}
-      placeholder={placeholder}
-      className="career-rich-text-editor"
-    />
-  </div>
-);
-
 const RichTextContent = ({ value, emptyText = "-" }) => {
-  const safeHtml = DOMPurify.sanitize(String(value || ""), {
-    USE_PROFILES: { html: true },
-  });
+  const safeHtml = sanitizeCareerRichText(value);
 
-  if (!stripHtml(safeHtml)) {
+  if (!hasCareerRichText(safeHtml)) {
     return <span>{emptyText}</span>;
   }
 
   return (
     <div
-      className="ql-editor career-rich-text-preview"
+      className="career-rich-text-preview"
       dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );
@@ -151,6 +98,11 @@ const getPaginatedResults = (payload) => {
   }
 
   return { count: 0, results: [] };
+};
+
+const getJobRecord = (response) => {
+  const payload = response?.data ?? response;
+  return payload?.data ?? payload?.result ?? payload;
 };
 
 const getId = (item, type) => {
@@ -230,6 +182,9 @@ const matchesSelectedOption = ({
 
 const Loker = () => {
   const formRef = useRef(null);
+  const descriptionEditorRef = useRef(null);
+  const requirementsEditorRef = useRef(null);
+  const benefitsEditorRef = useRef(null);
   const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -239,6 +194,7 @@ const Loker = () => {
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+  const [isEditLoading, setIsEditLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
   const departmentsQuery = useQuery({
@@ -401,8 +357,46 @@ const Loker = () => {
   };
 
   const addCareerJobMutation = useMutation({
-    mutationFn: addCareerJob,
-    onSuccess: () => {
+    mutationFn: async (data) => {
+      const created = getJobRecord(await addCareerJob(data));
+      const id = getId(created, "job");
+      if (!id) return { id: null, verificationError: true, changedFields: [] };
+
+      let saved;
+      try {
+        saved = getJobRecord(await getCareerJob(id));
+      } catch {
+        return { id, verificationError: true, changedFields: [] };
+      }
+      const changedFields = ["description", "requirements", "benefits"].filter(
+        (field) => !isCareerRichTextPreserved(data[field], saved?.[field]),
+      );
+      return { id, changedFields };
+    },
+    onSuccess: ({ id, changedFields, verificationError }) => {
+      if (!id) {
+        closeModal();
+        resetToFirstPage();
+        invalidateJobs();
+        Swal.fire(
+          "Penyimpanan perlu dicek",
+          "Loker dibuat, tetapi respons server tidak menyertakan ID untuk memeriksa format teks. Buka kembali loker dari daftar.",
+          "warning",
+        );
+        return;
+      }
+      if (changedFields.length || verificationError) {
+        setEditingJob({ id });
+        invalidateJobs();
+        Swal.fire(
+          verificationError ? "Penyimpanan perlu dicek" : "Format belum tersimpan",
+          verificationError
+            ? "Loker dibuat, tetapi isi terbaru belum dapat diperiksa. Editor tetap terbuka agar teks Anda aman."
+            : `Server mengubah format ${changedFields.join(", ")}. Editor tetap terbuka untuk memperbarui loker yang sama.`,
+          verificationError ? "warning" : "error",
+        );
+        return;
+      }
       closeModal();
       resetToFirstPage();
       invalidateJobs();
@@ -418,13 +412,55 @@ const Loker = () => {
   });
 
   const editCareerJobMutation = useMutation({
-    mutationFn: ({ id, data }) => editCareerJob(id, data),
+    mutationFn: async ({ id, data }) => {
+      await editCareerJob(id, data);
+      let savedJob;
+      try {
+        savedJob = getJobRecord(await getCareerJob(id));
+      } catch {
+        const error = new Error("Isi terbaru belum dapat diperiksa.");
+        error.code = "CAREER_VERIFICATION_FAILED";
+        throw error;
+      }
+      const fields = ["description", "requirements", "benefits"];
+      const changedFields = fields.filter(
+        (field) =>
+          !isCareerRichTextPreserved(data[field], savedJob?.[field]),
+      );
+
+      if (changedFields.length) {
+        const error = new Error("Format teks berubah setelah disimpan di server.");
+        error.code = "CAREER_FORMAT_CHANGED";
+        error.changedFields = changedFields;
+        throw error;
+      }
+
+      return savedJob;
+    },
     onSuccess: () => {
       closeModal();
       invalidateJobs();
       Swal.fire("Berhasil", "Loker berhasil diperbarui.", "success");
     },
     onError: (error) => {
+      if (error?.code === "CAREER_VERIFICATION_FAILED") {
+        invalidateJobs();
+        Swal.fire(
+          "Penyimpanan perlu dicek",
+          "Perubahan telah dikirim, tetapi isi terbaru belum dapat diperiksa. Editor tetap terbuka agar teks Anda aman.",
+          "warning",
+        );
+        return;
+      }
+      if (error?.code === "CAREER_FORMAT_CHANGED") {
+        invalidateJobs();
+        Swal.fire(
+          "Format belum tersimpan",
+          `Server mengubah format ${error.changedFields.join(", ")}. Editor tetap terbuka agar teks Anda tidak hilang.`,
+          "error",
+        );
+        return;
+      }
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Loker gagal diperbarui."),
@@ -488,47 +524,67 @@ const Loker = () => {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (job) => {
-    setEditingJob(job);
-    setForm({
-      department: job.departmentId,
-      branch: job.branchId,
-      title: job.title === "-" ? "" : job.title,
-      slug: job.slug,
-      description: job.description,
-      requirements: job.requirements,
-      benefits: job.benefits,
-      status: job.status,
-    });
-    setIsModalOpen(true);
+  const openEditModal = async (job) => {
+    if (isEditLoading) return;
+    try {
+      setIsEditLoading(true);
+      const detail = getJobRecord(await getCareerJob(job.id));
+      const latest = { ...job.raw, ...detail };
+      setEditingJob(job);
+      setForm({
+        department: latest.department_id || getId(latest.department, "department") || job.departmentId,
+        branch: latest.branch_id || getId(latest.branch, "branch") || job.branchId,
+        title: latest.title || "",
+        slug: latest.slug || "",
+        description: latest.description || "",
+        requirements: latest.requirements || "",
+        benefits: latest.benefits || "",
+        status: latest.status || job.status,
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      Swal.fire(
+        "Gagal memuat loker",
+        getErrorMessage(error, "Data terbaru loker belum dapat dimuat."),
+        "error",
+      );
+    } finally {
+      setIsEditLoading(false);
+    }
   };
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const buildPayload = () => ({
+  const buildPayload = (richValues) => ({
     department: form.department,
     branch: form.branch,
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
     // React Quill values are persisted as HTML strings so formatting remains
     // available to every frontend consuming the career jobs API.
-    description: serializeRichText(form.description),
-    requirements: serializeRichText(form.requirements),
-    benefits: serializeRichText(form.benefits),
+    description: sanitizeCareerRichText(richValues.description),
+    requirements: sanitizeCareerRichText(richValues.requirements),
+    benefits: sanitizeCareerRichText(richValues.benefits),
     status: form.status,
   });
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    const richValues = {
+      description: descriptionEditorRef.current?.getHTML() ?? form.description,
+      requirements: requirementsEditorRef.current?.getHTML() ?? form.requirements,
+      benefits: benefitsEditorRef.current?.getHTML() ?? form.benefits,
+    };
+
     const emptyRichTextFields = [
-      ["Deskripsi", form.description],
-      ["Requirements", form.requirements],
-      ["Benefits", form.benefits],
+      ["Deskripsi", richValues.description],
+      ["Requirements", richValues.requirements],
+      ["Benefits", richValues.benefits],
     ]
-      .filter(([, value]) => !stripHtml(value))
+      .filter(([, value]) => !hasCareerRichText(value))
       .map(([label]) => label);
 
     if (emptyRichTextFields.length) {
@@ -540,7 +596,7 @@ const Loker = () => {
       return;
     }
 
-    const payload = buildPayload();
+    const payload = buildPayload(richValues);
 
     if (editingJob) {
       editCareerJobMutation.mutate({ id: editingJob.id, data: payload });
@@ -619,7 +675,7 @@ const Loker = () => {
         accessor: "description",
         width: "42%",
         Cell: ({ cell }) => (
-          <div className="w-full max-w-[min(42rem,100%)] text-left text-slate-600 dark:text-slate-300">
+          <div className="w-full max-w-[min(42rem,100%)] text-start text-slate-600 dark:text-slate-300">
             <RichTextContent value={cell.value} />
           </div>
         ),
@@ -867,7 +923,7 @@ const Loker = () => {
                       <button
                         type="button"
                         onClick={() => openEditModal(job)}
-                        disabled={isMutating}
+                        disabled={isMutating || isEditLoading}
                         className="career-loker-mobile-action border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300"
                       >
                         <Icon icon="heroicons:pencil-square" width={17} />
@@ -916,6 +972,7 @@ const Loker = () => {
                 isAction
                 actionColumnClass="w-44 min-w-[11rem]"
                 tableMinWidth="780px"
+                bodyCellAlign="center"
               />
             </div>
 
@@ -1036,21 +1093,24 @@ const Loker = () => {
             </label>
           </div>
 
-          <RichTextField
+          <CareerRichTextField
+            ref={descriptionEditorRef}
             label="Deskripsi"
             value={form.description}
             onChange={(value) => updateForm("description", value)}
             placeholder="Tuliskan deskripsi pekerjaan."
           />
 
-          <RichTextField
+          <CareerRichTextField
+            ref={requirementsEditorRef}
             label="Requirements"
             value={form.requirements}
             onChange={(value) => updateForm("requirements", value)}
             placeholder="Tuliskan requirement pekerjaan."
           />
 
-          <RichTextField
+          <CareerRichTextField
+            ref={benefitsEditorRef}
             label="Benefits"
             value={form.benefits}
             onChange={(value) => updateForm("benefits", value)}

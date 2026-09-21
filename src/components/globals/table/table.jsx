@@ -69,6 +69,7 @@ const Table = ({
   onSelectionChange,
   getRowClassName,
   actionColumnClass = "w-36 min-w-[9rem]",
+  selectionColumnWidth = 48,
   fitToContainer = false,
   tableMinWidth,
   bodyCellAlign = "left",
@@ -161,6 +162,9 @@ const Table = ({
         hooks.visibleColumns.push((cols) => [
           {
             id: "selection",
+            width: selectionColumnWidth,
+            minWidth: selectionColumnWidth,
+            maxWidth: selectionColumnWidth,
             Header: ({ getToggleAllRowsSelectedProps, rows }) => (
               <IndeterminateCheckbox
                 {...getToggleAllRowsSelectedProps()}
