@@ -122,4 +122,44 @@ describe("CareerRichTextField", () => {
       `<${tag}><li><p>Syarat pertama</p></li><li><p>Syarat kedua</p></li><li><p>Syarat ketiga</p></li></${tag}><p></p>`,
     );
   });
+
+  it("turns selected hard-break lines into separate quote paragraphs", async () => {
+    const ref = createRef();
+    render(<CareerRichTextField ref={ref} label="Deskripsi" value="<p>Baris satu<br>Baris dua</p>" onChange={() => {}} />);
+    const editor = await waitFor(() => ref.current?.getEditor());
+    editor.commands.setTextSelection({ from: 1, to: editor.state.doc.content.size - 1 });
+    fireEvent.click(screen.getByRole("button", { name: "Kutipan" }));
+    expect(ref.current.getHTML()).toContain("<blockquote><p>Baris satu</p><p>Baris dua</p></blockquote>");
+  });
+
+  it("inserts a link without preselected text and rejects unsafe URLs", async () => {
+    const ref = createRef();
+    render(<CareerRichTextField ref={ref} label="Deskripsi" value="<p></p>" onChange={() => {}} />);
+    await waitFor(() => expect(ref.current?.getEditor()).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "Tautan" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Teks tautan" }), { target: { value: "Website" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Alamat tautan" }), { target: { value: "javascript:alert(1)" } });
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("valid");
+    fireEvent.change(screen.getByRole("textbox", { name: "Alamat tautan" }), { target: { value: "example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
+    expect(ref.current.getHTML()).toContain('<a target="_blank" rel="noopener noreferrer nofollow" href="https://example.com">Website</a>');
+  });
+
+  it("updates and removes an existing link without changing its text", async () => {
+    const ref = createRef();
+    render(<CareerRichTextField ref={ref} label="Deskripsi" value='<p><a href="https://old.example">Website</a></p>' onChange={() => {}} />);
+    const editor = await waitFor(() => ref.current?.getEditor());
+    editor.commands.setTextSelection({ from: 1, to: 8 });
+    fireEvent.click(screen.getByRole("button", { name: "Tautan" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Alamat tautan" }), { target: { value: "new.example" } });
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan" }));
+    expect(ref.current.getHTML()).toContain('href="https://new.example"');
+    expect(ref.current.getHTML()).toContain("Website");
+
+    editor.commands.setTextSelection({ from: 1, to: 8 });
+    fireEvent.click(screen.getByRole("button", { name: "Tautan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hapus tautan" }));
+    expect(ref.current.getHTML()).toContain("<p>Website</p>");
+  });
 });

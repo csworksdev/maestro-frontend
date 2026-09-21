@@ -15,3 +15,29 @@
     checked:before:ring-offset-2 checked:before:dark:ring-slate-700 
     checked:before:dark:ring-offset-0;
 }
+
+.responsive-table-main > table {
+  min-width: var(--responsive-table-min-width);
+}
+
+@media (max-width: 1279px) {
+  .responsive-table-viewport {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .responsive-table-track {
+    min-width: max(100%, var(--responsive-table-total-min-width));
+    width: max-content;
+  }
+
+  .responsive-table-viewport .responsive-table-main {
+    flex: 1 0 var(--responsive-table-min-width);
+    width: var(--responsive-table-min-width);
+    overflow-x: visible;
+  }
+
+}

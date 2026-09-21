@@ -459,8 +459,8 @@ const DashboardOperational = () => {
                   : "30 hari terakhir"
               }
             />
-            <div className="overflow-hidden rounded-lg border border-slate-100 dark:border-slate-700">
-              <table className="min-w-full divide-y divide-slate-100 text-left text-sm dark:divide-slate-700">
+            <div className="min-w-0 max-w-full overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700">
+              <table className="min-w-[620px] divide-y divide-slate-100 text-left text-sm dark:divide-slate-700">
                 <thead className="bg-slate-50 dark:bg-slate-800">
                   <tr>
                     <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-300">
@@ -548,8 +548,8 @@ const DashboardOperational = () => {
               }
             />
             {heatmapMatrix.hours.length && heatmapMatrix.pools.length ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-700">
+              <div className="min-w-0 max-w-full overflow-x-auto">
+                <table className="min-w-max divide-y divide-slate-100 text-sm dark:divide-slate-700">
                   <thead>
                     <tr>
                       <th className="sticky left-0 bg-white px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-300">

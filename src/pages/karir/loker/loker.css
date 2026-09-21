@@ -170,6 +170,7 @@
 
 .career-editor-link-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 8px;
@@ -177,12 +178,18 @@
 }
 
 .career-editor-link-row input {
-  min-width: 0;
-  flex: 1;
+  min-width: min(100%, 180px);
+  flex: 1 1 180px;
   padding: 5px 8px;
   border: 1px solid #cbd5e1;
   border-radius: 4px;
   font-size: 13px;
+}
+
+.career-editor-link-error {
+  flex-basis: 100%;
+  color: #b91c1c;
+  font-size: 12px;
 }
 
 .career-editor-link-row button {

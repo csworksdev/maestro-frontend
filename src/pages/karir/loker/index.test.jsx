@@ -38,7 +38,7 @@ beforeAll(() => {
 
 it("renders the Loker page and job list", async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
+  const { container } = render(
     <Provider store={store}>
       <QueryClientProvider client={client}>
         <Loker />
@@ -47,6 +47,7 @@ it("renders the Loker page and job list", async () => {
   );
 
   expect((await screen.findAllByText("Swimming Coach")).length).toBeGreaterThan(0);
+  expect(parseInt(container.querySelector(".responsive-table-viewport").style.getPropertyValue("--responsive-table-min-width"), 10)).toBeGreaterThanOrEqual(640);
   fireEvent.click(screen.getByRole("button", { name: "Tambah" }));
   expect(await screen.findByLabelText("Deskripsi")).toBeInTheDocument();
 });
