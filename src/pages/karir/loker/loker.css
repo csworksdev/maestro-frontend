@@ -38,26 +38,228 @@
   display: block;
 }
 
+.career-rich-text-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.career-rich-text-heading-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.career-rich-text-mode {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.career-rich-text-mode button {
+  padding: 4px 9px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.career-rich-text-mode button[aria-pressed="true"] {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.career-rich-text-source {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.career-rich-text-source:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
+
 .career-rich-text-editor {
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: #fff;
 }
 
-.career-rich-text-editor .ql-toolbar.ql-snow {
-  border-color: #e2e8f0;
-  border-radius: 8px 8px 0 0;
+.career-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 7px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
-.career-rich-text-editor .ql-container.ql-snow {
-  min-height: 130px;
-  border-color: #e2e8f0;
-  border-radius: 0 0 8px 8px;
-  font-family: inherit;
+.career-editor-toolbar select {
+  height: 32px;
+  max-width: 110px;
+  padding: 0 5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+}
+
+.career-editor-tool,
+.career-editor-color {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.career-editor-tool:hover,
+.career-editor-color:hover,
+.career-editor-tool[aria-pressed="true"] {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.career-editor-tool:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.career-editor-separator {
+  width: 1px;
+  height: 20px;
+  margin: 0 3px;
+  background: #cbd5e1;
+}
+
+.career-editor-color {
+  position: relative;
+  overflow: hidden;
+}
+
+.career-editor-color input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.career-editor-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.career-editor-link-row input {
+  min-width: min(100%, 180px);
+  flex: 1 1 180px;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.career-editor-link-error {
+  flex-basis: 100%;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.career-editor-link-row button {
+  flex: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.career-editor-content {
+  min-height: 150px;
+  padding: 12px 14px;
+  color: #334155;
   font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  outline: none;
 }
 
-.career-rich-text-editor .ql-editor {
-  min-height: 130px;
+.career-editor-content p + p {
+  margin-top: 0.65rem;
+}
+
+.career-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.career-editor-content :is(ul, ol),
+.career-rich-text-preview :is(ul, ol) {
+  margin: 0.4rem 0;
+  padding-left: 1.5rem;
+}
+
+.career-editor-content ul,
+.career-rich-text-preview ul {
+  list-style: disc;
+}
+
+.career-editor-content ol,
+.career-rich-text-preview ol {
+  list-style: decimal;
+}
+
+.career-editor-content blockquote,
+.career-rich-text-preview blockquote {
+  padding-left: 0.75rem;
+  border-left: 3px solid #94a3b8;
+}
+
+.career-editor-content :is(h1, h2, h3),
+.career-rich-text-preview :is(h1, h2, h3) {
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.career-editor-content h1,
+.career-rich-text-preview h1 { font-size: 1.35em; }
+.career-editor-content h2,
+.career-rich-text-preview h2 { font-size: 1.2em; }
+.career-editor-content h3,
+.career-rich-text-preview h3 { font-size: 1.1em; }
+
+.career-editor-content a,
+.career-rich-text-preview a {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 .career-rich-text-editor:focus-within {
@@ -66,33 +268,36 @@
 
 .dark .career-rich-text-editor {
   background: #0f172a;
+  border-color: #475569;
 }
 
-.dark .career-rich-text-editor :is(.ql-toolbar.ql-snow, .ql-container.ql-snow) {
-  border-color: #334155;
-}
-
-.dark .career-rich-text-editor .ql-editor {
+.dark .career-rich-text-mode,
+.dark .career-rich-text-source {
+  border-color: #475569;
+  background: #0f172a;
   color: #e2e8f0;
 }
 
-.dark .career-rich-text-editor .ql-editor.ql-blank::before {
-  color: #64748b;
+.dark .career-editor-toolbar,
+.dark .career-editor-link-row {
+  background: #1e293b;
+  border-color: #475569;
 }
 
-.dark .career-rich-text-editor .ql-stroke {
-  stroke: #cbd5e1;
+.dark .career-editor-content,
+.dark .career-editor-tool,
+.dark .career-editor-color {
+  color: #e2e8f0;
 }
 
-.dark .career-rich-text-editor .ql-fill {
-  fill: #cbd5e1;
+.dark .career-editor-toolbar select,
+.dark .career-editor-link-row input {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
 }
 
-.dark .career-rich-text-editor .ql-picker {
-  color: #cbd5e1;
-}
-
-.career-rich-text-preview.ql-editor {
+.career-rich-text-preview {
   min-height: 0;
   height: auto;
   padding: 0;
@@ -106,7 +311,7 @@
   text-transform: none !important;
 }
 
-.career-rich-text-preview.ql-editor * {
+.career-rich-text-preview * {
   font-family: inherit;
   font-size: inherit;
   text-transform: none !important;
@@ -166,6 +371,16 @@
 
   .career-loker-modal :is(input, select, textarea) {
     font-size: 16px;
+  }
+
+  .career-editor-toolbar {
+    padding: 6px;
+  }
+
+  .career-editor-tool,
+  .career-editor-color {
+    width: 36px;
+    height: 36px;
   }
 }
 

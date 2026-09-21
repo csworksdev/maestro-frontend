@@ -43,12 +43,13 @@ const TableXendit = memo(
 
     return (
       <Card noborder>
-        <div className="flex">
+        <div className="min-w-0 max-w-full">
           {/* Scrollable Table */}
-          <div className="overflow-x-auto flex-grow -mx-1 scrollable-body">
+          <div className="min-w-0 max-w-full overflow-x-auto scrollable-body">
             <table
               {...getTableProps()}
               className="table table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+              style={{ minWidth: `${Math.max(640, columns.length * 150)}px` }}
             >
               <thead className="border-t border-slate-100 dark:border-slate-800">
                 {headerGroups.map((headerGroup, index) => (

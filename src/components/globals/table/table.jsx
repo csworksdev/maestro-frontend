@@ -69,6 +69,7 @@ const Table = ({
   onSelectionChange,
   getRowClassName,
   actionColumnClass = "w-36 min-w-[9rem]",
+  selectionColumnWidth = 48,
   fitToContainer = false,
   tableMinWidth,
   bodyCellAlign = "left",
@@ -126,6 +127,11 @@ const Table = ({
       ),
     [columns, hiddenColumnIds, isColumnLocked],
   );
+  const responsiveMinWidth = Math.max(
+    640,
+    visibleColumns.reduce((width, column) => width + Math.max(Number(column.minWidth || column.width) || 120, 150), 0) +
+      (isCheckbox ? selectionColumnWidth : 0),
+  );
 
   const headerDensityClass = fitToContainer
     ? "text-[11px] !px-3 !py-3"
@@ -161,6 +167,9 @@ const Table = ({
         hooks.visibleColumns.push((cols) => [
           {
             id: "selection",
+            width: selectionColumnWidth,
+            minWidth: selectionColumnWidth,
+            maxWidth: selectionColumnWidth,
             Header: ({ getToggleAllRowsSelectedProps, rows }) => (
               <IndeterminateCheckbox
                 {...getToggleAllRowsSelectedProps()}
@@ -400,7 +409,7 @@ const Table = ({
 
   return (
     // <Card noborder className="overflow-hidden" bodyClass="p-4 sm:p-5">
-    <div className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+    <div className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
@@ -506,10 +515,17 @@ const Table = ({
           </Dropdown>
         </div>
       </div>
-      <div className="flex">
+      <div
+        className="responsive-table-viewport"
+        style={{
+          "--responsive-table-min-width": `${responsiveMinWidth}px`,
+          "--responsive-table-total-min-width": `${responsiveMinWidth + (isAction ? 144 : 0)}px`,
+        }}
+      >
+        <div className="responsive-table-track flex">
         {/* Main Table */}
         <div
-          className={`min-w-0 flex-grow scrollable-body ${
+          className={`responsive-table-main min-w-0 flex-grow scrollable-body ${
             fitToContainer ? "overflow-x-hidden" : "overflow-x-auto"
           }`}
         >
@@ -545,6 +561,7 @@ const Table = ({
             </table>
           </div>
         )}
+        </div>
       </div>
     </div>
     // </Card>

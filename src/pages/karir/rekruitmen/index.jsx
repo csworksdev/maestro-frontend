@@ -1246,12 +1246,12 @@ const Rekruitmen = () => {
       {
         Header: "Nama",
         accessor: "name",
-        width: "20%",
+        width: "24%",
         Cell: ({ row }) => (
-          <div className="flex max-w-full min-w-0 items-center justify-between gap-3 text-left">
+          <div className="flex max-w-full min-w-0 items-center justify-between gap-2 text-left">
             <div className="min-w-0 flex-1">
               <p
-                className="truncate whitespace-nowrap font-semibold text-slate-700 dark:text-slate-200"
+                className="break-words whitespace-normal font-semibold text-slate-700 dark:text-slate-200"
                 title={row.original.name}
               >
                 {row.original.name}
@@ -1264,7 +1264,7 @@ const Rekruitmen = () => {
                   }
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-1 block truncate whitespace-nowrap text-xs font-medium text-success-600 hover:underline"
+                  className="mt-1 block break-words whitespace-normal text-xs font-medium text-success-600 hover:underline"
                   onClick={(event) => event.stopPropagation()}
                   title={row.original.phoneNumber}
                 >
@@ -1813,6 +1813,7 @@ const Rekruitmen = () => {
                 actionColumnClass="w-36 min-w-[9rem]"
                 bodyCellAlign="center"
                 tableMinWidth="860px"
+                selectionColumnWidth={48}
               />
             </div>
 
