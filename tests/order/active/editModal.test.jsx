@@ -124,6 +124,9 @@ describe("Edit order modal", () => {
       />,
     );
 
+    expect(screen.queryByRole("heading", { name: "Ganti Hari" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Ganti Jam" })).not.toBeInTheDocument();
+
     await waitFor(() => {
       expect(mockGetKolamByBranch).toHaveBeenCalledWith(3);
       expect(mockGetProdukPool).toHaveBeenCalledWith(9);
