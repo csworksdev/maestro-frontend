@@ -9,6 +9,7 @@ import FilterSidebar from "@/components/ui/FilterSidebar";
 import Table from "@/components/globals/table/table";
 import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
@@ -507,8 +508,9 @@ const Loker = () => {
     deleteCareerJobMutation.isPending ||
     updateStatusMutation.isPending;
 
-  const handleSearch = () => {
-    setSearchQuery(searchInput);
+  const handleSearch = (value = searchInput) => {
+    setSearchInput(value);
+    setSearchQuery(value);
     resetToFirstPage();
   };
 
@@ -787,33 +789,14 @@ const Loker = () => {
           />
         }
       >
-        <div className="mb-6">
-          <div className="relative min-w-0">
-            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-              <Icon icon="heroicons-outline:search" width={20} />
-            </div>
-            <input
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  handleSearch();
-                }
-              }}
-              placeholder="Cari loker"
-              className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            />
-            <button
-              type="button"
-              onClick={handleSearch}
-              className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600"
-            >
-              <Icon icon="heroicons-outline:search" width={16} />
-              Cari
-            </button>
-          </div>
-
+        <div className="mb-1">
+          <Search
+            searchValue={searchInput}
+            handleSearch={handleSearch}
+            isLoading={jobsQuery.isFetching}
+            placeholder="Cari loker"
+            align="left"
+          />
         </div>
 
         {!jobsQuery.isError &&

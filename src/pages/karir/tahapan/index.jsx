@@ -10,6 +10,7 @@ import FilterSidebar from "@/components/ui/FilterSidebar";
 import Tooltip from "@/components/ui/Tooltip";
 import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
@@ -1120,8 +1121,9 @@ const Tahapan = () => {
     resetToFirstPage();
   };
 
-  const handleSearch = () => {
-    setSearchQuery(searchInput);
+  const handleSearch = (value = searchInput) => {
+    setSearchInput(value);
+    setSearchQuery(value);
     resetToFirstPage();
   };
 
@@ -2159,32 +2161,15 @@ const Tahapan = () => {
           }
         >
           <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full min-w-0 max-w-xl flex-1">
-              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon icon="heroicons-outline:search" width={20} />
-              </div>
-              <input
-                type="search"
-                value={searchInput}
+            <div className="w-full min-w-0 max-w-[460px] flex-1">
+              <Search
+                searchValue={searchInput}
+                handleSearch={handleSearch}
+                isLoading={applicationsQuery.isFetching}
                 disabled={!departmentId || !activeStageId}
-                onChange={(event) => setSearchInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
                 placeholder="Cari pelamar"
-                className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:disabled:bg-slate-800"
+                align="left"
               />
-              <button
-                type="button"
-                onClick={handleSearch}
-                disabled={!departmentId || !activeStageId}
-                className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Icon icon="heroicons-outline:search" width={16} />
-                Cari
-              </button>
             </div>
 
             <div className="rounded-md bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-300">
