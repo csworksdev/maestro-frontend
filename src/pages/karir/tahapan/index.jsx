@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import Tooltip from "@/components/ui/Tooltip";
 import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -20,6 +21,7 @@ import {
   editCareerStage,
   getBranches,
   getCareerApplications,
+  getCareerApplicationFormOptions,
   getCareerJobs,
   getCareerStages,
   getDepartments,
@@ -321,19 +323,6 @@ const normalizeOptions = (payload, mapper) => {
   return results.map(mapper).filter((option) => option.value && option.label);
 };
 
-const mergeOptions = (baseOptions, dynamicOptions) => {
-  const seen = new Set();
-  return [...baseOptions, ...dynamicOptions].filter((option) => {
-    const key = normalizeValue(option.value);
-    if (!key || seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
-};
-
 const optionFromDisplayFields = (items, valueKey, labelKey) => {
   const seen = new Set();
 
@@ -348,6 +337,26 @@ const optionFromDisplayFields = (items, valueKey, labelKey) => {
         return false;
       }
 
+      seen.add(key);
+      return true;
+    });
+};
+
+const normalizeFormOptions = (options) => {
+  if (!Array.isArray(options)) return [];
+  const seen = new Set();
+  return options
+    .map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: option?.value ?? "",
+            label: option?.label ?? option?.value ?? "",
+          },
+    )
+    .filter((option) => {
+      const key = normalizeValue(option.value);
+      if (!key || !option.label || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -419,82 +428,6 @@ const stageToneClass = {
     "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
   teal: "border-teal-100 bg-teal-50 text-teal-600 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-300",
 };
-
-const genderOptions = [
-  { value: "male", label: "Laki-laki" },
-  { value: "female", label: "Perempuan" },
-];
-
-const maritalStatusOptions = [
-  { value: "single", label: "Belum Menikah" },
-  { value: "married", label: "Menikah" },
-  { value: "divorced", label: "Cerai" },
-  { value: "widowed", label: "Duda/Janda" },
-];
-
-const religionOptions = [
-  { value: "islam", label: "Islam" },
-  { value: "kristen", label: "Kristen" },
-  { value: "katolik", label: "Katolik" },
-  { value: "hindu", label: "Hindu" },
-  { value: "buddha", label: "Buddha" },
-  { value: "konghucu", label: "Konghucu" },
-];
-
-const educationLevelOptions = [
-  { value: "sma", label: "SMA" },
-  { value: "smk", label: "SMK" },
-  { value: "d1", label: "D1" },
-  { value: "d2", label: "D2" },
-  { value: "d3", label: "D3" },
-  { value: "d4", label: "D4" },
-  { value: "s1", label: "S1" },
-  { value: "s2", label: "S2" },
-  { value: "s3", label: "S3" },
-];
-
-const educationStatusOptions = [
-  { value: "student", label: "Mahasiswa" },
-  { value: "graduated", label: "Lulusan" },
-];
-
-const contractSystemOptions = [
-  { value: "fulltime", label: "Full Time" },
-  { value: "full_time", label: "Full Time" },
-  { value: "part_time", label: "Part Time" },
-  { value: "freelance", label: "Freelance" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "internship", label: "Internship" },
-];
-
-const applicationStatusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "Dalam Proses" },
-  { value: "accepted", label: "Lulus" },
-  { value: "rejected", label: "Tidak Lulus" },
-];
-
-const coachExperienceOptions = [
-  { value: "no_experience", label: "0 Tahun" },
-  { value: "less_than_1_year", label: "< 1 Tahun" },
-  { value: "1_year", label: "1 Tahun" },
-  { value: "2_years", label: "2 Tahun" },
-  { value: "more_than_3_years", label: "> 3 Tahun" },
-];
-
-const sourceOptions = [
-  { value: "instagram", label: "Instagram" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "website", label: "Website" },
-  { value: "referral", label: "Referral" },
-  { value: "jobstreet", label: "Jobstreet" },
-  { value: "other", label: "Lainnya" },
-];
-
-const workingOptions = [
-  { value: "true", label: "Ya" },
-  { value: "false", label: "Tidak" },
-];
 
 const getStageTone = (status) => {
   const value = normalizeValue(status);
@@ -702,6 +635,7 @@ const Tahapan = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [editingStage, setEditingStage] = useState(null);
   const [stageForm, setStageForm] = useState(emptyStageForm);
@@ -752,6 +686,15 @@ const Tahapan = () => {
       });
       return normalizeOptions(res.data, optionFromBranch);
     },
+  });
+
+  const applicationFormOptionsQuery = useQuery({
+    queryKey: ["careerApplicationFormOptions"],
+    queryFn: async () => {
+      const res = await getCareerApplicationFormOptions();
+      return res?.data?.data ?? res?.data ?? {};
+    },
+    staleTime: 30 * 60 * 1000,
   });
 
   const stagesQuery = useQuery({
@@ -982,17 +925,13 @@ const Tahapan = () => {
           contractSystemFilter,
           application.contractSystem,
           application.contractSystemDisplay,
-          contractSystemOptions.find(
-            (option) => option.value === contractSystemFilter,
-          )?.label,
+          undefined,
         ) &&
         matchesOption(
           statusFilter,
           application.applicationStatus,
           application.applicationStatusDisplay,
-          applicationStatusOptions.find(
-            (option) => option.value === statusFilter,
-          )?.label,
+          undefined,
         ) &&
         matchesOption(
           workingFilter,
@@ -1002,8 +941,7 @@ const Tahapan = () => {
             : application.isWorking === false
               ? "Tidak"
               : "",
-          workingOptions.find((option) => option.value === workingFilter)
-            ?.label,
+          undefined,
         ) &&
         matchesMultiOption(genderFilter, application.gender) &&
         matchesMultiOption(maritalStatusFilter, application.maritalStatus) &&
@@ -1061,31 +999,60 @@ const Tahapan = () => {
     return counts;
   }, [mappedApplications]);
 
-  const dynamicOptions = useMemo(
-    () => ({
-      contractSystems: optionFromDisplayFields(
-        mappedApplications,
-        "contractSystem",
-        "contractSystemDisplay",
-      ),
-      statuses: optionFromDisplayFields(
+  const applicationStatusOptions = useMemo(
+    () =>
+      optionFromDisplayFields(
         mappedApplications,
         "applicationStatus",
         "applicationStatusDisplay",
       ),
-      coachExperiences: optionFromDisplayFields(
-        mappedApplications,
+    [mappedApplications],
+  );
+
+  const formFilterOptions = useMemo(() => {
+    const options = applicationFormOptionsQuery.data ?? {};
+    const withFallback = (formKey, valueKey, labelKey) => {
+      const formValues = normalizeFormOptions(options[formKey]);
+      return formValues.length
+        ? formValues
+        : optionFromDisplayFields(mappedApplications, valueKey, labelKey);
+    };
+
+    return {
+      genders: withFallback("gender", "gender", "genderDisplay"),
+      maritalStatuses: withFallback(
+        "marital_status",
+        "maritalStatus",
+        "maritalStatusDisplay",
+      ),
+      religions: withFallback("religion", "religion", "religionDisplay"),
+      educationLevels: withFallback(
+        "education_level",
+        "educationLevel",
+        "educationLevelDisplay",
+      ),
+      educationStatuses: withFallback(
+        "education_status",
+        "educationStatus",
+        "educationStatusDisplay",
+      ),
+      contractSystems: withFallback(
+        "contract_system",
+        "contractSystem",
+        "contractSystemDisplay",
+      ),
+      coachExperiences: withFallback(
+        "coach_experience",
         "coachExperience",
         "coachExperienceDisplay",
       ),
-      sources: optionFromDisplayFields(
-        mappedApplications,
-        "source",
-        "sourceDisplay",
-      ),
-    }),
-    [mappedApplications],
-  );
+      sources: withFallback("job_source", "source", "sourceDisplay"),
+      working: [
+        { value: "true", label: "Ya" },
+        { value: "false", label: "Tidak" },
+      ],
+    };
+  }, [applicationFormOptionsQuery.data, mappedApplications]);
 
   const activeFilterCount = [
     departmentId,
@@ -1112,13 +1079,13 @@ const Tahapan = () => {
     branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
     contractSystems: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(contractSystemOptions, dynamicOptions.contractSystems),
+      ...formFilterOptions.contractSystems,
     ],
     statuses: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(applicationStatusOptions, dynamicOptions.statuses),
+      ...applicationStatusOptions,
     ],
-    working: [{ value: "", label: "Semua kondisi" }, ...workingOptions],
+    working: [{ value: "", label: "Semua kondisi" }, ...formFilterOptions.working],
   };
 
   const pageCount = Math.max(
@@ -1944,7 +1911,15 @@ const Tahapan = () => {
 
   return (
     <div className="career-stages-page min-w-0 space-y-5">
-      <Card bodyClass="min-w-0 p-4 sm:p-5">
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Tahapan"
+        activeCount={activeFilterCount}
+        widthClass="max-w-lg"
+        contentClassName="career-stages-filter-sidebar"
+      >
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -2023,53 +1998,50 @@ const Tahapan = () => {
             <div className="career-stages-advanced-grid grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
               <CheckboxGroup
                 title="Gender"
-                options={genderOptions}
+                options={formFilterOptions.genders}
                 selectedValues={genderFilter}
                 onChange={toggleMultiFilter(setGenderFilter)}
               />
               <CheckboxGroup
                 title="Status Pernikahan"
-                options={maritalStatusOptions}
+                options={formFilterOptions.maritalStatuses}
                 selectedValues={maritalStatusFilter}
                 onChange={toggleMultiFilter(setMaritalStatusFilter)}
               />
               <CheckboxGroup
                 title="Agama"
-                options={religionOptions}
+                options={formFilterOptions.religions}
                 selectedValues={religionFilter}
                 onChange={toggleMultiFilter(setReligionFilter)}
               />
               <CheckboxGroup
                 title="Pendidikan"
-                options={educationLevelOptions}
+                options={formFilterOptions.educationLevels}
                 selectedValues={educationLevelFilter}
                 onChange={toggleMultiFilter(setEducationLevelFilter)}
               />
               <CheckboxGroup
                 title="Status Pendidikan"
-                options={educationStatusOptions}
+                options={formFilterOptions.educationStatuses}
                 selectedValues={educationStatusFilter}
                 onChange={toggleMultiFilter(setEducationStatusFilter)}
               />
               <CheckboxGroup
                 title="Pengalaman Coach"
-                options={mergeOptions(
-                  coachExperienceOptions,
-                  dynamicOptions.coachExperiences,
-                )}
+                options={formFilterOptions.coachExperiences}
                 selectedValues={coachExperienceFilter}
                 onChange={toggleMultiFilter(setCoachExperienceFilter)}
               />
               <CheckboxGroup
                 title="Sumber"
-                options={mergeOptions(sourceOptions, dynamicOptions.sources)}
+                options={formFilterOptions.sources}
                 selectedValues={sourceFilter}
                 onChange={toggleMultiFilter(setSourceFilter)}
               />
             </div>
           )}
         </div>
-      </Card>
+      </FilterSidebar>
 
       <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
         <Card

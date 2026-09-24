@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/Icon";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import useCareerDashboard from "./useCareerDashboard";
 import { EMPTY_FILTERS, filterParams, formatNumber, number } from "./data";
 import {
@@ -152,6 +153,7 @@ function DashboardKarir() {
   const [draft, setDraft] = useState({ ...EMPTY_FILTERS });
   const [view, setView] = useState("overview");
   const [dateError, setDateError] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const viewScrollPosition = useRef(null);
   const dashboard = useCareerDashboard(filters);
   const {
@@ -165,30 +167,22 @@ function DashboardKarir() {
   } = dashboard;
   const data = summary.data;
   const activeFilters = Object.keys(filterParams(filters)).length;
-  const dirty = Object.keys(EMPTY_FILTERS).some(
-    (key) => draft[key] !== filters[key],
-  );
   const changeFilter = (event) => {
-    setDraft((previous) => ({
-      ...previous,
+    const nextFilters = {
+      ...draft,
       [event.target.name]: event.target.value,
-    }));
-    setDateError("");
-  };
-  const applyFilters = (event) => {
-    event.preventDefault();
+    };
+    setDraft(nextFilters);
     if (
-      draft.filter_date_from &&
-      draft.filter_date_to &&
-      draft.filter_date_from > draft.filter_date_to
+      nextFilters.filter_date_from &&
+      nextFilters.filter_date_to &&
+      nextFilters.filter_date_from > nextFilters.filter_date_to
     ) {
-      setDateError(
-        "Tanggal akhir harus sama dengan atau setelah tanggal mulai.",
-      );
+      setDateError("Tanggal akhir harus sama dengan atau setelah tanggal mulai.");
       return;
     }
     setDateError("");
-    setFilters({ ...draft });
+    setFilters(nextFilters);
   };
   const resetFilters = () => {
     setDraft({ ...EMPTY_FILTERS });
@@ -215,6 +209,15 @@ function DashboardKarir() {
 
   return (
     <div className="career-dashboard">
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Dashboard Karir"
+        activeCount={activeFilters}
+        widthClass="max-w-lg"
+        contentClassName="career-dashboard-filter-sidebar"
+      >
       <section className="cd-filter-panel" aria-label="Filter dashboard">
         <div className="cd-filter-heading">
           <div>
@@ -226,7 +229,7 @@ function DashboardKarir() {
           </div>
           <span>Sesuaikan lingkup data yang ingin dilihat</span>
         </div>
-        <form onSubmit={applyFilters} noValidate>
+        <form onSubmit={(event) => event.preventDefault()} noValidate>
           <div className="cd-filter-grid">
             <FilterField
               label="Departemen"
@@ -281,14 +284,11 @@ function DashboardKarir() {
               aria-describedby={dateError ? "cd-date-error" : undefined}
             />
             <div className="cd-filter-actions">
-              <button type="submit" className="cd-button cd-button-primary">
-                Terapkan filter
-              </button>
               <button
                 type="button"
                 className="cd-button cd-button-light"
                 onClick={resetFilters}
-                disabled={!activeFilters && !dirty}
+                disabled={!activeFilters}
                 aria-label="Reset filter"
               >
                 <Icon icon="heroicons-outline:refresh" width={17} />
@@ -299,11 +299,6 @@ function DashboardKarir() {
           {dateError && (
             <p className="cd-filter-error" id="cd-date-error" role="alert">
               {dateError}
-            </p>
-          )}
-          {dirty && !dateError && (
-            <p className="cd-filter-hint" role="status">
-              Filter berubah. Klik Terapkan filter untuk memperbarui data.
             </p>
           )}
         </form>
@@ -329,6 +324,7 @@ function DashboardKarir() {
           </div>
         )}
       </section>
+      </FilterSidebar>
 
       <div className="cd-scope" aria-live="polite">
         <span>

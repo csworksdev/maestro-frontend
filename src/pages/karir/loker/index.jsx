@@ -5,6 +5,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import Table from "@/components/globals/table/table";
 import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -190,6 +191,7 @@ const Loker = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -753,6 +755,25 @@ const Loker = () => {
 
   return (
     <div className="career-loker-page grid min-w-0 grid-cols-1">
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Loker"
+        activeCount={[departmentFilter, branchFilter].filter(Boolean).length}
+      >
+        <div className="flex flex-col gap-4">
+          <select value={departmentFilter} onChange={(event) => { setDepartmentFilter(event.target.value); resetToFirstPage(); }} className={`${filterSelectClass} w-full`} aria-label="Filter department">
+            <option value="">Semua department</option>
+            {departmentOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <select value={branchFilter} onChange={(event) => { setBranchFilter(event.target.value); resetToFirstPage(); }} className={`${filterSelectClass} w-full`} aria-label="Filter cabang">
+            <option value="">Semua cabang</option>
+            {branchOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <button type="button" onClick={handleResetFilter} className="btn btn-light w-full">Reset Filter</button>
+        </div>
+      </FilterSidebar>
       <Card
         title="Loker"
         bodyClass="p-4 sm:p-6"
@@ -766,8 +787,8 @@ const Loker = () => {
           />
         }
       >
-        <div className="mb-6 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_minmax(170px,0.75fr)]">
-          <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
+        <div className="mb-6">
+          <div className="relative min-w-0">
             <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <Icon icon="heroicons-outline:search" width={20} />
             </div>
@@ -793,48 +814,6 @@ const Loker = () => {
             </button>
           </div>
 
-          <select
-            value={departmentFilter}
-            onChange={(event) => {
-              setDepartmentFilter(event.target.value);
-              resetToFirstPage();
-            }}
-            className={`${filterSelectClass} w-full min-w-0`}
-            aria-label="Filter department"
-          >
-            <option value="">Semua department</option>
-            {departmentOptions.map((department) => (
-              <option key={department.value} value={department.value}>
-                {department.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={branchFilter}
-            onChange={(event) => {
-              setBranchFilter(event.target.value);
-              resetToFirstPage();
-            }}
-            className={`${filterSelectClass} w-full min-w-0`}
-            aria-label="Filter cabang"
-          >
-            <option value="">Semua cabang</option>
-            {branchOptions.map((branch) => (
-              <option key={branch.value} value={branch.value}>
-                {branch.label}
-              </option>
-            ))}
-          </select>
-
-          <button
-            type="button"
-            onClick={handleResetFilter}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-100 px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 sm:col-span-2 xl:col-span-1"
-          >
-            <Icon icon="heroicons-outline:arrow-path" width={18} />
-            Reset Filter
-          </button>
         </div>
 
         {!jobsQuery.isError &&

@@ -8,6 +8,10 @@ export const getCareerJobs = (params) => {
   return axiosConfig.get("/api/career/jobs/", { params });
 };
 
+export const getCareerApplicationFormOptions = () => {
+  return axiosConfig.get("/career/jobs/form/");
+};
+
 export const getCareerJob = (id) => {
   return axiosConfig.get(`/api/career/jobs/${id}/`);
 };

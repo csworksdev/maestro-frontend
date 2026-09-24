@@ -15,6 +15,27 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* Sidebar width is independent from the page container query. Keep fields
+   comfortably readable instead of inheriting the page's six-column grid. */
+.career-recruitment-filter-sidebar .career-recruitment-filter-grid,
+.career-recruitment-filter-sidebar .career-recruitment-advanced-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.career-recruitment-filter-sidebar label,
+.career-recruitment-filter-sidebar select,
+.career-recruitment-filter-sidebar input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .career-recruitment-filter-sidebar .career-recruitment-filter-grid,
+  .career-recruitment-filter-sidebar .career-recruitment-advanced-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 .career-recruitment-table-hint {
   display: none;
 }
