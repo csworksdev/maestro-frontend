@@ -502,9 +502,103 @@ const Loker = () => {
     },
   });
 
+  const duplicateCareerJobMutation = useMutation({
+    mutationFn: async (job) => {
+      const detail = getJobRecord(await getCareerJob(job.id));
+      const latest = { ...job.raw, ...detail };
+      const originalTitle = latest.title || job.title || "Loker";
+      const payload = {
+        department:
+          latest.department_id ||
+          getId(latest.department, "department") ||
+          job.departmentId,
+        branch:
+          latest.branch_id ||
+          getId(latest.branch, "branch") ||
+          job.branchId,
+        title: `${originalTitle} (Salinan)`,
+        slug: `${slugify(originalTitle)}-salinan-${Date.now()}`,
+        description: sanitizeCareerRichText(
+          latest.description || job.description,
+        ),
+        requirements: sanitizeCareerRichText(
+          latest.requirements || job.requirements,
+        ),
+        benefits: sanitizeCareerRichText(latest.benefits || job.benefits),
+        status: "draft",
+      };
+      const missingSourceFields = [
+        "description",
+        "requirements",
+        "benefits",
+      ].filter((field) => !hasCareerRichText(payload[field]));
+
+      if (missingSourceFields.length) {
+        const error = new Error(
+          `Data sumber ${missingSourceFields.join(", ")} kosong dan tidak dapat diduplikat.`,
+        );
+        error.code = "DUPLICATE_SOURCE_INCOMPLETE";
+        throw error;
+      }
+
+      const created = getJobRecord(await addCareerJob(payload));
+      const duplicatedJobId = getId(created, "job");
+
+      if (!duplicatedJobId) {
+        const error = new Error(
+          "Server tidak mengembalikan ID loker hasil duplikasi.",
+        );
+        error.code = "DUPLICATE_ID_MISSING";
+        throw error;
+      }
+
+      let savedJob = getJobRecord(await getCareerJob(duplicatedJobId));
+      const richTextFields = ["description", "requirements", "benefits"];
+      const needsRecovery = richTextFields.some(
+        (field) =>
+          !hasCareerRichText(savedJob?.[field]) ||
+          !isCareerRichTextPreserved(payload[field], savedJob?.[field]),
+      );
+
+      if (needsRecovery) {
+        await editCareerJob(duplicatedJobId, payload);
+        savedJob = getJobRecord(await getCareerJob(duplicatedJobId));
+      }
+
+      const incompleteFields = richTextFields.filter(
+        (field) =>
+          !hasCareerRichText(savedJob?.[field]) ||
+          !isCareerRichTextPreserved(payload[field], savedJob?.[field]),
+      );
+
+      if (incompleteFields.length) {
+        const error = new Error(
+          `Isi ${incompleteFields.join(", ")} belum tersimpan lengkap.`,
+        );
+        error.code = "DUPLICATE_CONTENT_INCOMPLETE";
+        throw error;
+      }
+
+      return savedJob;
+    },
+    onSuccess: () => {
+      resetToFirstPage();
+      invalidateJobs();
+      Swal.fire("Berhasil", "Loker berhasil diduplikat sebagai Draft.", "success");
+    },
+    onError: (error) => {
+      Swal.fire(
+        "Gagal menduplikat loker",
+        getErrorMessage(error, "Loker belum dapat diduplikat."),
+        "error",
+      );
+    },
+  });
+
   const isMutating =
     addCareerJobMutation.isPending ||
     editCareerJobMutation.isPending ||
+    duplicateCareerJobMutation.isPending ||
     deleteCareerJobMutation.isPending ||
     updateStatusMutation.isPending;
 
@@ -650,6 +744,23 @@ const Loker = () => {
     });
   };
 
+  const handleDuplicate = (job) => {
+    Swal.fire({
+      title: "Duplikat loker?",
+      text: `Salinan “${job.title}” akan dibuat sebagai Draft.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#7c3aed",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, duplikat",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        duplicateCareerJobMutation.mutate(job);
+      }
+    });
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -707,6 +818,7 @@ const Loker = () => {
         Header: "Action",
         accessor: "action",
         id: "action",
+        width: "104px",
         sticky: "right",
         Cell: ({ row }) => {
           const job = row.original;
@@ -716,14 +828,21 @@ const Loker = () => {
               icon: "heroicons:pencil-square",
               onClick: () => openEditModal(job),
               className:
-                "!border-sky-100 !bg-sky-50 !text-sky-600 hover:!border-sky-200 hover:!bg-sky-100 hover:!text-sky-700 dark:!border-sky-500/20 dark:!bg-sky-500/10 dark:!text-sky-300 dark:hover:!bg-sky-500/20",
+                "!h-9 !w-9 !rounded-lg !border-sky-100 !bg-sky-50 !text-sky-600 hover:!border-sky-200 hover:!bg-sky-100 hover:!text-sky-700 dark:!border-sky-500/20 dark:!bg-sky-500/10 dark:!text-sky-300 dark:hover:!bg-sky-500/20",
+            },
+            {
+              name: "Duplikat",
+              icon: "heroicons-outline:document-duplicate",
+              onClick: () => handleDuplicate(job),
+              className:
+                "!h-9 !w-9 !rounded-lg !border-violet-100 !bg-violet-50 !text-violet-600 hover:!border-violet-200 hover:!bg-violet-100 hover:!text-violet-700 dark:!border-violet-500/20 dark:!bg-violet-500/10 dark:!text-violet-300 dark:hover:!bg-violet-500/20",
             },
             {
               name: "Delete",
               icon: "heroicons-outline:trash",
               onClick: () => handleDelete(job),
               className:
-                "!border-danger-100 !bg-danger-50 !text-danger-600 hover:!border-danger-200 hover:!bg-danger-100 hover:!text-danger-700 dark:!border-danger-500/20 dark:!bg-danger-500/10 dark:!text-danger-300 dark:hover:!bg-danger-500/20",
+                "!h-9 !w-9 !rounded-lg !border-danger-100 !bg-danger-50 !text-danger-600 hover:!border-danger-200 hover:!bg-danger-100 hover:!text-danger-700 dark:!border-danger-500/20 dark:!bg-danger-500/10 dark:!text-danger-300 dark:hover:!bg-danger-500/20",
             },
             {
               name: job.status === "published" ? "Jadikan Draft" : "Publish",
@@ -734,13 +853,13 @@ const Loker = () => {
               onClick: () => handleToggleStatus(job),
               className:
                 job.status === "published"
-                  ? "!border-amber-100 !bg-amber-50 !text-amber-600 hover:!border-amber-200 hover:!bg-amber-100 hover:!text-amber-700 dark:!border-amber-500/20 dark:!bg-amber-500/10 dark:!text-amber-300 dark:hover:!bg-amber-500/20"
-                  : "!border-success-100 !bg-success-50 !text-success-600 hover:!border-success-200 hover:!bg-success-100 hover:!text-success-700 dark:!border-success-500/20 dark:!bg-success-500/10 dark:!text-success-300 dark:hover:!bg-success-500/20",
+                  ? "!h-9 !w-9 !rounded-lg !border-amber-100 !bg-amber-50 !text-amber-600 hover:!border-amber-200 hover:!bg-amber-100 hover:!text-amber-700 dark:!border-amber-500/20 dark:!bg-amber-500/10 dark:!text-amber-300 dark:hover:!bg-amber-500/20"
+                  : "!h-9 !w-9 !rounded-lg !border-success-100 !bg-success-50 !text-success-600 hover:!border-success-200 hover:!bg-success-100 hover:!text-success-700 dark:!border-success-500/20 dark:!bg-success-500/10 dark:!text-success-300 dark:hover:!bg-success-500/20",
             },
           ];
 
           return (
-            <div className="flex items-center justify-center gap-2">
+            <div className="mx-auto grid w-fit grid-cols-2 place-items-center gap-1.5">
               {actions.map((action) => (
                 <TableAction key={action.name} action={action} row={{ row }} />
               ))}
@@ -893,6 +1012,18 @@ const Loker = () => {
                       </button>
                       <button
                         type="button"
+                        onClick={() => handleDuplicate(job)}
+                        disabled={isMutating}
+                        className="career-loker-mobile-action border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300"
+                      >
+                        <Icon
+                          icon="heroicons-outline:document-duplicate"
+                          width={17}
+                        />
+                        <span>Duplikat</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDelete(job)}
                         disabled={isMutating}
                         className="career-loker-mobile-action border-danger-100 bg-danger-50 text-danger-600 dark:border-danger-500/20 dark:bg-danger-500/10 dark:text-danger-300"
@@ -932,7 +1063,7 @@ const Loker = () => {
                 listData={listData}
                 listColumn={columns}
                 isAction
-                actionColumnClass="w-44 min-w-[11rem]"
+                actionColumnClass="w-24 min-w-[6rem]"
                 tableMinWidth="780px"
                 bodyCellAlign="center"
               />
