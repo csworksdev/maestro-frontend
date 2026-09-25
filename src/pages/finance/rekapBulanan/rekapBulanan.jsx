@@ -4,9 +4,6 @@ import Table from "@/components/globals/table/table";
 import { useNavigate } from "react-router-dom";
 import { getTrainerAll } from "@/axios/masterdata/trainer";
 import TableAction from "@/components/globals/table/tableAction";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { useForm } from "react-hook-form";
 import { getPeriodisasiAll } from "@/axios/referensi/periodisasi";
 import Select from "@/components/ui/Select";
 import {
@@ -28,6 +25,7 @@ import { toProperCase } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
 import Badge from "@/components/ui/Badge";
 import { Tab } from "@headlessui/react";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 
 const parseMutasiStatus = (value) => {
   if (typeof value === "boolean") return value;
@@ -56,6 +54,7 @@ const RekapBulanan = () => {
   const [unpaidList, setUnpaidList] = useState({});
   const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [selectedPeriode, setSelectedPeriode] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [summary, setSummary] = useState({
     prevCount: 0,
     prevPrice: 0,
@@ -65,21 +64,6 @@ const RekapBulanan = () => {
     currPriceUnpaid: 0,
     nextCount: 0,
     nextPrice: 0,
-  });
-
-  const validationSchema = yup.object({
-    trainer: yup.string().required("Coach is required"),
-    periode: yup.string().required("Periode is required"),
-  });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm({
-    resolver: yupResolver(validationSchema),
-    mode: "all",
   });
 
   const actions = [
@@ -142,17 +126,15 @@ const RekapBulanan = () => {
     if (!selectedTrainer && listTrainer.length > 0) {
       const defaultTrainer = listTrainer[0];
       setSelectedTrainer(defaultTrainer);
-      setValue("trainer", defaultTrainer.trainer_id);
     }
-  }, [listTrainer, selectedTrainer, setValue]);
+  }, [listTrainer, selectedTrainer]);
 
   useEffect(() => {
     if (!selectedPeriode && listPeriode.length > 0) {
       const defaultPeriode = listPeriode[0];
       setSelectedPeriode(defaultPeriode);
-      setValue("periode", defaultPeriode.name);
     }
-  }, [listPeriode, selectedPeriode, setValue]);
+  }, [listPeriode, selectedPeriode]);
 
   const fetchRekapData = async () => {
     try {
@@ -205,6 +187,12 @@ const RekapBulanan = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (selectedTrainer && selectedPeriode) fetchRekapData();
+    // fetchRekapData intentionally follows the selected API filters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTrainer, selectedPeriode]);
 
   const reSummarize = async () => {
     try {
@@ -303,10 +291,6 @@ const RekapBulanan = () => {
       setisEdited(!isEdited);
     }
   }, [editModalVisible]);
-
-  const onSubmit = (formData) => {
-    fetchRekapData();
-  };
 
   const handleDetail = (e) => {
     setDetailModalVisible(true); // Open the modal
@@ -1016,58 +1000,36 @@ const RekapBulanan = () => {
 
   return (
     <>
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Rekap Bulanan"
+        activeCount={[selectedTrainer, selectedPeriode].filter(Boolean).length}
+      >
+        <div className="flex flex-col gap-4">
+          <Select
+            name="trainer-sidebar"
+            label="Coach"
+            placeholder="Pilih Coach"
+            value={selectedTrainer?.trainer_id || ""}
+            options={listTrainer.map((item) => ({ value: item.trainer_id, label: item.nickname }))}
+            onChange={(e) => setSelectedTrainer(listTrainer.find((item) => item.trainer_id === e.target.value) || null)}
+          />
+          <Select
+            name="periode-sidebar"
+            label="Periode"
+            placeholder="Pilih Periode"
+            value={selectedPeriode?.name || ""}
+            options={listPeriode.map((item) => ({ value: item.name, label: item.name }))}
+            onChange={(e) => setSelectedPeriode(listPeriode.find((item) => item.name === e.target.value) || null)}
+          />
+        </div>
+      </FilterSidebar>
       <div className="grid grid-cols-1 justify-end">
         <Card title="Rekap Bulanan">
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="md:grid grid-cols-4 gap-4 items-end auto-cols-min"
-          >
-            <Select
-              name="trainer"
-              label="Coach"
-              placeholder="Pilih Coach"
-              register={register}
-              error={errors.trainer?.message}
-              options={listTrainer
-                .map((item) => ({
-                  value: item.trainer_id,
-                  label: item.nickname,
-                }))
-                .sort((a, b) => (a.label ?? "").localeCompare(b.label ?? ""))}
-              // defaultValue={listTrainer[0]?.value || ""}
-              onChange={(e) => {
-                setValue("trainer", e.target.value);
-                setSelectedTrainer(
-                  listTrainer.find((a) => a.trainer_id === e.target.value) ||
-                    null,
-                );
-              }}
-            />
-            <Select
-              name="periode"
-              label="Periode"
-              placeholder="Pilih Periode"
-              register={register}
-              error={errors.periode?.message}
-              options={listPeriode.map((item) => ({
-                value: item.name,
-                label: item.name,
-              }))}
-              // defaultValue={listPeriode[0]?.value || ""}
-              onChange={(e) => {
-                setValue("periode", e.target.value);
-                setSelectedPeriode(
-                  listPeriode.find((a) => a.name === e.target.value) || null,
-                );
-              }}
-            />
+          <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
             <div className="flex gap-2 mb:py-5 pl-4 gap-3 items-center">
-              <button
-                type="submit"
-                className="btn btn-dark text-center h-9 py-1 w-max"
-              >
-                <span>Filter</span>
-              </button>
               {isDownload ? (
                 <div className="flex flex-row justify-center gap-2">
                   <span>Downloading</span>
@@ -1118,7 +1080,7 @@ const RekapBulanan = () => {
                 </button>
               </div>
             ) : null}
-          </form>
+          </div>
           <PeriodSummary />
           {filtersLoading || isLoading ? (
             <SkeletionTable />

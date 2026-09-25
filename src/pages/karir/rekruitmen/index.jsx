@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
-import Modal from "@/components/ui/Modal";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import Table from "@/components/globals/table/table";
 import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
@@ -15,6 +16,7 @@ import {
   getBranches,
   createCareerApplicationTrainersBulk,
   getCareerApplications,
+  getCareerApplicationFormOptions,
   getCareerJobs,
   getDepartments,
   processCareerApplicationStage,
@@ -118,19 +120,6 @@ const normalizeOptions = (payload, mapper) => {
   return results.map(mapper).filter((option) => option.value && option.label);
 };
 
-const mergeOptions = (baseOptions, dynamicOptions) => {
-  const seen = new Set();
-  return [...baseOptions, ...dynamicOptions].filter((option) => {
-    const key = normalizeValue(option.value);
-    if (!key || seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
-};
-
 const optionFromDisplayFields = (items, valueKey, labelKey) => {
   const seen = new Set();
 
@@ -145,6 +134,47 @@ const optionFromDisplayFields = (items, valueKey, labelKey) => {
         return false;
       }
 
+      seen.add(key);
+      return true;
+    });
+};
+
+const optionFromApiFields = (items, valueKey, labelKey) =>
+  optionFromDisplayFields(
+    items.map((item) => {
+      const rawValue = item?.[valueKey];
+      return {
+        value: typeof rawValue === "boolean" ? String(rawValue) : rawValue,
+        label:
+          item?.[labelKey] ||
+          (valueKey === "is_working"
+            ? toBoolean(rawValue) === true
+              ? "Ya"
+              : toBoolean(rawValue) === false
+                ? "Tidak"
+                : ""
+            : rawValue),
+      };
+    }),
+    "value",
+    "label",
+  );
+
+const normalizeFormOptions = (options) => {
+  if (!Array.isArray(options)) return [];
+  const seen = new Set();
+  return options
+    .map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: option?.value ?? "",
+            label: option?.label ?? option?.value ?? "",
+          },
+    )
+    .filter((option) => {
+      const key = normalizeValue(option.value);
+      if (!key || !option.label || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -207,82 +237,6 @@ const matchesSearch = (search, application) => {
     application.branchName,
   ].some((value) => normalizeValue(value).includes(searchText));
 };
-
-const genderOptions = [
-  { value: "male", label: "Laki-laki" },
-  { value: "female", label: "Perempuan" },
-];
-
-const maritalStatusOptions = [
-  { value: "single", label: "Belum Menikah" },
-  { value: "married", label: "Menikah" },
-  { value: "divorced", label: "Cerai" },
-  { value: "widowed", label: "Duda/Janda" },
-];
-
-const religionOptions = [
-  { value: "islam", label: "Islam" },
-  { value: "kristen", label: "Kristen" },
-  { value: "katolik", label: "Katolik" },
-  { value: "hindu", label: "Hindu" },
-  { value: "buddha", label: "Buddha" },
-  { value: "konghucu", label: "Konghucu" },
-];
-
-const educationLevelOptions = [
-  { value: "sma", label: "SMA" },
-  { value: "smk", label: "SMK" },
-  { value: "d1", label: "D1" },
-  { value: "d2", label: "D2" },
-  { value: "d3", label: "D3" },
-  { value: "d4", label: "D4" },
-  { value: "s1", label: "S1" },
-  { value: "s2", label: "S2" },
-  { value: "s3", label: "S3" },
-];
-
-const educationStatusOptions = [
-  { value: "student", label: "Mahasiswa" },
-  { value: "graduated", label: "Lulusan" },
-];
-
-const contractSystemOptions = [
-  { value: "fulltime", label: "Full Time" },
-  { value: "full_time", label: "Full Time" },
-  { value: "part_time", label: "Part Time" },
-  { value: "freelance", label: "Freelance" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "internship", label: "Internship" },
-];
-
-const applicationStatusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "Dalam Proses" },
-  { value: "accepted", label: "Lulus" },
-  { value: "rejected", label: "Tidak Lulus" },
-];
-
-const coachExperienceOptions = [
-  { value: "no_experience", label: "0 Tahun" },
-  { value: "less_than_1_year", label: "< 1 Tahun" },
-  { value: "1_year", label: "1 Tahun" },
-  { value: "2_years", label: "2 Tahun" },
-  { value: "more_than_3_years", label: "> 3 Tahun" },
-];
-
-const sourceOptions = [
-  { value: "instagram", label: "Instagram" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "website", label: "Website" },
-  { value: "referral", label: "Referral" },
-  { value: "jobstreet", label: "Jobstreet" },
-  { value: "other", label: "Lainnya" },
-];
-
-const workingOptions = [
-  { value: "true", label: "Ya" },
-  { value: "false", label: "Tidak" },
-];
 
 const badgeToneClass = {
   green:
@@ -521,6 +475,24 @@ const Rekruitmen = () => {
     },
   });
 
+  const applicationFilterValuesQuery = useQuery({
+    queryKey: ["careerApplicationFilterValues"],
+    queryFn: async () => {
+      const res = await getCareerApplications({ page: 1, page_size: 100 });
+      return getPaginatedResults(res?.data).results;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const applicationFormOptionsQuery = useQuery({
+    queryKey: ["careerApplicationFormOptions"],
+    queryFn: async () => {
+      const res = await getCareerApplicationFormOptions();
+      return res?.data?.data ?? res?.data ?? {};
+    },
+    staleTime: 30 * 60 * 1000,
+  });
+
   const departmentOptions = departmentsQuery.data ?? [];
   const jobOptions = jobsOptionsQuery.data ?? [];
   const branchOptions = branchesQuery.data ?? [];
@@ -720,37 +692,83 @@ const Rekruitmen = () => {
         swimmingStylesDisplay: application.swimming_styles_display || [],
         sourceName: application.source_name,
         isWorking: toBoolean(application.is_working),
+        isWorkingDisplay:
+          toBoolean(application.is_working) === true
+            ? "Ya"
+            : toBoolean(application.is_working) === false
+              ? "Tidak"
+              : "-",
         isTrainer: toBoolean(application.is_trainer),
         raw: application,
       };
     });
   }, [applicationsQuery.data, branchLookup, departmentLookup, jobLookup]);
 
-  const dynamicOptions = useMemo(
-    () => ({
-      contractSystems: optionFromDisplayFields(
+  const backendFilterOptions = useMemo(() => {
+    const records = applicationFilterValuesQuery.data ?? [];
+    const formOptions = applicationFormOptionsQuery.data ?? {};
+    const fromFormOrApplications = (
+      formKey,
+      apiValueKey,
+      apiLabelKey,
+      mappedValueKey,
+      mappedLabelKey,
+    ) => {
+      const formValues = normalizeFormOptions(formOptions[formKey]);
+      if (formValues.length) return formValues;
+
+      const unfilteredValues = optionFromApiFields(
+        records,
+        apiValueKey,
+        apiLabelKey,
+      );
+      if (unfilteredValues.length) return unfilteredValues;
+
+      return optionFromDisplayFields(
         mappedApplications,
-        "contractSystem",
-        "contractSystemDisplay",
+        mappedValueKey,
+        mappedLabelKey,
+      );
+    };
+
+    return {
+      genders: fromFormOrApplications(
+        "gender", "gender", "gender_display", "gender", "genderDisplay",
       ),
-      statuses: optionFromDisplayFields(
-        mappedApplications,
-        "status",
-        "statusDisplay",
+      maritalStatuses: fromFormOrApplications(
+        "marital_status", "marital_status", "marital_status_display", "maritalStatus", "maritalStatusDisplay",
       ),
-      coachExperiences: optionFromDisplayFields(
-        mappedApplications,
-        "coachExperience",
-        "coachExperienceDisplay",
+      religions: fromFormOrApplications(
+        "religion", "religion", "religion_display", "religion", "religionDisplay",
       ),
-      sources: optionFromDisplayFields(
-        mappedApplications,
-        "source",
-        "sourceDisplay",
+      educationLevels: fromFormOrApplications(
+        "education_level", "education_level", "education_level_display", "educationLevel", "educationLevelDisplay",
       ),
-    }),
-    [mappedApplications],
-  );
+      educationStatuses: fromFormOrApplications(
+        "education_status", "education_status", "education_status_display", "educationStatus", "educationStatusDisplay",
+      ),
+      contractSystems: fromFormOrApplications(
+        "contract_system", "contract_system", "contract_system_display", "contractSystem", "contractSystemDisplay",
+      ),
+      statuses: optionFromApiFields(records, "status", "status_display").length
+        ? optionFromApiFields(records, "status", "status_display")
+        : optionFromDisplayFields(mappedApplications, "status", "statusDisplay"),
+      coachExperiences: fromFormOrApplications(
+        "coach_experience", "coach_experience", "coach_experience_display", "coachExperience", "coachExperienceDisplay",
+      ),
+      sources: fromFormOrApplications(
+        "job_source", "source", "source_display", "source", "sourceDisplay",
+      ),
+      working: [
+        { value: "true", label: "Ya" },
+        { value: "false", label: "Tidak" },
+      ],
+    };
+  }, [
+    applicationFilterValuesQuery.data,
+    applicationFormOptionsQuery.data,
+    mappedApplications,
+  ]);
 
   const listData = useMemo(() => {
     const selectedDepartment = departmentOptions.find(
@@ -786,7 +804,7 @@ const Rekruitmen = () => {
           contractSystemFilter,
           application.contractSystem,
           application.contractSystemDisplay,
-          contractSystemOptions.find(
+          backendFilterOptions.contractSystems.find(
             (option) => option.value === contractSystemFilter,
           )?.label,
         ) &&
@@ -794,7 +812,7 @@ const Rekruitmen = () => {
           statusFilter,
           application.status,
           application.statusDisplay,
-          applicationStatusOptions.find(
+          backendFilterOptions.statuses.find(
             (option) => option.value === statusFilter,
           )?.label,
         ) &&
@@ -806,7 +824,7 @@ const Rekruitmen = () => {
             : application.isWorking === false
               ? "Tidak"
               : "",
-          workingOptions.find((option) => option.value === workingFilter)
+          backendFilterOptions.working.find((option) => option.value === workingFilter)
             ?.label,
         ) &&
         matchesMultiOption(genderFilter, application.gender) &&
@@ -838,6 +856,7 @@ const Rekruitmen = () => {
     statusFilter,
     branchFilter,
     branchOptions,
+    backendFilterOptions,
     coachExperienceFilter,
     contractSystemFilter,
     departmentFilter,
@@ -858,8 +877,9 @@ const Rekruitmen = () => {
   const pageCount = Math.max(1, Math.ceil((listData.count || 0) / pageSize));
   const safePageIndex = Math.min(pageIndex, pageCount - 1);
 
-  const handleSearch = () => {
-    setSearchQuery(searchInput);
+  const handleSearch = (value = searchInput) => {
+    setSearchInput(value);
+    setSearchQuery(value);
     resetToFirstPage();
   };
 
@@ -1358,65 +1378,35 @@ const Rekruitmen = () => {
     branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
     contractSystems: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(contractSystemOptions, dynamicOptions.contractSystems),
+      ...backendFilterOptions.contractSystems,
     ],
     statuses: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(applicationStatusOptions, dynamicOptions.statuses),
+      ...backendFilterOptions.statuses,
     ],
-    working: [{ value: "", label: "Semua kondisi" }, ...workingOptions],
+    working: [{ value: "", label: "Semua kondisi" }, ...backendFilterOptions.working],
   };
 
   return (
     <div className="career-recruitment-page min-w-0 space-y-5">
-      <div className="career-recruitment-toolbar flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          onClick={() => setIsFilterModalOpen(true)}
-          className="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2.5 rounded-md border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-          aria-label={`Buka filter pelamar${activeFilterCount ? `, ${activeFilterCount} filter aktif` : ""}`}
-        >
-          <Icon icon="heroicons-outline:adjustments-horizontal" width={19} />
-          Filter
-          {activeFilterCount > 0 && (
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-600 px-1 text-[11px] font-bold text-white dark:bg-slate-500">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-
-        <div className="relative w-full sm:max-w-2xl">
-          <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-            <Icon icon="heroicons-outline:search" width={20} />
-          </div>
-          <input
-            type="search"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") handleSearch();
-            }}
-            placeholder="Pencarian"
-            aria-label="Cari pelamar"
-            className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-          />
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-          >
-            <Icon icon="heroicons-outline:search" width={16} />
-            Cari
-          </button>
-        </div>
+      <div className="career-recruitment-toolbar">
+        <Search
+          searchValue={searchInput}
+          handleSearch={handleSearch}
+          isLoading={applicationsQuery.isFetching}
+          placeholder="Cari pelamar"
+          align="left"
+        />
       </div>
 
-      <Modal
+      <FilterSidebar
         title="Filter Pelamar"
-        activeModal={isFilterModalOpen}
+        open={isFilterModalOpen}
+        onOpen={() => setIsFilterModalOpen(true)}
         onClose={() => setIsFilterModalOpen(false)}
-        className="max-w-5xl"
-        scrollContent
+        activeCount={activeFilterCount}
+        widthClass="max-w-lg"
+        contentClassName="career-recruitment-filter-sidebar"
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1485,46 +1475,43 @@ const Rekruitmen = () => {
             <div className="career-recruitment-advanced-grid grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
               <CheckboxGroup
                 title="Gender"
-                options={genderOptions}
+                options={backendFilterOptions.genders}
                 selectedValues={genderFilter}
                 onChange={toggleMultiFilter(setGenderFilter)}
               />
               <CheckboxGroup
                 title="Status Pernikahan"
-                options={maritalStatusOptions}
+                options={backendFilterOptions.maritalStatuses}
                 selectedValues={maritalStatusFilter}
                 onChange={toggleMultiFilter(setMaritalStatusFilter)}
               />
               <CheckboxGroup
                 title="Agama"
-                options={religionOptions}
+                options={backendFilterOptions.religions}
                 selectedValues={religionFilter}
                 onChange={toggleMultiFilter(setReligionFilter)}
               />
               <CheckboxGroup
                 title="Pendidikan"
-                options={educationLevelOptions}
+                options={backendFilterOptions.educationLevels}
                 selectedValues={educationLevelFilter}
                 onChange={toggleMultiFilter(setEducationLevelFilter)}
               />
               <CheckboxGroup
                 title="Status Pendidikan"
-                options={educationStatusOptions}
+                options={backendFilterOptions.educationStatuses}
                 selectedValues={educationStatusFilter}
                 onChange={toggleMultiFilter(setEducationStatusFilter)}
               />
               <CheckboxGroup
                 title="Pengalaman Coach"
-                options={mergeOptions(
-                  coachExperienceOptions,
-                  dynamicOptions.coachExperiences,
-                )}
+                options={backendFilterOptions.coachExperiences}
                 selectedValues={coachExperienceFilter}
                 onChange={toggleMultiFilter(setCoachExperienceFilter)}
               />
               <CheckboxGroup
                 title="Sumber"
-                options={mergeOptions(sourceOptions, dynamicOptions.sources)}
+                options={backendFilterOptions.sources}
                 selectedValues={sourceFilter}
                 onChange={toggleMultiFilter(setSourceFilter)}
               />
@@ -1539,16 +1526,9 @@ const Rekruitmen = () => {
               <Icon icon="heroicons-outline:arrow-path" width={17} />
               Reset Filter
             </button>
-            <button
-              type="button"
-              onClick={() => setIsFilterModalOpen(false)}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary-500 px-5 text-sm font-bold text-white transition hover:bg-primary-600"
-            >
-              Terapkan Filter
-            </button>
           </div>
         </div>
-      </Modal>
+      </FilterSidebar>
 
       <Card
         title="Rekruitmen"

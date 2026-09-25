@@ -8,15 +8,22 @@ import {
   useFilters,
 } from "react-table";
 
+const toCssSize = (value) =>
+  typeof value === "number" ? `${value}px` : value;
+
 const TableXendit = memo(
-  ({ listData, listColumn, handleSearch }) => {
+  ({ listData, listColumn, handleSearch, autoColumnMaxWidth = 320 }) => {
     const columns = useMemo(
       () =>
         listColumn.map((col) => ({
           ...col,
           width: col.width || 120,
+          autoWidthStyle: {
+            minWidth: toCssSize(col.minWidth),
+            maxWidth: toCssSize(col.maxWidth ?? autoColumnMaxWidth),
+          },
         })),
-      [listColumn]
+      [listColumn, autoColumnMaxWidth]
     );
 
     const data = useMemo(() => listData, [listData]);
@@ -48,7 +55,7 @@ const TableXendit = memo(
           <div className="min-w-0 max-w-full overflow-x-auto scrollable-body">
             <table
               {...getTableProps()}
-              className="table table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+              className="table w-full table-auto divide-y divide-slate-100 dark:divide-slate-700"
               style={{ minWidth: `${Math.max(640, columns.length * 150)}px` }}
             >
               <thead className="border-t border-slate-100 dark:border-slate-800">
@@ -62,7 +69,8 @@ const TableXendit = memo(
                         {...column.getHeaderProps(
                           column.getSortByToggleProps()
                         )}
-                        className="table-th text-center text-wrap"
+                        style={column.autoWidthStyle}
+                        className="table-th !px-4 whitespace-normal break-words text-center"
                       >
                         {column.render("Header")}
                         <span>
@@ -93,11 +101,19 @@ const TableXendit = memo(
                     >
                       {row.cells.map((cell) => (
                         <td
-                          style={{ textTransform: "none" }}
                           {...cell.getCellProps()}
-                          className="table-td text-wrap p-3 align-middle"
+                          style={{
+                            ...cell.column.autoWidthStyle,
+                            textTransform: "none",
+                          }}
+                          className="table-td !px-3 !py-3 whitespace-normal break-words align-middle"
                         >
-                          {cell.render("Cell")}
+                          <div
+                            className="max-w-full whitespace-normal break-words"
+                            style={cell.column.autoWidthStyle}
+                          >
+                            {cell.render("Cell")}
+                          </div>
                         </td>
                       ))}
                     </tr>
@@ -114,7 +130,8 @@ const TableXendit = memo(
     JSON.stringify(prevProps.listData) === JSON.stringify(nextProps.listData) &&
     JSON.stringify(prevProps.listColumn) ===
       JSON.stringify(nextProps.listColumn) &&
-    prevProps.handleSearch === nextProps.handleSearch
+    prevProps.handleSearch === nextProps.handleSearch &&
+    prevProps.autoColumnMaxWidth === nextProps.autoColumnMaxWidth
 );
 
 export default TableXendit;

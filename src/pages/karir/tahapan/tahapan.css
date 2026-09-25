@@ -25,6 +25,27 @@
   line-height: normal;
 }
 
+/* The page container is wider than the drawer. Limit the filter form to a
+   readable two-column layout inside the sidebar. */
+.career-stages-filter-sidebar .career-stages-filter-grid,
+.career-stages-filter-sidebar .career-stages-advanced-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.career-stages-filter-sidebar label,
+.career-stages-filter-sidebar select,
+.career-stages-filter-sidebar input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .career-stages-filter-sidebar .career-stages-filter-grid,
+  .career-stages-filter-sidebar .career-stages-advanced-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 /* Modal aplikasi menggunakan z-index 99999; konfirmasi harus berada di atasnya. */
 .swal2-container.career-stage-delete-confirmation {
   z-index: 100000 !important;
