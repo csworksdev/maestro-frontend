@@ -58,6 +58,9 @@ const IndeterminateCheckbox = React.forwardRef(
   },
 );
 
+const toCssSize = (value) =>
+  typeof value === "number" ? `${value}px` : value;
+
 const Table = ({
   tableId,
   listData,
@@ -73,6 +76,7 @@ const Table = ({
   fitToContainer = false,
   tableMinWidth,
   bodyCellAlign = "left",
+  autoColumnMaxWidth = 320,
 }) => {
   const dispatch = useDispatch();
   const density = useSelector(
@@ -87,8 +91,12 @@ const Table = ({
           col.id ??
           (typeof col.accessor === "string" ? col.accessor : `col_${index}`),
         width: col.width || 120,
+        autoWidthStyle: {
+          minWidth: toCssSize(col.minWidth),
+          maxWidth: toCssSize(col.maxWidth ?? autoColumnMaxWidth),
+        },
       })),
-    [listColumn],
+    [listColumn, autoColumnMaxWidth],
   );
 
   const data = useMemo(() => listData?.results ?? [], [listData]);
@@ -134,15 +142,15 @@ const Table = ({
   );
 
   const headerDensityClass = fitToContainer
-    ? "text-[11px] !px-3 !py-3"
+    ? "text-[11px] !px-2 !py-3"
     : density === "compact"
-      ? "text-[11px] !px-4 !py-3"
-      : "text-xs !px-6 !py-4";
+      ? "text-[11px] !px-3 !py-3"
+      : "text-xs !px-4 !py-4";
   const cellDensityClass = fitToContainer
-    ? "text-xs !px-3 !py-3"
+    ? "text-xs !px-2 !py-3"
     : density === "compact"
-      ? "text-xs !px-4 !py-2.5"
-      : "text-sm !px-6 !py-4";
+      ? "text-xs !px-3 !py-2.5"
+      : "text-sm !px-4 !py-4";
   const bodyCellAlignClass =
     bodyCellAlign === "center" ? "text-center" : "text-left";
 
@@ -342,15 +350,21 @@ const Table = ({
             return (
               <th
                 {...col.getHeaderProps(col.getSortByToggleProps())}
-                className={`table-th text-center text-wrap bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
+                style={col.autoWidthStyle}
+                className={`table-th whitespace-normal break-words text-center bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
                   col.canSort
                     ? "cursor-pointer select-none hover:text-slate-900 dark:hover:text-slate-100"
                     : ""
                 }`}
                 key={col.id}
               >
-                <div className="inline-flex items-center justify-center gap-1.5">
-                  <span>{col.render("Header")}</span>
+                <div
+                  className="inline-flex max-w-full items-center justify-center gap-1.5 whitespace-normal break-words"
+                  style={col.autoWidthStyle}
+                >
+                  <span className="min-w-0 break-words">
+                    {col.render("Header")}
+                  </span>
                   {sortIcon}
                 </div>
               </th>
@@ -395,10 +409,18 @@ const Table = ({
               <td
                 key={key}
                 {...restCellProps}
-                style={{ textTransform: "none" }}
-                className={`table-td text-wrap align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass}`}
+                style={{
+                  ...cell.column.autoWidthStyle,
+                  textTransform: "none",
+                }}
+                className={`table-td whitespace-normal break-words align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass}`}
               >
-                {cell.render("Cell")}
+                <div
+                  className="max-w-full whitespace-normal break-words"
+                  style={cell.column.autoWidthStyle}
+                >
+                  {cell.render("Cell")}
+                </div>
               </td>
             );
           })
@@ -531,7 +553,7 @@ const Table = ({
         >
           <table
             {...getTableProps()}
-            className="table w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+            className="table w-full table-auto divide-y divide-slate-100 dark:divide-slate-700"
             style={{ minWidth: fitToContainer ? undefined : tableMinWidth }}
           >
             <thead className="border-b border-slate-100 dark:border-slate-800">
@@ -579,6 +601,7 @@ export default memo(Table, (prev, next) => {
     prev.fitToContainer === next.fitToContainer &&
     prev.tableMinWidth === next.tableMinWidth &&
     prev.bodyCellAlign === next.bodyCellAlign &&
+    prev.autoColumnMaxWidth === next.autoColumnMaxWidth &&
     prev.getRowClassName === next.getRowClassName
   );
 });
