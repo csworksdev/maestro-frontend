@@ -61,6 +61,18 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+        "/__trainer_documents_api": {
+          target: "https://woven-affecting-accuracy.ngrok-free.dev",
+          changeOrigin: true,
+          secure: true,
+          rewrite: (proxyPath) =>
+            proxyPath.replace(/^\/__trainer_documents_api/, ""),
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyRequest) => {
+              proxyRequest.setHeader("ngrok-skip-browser-warning", "true");
+            });
+          },
+        },
       },
       watch: {
         usePolling: true,
