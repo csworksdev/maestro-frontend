@@ -13,12 +13,15 @@ const TableAction = ({ action, row }) => {
       <button
         type="button"
         aria-label={action.name}
+        disabled={action.disabled}
         onClick={(event) => {
           event.stopPropagation();
+          if (action.disabled) return;
           action.onClick?.(row);
         }}
         className={`group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/70 bg-white/80 text-slate-600 shadow-sm transition
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:ring-offset-2
+          disabled:cursor-not-allowed disabled:opacity-50
           dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-200 dark:ring-offset-slate-800
           ${getClassName(action)}`}
       >
@@ -26,7 +29,9 @@ const TableAction = ({ action, row }) => {
           icon={action.icon}
           width={18}
           height={18}
-          className="transition-transform duration-200 group-hover:scale-105"
+          className={`transition-transform duration-200 group-hover:scale-105 ${
+            action.isLoading ? "animate-spin" : ""
+          }`}
         />
       </button>
     </Tooltip>
