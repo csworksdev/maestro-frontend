@@ -546,7 +546,7 @@ const Dokumen = ({ trainerId }) => {
             }}
             listColumn={columns}
             isPagination={false}
-            fitToContainer
+            tableMinWidth="960px"
             bodyCellAlign="center"
             actionColumnClass="w-56 min-w-[14rem]"
           />

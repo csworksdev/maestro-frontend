@@ -1,18 +1,9 @@
 import { axiosConfig } from "../config";
 
-const TRAINER_DOCUMENT_BASE_URL =
-  "https://woven-affecting-accuracy.ngrok-free.dev";
-const getTrainerDocumentUrl = (trainerId) => {
-  const baseUrl = import.meta.env.DEV
-    ? "/__trainer_documents_api"
-    : TRAINER_DOCUMENT_BASE_URL;
-
-  return `${baseUrl}/api/trainer/${encodeURIComponent(trainerId)}/documents/`;
-};
+const getTrainerDocumentUrl = (trainerId) =>
+  `/api/trainer/${encodeURIComponent(trainerId)}/documents/`;
 const getTrainerDocumentDetailUrl = (trainerId, documentId) =>
   `${getTrainerDocumentUrl(trainerId)}${encodeURIComponent(documentId)}/`;
-const trainerDocumentRequestConfig = () =>
-  import.meta.env.DEV ? { baseURL: window.location.origin } : {};
 
 export const getTrainerAll = async (data) => {
   try {
@@ -64,13 +55,7 @@ export const DeleteTrainer = async (id) => {
 };
 
 export const getTrainerDocuments = (trainerId, params = {}) =>
-  axiosConfig.get(
-    getTrainerDocumentUrl(trainerId),
-    {
-      ...trainerDocumentRequestConfig(),
-      params,
-    },
-  );
+  axiosConfig.get(getTrainerDocumentUrl(trainerId), { params });
 
 const createTrainerDocumentFormData = (data) => {
   const formData = new FormData();
@@ -86,27 +71,19 @@ export const createTrainerDocument = (trainerId, data) =>
   axiosConfig.post(
     getTrainerDocumentUrl(trainerId),
     createTrainerDocumentFormData(data),
-    trainerDocumentRequestConfig(),
   );
 
 export const getTrainerDocumentDetail = (trainerId, documentId) =>
-  axiosConfig.get(
-    getTrainerDocumentDetailUrl(trainerId, documentId),
-    trainerDocumentRequestConfig(),
-  );
+  axiosConfig.get(getTrainerDocumentDetailUrl(trainerId, documentId));
 
 export const updateTrainerDocument = (trainerId, documentId, data) =>
   axiosConfig.put(
     getTrainerDocumentDetailUrl(trainerId, documentId),
     createTrainerDocumentFormData(data),
-    trainerDocumentRequestConfig(),
   );
 
 export const deleteTrainerDocument = (trainerId, documentId) =>
-  axiosConfig.delete(
-    getTrainerDocumentDetailUrl(trainerId, documentId),
-    trainerDocumentRequestConfig(),
-  );
+  axiosConfig.delete(getTrainerDocumentDetailUrl(trainerId, documentId));
 
 export const uploadTrainerDocuments = (trainerId, files) => {
   const formData = new FormData();
@@ -126,6 +103,5 @@ export const uploadTrainerDocuments = (trainerId, files) => {
   return axiosConfig.post(
     getTrainerDocumentUrl(trainerId),
     formData,
-    trainerDocumentRequestConfig(),
   );
 };

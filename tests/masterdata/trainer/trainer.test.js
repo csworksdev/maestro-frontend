@@ -4,6 +4,8 @@ import {
   AddTrainer,
   DeleteTrainer,
   EditTrainer,
+  getTrainerDocuments,
+  deleteTrainerDocument,
   getTrainerAll,
   getTrainerAllNew,
 } from "../../../src/axios/masterdata/trainer";
@@ -88,6 +90,22 @@ describe("trainer api", () => {
 
     expect(result).toBe(response);
     expect(mockDelete).toHaveBeenCalledWith("/api/trainer/3/");
+  });
+
+  it("uses the configured production API for trainer documents", async () => {
+    mockGet.mockResolvedValue({ data: { results: [] } });
+    mockDelete.mockResolvedValue({ status: 204 });
+
+    await getTrainerDocuments("trainer/1", { page: 2 });
+    await deleteTrainerDocument("trainer/1", "document/2");
+
+    expect(mockGet).toHaveBeenCalledWith(
+      "/api/trainer/trainer%2F1/documents/",
+      { params: { page: 2 } },
+    );
+    expect(mockDelete).toHaveBeenCalledWith(
+      "/api/trainer/trainer%2F1/documents/document%2F2/",
+    );
   });
 
   it("logs errors and returns undefined", async () => {
