@@ -73,6 +73,13 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+        "/__trainer_document_files": {
+          target: "https://media.maestroswim.com",
+          changeOrigin: true,
+          secure: true,
+          rewrite: (proxyPath) =>
+            proxyPath.replace(/^\/__trainer_document_files/, ""),
+        },
       },
       watch: {
         usePolling: true,

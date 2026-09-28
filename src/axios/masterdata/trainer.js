@@ -9,6 +9,8 @@ const getTrainerDocumentUrl = (trainerId) => {
 
   return `${baseUrl}/api/trainer/${encodeURIComponent(trainerId)}/documents/`;
 };
+const getTrainerDocumentDetailUrl = (trainerId, documentId) =>
+  `${getTrainerDocumentUrl(trainerId)}${encodeURIComponent(documentId)}/`;
 const trainerDocumentRequestConfig = () =>
   import.meta.env.DEV ? { baseURL: window.location.origin } : {};
 
@@ -61,9 +63,48 @@ export const DeleteTrainer = async (id) => {
   }
 };
 
-export const getTrainerDocuments = (trainerId) =>
+export const getTrainerDocuments = (trainerId, params = {}) =>
   axiosConfig.get(
     getTrainerDocumentUrl(trainerId),
+    {
+      ...trainerDocumentRequestConfig(),
+      params,
+    },
+  );
+
+const createTrainerDocumentFormData = (data) => {
+  const formData = new FormData();
+  formData.append("type", data.type);
+  if (data.file) formData.append("file", data.file);
+  formData.append("file_name", data.file_name || "");
+  formData.append("document_number", data.document_number || "");
+  formData.append("document_date", data.document_date || "");
+  return formData;
+};
+
+export const createTrainerDocument = (trainerId, data) =>
+  axiosConfig.post(
+    getTrainerDocumentUrl(trainerId),
+    createTrainerDocumentFormData(data),
+    trainerDocumentRequestConfig(),
+  );
+
+export const getTrainerDocumentDetail = (trainerId, documentId) =>
+  axiosConfig.get(
+    getTrainerDocumentDetailUrl(trainerId, documentId),
+    trainerDocumentRequestConfig(),
+  );
+
+export const updateTrainerDocument = (trainerId, documentId, data) =>
+  axiosConfig.put(
+    getTrainerDocumentDetailUrl(trainerId, documentId),
+    createTrainerDocumentFormData(data),
+    trainerDocumentRequestConfig(),
+  );
+
+export const deleteTrainerDocument = (trainerId, documentId) =>
+  axiosConfig.delete(
+    getTrainerDocumentDetailUrl(trainerId, documentId),
     trainerDocumentRequestConfig(),
   );
 
