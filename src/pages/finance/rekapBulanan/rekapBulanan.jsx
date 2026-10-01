@@ -1013,21 +1013,54 @@ const RekapBulanan = () => {
             label="Coach"
             placeholder="Pilih Coach"
             value={selectedTrainer?.trainer_id || ""}
-            options={listTrainer.map((item) => ({ value: item.trainer_id, label: item.nickname }))}
-            onChange={(e) => setSelectedTrainer(listTrainer.find((item) => item.trainer_id === e.target.value) || null)}
+            options={listTrainer.map((item) => ({
+              value: item.trainer_id,
+              label: item.nickname,
+            }))}
+            onChange={(e) =>
+              setSelectedTrainer(
+                listTrainer.find(
+                  (item) => item.trainer_id === e.target.value,
+                ) || null,
+              )
+            }
           />
           <Select
             name="periode-sidebar"
             label="Periode"
             placeholder="Pilih Periode"
             value={selectedPeriode?.name || ""}
-            options={listPeriode.map((item) => ({ value: item.name, label: item.name }))}
-            onChange={(e) => setSelectedPeriode(listPeriode.find((item) => item.name === e.target.value) || null)}
+            options={listPeriode.map((item) => ({
+              value: item.name,
+              label: item.name,
+            }))}
+            onChange={(e) =>
+              setSelectedPeriode(
+                listPeriode.find((item) => item.name === e.target.value) ||
+                  null,
+              )
+            }
           />
         </div>
       </FilterSidebar>
       <div className="grid grid-cols-1 justify-end">
-        <Card title="Rekap Bulanan">
+        <Card
+          title={
+            <div className="flex flex-wrap items-center gap-2 normal-case">
+              <span>Rekap Bulanan</span>
+              {selectedTrainer && (
+                <span className="inline-flex items-center rounded bg-primary-500 bg-opacity-10 px-2 py-1 text-xs font-medium leading-none text-primary-500">
+                  {selectedTrainer.nickname}
+                </span>
+              )}
+              {selectedPeriode && (
+                <span className="inline-flex items-center rounded bg-slate-100 px-2 py-1 text-xs font-medium leading-none text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                  {selectedPeriode.name}
+                </span>
+              )}
+            </div>
+          }
+        >
           <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
             <div className="flex gap-2 mb:py-5 pl-4 gap-3 items-center">
               {isDownload ? (
