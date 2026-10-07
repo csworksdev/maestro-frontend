@@ -323,6 +323,28 @@
   margin-top: 0.4rem;
 }
 
+.career-loker-description-cell,
+.career-loker-description-cell .career-rich-text-preview {
+  display: block !important;
+  width: 100%;
+  max-width: none !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: clip !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: initial !important;
+}
+
+.career-loker-description-cell .career-rich-text-preview * {
+  max-height: none !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: clip !important;
+  -webkit-line-clamp: unset !important;
+}
+
 @container career-loker (max-width: 1050px) {
   .career-loker-table-hint {
     display: flex;

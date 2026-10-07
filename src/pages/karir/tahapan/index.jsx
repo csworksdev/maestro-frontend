@@ -317,7 +317,22 @@ const optionFromJob = (job) => ({
       ? job.department.department_id || job.department.id
       : job.department,
   departmentName: job.department_name || job.department?.name,
+  branch:
+    job.branch_id ||
+    (typeof job.branch === "object"
+      ? job.branch.branch_id || job.branch.id
+      : job.branch),
+  branchName:
+    job.branch_name ||
+    (typeof job.branch === "object"
+      ? job.branch.name || job.branch.branch_name
+      : ""),
 });
+
+const formatJobWithBranch = (jobTitle, branchName) =>
+  [jobTitle, branchName]
+    .filter((value) => value && value !== "-")
+    .join(" - ") || "-";
 
 const normalizeOptions = (payload, mapper) => {
   const { results } = getPaginatedResults(payload);
@@ -519,14 +534,16 @@ const Badge = ({ children, tone = "slate", icon }) => (
   </span>
 );
 
-const FilterSelect = ({ label, value, options, onChange }) => (
-  <label className="block">
-    <span className="mb-2 block text-sm font-semibold text-slate-600 dark:text-slate-300">
+const FilterSelect = ({ label, value, options, onChange, onOpen }) => (
+  <label className="career-stages-filter-row">
+    <span className="career-stages-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
       {label}
     </span>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      onPointerDown={onOpen}
+      onFocus={onOpen}
       className="h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
     >
       {options.map((option) => (
@@ -538,30 +555,75 @@ const FilterSelect = ({ label, value, options, onChange }) => (
   </label>
 );
 
-const CheckboxGroup = ({ title, options, selectedValues, onChange }) => (
-  <div className="border-t border-slate-100 pt-4 dark:border-slate-700">
-    <h4 className="mb-3 text-xs font-bold uppercase text-slate-500 dark:text-slate-300">
+const CheckboxGroup = ({
+  id,
+  title,
+  options,
+  selectedValues,
+  onChange,
+  isOpen,
+  onToggle,
+}) => (
+  <div
+    className={`career-stages-filter-row ${
+      isOpen ? "career-stages-filter-row-open" : ""
+    }`}
+  >
+    <span className="career-stages-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
       {title}
-    </h4>
-    <div className="space-y-3">
-      {options.map((option) => {
-        const checked = selectedValues.includes(option.value);
+    </span>
+    <div className="career-stages-multiselect min-w-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`${id}-options`}
+        className="flex h-12 w-full items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-4 text-left text-sm font-medium text-slate-700 shadow-sm outline-none transition hover:border-primary-300 focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <span className="truncate">
+          {selectedValues.length
+            ? `${selectedValues.length} dipilih`
+            : `Semua ${title.toLowerCase()}`}
+        </span>
+        <Icon
+          icon="heroicons-outline:chevron-down"
+          width={17}
+          className={`career-stages-multiselect-chevron flex-none ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div
+          id={`${id}-options`}
+          className="career-stages-multiselect-options mt-2 max-h-60 w-full space-y-1 overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-md dark:border-slate-700 dark:bg-slate-900"
+        >
+          {options.length ? (
+            options.map((option) => {
+              const checked = selectedValues.includes(option.value);
 
-        return (
-          <label
-            key={option.value}
-            className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-500 dark:text-slate-300"
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={() => onChange(option.value)}
-              className="h-5 w-5 rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
-            />
-            <span>{option.label}</span>
-          </label>
-        );
-      })}
+              return (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onChange(option.value)}
+                    className="h-5 w-5 flex-none rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            })
+          ) : (
+            <p className="px-2 py-3 text-sm text-slate-400">
+              Belum ada pilihan.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   </div>
 );
@@ -635,8 +697,8 @@ const Tahapan = () => {
   const [sourceFilter, setSourceFilter] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [openFilterDropdown, setOpenFilterDropdown] = useState(null);
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [editingStage, setEditingStage] = useState(null);
   const [stageForm, setStageForm] = useState(emptyStageForm);
@@ -1058,7 +1120,6 @@ const Tahapan = () => {
   const activeFilterCount = [
     departmentId,
     jobFilter,
-    branchFilter,
     contractSystemFilter,
     statusFilter,
     workingFilter,
@@ -1071,13 +1132,23 @@ const Tahapan = () => {
     ...sourceFilter,
   ].filter(Boolean).length;
 
+  const combinedJobOptions = filteredJobOptions.map((job) => ({
+    ...job,
+    label: formatJobWithBranch(
+      job.label,
+      job.branchName ||
+        branchOptions.find(
+          (branch) => String(branch.value) === String(job.branch),
+        )?.label,
+    ),
+  }));
+
   const selectOptions = {
     departments: [
       { value: "", label: "Pilih department" },
       ...departmentOptions,
     ],
-    jobs: [{ value: "", label: "Semua loker" }, ...filteredJobOptions],
-    branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
+    jobs: [{ value: "", label: "Semua loker" }, ...combinedJobOptions],
     contractSystems: [
       { value: "", label: "Semua status" },
       ...formFilterOptions.contractSystems,
@@ -1116,6 +1187,7 @@ const Tahapan = () => {
     setDepartmentId(value);
     setActiveStageId("");
     setJobFilter("");
+    setBranchFilter("");
     setSearchInput("");
     setSearchQuery("");
     resetToFirstPage();
@@ -1129,6 +1201,16 @@ const Tahapan = () => {
 
   const handleFilterChange = (setter) => (value) => {
     setter(value);
+    resetToFirstPage();
+  };
+
+  const handleJobChange = (value) => {
+    const selectedJob = jobOptions.find(
+      (option) => String(option.value) === String(value),
+    );
+
+    setJobFilter(value);
+    setBranchFilter(value ? selectedJob?.branch || "" : "");
     resetToFirstPage();
   };
 
@@ -1158,7 +1240,16 @@ const Tahapan = () => {
     setEducationStatusFilter([]);
     setCoachExperienceFilter([]);
     setSourceFilter([]);
+    setOpenFilterDropdown(null);
     resetToFirstPage();
+  };
+
+  const closeMultiFilterDropdown = () => setOpenFilterDropdown(null);
+
+  const toggleFilterDropdown = (dropdownId) => {
+    setOpenFilterDropdown((current) =>
+      current === dropdownId ? null : dropdownId,
+    );
   };
 
   const closeStageModal = () => {
@@ -1916,132 +2007,135 @@ const Tahapan = () => {
       <FilterSidebar
         open={isFilterOpen}
         onOpen={() => setIsFilterOpen(true)}
-        onClose={() => setIsFilterOpen(false)}
+        onClose={() => {
+          setIsFilterOpen(false);
+          setOpenFilterDropdown(null);
+        }}
         title="Filter Tahapan"
         activeCount={activeFilterCount}
         widthClass="max-w-lg"
         contentClassName="career-stages-filter-sidebar"
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Filter Pelamar
-              </h3>
-              <p className="mt-1 text-sm font-semibold text-slate-400">
-                {activeFilterCount
-                  ? `${activeFilterCount} filter aktif`
-                  : "Pilih department untuk melihat pipeline tahapan rekrutmen."}
-              </p>
-            </div>
-            <div className="career-stages-filter-actions grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
-              <button
-                type="button"
-                onClick={() => setIsAdvancedFiltersOpen((current) => !current)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition hover:border-primary-200 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                aria-expanded={isAdvancedFiltersOpen}
-              >
-                <Icon icon="heroicons-outline:adjustments" width={16} />
-                {isAdvancedFiltersOpen
-                  ? "Sembunyikan Filter"
-                  : "Filter Lanjutan"}
-              </button>
-              <button
-                type="button"
-                onClick={handleResetFilter}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-slate-100 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
-              >
-                <Icon icon="heroicons-outline:arrow-path" width={16} />
-                Reset
-              </button>
-            </div>
+        <div className="career-stages-filter-content flex flex-col gap-4">
+          <div className="career-stages-filter-sticky flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p className="text-sm font-semibold text-slate-400">
+              {activeFilterCount
+                ? `${activeFilterCount} filter aktif`
+                : "Belum ada filter aktif."}
+            </p>
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="inline-flex min-h-[44px] flex-none items-center justify-center gap-2 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+            >
+              <Icon icon="heroicons-outline:arrow-path" width={17} />
+              Reset Filter
+            </button>
           </div>
 
-          <div className="career-stages-filter-grid grid grid-cols-1 gap-3">
+          <div className="career-stages-filter-grid grid grid-cols-1 gap-4 pt-1">
             <FilterSelect
               label="Department"
               value={departmentId}
               options={selectOptions.departments}
               onChange={handleDepartmentChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Loker"
               value={jobFilter}
               options={selectOptions.jobs}
-              onChange={handleFilterChange(setJobFilter)}
-            />
-            <FilterSelect
-              label="Cabang"
-              value={branchFilter}
-              options={selectOptions.branches}
-              onChange={handleFilterChange(setBranchFilter)}
+              onChange={handleJobChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status Pekerjaan"
               value={contractSystemFilter}
               options={selectOptions.contractSystems}
               onChange={handleFilterChange(setContractSystemFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status"
               value={statusFilter}
               options={selectOptions.statuses}
               onChange={handleFilterChange(setStatusFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Sedang Bekerja"
               value={workingFilter}
               options={selectOptions.working}
               onChange={handleFilterChange(setWorkingFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
           </div>
 
-          {isAdvancedFiltersOpen && (
-            <div className="career-stages-advanced-grid grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-              <CheckboxGroup
-                title="Gender"
-                options={formFilterOptions.genders}
-                selectedValues={genderFilter}
-                onChange={toggleMultiFilter(setGenderFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pernikahan"
-                options={formFilterOptions.maritalStatuses}
-                selectedValues={maritalStatusFilter}
-                onChange={toggleMultiFilter(setMaritalStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Agama"
-                options={formFilterOptions.religions}
-                selectedValues={religionFilter}
-                onChange={toggleMultiFilter(setReligionFilter)}
-              />
-              <CheckboxGroup
-                title="Pendidikan"
-                options={formFilterOptions.educationLevels}
-                selectedValues={educationLevelFilter}
-                onChange={toggleMultiFilter(setEducationLevelFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pendidikan"
-                options={formFilterOptions.educationStatuses}
-                selectedValues={educationStatusFilter}
-                onChange={toggleMultiFilter(setEducationStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Pengalaman Coach"
-                options={formFilterOptions.coachExperiences}
-                selectedValues={coachExperienceFilter}
-                onChange={toggleMultiFilter(setCoachExperienceFilter)}
-              />
-              <CheckboxGroup
-                title="Sumber"
-                options={formFilterOptions.sources}
-                selectedValues={sourceFilter}
-                onChange={toggleMultiFilter(setSourceFilter)}
-              />
-            </div>
-          )}
+          <div className="career-stages-advanced-grid grid grid-cols-1 gap-4">
+            <CheckboxGroup
+              id="stage-gender-filter"
+              title="Gender"
+              options={formFilterOptions.genders}
+              selectedValues={genderFilter}
+              onChange={toggleMultiFilter(setGenderFilter)}
+              isOpen={openFilterDropdown === "gender"}
+              onToggle={() => toggleFilterDropdown("gender")}
+            />
+            <CheckboxGroup
+              id="stage-marital-status-filter"
+              title="Status Pernikahan"
+              options={formFilterOptions.maritalStatuses}
+              selectedValues={maritalStatusFilter}
+              onChange={toggleMultiFilter(setMaritalStatusFilter)}
+              isOpen={openFilterDropdown === "maritalStatus"}
+              onToggle={() => toggleFilterDropdown("maritalStatus")}
+            />
+            <CheckboxGroup
+              id="stage-religion-filter"
+              title="Agama"
+              options={formFilterOptions.religions}
+              selectedValues={religionFilter}
+              onChange={toggleMultiFilter(setReligionFilter)}
+              isOpen={openFilterDropdown === "religion"}
+              onToggle={() => toggleFilterDropdown("religion")}
+            />
+            <CheckboxGroup
+              id="stage-education-level-filter"
+              title="Pendidikan"
+              options={formFilterOptions.educationLevels}
+              selectedValues={educationLevelFilter}
+              onChange={toggleMultiFilter(setEducationLevelFilter)}
+              isOpen={openFilterDropdown === "educationLevel"}
+              onToggle={() => toggleFilterDropdown("educationLevel")}
+            />
+            <CheckboxGroup
+              id="stage-education-status-filter"
+              title="Status Pendidikan"
+              options={formFilterOptions.educationStatuses}
+              selectedValues={educationStatusFilter}
+              onChange={toggleMultiFilter(setEducationStatusFilter)}
+              isOpen={openFilterDropdown === "educationStatus"}
+              onToggle={() => toggleFilterDropdown("educationStatus")}
+            />
+            <CheckboxGroup
+              id="stage-coach-experience-filter"
+              title="Pengalaman Coach"
+              options={formFilterOptions.coachExperiences}
+              selectedValues={coachExperienceFilter}
+              onChange={toggleMultiFilter(setCoachExperienceFilter)}
+              isOpen={openFilterDropdown === "coachExperience"}
+              onToggle={() => toggleFilterDropdown("coachExperience")}
+            />
+            <CheckboxGroup
+              id="stage-source-filter"
+              title="Sumber"
+              options={formFilterOptions.sources}
+              selectedValues={sourceFilter}
+              onChange={toggleMultiFilter(setSourceFilter)}
+              isOpen={openFilterDropdown === "source"}
+              onToggle={() => toggleFilterDropdown("source")}
+            />
+          </div>
         </div>
       </FilterSidebar>
 
