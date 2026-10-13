@@ -7,6 +7,8 @@ const FilterSidebar = ({
   onClose,
   title = "Filter",
   description = "Data otomatis diperbarui saat filter berubah.",
+  statusText = "",
+  headerAction = null,
   activeCount = 0,
   children,
   widthClass = "max-w-md",
@@ -57,21 +59,29 @@ const FilterSidebar = ({
           open ? "translate-x-0" : "invisible translate-x-full pointer-events-none"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-          <div>
+        <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
             {description && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{description}</p>
             )}
+            {statusText && (
+              <p className="mt-2 text-xs font-semibold text-slate-400 dark:text-slate-400">
+                {statusText}
+              </p>
+            )}
           </div>
-          <button
-            type="button"
-            aria-label="Tutup sidebar filter"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-            onClick={onClose}
-          >
-            <Icon icon="heroicons:x-mark" className="text-xl" />
-          </button>
+          <div className="flex flex-none items-center gap-2">
+            {headerAction}
+            <button
+              type="button"
+              aria-label="Tutup sidebar filter"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+              onClick={onClose}
+            >
+              <Icon icon="heroicons:x-mark" className="text-xl" />
+            </button>
+          </div>
         </div>
         <div className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-5 sm:p-6 ${contentClassName}`}>
           {children}

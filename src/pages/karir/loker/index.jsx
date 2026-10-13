@@ -269,7 +269,30 @@ const Loker = () => {
       }
 
       const res = await getCareerJobs(params);
-      return getPaginatedResults(res.data);
+      const paginatedJobs = getPaginatedResults(res.data);
+      const detailResults = await Promise.allSettled(
+        paginatedJobs.results.map(async (job) => {
+          const jobId = job?.job_id || getId(job, "job");
+
+          if (!jobId) {
+            return job;
+          }
+
+          const detail = getJobRecord(await getCareerJob(jobId));
+          return detail && typeof detail === "object"
+            ? { ...job, ...detail }
+            : job;
+        }),
+      );
+
+      return {
+        ...paginatedJobs,
+        results: detailResults.map((result, index) =>
+          result.status === "fulfilled"
+            ? result.value
+            : paginatedJobs.results[index],
+        ),
+      };
     },
     keepPreviousData: true,
   });
@@ -790,7 +813,7 @@ const Loker = () => {
         accessor: "description",
         width: "42%",
         Cell: ({ cell }) => (
-          <div className="w-full max-w-[min(42rem,100%)] text-start text-slate-600 dark:text-slate-300">
+          <div className="career-loker-description-cell w-full text-start text-slate-600 dark:text-slate-300">
             <RichTextContent value={cell.value} />
           </div>
         ),
@@ -993,7 +1016,7 @@ const Loker = () => {
                       </div>
                     </dl>
 
-                    <div className="mt-3 break-words text-xs text-slate-500 dark:text-slate-300">
+                    <div className="career-loker-description-cell mt-3 break-words text-xs text-slate-500 dark:text-slate-300">
                       <RichTextContent
                         value={job.description}
                         emptyText="Belum ada deskripsi."
@@ -1064,7 +1087,7 @@ const Loker = () => {
                 listColumn={columns}
                 isAction
                 actionColumnClass="w-24 min-w-[6rem]"
-                tableMinWidth="780px"
+                tableMinWidth="960px"
                 bodyCellAlign="center"
               />
             </div>
