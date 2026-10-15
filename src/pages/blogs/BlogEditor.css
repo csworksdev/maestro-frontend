@@ -1,0 +1,72 @@
+/* Reserve a dedicated gutter so Editor.js block controls never cover images. */
+.blog-editor-canvas .codex-editor__redactor {
+  padding-left: 52px !important;
+}
+
+.blog-editor-canvas .ce-toolbar__content {
+  max-width: none;
+}
+
+.blog-editor-canvas .ce-toolbar__actions,
+.blog-editor-canvas .codex-editor--narrow .ce-toolbar__actions {
+  left: 6px;
+  right: auto;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 0;
+  z-index: 5;
+}
+
+.blog-editor-canvas .ce-toolbar__plus,
+.blog-editor-canvas .ce-toolbar__settings-btn {
+  position: static;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 12%);
+}
+
+.blog-editor-canvas .ce-toolbar__plus:hover,
+.blog-editor-canvas .ce-toolbar__settings-btn:hover,
+.blog-editor-canvas .ce-toolbar__plus--active,
+.blog-editor-canvas .ce-toolbar__settings-btn--active {
+  color: #4f46e5;
+  background: #eef2ff;
+  border-color: #818cf8;
+}
+
+.dark .blog-editor-canvas .ce-toolbar__plus,
+.dark .blog-editor-canvas .ce-toolbar__settings-btn {
+  color: #e2e8f0;
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark .blog-editor-canvas .ce-toolbar__plus:hover,
+.dark .blog-editor-canvas .ce-toolbar__settings-btn:hover,
+.dark .blog-editor-canvas .ce-toolbar__plus--active,
+.dark .blog-editor-canvas .ce-toolbar__settings-btn--active {
+  color: #c7d2fe;
+  background: #312e81;
+  border-color: #818cf8;
+}
+
+@media (max-width: 480px) {
+  .blog-editor-canvas {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+
+  .blog-editor-canvas .codex-editor__redactor {
+    padding-left: 46px !important;
+  }
+
+  .blog-editor-canvas .ce-toolbar__actions,
+  .blog-editor-canvas .codex-editor--narrow .ce-toolbar__actions {
+    left: 2px;
+  }
+}

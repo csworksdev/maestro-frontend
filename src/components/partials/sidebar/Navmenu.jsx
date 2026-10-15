@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { Collapse } from "react-collapse";
+import { NavLink, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/Icon";
 import { toggleActiveChat } from "@/pages/app/chat/store";
 import { useDispatch } from "react-redux";
-import useMobileMenu from "@/hooks/useMobileMenu";
 import Submenu from "./Submenu";
 
 const Navmenu = ({ menus }) => {
@@ -31,7 +29,6 @@ const Navmenu = ({ menus }) => {
 
   const location = useLocation();
   const locationName = location.pathname.replace(/^\/+/, "");
-  const [mobileMenu, setMobileMenu] = useMobileMenu();
   const dispatch = useDispatch();
 
   const isLocationMatch = (targetLocation) => {
@@ -84,13 +81,10 @@ const Navmenu = ({ menus }) => {
     setActiveSubmenu(submenuIndex);
     setMultiMenu(multiMenuIndex);
     dispatch(toggleActiveChat(false));
-    // if (mobileMenu) {
-    //   setMobileMenu(false);
-    // }
 
     localStorage.setItem("activeSubmenu", submenuIndex);
     localStorage.setItem("activeMultiMenu", multiMenuIndex);
-  }, [location, menus, dispatch, mobileMenu, setMobileMenu]);
+  }, [location.pathname, menus, dispatch]);
 
   return (
     <ul>
@@ -135,11 +129,17 @@ const Navmenu = ({ menus }) => {
               </div>
               <div className="flex-0">
                 <div
-                  className={`menu-arrow transform transition-all duration-300 ${
-                    activeSubmenu === i ? "rotate-90" : ""
-                  }`}
+                  className="menu-arrow"
+                  style={{
+                    transform:
+                      activeSubmenu === i ? "rotate(90deg)" : "rotate(0deg)",
+                    transition: "transform 300ms ease",
+                  }}
                 >
-                  <Icon icon="heroicons-outline:chevron-right" />
+                  <Icon
+                    icon="heroicons-outline:chevron-right"
+                    className="block"
+                  />
                 </div>
               </div>
             </div>

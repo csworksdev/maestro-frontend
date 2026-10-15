@@ -309,6 +309,29 @@ export const menuAdminNew = [
     icon: "heroicons-outline:globe-americas",
     link: "promo",
   },
+  {
+    title: "Blogs",
+    icon: "heroicons-outline:newspaper",
+    link: "blogs",
+    child: [
+      {
+        childtitle: "Posts",
+        childlink: "blogs",
+      },
+      {
+        childtitle: "Media",
+        childlink: "blogs/media",
+      },
+      {
+        childtitle: "Tags",
+        childlink: "blogs/tags",
+      },
+      {
+        childtitle: "Categories",
+        childlink: "blogs/categories",
+      },
+    ],
+  },
   // {
   //   title: "Follow Up Perpanjang",
   //   icon: "heroicons-outline:globe-americas",

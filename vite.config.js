@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
     env.VITE_CAREER_API_URL ||
     env.VITE_CAREER_EXPORT_API_URL ||
     "https://woven-affecting-accuracy.ngrok-free.dev";
+  const blogApiProxyTarget =
+    env.VITE_BLOG_API_URL ||
+    "https://woven-affecting-accuracy.ngrok-free.dev";
 
   return {
     resolve: {
@@ -71,6 +74,17 @@ export default defineConfig(({ mode }) => {
           secure: true,
           rewrite: (proxyPath) =>
             proxyPath.replace(/^\/__career_export_api/, ""),
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyRequest) => {
+              proxyRequest.setHeader("ngrok-skip-browser-warning", "true");
+            });
+          },
+        },
+        "/__blog_api": {
+          target: blogApiProxyTarget,
+          changeOrigin: true,
+          secure: true,
+          rewrite: (proxyPath) => proxyPath.replace(/^\/__blog_api/, ""),
           configure: (proxy) => {
             proxy.on("proxyReq", (proxyRequest) => {
               proxyRequest.setHeader("ngrok-skip-browser-warning", "true");

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Collapse } from "react-collapse";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/Icon";
 import Multilevel from "./Multi";
 
@@ -11,6 +11,22 @@ const Submenu = ({
   toggleMultiMenu,
   activeMultiMenu,
 }) => {
+  const location = useLocation();
+  const normalizePath = (value) =>
+    String(value || "")
+      .replace(/^\/+|\/+$/g, "")
+      .toLowerCase();
+  const currentPath = normalizePath(location.pathname);
+  const activeChildLink = item.child
+    ?.filter((child) => !child.multi_menu)
+    .map((child) => normalizePath(child.childlink))
+    .filter(
+      (childPath) =>
+        childPath &&
+        (currentPath === childPath || currentPath.startsWith(`${childPath}/`)),
+    )
+    .sort((first, second) => second.length - first.length)[0];
+
   return (
     <Collapse isOpened={activeSubmenu === i}>
       <ul className="sub-menu  space-y-4  ">
@@ -52,7 +68,11 @@ const Submenu = ({
               </div>
             ) : (
               <NavLink to={subItem.childlink}>
-                {({ isActive }) => (
+                {() => {
+                  const isActive =
+                    normalizePath(subItem.childlink) === activeChildLink;
+
+                  return (
                   <span
                     className={`${
                       isActive
@@ -69,7 +89,8 @@ const Submenu = ({
                     ></span>
                     <span className="flex-1">{subItem.childtitle}</span>
                   </span>
-                )}
+                  );
+                }}
               </NavLink>
             )}
           </li>
