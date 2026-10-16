@@ -132,6 +132,12 @@
     .text-box {
       @apply text-white dark:text-slate-300;
     }
+
+    // Keep the submenu indicator visible on the navy active background.
+    // This selector intentionally comes after `.parent_active .menu-arrow`.
+    .menu-arrow {
+      @apply bg-white bg-opacity-20 text-white dark:bg-white dark:bg-opacity-20 dark:text-white;
+    }
   }
   .menu-badge {
     @apply bg-slate-100  text-slate-900;

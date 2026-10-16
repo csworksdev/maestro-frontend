@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
 import Textinput from "@/components/ui/Textinput";
+import Table from "@/components/globals/table/table";
+import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
 import {
   addBlogTag,
@@ -19,14 +20,7 @@ import {
   getBlogErrorMessage,
   showBlogLoading,
 } from "./blogAlerts";
-
-const formatDate = (value) =>
-  value
-    ? new Intl.DateTimeFormat("id-ID", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "-";
+import { formatBlogDate, getBlogCollection, getBlogPageCount } from "./blogUtils";
 
 const BlogTags = () => {
   const queryClient = useQueryClient();
@@ -51,8 +45,8 @@ const BlogTags = () => {
         })
       ).data,
   });
-  const tags = tagsQuery.data?.results || [];
-  const pageCount = Math.ceil((tagsQuery.data?.count || 0) / pageSize);
+  const tags = getBlogCollection(tagsQuery.data);
+  const pageCount = getBlogPageCount(tagsQuery.data, pageSize);
 
   const saveMutation = useMutation({
     mutationFn: ({ tagId, data }) =>
@@ -162,6 +156,87 @@ const BlogTags = () => {
     }
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        Header: "Nama",
+        accessor: "name",
+        minWidth: 180,
+        Cell: ({ value }) => (
+          <span className="font-medium text-slate-700 dark:text-slate-200">
+            {value}
+          </span>
+        ),
+      },
+      {
+        Header: "Slug",
+        accessor: "slug",
+        minWidth: 190,
+        Cell: ({ value }) => <span className="text-slate-500">{value}</span>,
+      },
+      {
+        Header: "Jumlah Post",
+        accessor: "post_count",
+        minWidth: 120,
+        Cell: ({ value }) => (
+          <span className="rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700">
+            {value || 0}
+          </span>
+        ),
+      },
+      {
+        Header: "Dibuat Oleh",
+        accessor: "created_by_name",
+        minWidth: 150,
+        Cell: ({ value }) => value || "-",
+      },
+      {
+        Header: "Terakhir Diubah",
+        accessor: "updated_at",
+        minWidth: 170,
+        Cell: ({ value }) => (
+          <span className="whitespace-nowrap">{formatBlogDate(value)}</span>
+        ),
+      },
+      {
+        Header: "Aksi",
+        accessor: "action",
+        id: "action",
+        sticky: "right",
+        disableSortBy: true,
+        Cell: ({ row }) => {
+          const tag = row.original;
+          return (
+            <div className="flex items-center justify-center gap-2">
+              <TableAction
+                action={{
+                  name: "Edit",
+                  icon: "heroicons:pencil-square",
+                  className:
+                    "!border-primary-200 !bg-primary-100 !text-primary-600 hover:!border-primary-300 hover:!bg-primary-200 hover:!text-primary-700 dark:!border-primary-500/30 dark:!bg-primary-500/10 dark:!text-primary-300 dark:hover:!border-primary-500/50 dark:hover:!bg-primary-500/20",
+                  onClick: () => openEdit(tag),
+                }}
+                row={tag}
+              />
+              <TableAction
+                action={{
+                  name: "Delete",
+                  icon: "heroicons-outline:trash",
+                  disabled: deleteMutation.isPending,
+                  className:
+                    "!border-danger-200 !bg-danger-100 !text-danger-600 hover:!border-danger-300 hover:!bg-danger-200 hover:!text-danger-700 dark:!border-danger-500/30 dark:!bg-danger-500/10 dark:!text-danger-300 dark:hover:!border-danger-500/50 dark:hover:!bg-danger-500/20",
+                  onClick: () => handleDelete(tag),
+                }}
+                row={tag}
+              />
+            </div>
+          );
+        },
+      },
+    ],
+    [deleteMutation.isPending],
+  );
+
   return (
     <Card
       title="Blog Tags"
@@ -202,61 +277,19 @@ const BlogTags = () => {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-slate-700">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-700">
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">
-              <th className="px-5 py-3">Nama</th>
-              <th className="px-5 py-3">Slug</th>
-              <th className="px-5 py-3">Jumlah Post</th>
-              <th className="px-5 py-3">Dibuat Oleh</th>
-              <th className="px-5 py-3">Terakhir Diubah</th>
-              <th className="px-5 py-3 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-            {tags.map((tag) => (
-              <tr key={tag.tag_id} className="text-sm text-slate-700 dark:text-slate-200">
-                <td className="px-5 py-4 font-medium">{tag.name}</td>
-                <td className="px-5 py-4 text-slate-500">{tag.slug}</td>
-                <td className="px-5 py-4">
-                  <span className="rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700">
-                    {tag.post_count || 0}
-                  </span>
-                </td>
-                <td className="px-5 py-4">{tag.created_by_name || "-"}</td>
-                <td className="whitespace-nowrap px-5 py-4">{formatDate(tag.updated_at)}</td>
-                <td className="px-5 py-4">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="action-btn bg-primary-500 bg-opacity-30 text-primary-500 hover:bg-opacity-100 hover:text-white"
-                      onClick={() => openEdit(tag)}
-                      title="Edit"
-                    >
-                      <Icon icon="heroicons:pencil-square" />
-                    </button>
-                    <button
-                      className="action-btn bg-danger-500 bg-opacity-30 text-danger-500 hover:bg-opacity-100 hover:text-white"
-                      onClick={() => handleDelete(tag)}
-                      disabled={deleteMutation.isPending}
-                      title="Hapus"
-                    >
-                      <Icon icon="heroicons-outline:trash" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {!tags.length && (
-              <tr>
-                <td colSpan="6" className="px-5 py-14 text-center text-slate-500">
-                  {tagsQuery.isLoading ? "Memuat tags..." : "Belum ada tag."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {tags.length ? (
+        <Table
+          tableId="blog-tags-table"
+          listData={{ results: tags }}
+          listColumn={columns}
+          isPagination={false}
+          tableMinWidth={820}
+        />
+      ) : (
+        <div className="border-y border-slate-100 py-14 text-center text-sm text-slate-500 dark:border-slate-700">
+          {tagsQuery.isLoading ? "Memuat tags..." : "Belum ada tag."}
+        </div>
+      )}
 
       <PaginationComponent
         pageSize={pageSize}
@@ -266,7 +299,7 @@ const BlogTags = () => {
         canNextPage={pageIndex < pageCount - 1}
         gotoPage={setPageIndex}
         previousPage={() => setPageIndex((page) => Math.max(0, page - 1))}
-        nextPage={() => setPageIndex((page) => Math.min(pageCount - 1, page + 1))}
+        nextPage={() => setPageIndex((page) => Math.min(Math.max(0, pageCount - 1), page + 1))}
         setPageSize={(size) => {
           setPageSize(size);
           setPageIndex(0);

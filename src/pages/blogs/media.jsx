@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
 import Fileinput from "@/components/ui/Fileinput";
+import Tooltip from "@/components/ui/Tooltip";
 import PaginationComponent from "@/components/globals/table/pagination";
 import {
   addBlogMedia,
@@ -18,6 +19,7 @@ import {
   getBlogErrorMessage,
   showBlogLoading,
 } from "./blogAlerts";
+import { getBlogCollection, getBlogPageCount } from "./blogUtils";
 
 const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg"]);
 const formatBytes = (bytes = 0) => {
@@ -49,8 +51,8 @@ const BlogMedia = () => {
         })
       ).data,
   });
-  const media = mediaQuery.data?.results || [];
-  const pageCount = Math.ceil((mediaQuery.data?.count || 0) / pageSize);
+  const media = getBlogCollection(mediaQuery.data);
+  const pageCount = getBlogPageCount(mediaQuery.data, pageSize);
 
   const uploadMutation = useMutation({
     mutationFn: addBlogMedia,
@@ -144,8 +146,16 @@ const BlogMedia = () => {
   };
 
   const handleCopy = async (url) => {
-    await navigator.clipboard.writeText(url);
-    Swal.fire({ title: "URL disalin", icon: "success", timer: 1000, showConfirmButton: false });
+    try {
+      if (!url) throw new Error("URL media tidak tersedia.");
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Browser tidak mendukung akses clipboard.");
+      }
+      await navigator.clipboard.writeText(url);
+      Swal.fire({ title: "URL disalin", icon: "success", timer: 1000, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire("Gagal menyalin URL", error.message || "Salin URL secara manual.", "error");
+    }
   };
 
   return (
@@ -166,7 +176,7 @@ const BlogMedia = () => {
       </form>
 
       {mediaQuery.isError && (
-        <div className="mb-4 rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">Media gagal dimuat.</div>
+        <div className="mb-4 rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">{getBlogErrorMessage(mediaQuery.error, "Media gagal dimuat.")}</div>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -191,9 +201,15 @@ const BlogMedia = () => {
                   <p className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs text-slate-500">{item.alt_text || "Belum ada alt text"}</p>
                 </div>
                 <div className="flex justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
-                  <button className="action-btn bg-info-500 bg-opacity-30 text-info-500 hover:bg-opacity-100 hover:text-white" onClick={() => handleCopy(item.url)} title="Salin URL"><Icon icon="heroicons-outline:link" /></button>
-                  <button className="action-btn bg-primary-500 bg-opacity-30 text-primary-500 hover:bg-opacity-100 hover:text-white" onClick={() => openEdit(item)} title="Edit alt text"><Icon icon="heroicons:pencil-square" /></button>
-                  <button className="action-btn bg-danger-500 bg-opacity-30 text-danger-500 hover:bg-opacity-100 hover:text-white" onClick={() => handleDelete(item)} title="Hapus"><Icon icon="heroicons-outline:trash" /></button>
+                  <Tooltip content="Salin URL" placement="top" arrow>
+                    <button type="button" className="action-btn bg-info-500 bg-opacity-30 text-info-500 hover:bg-opacity-100 hover:text-white" onClick={() => handleCopy(item.url)} aria-label={`Salin URL ${item.original_name}`}><Icon icon="heroicons-outline:link" /></button>
+                  </Tooltip>
+                  <Tooltip content="Edit" placement="top" arrow>
+                    <button type="button" className="action-btn bg-primary-500 bg-opacity-30 text-primary-500 hover:bg-opacity-100 hover:text-white" onClick={() => openEdit(item)} aria-label={`Edit alt text ${item.original_name}`}><Icon icon="heroicons:pencil-square" /></button>
+                  </Tooltip>
+                  <Tooltip content="Hapus" placement="top" arrow>
+                    <button type="button" className="action-btn bg-danger-500 bg-opacity-30 text-danger-500 hover:bg-opacity-100 hover:text-white" onClick={() => handleDelete(item)} disabled={deleteMutation.isPending} aria-label={`Hapus ${item.original_name}`}><Icon icon="heroicons-outline:trash" /></button>
+                  </Tooltip>
                 </div>
               </div>
             </article>
@@ -213,7 +229,7 @@ const BlogMedia = () => {
         canNextPage={pageIndex < pageCount - 1}
         gotoPage={setPageIndex}
         previousPage={() => setPageIndex((page) => Math.max(0, page - 1))}
-        nextPage={() => setPageIndex((page) => Math.min(pageCount - 1, page + 1))}
+        nextPage={() => setPageIndex((page) => Math.min(Math.max(0, pageCount - 1), page + 1))}
         setPageSize={(size) => { setPageSize(size); setPageIndex(0); }}
       />
 
@@ -231,7 +247,8 @@ const BlogMedia = () => {
       <Modal activeModal={Boolean(editMedia)} onClose={() => setEditMedia(null)} title="Edit Alt Text" className="max-w-lg">
         <form onSubmit={handleEdit} className="space-y-4">
           {editMedia && <p className="truncate text-sm font-medium">{editMedia.original_name}</p>}
-          <textarea className="form-control py-2" rows="4" value={altText} onChange={(event) => setAltText(event.target.value)} placeholder="Alt text media..." />
+          <label className="form-label" htmlFor="edit-media-alt-text">Alt Text</label>
+          <textarea id="edit-media-alt-text" className="form-control py-2" rows="4" value={altText} onChange={(event) => setAltText(event.target.value)} placeholder="Alt text media..." />
           <div className="flex justify-end gap-3"><Button text="Batal" className="btn-light" onClick={() => setEditMedia(null)} /><Button text="Simpan" type="submit" className="btn-dark" isLoading={editMutation.isPending} /></div>
         </form>
       </Modal>

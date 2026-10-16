@@ -19,14 +19,17 @@ import {
   uploadEditorImage,
 } from "@/axios/blog/media";
 
-const BlogEditor = ({ initialData, editorRef, onReady }) => {
+const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
   const instanceRef = useRef(null);
   const undoRef = useRef(null);
   const scrollRestoreTimersRef = useRef([]);
+  const changeTimerRef = useRef(null);
+  const saveRevisionRef = useRef(0);
   const [historyState, setHistoryState] = useState({
     canUndo: false,
     canRedo: false,
   });
+  const [editorError, setEditorError] = useState("");
   const holderId = `blog-editor-${useId().replace(/:/g, "")}`;
 
   const updateHistoryState = () => {
@@ -70,6 +73,12 @@ const BlogEditor = ({ initialData, editorRef, onReady }) => {
     keepViewportPosition();
     await history[action]();
     updateHistoryState();
+  };
+
+  const saveChangedContent = async (editor) => {
+    const revision = ++saveRevisionRef.current;
+    const content = await editor.save();
+    onChange?.(content, revision);
   };
 
   useEffect(() => {
@@ -136,21 +145,45 @@ const BlogEditor = ({ initialData, editorRef, onReady }) => {
         editorRef.current = editor;
         onReady?.();
       },
+      onChange: () => {
+        window.clearTimeout(changeTimerRef.current);
+        changeTimerRef.current = window.setTimeout(async () => {
+          try {
+            await saveChangedContent(editor);
+          } catch {
+            // Editor may be navigating away while a change is being serialized.
+          }
+        }, 400);
+      },
     });
     instanceRef.current = editor;
+    editor.isReady.catch(() => {
+      if (active) {
+        setEditorError(
+          "Editor tidak berhasil dimuat. Muat ulang halaman lalu coba kembali.",
+        );
+      }
+    });
 
     return () => {
       active = false;
       scrollRestoreTimersRef.current.forEach(window.clearTimeout);
       scrollRestoreTimersRef.current = [];
+      window.clearTimeout(changeTimerRef.current);
       editorRef.current = null;
       undoRef.current = null;
       editor.isReady
-        .then(() => editor.destroy())
+        .then(async () => {
+          try {
+            await saveChangedContent(editor);
+          } finally {
+            editor.destroy();
+          }
+        })
         .catch(() => undefined);
       instanceRef.current = null;
     };
-  }, [editorRef, holderId, initialData, onReady]);
+  }, [editorRef, holderId, initialData, onChange, onReady]);
 
   const historyButtonClass = (enabled) =>
     `inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500/30 ${
@@ -161,6 +194,11 @@ const BlogEditor = ({ initialData, editorRef, onReady }) => {
 
   return (
     <div className="rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      {editorError && (
+        <div role="alert" className="border-b border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+          {editorError}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
         <div className="flex items-center gap-2">
           <button
@@ -191,7 +229,7 @@ const BlogEditor = ({ initialData, editorRef, onReady }) => {
       </div>
       <div
         id={holderId}
-        className="blog-editor-canvas min-h-[560px] px-3 py-4 text-slate-800 dark:text-slate-200"
+        className="blog-editor-canvas min-h-[360px] px-3 py-4 text-slate-800 dark:text-slate-200 sm:min-h-[480px] xl:min-h-[560px]"
         onKeyDownCapture={handleHistoryShortcut}
       />
     </div>

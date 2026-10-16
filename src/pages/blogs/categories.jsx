@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
 import Textinput from "@/components/ui/Textinput";
+import Table from "@/components/globals/table/table";
+import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
 import {
   addBlogCategory,
@@ -19,14 +20,7 @@ import {
   getBlogErrorMessage,
   showBlogLoading,
 } from "./blogAlerts";
-
-const formatDate = (value) =>
-  value
-    ? new Intl.DateTimeFormat("id-ID", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "-";
+import { formatBlogDate, getBlogCollection, getBlogPageCount } from "./blogUtils";
 
 const BlogCategories = () => {
   const queryClient = useQueryClient();
@@ -34,11 +28,9 @@ const BlogCategories = () => {
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
-  const [parentFilter, setParentFilter] = useState("");
-  const [onlyRoot, setOnlyRoot] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [form, setForm] = useState({ name: "", description: "", parent: "" });
+  const [form, setForm] = useState({ name: "", description: "" });
   const [nameError, setNameError] = useState("");
 
   const categoriesQuery = useQuery({
@@ -47,8 +39,6 @@ const BlogCategories = () => {
       pageIndex,
       pageSize,
       appliedSearch,
-      parentFilter,
-      onlyRoot,
     ],
     queryFn: async () =>
       (
@@ -57,25 +47,15 @@ const BlogCategories = () => {
           page_size: pageSize,
           search: appliedSearch || undefined,
           ordering: "-created_at",
-          filter_parent_id: parentFilter || undefined,
-          only_root: onlyRoot || undefined,
         })
       ).data,
   });
 
-  const optionsQuery = useQuery({
-    queryKey: ["blog-category-options"],
-    queryFn: async () =>
-      (await getBlogCategories({ page_size: 100, ordering: "name" })).data,
-  });
-
-  const categories = categoriesQuery.data?.results || [];
-  const categoryOptions = optionsQuery.data?.results || [];
-  const pageCount = Math.ceil((categoriesQuery.data?.count || 0) / pageSize);
+  const categories = getBlogCollection(categoriesQuery.data);
+  const pageCount = getBlogPageCount(categoriesQuery.data, pageSize);
 
   const invalidateCategories = () => {
     queryClient.invalidateQueries({ queryKey: ["blog-categories-admin"] });
-    queryClient.invalidateQueries({ queryKey: ["blog-category-options"] });
     queryClient.invalidateQueries({ queryKey: ["blog-categories"] });
   };
 
@@ -91,7 +71,7 @@ const BlogCategories = () => {
 
   const resetForm = () => {
     setSelectedCategory(null);
-    setForm({ name: "", description: "", parent: "" });
+    setForm({ name: "", description: "" });
     setNameError("");
   };
 
@@ -110,7 +90,6 @@ const BlogCategories = () => {
     setForm({
       name: category.name || "",
       description: category.description || "",
-      parent: category.parent || "",
     });
     setNameError("");
     setModalOpen(true);
@@ -120,7 +99,6 @@ const BlogCategories = () => {
       setForm({
         name: data.name || "",
         description: data.description || "",
-        parent: data.parent || "",
       });
     } catch (error) {
       Swal.fire(
@@ -157,7 +135,6 @@ const BlogCategories = () => {
         data: {
           name: form.name.trim(),
           description: form.description.trim(),
-          parent: form.parent || null,
         },
       });
       closeModal();
@@ -204,10 +181,94 @@ const BlogCategories = () => {
     }
   };
 
-  const changeFilter = (callback) => {
-    callback();
-    setPageIndex(0);
-  };
+  const columns = useMemo(
+    () => [
+      {
+        Header: "Kategori",
+        accessor: "name",
+        minWidth: 190,
+        Cell: ({ row }) => (
+          <div>
+            <div className="font-medium text-slate-700 dark:text-slate-200">
+              {row.original.name}
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              {row.original.slug}
+            </div>
+          </div>
+        ),
+      },
+      {
+        Header: "Deskripsi",
+        accessor: "description",
+        minWidth: 220,
+        maxWidth: 320,
+        Cell: ({ value }) => (
+          <span className="line-clamp-2 text-slate-500">{value || "-"}</span>
+        ),
+      },
+      {
+        Header: "Post",
+        accessor: "post_count",
+        minWidth: 90,
+        Cell: ({ value }) => (
+          <span className="rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700">
+            {value || 0}
+          </span>
+        ),
+      },
+      {
+        Header: "Dibuat Oleh",
+        accessor: "created_by_name",
+        minWidth: 150,
+        Cell: ({ value }) => value || "-",
+      },
+      {
+        Header: "Terakhir Diubah",
+        accessor: "updated_at",
+        minWidth: 170,
+        Cell: ({ value }) => (
+          <span className="whitespace-nowrap">{formatBlogDate(value)}</span>
+        ),
+      },
+      {
+        Header: "Aksi",
+        accessor: "action",
+        id: "action",
+        sticky: "right",
+        disableSortBy: true,
+        Cell: ({ row }) => {
+          const category = row.original;
+          return (
+            <div className="flex items-center justify-center gap-2">
+              <TableAction
+                action={{
+                  name: "Edit",
+                  icon: "heroicons:pencil-square",
+                  className:
+                    "!border-primary-200 !bg-primary-100 !text-primary-600 hover:!border-primary-300 hover:!bg-primary-200 hover:!text-primary-700 dark:!border-primary-500/30 dark:!bg-primary-500/10 dark:!text-primary-300 dark:hover:!border-primary-500/50 dark:hover:!bg-primary-500/20",
+                  onClick: () => openEdit(category),
+                }}
+                row={category}
+              />
+              <TableAction
+                action={{
+                  name: "Delete",
+                  icon: "heroicons-outline:trash",
+                  disabled: deleteMutation.isPending,
+                  className:
+                    "!border-danger-200 !bg-danger-100 !text-danger-600 hover:!border-danger-300 hover:!bg-danger-200 hover:!text-danger-700 dark:!border-danger-500/30 dark:!bg-danger-500/10 dark:!text-danger-300 dark:hover:!border-danger-500/50 dark:hover:!bg-danger-500/20",
+                  onClick: () => handleDelete(category),
+                }}
+                row={category}
+              />
+            </div>
+          );
+        },
+      },
+    ],
+    [deleteMutation.isPending],
+  );
 
   return (
     <Card
@@ -222,7 +283,7 @@ const BlogCategories = () => {
       }
     >
       <form
-        className="mb-5 grid gap-3 lg:grid-cols-[minmax(240px,1fr)_minmax(210px,280px)_170px_auto]"
+        className="mb-5 flex flex-col gap-3 sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
           setPageIndex(0);
@@ -230,42 +291,11 @@ const BlogCategories = () => {
         }}
       >
         <input
-          className="form-control py-2"
+          className="form-control py-2 sm:max-w-sm"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Cari nama, slug, atau deskripsi..."
         />
-        <select
-          className="form-control py-2"
-          value={parentFilter}
-          onChange={(event) =>
-            changeFilter(() => {
-              setParentFilter(event.target.value);
-              if (event.target.value) setOnlyRoot(false);
-            })
-          }
-          disabled={onlyRoot}
-        >
-          <option value="">Semua parent</option>
-          {categoryOptions.map((category) => (
-            <option key={category.category_id} value={category.category_id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <label className="flex items-center gap-2 rounded border border-slate-200 px-3 text-sm dark:border-slate-700">
-          <input
-            type="checkbox"
-            checked={onlyRoot}
-            onChange={(event) =>
-              changeFilter(() => {
-                setOnlyRoot(event.target.checked);
-                if (event.target.checked) setParentFilter("");
-              })
-            }
-          />
-          Hanya root
-        </label>
         <Button
           type="submit"
           text="Cari"
@@ -283,70 +313,21 @@ const BlogCategories = () => {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-slate-700">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-700">
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">
-              <th className="px-5 py-3">Kategori</th>
-              <th className="px-5 py-3">Parent</th>
-              <th className="px-5 py-3">Deskripsi</th>
-              <th className="px-5 py-3">Post</th>
-              <th className="px-5 py-3">Dibuat Oleh</th>
-              <th className="px-5 py-3">Terakhir Diubah</th>
-              <th className="px-5 py-3 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-            {categories.map((category) => (
-              <tr key={category.category_id} className="text-sm text-slate-700 dark:text-slate-200">
-                <td className="px-5 py-4">
-                  <div className="font-medium">{category.name}</div>
-                  <div className="mt-1 text-xs text-slate-500">{category.slug}</div>
-                </td>
-                <td className="px-5 py-4">{category.parent_name || "Root"}</td>
-                <td className="max-w-xs px-5 py-4 text-slate-500">
-                  <span className="line-clamp-2">{category.description || "-"}</span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700">
-                    {category.post_count || 0}
-                  </span>
-                </td>
-                <td className="px-5 py-4">{category.created_by_name || "-"}</td>
-                <td className="whitespace-nowrap px-5 py-4">{formatDate(category.updated_at)}</td>
-                <td className="px-5 py-4">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="action-btn bg-primary-500 bg-opacity-30 text-primary-500 hover:bg-opacity-100 hover:text-white"
-                      onClick={() => openEdit(category)}
-                      title="Edit"
-                    >
-                      <Icon icon="heroicons:pencil-square" />
-                    </button>
-                    <button
-                      className="action-btn bg-danger-500 bg-opacity-30 text-danger-500 hover:bg-opacity-100 hover:text-white"
-                      onClick={() => handleDelete(category)}
-                      disabled={deleteMutation.isPending}
-                      title="Hapus"
-                    >
-                      <Icon icon="heroicons-outline:trash" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {!categories.length && (
-              <tr>
-                <td colSpan="7" className="px-5 py-14 text-center text-slate-500">
-                  {categoriesQuery.isLoading
-                    ? "Memuat categories..."
-                    : "Belum ada kategori."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {categories.length ? (
+        <Table
+          tableId="blog-categories-table"
+          listData={{ results: categories }}
+          listColumn={columns}
+          isPagination={false}
+          tableMinWidth={840}
+        />
+      ) : (
+        <div className="border-y border-slate-100 py-14 text-center text-sm text-slate-500 dark:border-slate-700">
+          {categoriesQuery.isLoading
+            ? "Memuat categories..."
+            : "Belum ada kategori."}
+        </div>
+      )}
 
       <PaginationComponent
         pageSize={pageSize}
@@ -356,7 +337,7 @@ const BlogCategories = () => {
         canNextPage={pageIndex < pageCount - 1}
         gotoPage={setPageIndex}
         previousPage={() => setPageIndex((page) => Math.max(0, page - 1))}
-        nextPage={() => setPageIndex((page) => Math.min(pageCount - 1, page + 1))}
+        nextPage={() => setPageIndex((page) => Math.min(Math.max(0, pageCount - 1), page + 1))}
         setPageSize={(size) => {
           setPageSize(size);
           setPageIndex(0);
@@ -397,31 +378,6 @@ const BlogCategories = () => {
               placeholder="Deskripsi singkat kategori"
             />
           </div>
-          <div>
-            <label className="form-label" htmlFor="category-parent">
-              Parent Category
-            </label>
-            <select
-              id="category-parent"
-              className="form-control py-2"
-              value={form.parent}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, parent: event.target.value }))
-              }
-            >
-              <option value="">Tanpa parent (root)</option>
-              {categoryOptions
-                .filter(
-                  (category) =>
-                    category.category_id !== selectedCategory?.category_id,
-                )
-                .map((category) => (
-                  <option key={category.category_id} value={category.category_id}>
-                    {category.name}
-                  </option>
-                ))}
-            </select>
-          </div>
           {selectedCategory?.slug && (
             <Textinput
               label="Slug"
@@ -431,8 +387,7 @@ const BlogCategories = () => {
             />
           )}
           <p className="text-xs text-slate-500">
-            Slug dibuat otomatis oleh backend. Parent dikirim sebagai ID kategori
-            atau null untuk kategori root.
+            Slug dibuat otomatis oleh backend berdasarkan nama kategori.
           </p>
           <div className="flex justify-end gap-3">
             <Button text="Batal" className="btn-light" onClick={closeModal} />

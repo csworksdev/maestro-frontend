@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactSelect from "react-select";
@@ -18,11 +18,13 @@ import {
 import { getBlogMedia } from "@/axios/blog/media";
 import {
   confirmBlogAction,
-  getBlogErrorMessage as getConnectionErrorMessage,
+  getBlogErrorMessage,
   showBlogLoading,
 } from "./blogAlerts";
 
 const EMPTY_CONTENT = { time: Date.now(), blocks: [], version: "2.31.7" };
+const BLOG_DRAFT_PREFIX = "maestro:blog-form-draft:";
+const BLOG_DRAFT_VERSION = 2;
 const STATUS_OPTIONS = [
   { value: "draft", label: "Draft" },
   { value: "published", label: "Published" },
@@ -49,17 +51,8 @@ const formatErrorValue = (value, path = "") => {
   return [];
 };
 
-const getErrorMessage = (error, fallback) => {
-  if (error?.code === "ECONNABORTED" || !error?.response) {
-    return getConnectionErrorMessage(error, fallback);
-  }
-  const data = error?.response?.data;
-  if (typeof data === "string") return data;
-  if (data?.detail) return data.detail;
-  const messages = formatErrorValue(data);
-  if (messages.length) return messages.join("\n");
-  return fallback;
-};
+const getErrorMessage = (error, fallback) =>
+  getBlogErrorMessage(error, fallback);
 
 const getValidationPayload = (error) => {
   const data = error?.response?.data;
@@ -81,27 +74,134 @@ const toDateTimeLocal = (value) => {
     .slice(0, 16);
 };
 
+const readBlogDraft = (key, scope) => {
+  try {
+    const draft = JSON.parse(sessionStorage.getItem(key));
+    if (
+      !draft ||
+      typeof draft !== "object" ||
+      draft.version !== BLOG_DRAFT_VERSION ||
+      draft.scope !== scope
+    ) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    return draft;
+  } catch {
+    return null;
+  }
+};
+
+const writeBlogDraft = (key, scope, draft) => {
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        ...draft,
+        version: BLOG_DRAFT_VERSION,
+        scope,
+        savedAt: new Date().toISOString(),
+      }),
+    );
+  } catch {
+    // The form remains usable when browser storage is disabled or full.
+  }
+};
+
+const getSelectionIds = (values, idField) =>
+  (Array.isArray(values) ? values : [])
+    .map((value) =>
+      value && typeof value === "object" ? value[idField] ?? value.value : value,
+    )
+    .filter((value) => value !== undefined && value !== null && value !== "");
+
+const createInitialForm = (post, draftForm) => {
+  const serverForm = {
+    title: post?.title || "",
+    status: post?.status || "draft",
+    published_at: toDateTimeLocal(post?.published_at),
+    categories: getSelectionIds(
+      post?.categories || post?.categories_detail,
+      "category_id",
+    ),
+    tags: getSelectionIds(post?.tags || post?.tags_detail, "tag_id"),
+    featured_image:
+      post?.featured_image?.media_id || post?.featured_image_id || post?.featured_image || "",
+    allow_comments: post?.allow_comments ?? true,
+    is_sticky: post?.is_sticky ?? false,
+    seo_title: post?.seo_title || "",
+    seo_description: post?.seo_description || "",
+  };
+
+  if (!draftForm || typeof draftForm !== "object") return serverForm;
+  const status = STATUS_OPTIONS.some(({ value }) => value === draftForm.status)
+    ? draftForm.status
+    : serverForm.status;
+
+  return {
+    ...serverForm,
+    title: typeof draftForm.title === "string" ? draftForm.title : serverForm.title,
+    status,
+    published_at:
+      typeof draftForm.published_at === "string"
+        ? draftForm.published_at
+        : serverForm.published_at,
+    categories: getSelectionIds(draftForm.categories, "category_id"),
+    tags: getSelectionIds(draftForm.tags, "tag_id"),
+    featured_image:
+      typeof draftForm.featured_image === "string"
+        ? draftForm.featured_image
+        : serverForm.featured_image,
+    allow_comments:
+      typeof draftForm.allow_comments === "boolean"
+        ? draftForm.allow_comments
+        : serverForm.allow_comments,
+    is_sticky:
+      typeof draftForm.is_sticky === "boolean"
+        ? draftForm.is_sticky
+        : serverForm.is_sticky,
+    seo_title:
+      typeof draftForm.seo_title === "string"
+        ? draftForm.seo_title
+        : serverForm.seo_title,
+    seo_description:
+      typeof draftForm.seo_description === "string"
+        ? draftForm.seo_description
+        : serverForm.seo_description,
+  };
+};
+
 const BlogFormContent = ({ post = null }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const editorRef = useRef(null);
   const publishedAtRef = useRef(null);
   const publishedAtFieldRef = useRef(null);
+  const draftKey = `${BLOG_DRAFT_PREFIX}${post?.post_id || "new"}`;
+  const draftScope = post
+    ? `${post.post_id}:${post.updated_at || post.modified_at || "unknown"}`
+    : "new";
+  const initialDraftRef = useRef(readBlogDraft(draftKey, draftScope));
+  const formRef = useRef(null);
+  const discardDraftRef = useRef(false);
+  const editorRevisionRef = useRef(0);
   const [editorReady, setEditorReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({
-    title: post?.title || "",
-    status: post?.status || "draft",
-    published_at: toDateTimeLocal(post?.published_at),
-    categories: post?.categories || [],
-    tags: post?.tags || [],
-    featured_image: post?.featured_image || "",
-    allow_comments: post?.allow_comments ?? true,
-    is_sticky: post?.is_sticky ?? false,
-    seo_title: post?.seo_title || "",
-    seo_description: post?.seo_description || "",
-  });
+  const [form, setForm] = useState(() =>
+    createInitialForm(post, initialDraftRef.current?.form),
+  );
+  formRef.current = form;
+  const initialContentRef = useRef(
+    normalizeBlogContent(
+      initialDraftRef.current?.content || post?.content || EMPTY_CONTENT,
+    ),
+  );
+
+  useEffect(() => {
+    const currentDraft = readBlogDraft(draftKey, draftScope) || {};
+    writeBlogDraft(draftKey, draftScope, { ...currentDraft, form });
+  }, [draftKey, draftScope, form]);
 
   const categoriesQuery = useQuery({
     queryKey: ["blog-categories"],
@@ -148,18 +248,45 @@ const BlogFormContent = ({ post = null }) => {
   );
   const selectedMedia = useMemo(
     () =>
-      mediaOptions.find((option) => option.value === form.featured_image)
+      mediaOptions.find(
+        (option) => String(option.value) === String(form.featured_image),
+      )
         ?.media || null,
     [form.featured_image, mediaOptions],
   );
-  const initialContent = useMemo(
-    () => normalizeBlogContent(post?.content || EMPTY_CONTENT),
-    [post],
-  );
+  const initialContent = initialContentRef.current;
   const handleEditorReady = useCallback(() => setEditorReady(true), []);
+  const handleEditorChange = useCallback(
+    (content, revision) => {
+      if (
+        discardDraftRef.current ||
+        revision <= editorRevisionRef.current
+      ) return;
+      editorRevisionRef.current = revision;
+      const currentDraft = readBlogDraft(draftKey, draftScope) || {};
+      writeBlogDraft(draftKey, draftScope, {
+        ...currentDraft,
+        form: formRef.current,
+        content: normalizeBlogContent(content),
+      });
+    },
+    [draftKey, draftScope],
+  );
 
-  const updateField = (field) => (event) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }));
+  const clearDraft = useCallback(() => {
+    discardDraftRef.current = true;
+    try {
+      sessionStorage.removeItem(draftKey);
+    } catch {
+      // Ignore unavailable browser storage.
+    }
+  }, [draftKey]);
+
+  const updateField = (field, maxLength) => (event) => {
+    const value = maxLength
+      ? event.target.value.slice(0, maxLength)
+      : event.target.value;
+    setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: "" }));
   };
 
@@ -249,9 +376,24 @@ const BlogFormContent = ({ post = null }) => {
         "Mohon tunggu. Jangan tutup halaman sampai proses selesai.",
       );
 
-      if (post) await editBlogPost(post.post_id, payload);
-      else await addBlogPost(payload);
+      const saveResponse = post
+        ? await editBlogPost(post.post_id, payload)
+        : await addBlogPost(payload);
 
+      clearDraft();
+      // Detail blog memiliki cache terpisah dari daftar blog. Perbarui cache
+      // aktif langsung dari respons PUT supaya data lama tidak sempat dirender,
+      // lalu tandai seluruh detail stale sebagai pengaman untuk kunjungan lain.
+      if (post && saveResponse?.data && typeof saveResponse.data === "object") {
+        queryClient.setQueryData(
+          ["blog-post", String(post.post_id)],
+          saveResponse.data,
+        );
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["blog-post"],
+        refetchType: "none",
+      });
       await queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
       await Swal.fire(
         "Berhasil",
@@ -259,6 +401,7 @@ const BlogFormContent = ({ post = null }) => {
         "success",
       );
       navigate("/blogs");
+      queryClient.removeQueries({ queryKey: ["blog-post"] });
     } catch (error) {
       const validation = getValidationPayload(error);
       setErrors((current) => ({
@@ -303,6 +446,7 @@ const BlogFormContent = ({ post = null }) => {
               initialData={initialContent}
               editorRef={editorRef}
               onReady={handleEditorReady}
+              onChange={handleEditorChange}
             />
           </section>
 
@@ -357,38 +501,53 @@ const BlogFormContent = ({ post = null }) => {
                 </div>
               )}
               <div>
-                <label className="form-label">Kategori</label>
+                <label className="form-label" htmlFor="blog-categories">Kategori</label>
                 <ReactSelect
+                  inputId="blog-categories"
+                  classNamePrefix="blog-select"
                   isMulti
                   isLoading={categoriesQuery.isLoading}
                   options={categoryOptions}
-                  value={categoryOptions.filter((option) => form.categories.includes(option.value))}
+                  value={categoryOptions.filter((option) =>
+                    form.categories.some(
+                      (value) => String(value) === String(option.value),
+                    ),
+                  )}
                   onChange={(selected) => setForm((current) => ({ ...current, categories: selected.map((option) => option.value) }))}
                   placeholder="Pilih kategori..."
                   noOptionsMessage={() => "Kategori tidak tersedia"}
                 />
               </div>
               <div>
-                <label className="form-label">Tags</label>
+                <label className="form-label" htmlFor="blog-tags">Tags</label>
                 <ReactSelect
+                  inputId="blog-tags"
+                  classNamePrefix="blog-select"
                   isMulti
                   isLoading={tagsQuery.isLoading}
                   options={tagOptions}
-                  value={tagOptions.filter((option) => form.tags.includes(option.value))}
+                  value={tagOptions.filter((option) =>
+                    form.tags.some(
+                      (value) => String(value) === String(option.value),
+                    ),
+                  )}
                   onChange={(selected) => setForm((current) => ({ ...current, tags: selected.map((option) => option.value) }))}
                   placeholder="Pilih tags..."
                   noOptionsMessage={() => "Tag tidak tersedia"}
                 />
               </div>
               <div>
-                <label className="form-label">Featured Image</label>
+                <label className="form-label" htmlFor="blog-featured-image">Featured Image</label>
                 <ReactSelect
+                  inputId="blog-featured-image"
+                  classNamePrefix="blog-select"
                   isClearable
                   isLoading={mediaQuery.isLoading}
                   options={mediaOptions}
                   value={
                     mediaOptions.find(
-                      (option) => option.value === form.featured_image,
+                      (option) =>
+                        String(option.value) === String(form.featured_image),
                     ) || null
                   }
                   onChange={(selected) =>
@@ -403,17 +562,26 @@ const BlogFormContent = ({ post = null }) => {
               </div>
               {(selectedMedia?.url || post?.featured_image_url) && (
                 <img
+                  key={selectedMedia?.url || post.featured_image_url}
                   src={selectedMedia?.url || post.featured_image_url}
                   alt={selectedMedia?.alt_text || post?.title || "Featured blog"}
                   className="h-36 w-full rounded-md border border-slate-200 object-cover dark:border-slate-700"
+                  loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget.hidden = true;
+                  }}
                 />
               )}
               <Textinput
                 label="SEO Title"
                 value={form.seo_title}
-                onChange={updateField("seo_title")}
+                onChange={updateField("seo_title", 60)}
                 placeholder="Judul untuk mesin pencari"
+                maxLength={60}
               />
+              <p className="-mt-3 text-right text-xs text-slate-500">
+                {form.seo_title.length}/60
+              </p>
               <div>
                 <label className="form-label" htmlFor="blog-seo-description">SEO Description</label>
                 <textarea
@@ -421,9 +589,13 @@ const BlogFormContent = ({ post = null }) => {
                   className="form-control py-2"
                   rows="3"
                   value={form.seo_description}
-                  onChange={updateField("seo_description")}
+                  onChange={updateField("seo_description", 160)}
                   placeholder="Deskripsi singkat untuk mesin pencari"
+                  maxLength={160}
                 />
+                <p className="mt-1 text-right text-xs text-slate-500">
+                  {form.seo_description.length}/160
+                </p>
               </div>
               <ToggleField
                 label="Sticky post"
@@ -434,15 +606,27 @@ const BlogFormContent = ({ post = null }) => {
             </div>
           </aside>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-200 pt-5 dark:border-slate-700">
-          <Button text="Batal" className="btn-light" onClick={() => navigate("/blogs")} />
-          <Button
-            text={post ? "Simpan Perubahan" : "Tambah Blog"}
-            type="submit"
-            className="btn-dark"
-            isLoading={saving}
-            disabled={!editorReady}
-          />
+        <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-end">
+          <div className="text-xs text-slate-500 dark:text-slate-400 sm:mr-auto">
+            Perubahan disimpan otomatis selama sesi ini.
+          </div>
+          <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 sm:flex">
+            <Button
+              text="Batal"
+              className="btn-light w-full"
+              onClick={() => {
+                clearDraft();
+                navigate("/blogs");
+              }}
+            />
+            <Button
+              text={post ? "Simpan Perubahan" : "Tambah Blog"}
+              type="submit"
+              className="btn-dark w-full"
+              isLoading={saving}
+              disabled={!editorReady}
+            />
+          </div>
         </div>
       </form>
     </Card>

@@ -7,6 +7,39 @@
   max-width: none;
 }
 
+.blog-editor-canvas .ce-block__content,
+.blog-editor-canvas .ce-toolbar__content {
+  max-width: 100%;
+}
+
+.blog-editor-canvas img,
+.blog-editor-canvas video,
+.blog-editor-canvas iframe {
+  max-width: 100%;
+}
+
+.blog-editor-canvas .ce-code__textarea,
+.blog-editor-canvas .cdx-input {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.dark .blog-select__control {
+  border-color: #475569;
+  background-color: #1e293b;
+}
+
+.dark .blog-select__menu,
+.dark .blog-select__multi-value {
+  background-color: #334155;
+}
+
+.dark .blog-select__single-value,
+.dark .blog-select__input-container,
+.dark .blog-select__multi-value__label {
+  color: #e2e8f0;
+}
+
 .blog-editor-canvas .ce-toolbar__actions,
 .blog-editor-canvas .codex-editor--narrow .ce-toolbar__actions {
   left: 6px;
