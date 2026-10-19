@@ -3,6 +3,22 @@ import { axiosConfig } from "../config";
 const storageApiBaseUrl = String(
   import.meta.env.VITE_STORAGE_API_URL || ""
 ).replace(/\/$/, "");
+const careerExportApiBaseUrl = String(
+  import.meta.env.VITE_CAREER_API_URL ||
+    import.meta.env.VITE_CAREER_EXPORT_API_URL ||
+    "https://woven-affecting-accuracy.ngrok-free.dev",
+).replace(/\/$/, "");
+
+const getCareerApiOptions = (options = {}) => ({
+  ...options,
+  baseURL: import.meta.env.DEV
+    ? "/__career_export_api"
+    : careerExportApiBaseUrl,
+  headers: {
+    "ngrok-skip-browser-warning": "true",
+    ...options.headers,
+  },
+});
 
 export const getCareerJobs = (params) => {
   return axiosConfig.get("/api/career/jobs/", { params });
@@ -62,7 +78,17 @@ export const getCareerDashboardBranches = (params, options = {}) => {
 };
 
 export const getCareerApplications = (params) => {
-  return axiosConfig.get("/api/career/applications/", { params });
+  return axiosConfig.get(
+    "/api/career/applications/",
+    getCareerApiOptions({ params }),
+  );
+};
+
+export const exportCareerApplications = (params) => {
+  return axiosConfig.get(
+    "/api/career/applications/export/",
+    getCareerApiOptions({ params, responseType: "blob" }),
+  );
 };
 
 export const getCareerApplication = (id) => {

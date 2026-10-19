@@ -15,6 +15,7 @@ import getErrorMessage from "@/utils/careerErrorMessage";
 import {
   getBranches,
   createCareerApplicationTrainersBulk,
+  exportCareerApplications,
   getCareerApplications,
   getCareerApplicationFormOptions,
   getCareerJobs,
@@ -95,6 +96,46 @@ const getWhatsappHref = (phoneNumber) => {
   return `https://wa.me/${digits}`;
 };
 
+const isSafeDocumentLink = (value) => {
+  const link = String(value || "").trim();
+  return Boolean(link) && !/^(?:javascript|data):/i.test(link);
+};
+
+const getExportFilename = (response) => {
+  const disposition = response?.headers?.["content-disposition"] || "";
+  const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const regularFilename = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+  const date = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
+
+  try {
+    return decodeURIComponent(encodedFilename || regularFilename || "") ||
+      `rekruitmen-${date}.xlsx`;
+  } catch {
+    return regularFilename || `rekruitmen-${date}.xlsx`;
+  }
+};
+
+const downloadRecruitmentExcel = (response) => {
+  const blob =
+    response.data instanceof Blob
+      ? response.data
+      : new Blob([response.data], {
+          type: response.headers?.["content-type"] ||
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = getExportFilename(response);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
 const optionFromDepartment = (department) => ({
   value: department.department_id,
   label: department.name,
@@ -113,7 +154,22 @@ const optionFromJob = (job) => ({
       ? job.department.department_id || job.department.id
       : job.department,
   departmentName: job.department_name || job.department?.name,
+  branch:
+    job.branch_id ||
+    (typeof job.branch === "object"
+      ? job.branch.branch_id || job.branch.id
+      : job.branch),
+  branchName:
+    job.branch_name ||
+    (typeof job.branch === "object"
+      ? job.branch.name || job.branch.branch_name
+      : ""),
 });
+
+const formatJobWithBranch = (jobTitle, branchName) =>
+  [jobTitle, branchName]
+    .filter((value) => value && value !== "-")
+    .join(" - ") || "-";
 
 const normalizeOptions = (payload, mapper) => {
   const { results } = getPaginatedResults(payload);
@@ -362,14 +418,16 @@ const Badge = ({ children, tone = "slate", icon }) => (
   </span>
 );
 
-const FilterSelect = ({ label, value, options, onChange }) => (
-  <label className="block">
-    <span className="mb-2 block text-sm font-semibold text-slate-600 dark:text-slate-300">
+const FilterSelect = ({ label, value, options, onChange, onOpen }) => (
+  <label className="career-recruitment-filter-row">
+    <span className="career-recruitment-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
       {label}
     </span>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      onPointerDown={onOpen}
+      onFocus={onOpen}
       className="h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
     >
       {options.map((option) => (
@@ -381,30 +439,93 @@ const FilterSelect = ({ label, value, options, onChange }) => (
   </label>
 );
 
-const CheckboxGroup = ({ title, options, selectedValues, onChange }) => (
-  <div className="border-t border-slate-100 pt-4 dark:border-slate-700">
-    <h4 className="mb-3 text-xs font-bold uppercase text-slate-500 dark:text-slate-300">
-      {title}
-    </h4>
-    <div className="space-y-3">
-      {options.map((option) => {
-        const checked = selectedValues.includes(option.value);
+const FilterDate = ({ label, value, onChange, min, max, onOpen }) => (
+  <label className="career-recruitment-filter-row">
+    <span className="career-recruitment-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
+      {label}
+    </span>
+    <input
+      type="date"
+      value={value}
+      min={min}
+      max={max}
+      onChange={(event) => onChange(event.target.value)}
+      onPointerDown={onOpen}
+      onFocus={onOpen}
+      className="h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+    />
+  </label>
+);
 
-        return (
-          <label
-            key={option.value}
-            className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-500 dark:text-slate-300"
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={() => onChange(option.value)}
-              className="h-5 w-5 rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
-            />
-            <span>{option.label}</span>
-          </label>
-        );
-      })}
+const CheckboxGroup = ({
+  id,
+  title,
+  options,
+  selectedValues,
+  onChange,
+  isOpen,
+  onToggle,
+}) => (
+  <div
+    className={`career-recruitment-filter-row ${
+      isOpen ? "career-recruitment-filter-row-open" : ""
+    }`}
+  >
+    <span className="career-recruitment-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
+      {title}
+    </span>
+    <div className="career-recruitment-multiselect min-w-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`${id}-options`}
+        className="flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-4 text-left text-sm font-medium text-slate-700 shadow-sm outline-none transition hover:border-primary-300 focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <span className="truncate">
+          {selectedValues.length
+            ? `${selectedValues.length} dipilih`
+            : `Semua ${title.toLowerCase()}`}
+        </span>
+        <Icon
+          icon="heroicons-outline:chevron-down"
+          width={17}
+          className={`career-recruitment-multiselect-chevron flex-none ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div
+          id={`${id}-options`}
+          className="career-recruitment-multiselect-options mt-2 max-h-60 w-full space-y-1 overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-md dark:border-slate-700 dark:bg-slate-900"
+        >
+          {options.length ? (
+            options.map((option) => {
+              const checked = selectedValues.includes(option.value);
+
+              return (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onChange(option.value)}
+                    className="h-5 w-5 flex-none rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            })
+          ) : (
+            <p className="px-2 py-3 text-sm text-slate-400">
+              Belum ada pilihan.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   </div>
 );
@@ -420,6 +541,8 @@ const Rekruitmen = () => {
   const [contractSystemFilter, setContractSystemFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [workingFilter, setWorkingFilter] = useState("");
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState([]);
   const [maritalStatusFilter, setMaritalStatusFilter] = useState([]);
   const [religionFilter, setReligionFilter] = useState([]);
@@ -432,8 +555,8 @@ const Rekruitmen = () => {
   const [selectedApplicationIds, setSelectedApplicationIds] = useState([]);
   const [selectedApplications, setSelectedApplications] = useState([]);
   const [selectionResetKey, setSelectionResetKey] = useState(0);
-  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [openFilterDropdown, setOpenFilterDropdown] = useState(null);
 
   const resetToFirstPage = () => {
     setPageIndex(0);
@@ -546,10 +669,11 @@ const Rekruitmen = () => {
   const activeFilterCount = [
     departmentFilter,
     jobFilter,
-    branchFilter,
     contractSystemFilter,
     statusFilter,
     workingFilter,
+    dateFromFilter,
+    dateToFilter,
     ...genderFilter,
     ...maritalStatusFilter,
     ...religionFilter,
@@ -572,6 +696,8 @@ const Rekruitmen = () => {
         contractSystemFilter,
         statusFilter,
         workingFilter,
+        dateFromFilter,
+        dateToFilter,
         genderFilter,
         maritalStatusFilter,
         religionFilter,
@@ -595,6 +721,8 @@ const Rekruitmen = () => {
         params.filter_contract_system = contractSystemFilter;
       if (statusFilter) params.filter_status = statusFilter;
       if (workingFilter) params.filter_is_working = workingFilter;
+      if (dateFromFilter) params.filter_date_from = dateFromFilter;
+      if (dateToFilter) params.filter_date_to = dateToFilter;
       if (genderFilter.length) params.filter_gender = genderFilter.join(",");
       if (maritalStatusFilter.length)
         params.filter_marital_status = maritalStatusFilter.join(",");
@@ -619,19 +747,22 @@ const Rekruitmen = () => {
 
     return payload.results.map((application) => {
       const latestStage = getCurrentApplicationStage(application.stages || []);
+      const jobTitle = application.job_title || jobLookup[application.job] || "-";
+      const branchName =
+        application.branch_name || branchLookup[application.branch] || "-";
 
       return {
         id: application.application_id,
         jobId: application.job,
-        jobTitle: application.job_title || jobLookup[application.job] || "-",
+        jobTitle,
+        jobDisplay: formatJobWithBranch(jobTitle, branchName),
         departmentId: application.department,
         departmentName:
           application.department_name ||
           departmentLookup[application.department] ||
           "-",
         branchId: application.branch,
-        branchName:
-          application.branch_name || branchLookup[application.branch] || "-",
+        branchName,
         name: application.name || "-",
         nickname: application.nickname || "",
         email: application.email || "-",
@@ -770,6 +901,18 @@ const Rekruitmen = () => {
     mappedApplications,
   ]);
 
+  const combinedJobOptions = useMemo(
+    () =>
+      filteredJobOptions.map((job) => ({
+        ...job,
+        label: formatJobWithBranch(
+          job.label,
+          job.branchName || branchLookup[job.branch],
+        ),
+      })),
+    [branchLookup, filteredJobOptions],
+  );
+
   const listData = useMemo(() => {
     const selectedDepartment = departmentOptions.find(
       (option) => option.value === departmentFilter,
@@ -891,6 +1034,17 @@ const Rekruitmen = () => {
   const handleDepartmentChange = (value) => {
     setDepartmentFilter(value);
     setJobFilter("");
+    setBranchFilter("");
+    resetToFirstPage();
+  };
+
+  const handleJobChange = (value) => {
+    const selectedJob = jobOptions.find(
+      (option) => String(option.value) === String(value),
+    );
+
+    setJobFilter(value);
+    setBranchFilter(value ? selectedJob?.branch || "" : "");
     resetToFirstPage();
   };
 
@@ -912,6 +1066,8 @@ const Rekruitmen = () => {
     setContractSystemFilter("");
     setStatusFilter("");
     setWorkingFilter("");
+    setDateFromFilter("");
+    setDateToFilter("");
     setGenderFilter([]);
     setMaritalStatusFilter([]);
     setReligionFilter([]);
@@ -919,7 +1075,16 @@ const Rekruitmen = () => {
     setEducationStatusFilter([]);
     setCoachExperienceFilter([]);
     setSourceFilter([]);
+    setOpenFilterDropdown(null);
     resetToFirstPage();
+  };
+
+  const closeMultiFilterDropdown = () => setOpenFilterDropdown(null);
+
+  const toggleFilterDropdown = (dropdownId) => {
+    setOpenFilterDropdown((current) =>
+      current === dropdownId ? null : dropdownId,
+    );
   };
 
   const handleSelectionChange = (selection) => {
@@ -1110,6 +1275,83 @@ const Rekruitmen = () => {
       );
     },
   });
+
+  const exportApplicationsMutation = useMutation({
+    mutationFn: async () => {
+      const params = { page: 1, page_size: 20 };
+
+      if (searchQuery) params.search = searchQuery;
+      if (departmentFilter) params.filter_department_id = departmentFilter;
+      if (jobFilter) params.filter_job_id = jobFilter;
+      if (branchFilter) params.filter_branch_id = branchFilter;
+      if (contractSystemFilter)
+        params.filter_contract_system = contractSystemFilter;
+      if (statusFilter) params.filter_status = statusFilter;
+      if (workingFilter) params.filter_is_working = workingFilter;
+      if (dateFromFilter) params.filter_date_from = dateFromFilter;
+      if (dateToFilter) params.filter_date_to = dateToFilter;
+      if (genderFilter.length) params.filter_gender = genderFilter.join(",");
+      if (maritalStatusFilter.length)
+        params.filter_marital_status = maritalStatusFilter.join(",");
+      if (religionFilter.length)
+        params.filter_religion = religionFilter.join(",");
+      if (educationLevelFilter.length)
+        params.filter_education_level = educationLevelFilter.join(",");
+      if (educationStatusFilter.length)
+        params.filter_education_status = educationStatusFilter.join(",");
+      if (coachExperienceFilter.length)
+        params.filter_coach_experience = coachExperienceFilter.join(",");
+      if (sourceFilter.length) params.filter_source = sourceFilter.join(",");
+
+      return exportCareerApplications(params);
+    },
+    onSuccess: (response) => {
+      if (!response?.data || response.data.size === 0) {
+        Swal.fire(
+          "Tidak ada data",
+          "File export dari server tidak berisi data.",
+          "info",
+        );
+        return;
+      }
+
+      downloadRecruitmentExcel(response);
+      Swal.fire(
+        "Berhasil",
+        "File Excel data pelamar berhasil diunduh.",
+        "success",
+      );
+    },
+    onError: (error) => {
+      Swal.fire(
+        "Gagal",
+        getErrorMessage(error, "Data pelamar gagal diekspor."),
+        "error",
+      );
+    },
+  });
+
+  const handleExportApplications = () => {
+    if (exportApplicationsMutation.isPending) return;
+
+    Swal.fire({
+      title: "Export data pelamar?",
+      text: activeFilterCount
+        ? `File Excel akan berisi data pelamar sesuai ${activeFilterCount} filter yang sedang aktif.`
+        : "File Excel akan berisi seluruh data pelamar.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, export",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        exportApplicationsMutation.mutate();
+      }
+    });
+  };
 
   const handleCreateTrainersBulk = () => {
     if (!selectedApplications.length) {
@@ -1306,15 +1548,9 @@ const Rekruitmen = () => {
       },
       {
         Header: "Loker",
-        accessor: "jobTitle",
-        width: "13%",
+        accessor: "jobDisplay",
+        width: "24%",
         Cell: ({ cell }) => <span>{cell.value}</span>,
-      },
-      {
-        Header: "Cabang",
-        accessor: "branchName",
-        width: "11%",
-        Cell: ({ cell }) => <Badge tone="blue">{cell.value}</Badge>,
       },
       {
         Header: "Gender",
@@ -1323,6 +1559,39 @@ const Rekruitmen = () => {
         Cell: ({ cell, row }) => (
           <Badge tone={genderTone(row.original.gender)}>{cell.value}</Badge>
         ),
+      },
+      {
+        Header: "Pendidikan",
+        accessor: "educationLevelDisplay",
+        width: "13%",
+        Cell: ({ cell }) => <span>{cell.value || "-"}</span>,
+      },
+      {
+        Header: "Pengalaman",
+        accessor: "coachExperienceDisplay",
+        width: "13%",
+        Cell: ({ cell }) => <span>{cell.value || "-"}</span>,
+      },
+      {
+        Header: "CV",
+        accessor: "uploadCv",
+        width: "10%",
+        Cell: ({ cell }) =>
+          isSafeDocumentLink(cell.value) ? (
+            <a
+              href={cell.value}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"
+              title="Lihat CV"
+            >
+              <Icon icon="heroicons-outline:document-text" width={16} />
+              Lihat CV
+            </a>
+          ) : (
+            <span className="text-slate-400">-</span>
+          ),
       },
       {
         Header: "Status Pekerjaan",
@@ -1374,8 +1643,7 @@ const Rekruitmen = () => {
       { value: "", label: "Semua department" },
       ...departmentOptions,
     ],
-    jobs: [{ value: "", label: "Semua loker" }, ...filteredJobOptions],
-    branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
+    jobs: [{ value: "", label: "Semua loker" }, ...combinedJobOptions],
     contractSystems: [
       { value: "", label: "Semua status" },
       ...backendFilterOptions.contractSystems,
@@ -1403,129 +1671,146 @@ const Rekruitmen = () => {
         title="Filter Pelamar"
         open={isFilterModalOpen}
         onOpen={() => setIsFilterModalOpen(true)}
-        onClose={() => setIsFilterModalOpen(false)}
+        onClose={() => {
+          setIsFilterModalOpen(false);
+          setOpenFilterDropdown(null);
+        }}
         activeCount={activeFilterCount}
         widthClass="max-w-lg"
         contentClassName="career-recruitment-filter-sidebar"
+        statusText={
+          activeFilterCount
+            ? `${activeFilterCount} filter aktif`
+            : "Belum ada filter aktif."
+        }
+        headerAction={
+          <button
+            type="button"
+            onClick={handleResetFilter}
+            className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md bg-slate-100 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+          >
+            <Icon icon="heroicons-outline:arrow-path" width={16} />
+            <span className="hidden min-[400px]:inline">Reset Filter</span>
+          </button>
+        }
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-400">
-                {activeFilterCount
-                  ? `${activeFilterCount} filter aktif`
-                  : "Gunakan filter untuk menyaring data pelamar."}
-              </p>
-            </div>
-            <div className="career-recruitment-filter-actions flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsAdvancedFiltersOpen((current) => !current)}
-                className="inline-flex min-h-[44px] min-w-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold leading-4 text-slate-600 transition hover:border-primary-200 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                aria-expanded={isAdvancedFiltersOpen}
-              >
-                <Icon icon="heroicons-outline:adjustments" width={16} />
-                {isAdvancedFiltersOpen
-                  ? "Sembunyikan Filter"
-                  : "Filter Lanjutan"}
-              </button>
-            </div>
-          </div>
-
-          <div className="career-recruitment-filter-grid grid min-w-0 grid-cols-1 gap-3">
+        <div className="career-recruitment-filter-content flex flex-col gap-4">
+          <div className="career-recruitment-filter-grid grid min-w-0 grid-cols-1 gap-4 pt-1">
+            <FilterDate
+              label="Tanggal Dari"
+              value={dateFromFilter}
+              max={dateToFilter || undefined}
+              onChange={handleFilterChange(setDateFromFilter)}
+              onOpen={closeMultiFilterDropdown}
+            />
+            <FilterDate
+              label="Tanggal Sampai"
+              value={dateToFilter}
+              min={dateFromFilter || undefined}
+              onChange={handleFilterChange(setDateToFilter)}
+              onOpen={closeMultiFilterDropdown}
+            />
             <FilterSelect
               label="Department"
               value={departmentFilter}
               options={selectOptions.departments}
               onChange={handleDepartmentChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Loker"
               value={jobFilter}
               options={selectOptions.jobs}
-              onChange={handleFilterChange(setJobFilter)}
-            />
-            <FilterSelect
-              label="Cabang"
-              value={branchFilter}
-              options={selectOptions.branches}
-              onChange={handleFilterChange(setBranchFilter)}
+              onChange={handleJobChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status Pekerjaan"
               value={contractSystemFilter}
               options={selectOptions.contractSystems}
               onChange={handleFilterChange(setContractSystemFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status"
               value={statusFilter}
               options={selectOptions.statuses}
               onChange={handleFilterChange(setStatusFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Sedang Bekerja"
               value={workingFilter}
               options={selectOptions.working}
               onChange={handleFilterChange(setWorkingFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
           </div>
 
-          {isAdvancedFiltersOpen && (
-            <div className="career-recruitment-advanced-grid grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-              <CheckboxGroup
-                title="Gender"
-                options={backendFilterOptions.genders}
-                selectedValues={genderFilter}
-                onChange={toggleMultiFilter(setGenderFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pernikahan"
-                options={backendFilterOptions.maritalStatuses}
-                selectedValues={maritalStatusFilter}
-                onChange={toggleMultiFilter(setMaritalStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Agama"
-                options={backendFilterOptions.religions}
-                selectedValues={religionFilter}
-                onChange={toggleMultiFilter(setReligionFilter)}
-              />
-              <CheckboxGroup
-                title="Pendidikan"
-                options={backendFilterOptions.educationLevels}
-                selectedValues={educationLevelFilter}
-                onChange={toggleMultiFilter(setEducationLevelFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pendidikan"
-                options={backendFilterOptions.educationStatuses}
-                selectedValues={educationStatusFilter}
-                onChange={toggleMultiFilter(setEducationStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Pengalaman Coach"
-                options={backendFilterOptions.coachExperiences}
-                selectedValues={coachExperienceFilter}
-                onChange={toggleMultiFilter(setCoachExperienceFilter)}
-              />
-              <CheckboxGroup
-                title="Sumber"
-                options={backendFilterOptions.sources}
-                selectedValues={sourceFilter}
-                onChange={toggleMultiFilter(setSourceFilter)}
-              />
-            </div>
-          )}
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end dark:border-slate-700">
-            <button
-              type="button"
-              onClick={handleResetFilter}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
-            >
-              <Icon icon="heroicons-outline:arrow-path" width={17} />
-              Reset Filter
-            </button>
+          <div className="career-recruitment-advanced-grid grid grid-cols-1 gap-4">
+            <CheckboxGroup
+              id="gender-filter"
+              title="Gender"
+              options={backendFilterOptions.genders}
+              selectedValues={genderFilter}
+              onChange={toggleMultiFilter(setGenderFilter)}
+              isOpen={openFilterDropdown === "gender"}
+              onToggle={() => toggleFilterDropdown("gender")}
+            />
+            <CheckboxGroup
+              id="marital-status-filter"
+              title="Status Pernikahan"
+              options={backendFilterOptions.maritalStatuses}
+              selectedValues={maritalStatusFilter}
+              onChange={toggleMultiFilter(setMaritalStatusFilter)}
+              isOpen={openFilterDropdown === "maritalStatus"}
+              onToggle={() => toggleFilterDropdown("maritalStatus")}
+            />
+            <CheckboxGroup
+              id="religion-filter"
+              title="Agama"
+              options={backendFilterOptions.religions}
+              selectedValues={religionFilter}
+              onChange={toggleMultiFilter(setReligionFilter)}
+              isOpen={openFilterDropdown === "religion"}
+              onToggle={() => toggleFilterDropdown("religion")}
+            />
+            <CheckboxGroup
+              id="education-level-filter"
+              title="Pendidikan"
+              options={backendFilterOptions.educationLevels}
+              selectedValues={educationLevelFilter}
+              onChange={toggleMultiFilter(setEducationLevelFilter)}
+              isOpen={openFilterDropdown === "educationLevel"}
+              onToggle={() => toggleFilterDropdown("educationLevel")}
+            />
+            <CheckboxGroup
+              id="education-status-filter"
+              title="Status Pendidikan"
+              options={backendFilterOptions.educationStatuses}
+              selectedValues={educationStatusFilter}
+              onChange={toggleMultiFilter(setEducationStatusFilter)}
+              isOpen={openFilterDropdown === "educationStatus"}
+              onToggle={() => toggleFilterDropdown("educationStatus")}
+            />
+            <CheckboxGroup
+              id="coach-experience-filter"
+              title="Pengalaman Coach"
+              options={backendFilterOptions.coachExperiences}
+              selectedValues={coachExperienceFilter}
+              onChange={toggleMultiFilter(setCoachExperienceFilter)}
+              isOpen={openFilterDropdown === "coachExperience"}
+              onToggle={() => toggleFilterDropdown("coachExperience")}
+            />
+            <CheckboxGroup
+              id="source-filter"
+              title="Sumber"
+              options={backendFilterOptions.sources}
+              selectedValues={sourceFilter}
+              onChange={toggleMultiFilter(setSourceFilter)}
+              isOpen={openFilterDropdown === "source"}
+              onToggle={() => toggleFilterDropdown("source")}
+            />
           </div>
         </div>
       </FilterSidebar>
@@ -1536,6 +1821,27 @@ const Rekruitmen = () => {
         className="career-recruitment-card min-w-0 overflow-hidden"
         headerslot={
           <div className="career-recruitment-bulk-actions flex min-w-0 flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleExportApplications}
+              disabled={exportApplicationsMutation.isPending}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-primary-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Icon
+                icon={
+                  exportApplicationsMutation.isPending
+                    ? "heroicons-outline:arrow-path"
+                    : "heroicons-outline:arrow-down-tray"
+                }
+                width={18}
+                className={
+                  exportApplicationsMutation.isPending ? "animate-spin" : ""
+                }
+              />
+              {exportApplicationsMutation.isPending
+                ? "Mengekspor..."
+                : "Export"}
+            </button>
             {selectedApplications.length > 0 && (
               <div className="mr-1 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <span>{selectedPendingCandidates.length} Pending</span>
@@ -1733,15 +2039,7 @@ const Rekruitmen = () => {
                           Loker
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.jobTitle}
-                        </dd>
-                      </div>
-                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                          Cabang
-                        </dt>
-                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.branchName}
+                          {application.jobDisplay}
                         </dd>
                       </div>
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
@@ -1758,6 +2056,45 @@ const Rekruitmen = () => {
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
                           {application.contractSystemDisplay}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Pendidikan
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.educationLevelDisplay || "-"}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Pengalaman
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.coachExperienceDisplay || "-"}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          CV
+                        </dt>
+                        <dd className="mt-1">
+                          {isSafeDocumentLink(application.uploadCv) ? (
+                            <a
+                              href={application.uploadCv}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"
+                            >
+                              <Icon
+                                icon="heroicons-outline:document-text"
+                                width={16}
+                              />
+                              Lihat CV
+                            </a>
+                          ) : (
+                            <span className="font-medium text-slate-400">-</span>
+                          )}
                         </dd>
                       </div>
                     </dl>
@@ -1792,7 +2129,7 @@ const Rekruitmen = () => {
                 onSelectionChange={handleSelectionChange}
                 actionColumnClass="w-36 min-w-[9rem]"
                 bodyCellAlign="center"
-                tableMinWidth="860px"
+                tableMinWidth="1220px"
                 selectionColumnWidth={48}
               />
             </div>
