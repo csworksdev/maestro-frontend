@@ -7,18 +7,9 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig(({ mode = "production" }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const apiProxyTarget =
-    mode === "development"
-      ? env.VITE_DEV_API_URL || env.VITE_API_URL
-      : env.VITE_API_URL;
-  const storageProxyTarget =
-    mode === "development"
-      ? env.VITE_DEV_API_URL || env.VITE_API_URL
-      : env.VITE_API_URL;
-  const careerExportProxyTarget =
-    mode === "development"
-      ? env.VITE_DEV_API_URL || env.VITE_API_URL
-      : env.VITE_API_URL;
+  const apiProxyTarget = env.VITE_API_URL;
+  const storageProxyTarget = env.VITE_API_URL;
+  const careerExportProxyTarget = env.VITE_API_URL;
 
   return {
     resolve: {
@@ -55,6 +46,11 @@ export default defineConfig(({ mode = "production" }) => {
           target: apiProxyTarget,
           changeOrigin: true,
           rewrite: (proxyPath) => proxyPath.replace(/^\/__api/, ""),
+        },
+        "/__access-api": {
+          target: env.VITE_ACCESS_API_URL || apiProxyTarget,
+          changeOrigin: true,
+          rewrite: (proxyPath) => proxyPath.replace(/^\/__access-api/, ""),
         },
         "/__storage_api": {
           target: storageProxyTarget,
