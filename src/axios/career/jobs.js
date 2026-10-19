@@ -12,10 +12,6 @@ const getCareerApiOptions = (options = {}) => ({
   baseURL: import.meta.env.DEV
     ? "/__career_export_api"
     : careerExportApiBaseUrl,
-  headers: {
-    "ngrok-skip-browser-warning": "true",
-    ...options.headers,
-  },
 });
 
 export const getCareerJobs = (params) => {
@@ -130,7 +126,6 @@ export const uploadCareerApplicationAttachment = (file) => {
     ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
     headers: {
       "Content-Type": "multipart/form-data",
-      "ngrok-skip-browser-warning": "true",
     },
   });
 };
@@ -150,7 +145,6 @@ export const deleteCareerApplicationAttachment = (fileKey) => {
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
-      "ngrok-skip-browser-warning": "true",
     },
   });
 };
