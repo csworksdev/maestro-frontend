@@ -1,12 +1,10 @@
 import { axiosConfig } from "../config";
 
 const storageApiBaseUrl = String(
-  import.meta.env.VITE_STORAGE_API_URL || ""
+  import.meta.env.VITE_STORAGE_API_URL || "",
 ).replace(/\/$/, "");
 const careerExportApiBaseUrl = String(
-  import.meta.env.VITE_CAREER_API_URL ||
-    import.meta.env.VITE_CAREER_EXPORT_API_URL ||
-    "https://woven-affecting-accuracy.ngrok-free.dev",
+  import.meta.env.VITE_API_URL || "",
 ).replace(/\/$/, "");
 
 const getCareerApiOptions = (options = {}) => ({
@@ -125,8 +123,8 @@ export const uploadCareerApplicationAttachment = (file) => {
   const storageUrl = import.meta.env.DEV
     ? "/__storage_api/api/storage/"
     : storageApiBaseUrl
-    ? `${storageApiBaseUrl}/api/storage/`
-    : "/api/storage/";
+      ? `${storageApiBaseUrl}/api/storage/`
+      : "/api/storage/";
 
   return axiosConfig.post(storageUrl, formData, {
     ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
@@ -141,8 +139,8 @@ export const deleteCareerApplicationAttachment = (fileKey) => {
   const storageUrl = import.meta.env.DEV
     ? "/__storage_api/api/storage/"
     : storageApiBaseUrl
-    ? `${storageApiBaseUrl}/api/storage/`
-    : "/api/storage/";
+      ? `${storageApiBaseUrl}/api/storage/`
+      : "/api/storage/";
 
   const formData = new FormData();
   formData.append("file_key", fileKey);
