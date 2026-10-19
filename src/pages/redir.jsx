@@ -141,7 +141,7 @@ function Redir() {
               </div>
             </div>
             <a
-              href="https://media.maestroswim.com/apk/CoachCorner_v1.1.apk"
+              href="https://play.google.com/store/apps/details?id=com.maestroswim.coach&pcampaignid=web_share"
               target="_blank"
               rel="noreferrer"
               className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400/15 px-5 py-3 text-sm font-semibold text-cyan-50 ring-1 ring-cyan-300/30 transition hover:bg-cyan-400/25"
