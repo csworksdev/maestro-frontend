@@ -5,14 +5,15 @@ import replace from "@rollup/plugin-replace";
 import viteCompression from "vite-plugin-compression";
 import { visualizer } from "rollup-plugin-visualizer";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode = "production" }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const apiProxyTarget =
     mode === "development"
       ? env.VITE_DEV_API_URL || env.VITE_API_URL
       : env.VITE_API_URL;
   const storageProxyTarget =
-    env.VITE_STORAGE_API_URL || "https://woven-affecting-accuracy.ngrok-free.dev";
+    env.VITE_STORAGE_API_URL ||
+    "https://woven-affecting-accuracy.ngrok-free.dev";
   const careerExportProxyTarget =
     env.VITE_CAREER_API_URL ||
     env.VITE_CAREER_EXPORT_API_URL ||
