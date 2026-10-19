@@ -12,12 +12,13 @@ export default defineConfig(({ mode = "production" }) => {
       ? env.VITE_DEV_API_URL || env.VITE_API_URL
       : env.VITE_API_URL;
   const storageProxyTarget =
-    env.VITE_STORAGE_API_URL ||
-    "https://woven-affecting-accuracy.ngrok-free.dev";
+    mode === "development"
+      ? env.VITE_DEV_API_URL || env.VITE_API_URL
+      : env.VITE_API_URL;
   const careerExportProxyTarget =
-    env.VITE_CAREER_API_URL ||
-    env.VITE_CAREER_EXPORT_API_URL ||
-    "https://woven-affecting-accuracy.ngrok-free.dev";
+    mode === "development"
+      ? env.VITE_DEV_API_URL || env.VITE_API_URL
+      : env.VITE_API_URL;
 
   return {
     resolve: {
