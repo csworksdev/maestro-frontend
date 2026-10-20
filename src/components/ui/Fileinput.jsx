@@ -12,6 +12,7 @@ const Fileinput = ({
   id,
   selectedFile,
   badge,
+  accept,
   selectedFiles = [],
 }) => {
   return (
@@ -24,6 +25,7 @@ const Fileinput = ({
             className="bg-red-400 w-full hidden"
             name={name}
             id={id}
+            accept={accept}
             multiple={multiple}
             placeholder={placeholder}
           />

@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import EditorJS from "@editorjs/editorjs";
 import Undo from "editorjs-undo";
 import Header from "@editorjs/header";
@@ -13,11 +13,36 @@ import Table from "@editorjs/table";
 import Code from "@editorjs/code";
 import AttachesTool from "@editorjs/attaches";
 import Icon from "@/components/ui/Icon";
+import BlogMediaPicker from "./BlogMediaPicker";
 import "./BlogEditor.css";
-import {
-  uploadEditorAttachment,
-  uploadEditorImage,
-} from "@/axios/blog/media";
+import { uploadEditorAttachment } from "@/axios/blog/media";
+
+class MediaLibraryImageTool extends ImageTool {
+  constructor(args) {
+    super(args);
+    this.openMediaLibrary = args.config.openMediaLibrary;
+    this.editorApi = args.api;
+    this.blockApi = args.block;
+  }
+
+  async appendCallback() {
+    const media = await this.openMediaLibrary?.();
+    if (!media?.url) {
+      const blockIndex = this.editorApi.blocks.getBlockIndex(this.blockApi.id);
+      if (blockIndex >= 0) this.editorApi.blocks.delete(blockIndex);
+      return;
+    }
+
+    this.data = {
+      ...this.data,
+      file: {
+        ...media,
+        url: media.url,
+      },
+      caption: media.alt_text || this.data.caption || "",
+    };
+  }
+}
 
 const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
   const instanceRef = useRef(null);
@@ -25,12 +50,30 @@ const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
   const scrollRestoreTimersRef = useRef([]);
   const changeTimerRef = useRef(null);
   const saveRevisionRef = useRef(0);
+  const mediaRequestRef = useRef(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [historyState, setHistoryState] = useState({
     canUndo: false,
     canRedo: false,
   });
   const [editorError, setEditorError] = useState("");
   const holderId = `blog-editor-${useId().replace(/:/g, "")}`;
+
+  const openMediaLibrary = useCallback(
+    () =>
+      new Promise((resolve) => {
+        mediaRequestRef.current?.(null);
+        mediaRequestRef.current = resolve;
+        setMediaPickerOpen(true);
+      }),
+    [],
+  );
+
+  const finishMediaRequest = useCallback((media = null) => {
+    mediaRequestRef.current?.(media);
+    mediaRequestRef.current = null;
+    setMediaPickerOpen(false);
+  }, []);
 
   const updateHistoryState = () => {
     const history = undoRef.current;
@@ -102,12 +145,14 @@ const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
         delimiter: Delimiter,
         inlineCode: InlineCode,
         image: {
-          class: ImageTool,
+          class: MediaLibraryImageTool,
           config: {
+            openMediaLibrary,
             uploader: {
-              uploadByFile: async (file) =>
-                (await uploadEditorImage(file)).data,
-              uploadByUrl: async () => ({ success: 0 }),
+              uploadByUrl: async (url) => ({
+                success: 1,
+                file: { url },
+              }),
             },
           },
         },
@@ -167,6 +212,8 @@ const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
 
     return () => {
       active = false;
+      mediaRequestRef.current?.(null);
+      mediaRequestRef.current = null;
       scrollRestoreTimersRef.current.forEach(window.clearTimeout);
       scrollRestoreTimersRef.current = [];
       window.clearTimeout(changeTimerRef.current);
@@ -183,7 +230,7 @@ const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
         .catch(() => undefined);
       instanceRef.current = null;
     };
-  }, [editorRef, holderId, initialData, onChange, onReady]);
+  }, [editorRef, holderId, initialData, onChange, onReady, openMediaLibrary]);
 
   const historyButtonClass = (enabled) =>
     `inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500/30 ${
@@ -193,46 +240,53 @@ const BlogEditor = ({ initialData, editorRef, onReady, onChange }) => {
     }`;
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-      {editorError && (
-        <div role="alert" className="border-b border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
-          {editorError}
+    <>
+      <div className="rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+        {editorError && (
+          <div role="alert" className="border-b border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+            {editorError}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={historyButtonClass(historyState.canUndo)}
+              disabled={!historyState.canUndo}
+              onClick={() => runHistoryAction("undo")}
+              onMouseDown={(event) => event.preventDefault()}
+              title="Undo (Ctrl/Cmd + Z)"
+              aria-disabled={!historyState.canUndo}
+            >
+              <Icon icon="heroicons-outline:arrow-uturn-left" />
+              <span>Undo</span>
+            </button>
+            <button
+              type="button"
+              className={historyButtonClass(historyState.canRedo)}
+              disabled={!historyState.canRedo}
+              onClick={() => runHistoryAction("redo")}
+              onMouseDown={(event) => event.preventDefault()}
+              title="Redo (Ctrl/Cmd + Y)"
+              aria-disabled={!historyState.canRedo}
+            >
+              <Icon icon="heroicons-outline:arrow-uturn-right" />
+              <span>Redo</span>
+            </button>
+          </div>
         </div>
-      )}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={historyButtonClass(historyState.canUndo)}
-            disabled={!historyState.canUndo}
-            onClick={() => runHistoryAction("undo")}
-            onMouseDown={(event) => event.preventDefault()}
-            title="Undo (Ctrl/Cmd + Z)"
-            aria-disabled={!historyState.canUndo}
-          >
-            <Icon icon="heroicons-outline:arrow-uturn-left" />
-            <span>Undo</span>
-          </button>
-          <button
-            type="button"
-            className={historyButtonClass(historyState.canRedo)}
-            disabled={!historyState.canRedo}
-            onClick={() => runHistoryAction("redo")}
-            onMouseDown={(event) => event.preventDefault()}
-            title="Redo (Ctrl/Cmd + Y)"
-            aria-disabled={!historyState.canRedo}
-          >
-            <Icon icon="heroicons-outline:arrow-uturn-right" />
-            <span>Redo</span>
-          </button>
-        </div>
+        <div
+          id={holderId}
+          className="blog-editor-canvas min-h-[360px] px-3 py-4 text-slate-800 dark:text-slate-200 sm:min-h-[480px] xl:min-h-[560px]"
+          onKeyDownCapture={handleHistoryShortcut}
+        />
       </div>
-      <div
-        id={holderId}
-        className="blog-editor-canvas min-h-[360px] px-3 py-4 text-slate-800 dark:text-slate-200 sm:min-h-[480px] xl:min-h-[560px]"
-        onKeyDownCapture={handleHistoryShortcut}
+      <BlogMediaPicker
+        open={mediaPickerOpen}
+        onClose={() => finishMediaRequest(null)}
+        onSelect={finishMediaRequest}
       />
-    </div>
+    </>
   );
 };
 

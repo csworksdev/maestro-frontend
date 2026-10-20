@@ -32,6 +32,33 @@ const STATUS_OPTIONS = [
   { value: "private", label: "Private" },
 ];
 
+const FeaturedImageOption = ({ label, media }) => (
+  <div className="flex min-w-0 items-center gap-3">
+    <div className="h-10 w-14 flex-none overflow-hidden rounded border border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-700">
+      {media?.url ? (
+        <img
+          src={media.url}
+          alt={media.alt_text || label || "Featured image"}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <span className="flex h-full items-center justify-center text-[10px] text-slate-400">
+          No image
+        </span>
+      )}
+    </div>
+    <div className="min-w-0">
+      <span className="block truncate text-sm">{label}</span>
+      {media?.alt_text && (
+        <span className="block truncate text-xs text-slate-500">
+          {media.alt_text}
+        </span>
+      )}
+    </div>
+  </div>
+);
+
 const getCollection = (data) => data?.results || data || [];
 const formatErrorValue = (value, path = "") => {
   if (value == null) return [];
@@ -544,6 +571,9 @@ const BlogFormContent = ({ post = null }) => {
                   isClearable
                   isLoading={mediaQuery.isLoading}
                   options={mediaOptions}
+                  formatOptionLabel={(option) => (
+                    <FeaturedImageOption {...option} />
+                  )}
                   value={
                     mediaOptions.find(
                       (option) =>
