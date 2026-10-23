@@ -101,6 +101,48 @@ const isSafeDocumentLink = (value) => {
   return Boolean(link) && !/^(?:javascript|data):/i.test(link);
 };
 
+const EducationDetails = ({ application, compact = false }) => {
+  const level = application?.educationLevelDisplay || "-";
+  const status = application?.educationStatusDisplay || "-";
+  const university = application?.educationUniversity || "-";
+  const major = application?.educationMajor || "-";
+  const normalizedStatus = normalizeValue(
+    application?.educationStatus || application?.educationStatusDisplay,
+  );
+  const statusClassName = ["graduated", "lulusan", "lulus"].includes(
+    normalizedStatus,
+  )
+    ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+    : [
+          "student",
+          "siswa",
+          "mahasiswa",
+          "masih sekolah",
+          "masih kuliah",
+        ].includes(normalizedStatus)
+      ? "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30"
+      : "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700/60 dark:text-slate-300 dark:ring-slate-600";
+
+  return (
+    <div
+      className={`min-w-0 break-words ${
+        compact ? "space-y-0.5" : "space-y-1 text-xs"
+      }`}
+    >
+      <div className="font-semibold text-slate-800 dark:text-slate-100">
+        {level}
+      </div>
+      <div className="text-slate-600 dark:text-slate-300">{university}</div>
+      <div className="text-slate-500 dark:text-slate-400">{major}</div>
+      <span
+        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${statusClassName}`}
+      >
+        {status}
+      </span>
+    </div>
+  );
+};
+
 const getExportFilename = (response) => {
   const disposition = response?.headers?.["content-disposition"] || "";
   const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
@@ -310,14 +352,24 @@ const badgeToneClass = {
     "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
 };
 
-const genderTone = (gender) => {
-  const value = normalizeValue(gender);
+const genderTone = (gender, genderDisplay) => {
+  const values = [gender, genderDisplay]
+    .map((value) => normalizeValue(value).replace(/[_-]+/g, " "))
+    .filter(Boolean);
 
-  if (value === "female" || value === "perempuan") {
+  if (
+    values.some((value) =>
+      ["female", "f", "p", "perempuan", "wanita", "woman"].includes(value),
+    )
+  ) {
     return "pink";
   }
 
-  if (value === "male" || value === "laki-laki" || value === "laki laki") {
+  if (
+    values.some((value) =>
+      ["male", "m", "l", "laki laki", "pria", "man"].includes(value),
+    )
+  ) {
     return "blue";
   }
 
@@ -1557,14 +1609,18 @@ const Rekruitmen = () => {
         accessor: "genderDisplay",
         width: "11%",
         Cell: ({ cell, row }) => (
-          <Badge tone={genderTone(row.original.gender)}>{cell.value}</Badge>
+          <Badge
+            tone={genderTone(row.original.gender, row.original.genderDisplay)}
+          >
+            {cell.value}
+          </Badge>
         ),
       },
       {
         Header: "Pendidikan",
         accessor: "educationLevelDisplay",
-        width: "13%",
-        Cell: ({ cell }) => <span>{cell.value || "-"}</span>,
+        width: "18%",
+        Cell: ({ row }) => <EducationDetails application={row.original} />,
       },
       {
         Header: "Pengalaman",
@@ -2047,7 +2103,14 @@ const Rekruitmen = () => {
                           Gender
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.genderDisplay}
+                          <Badge
+                            tone={genderTone(
+                              application.gender,
+                              application.genderDisplay,
+                            )}
+                          >
+                            {application.genderDisplay}
+                          </Badge>
                         </dd>
                       </div>
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
@@ -2063,7 +2126,7 @@ const Rekruitmen = () => {
                           Pendidikan
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.educationLevelDisplay || "-"}
+                          <EducationDetails application={application} compact />
                         </dd>
                       </div>
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
@@ -2129,6 +2192,7 @@ const Rekruitmen = () => {
                 onSelectionChange={handleSelectionChange}
                 actionColumnClass="w-36 min-w-[9rem]"
                 bodyCellAlign="center"
+                comfortableBodyCellClassName="!py-5"
                 tableMinWidth="1220px"
                 selectionColumnWidth={48}
               />

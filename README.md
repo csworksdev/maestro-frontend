@@ -53,3 +53,33 @@ Jika `*.localhost` belum resolve ke `127.0.0.1`, tambahkan ke `hosts` lokal.
 ## Build & deploy
 - Output build ada di `dist`.
 - Konfigurasi environment ada di `.env`, `.env.development`, `.env.production`.
+
+## Memilih backend saat development
+
+Vite membaca `.env` untuk pengaturan bersama, lalu menimpanya dengan file sesuai
+mode. Gunakan nama variabel yang sama di setiap mode; `VITE_DEV_*` tidak digunakan.
+
+| Perintah | File environment | Backend default |
+| --- | --- | --- |
+| `npm run dev` / `npm run start-admin` / `npm run start-coach` | `.env` + `.env.development` | Lokal |
+| `npm run build` | `.env` + `.env.production` | Production |
+
+Atur alamat backend lokal di `.env.development`:
+
+```dotenv
+VITE_API_URL=http://127.0.0.1:8000
+VITE_ACCESS_API_URL=http://127.0.0.1:8000
+VITE_API_WS=ws://127.0.0.1:8001
+```
+
+Sesuaikan port dengan backend lokal. `VITE_ACCESS_API_URL` dapat dihapus untuk
+mengikuti `VITE_API_URL`. Koneksi database diatur oleh backend tujuan.
+
+Untuk sementara memakai backend lain saat frontend berjalan lokal, buat
+`.env.development.local` berisi alamat API dan WebSocket tujuan dengan nama
+variabel yang sama. File ini menimpa `.env.development`; hapus override tersebut
+untuk kembali memakai backend lokal. Restart Vite setiap kali mengubah environment.
+
+Saat development, URL request browser tetap memakai prefix `/__api` pada alamat
+frontend. Vite menghapus prefix itu dan meneruskan request ke `VITE_API_URL`.
+Saat build production, frontend memakai alamat API secara langsung.

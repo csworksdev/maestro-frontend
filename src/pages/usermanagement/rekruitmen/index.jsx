@@ -246,10 +246,34 @@ const getApplicationStageStatusDisplay = (application = {}, stage = null) => {
   );
 };
 
-const getGenderBadgeClass = (gender = "") =>
-  String(gender).toLowerCase() === "female"
-    ? "bg-pink-50 text-pink-700 ring-pink-100 dark:bg-pink-500/10 dark:text-pink-200 dark:ring-pink-500/20"
-    : "bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-500/20";
+const getGenderBadgeClass = (gender = "", genderDisplay = "") => {
+  const values = [gender, genderDisplay]
+    .map((value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[_-]+/g, " "),
+    )
+    .filter(Boolean);
+
+  if (
+    values.some((value) =>
+      ["female", "f", "p", "perempuan", "wanita", "woman"].includes(value),
+    )
+  ) {
+    return "bg-pink-50 text-pink-700 ring-pink-100 dark:bg-pink-500/10 dark:text-pink-200 dark:ring-pink-500/20";
+  }
+
+  if (
+    values.some((value) =>
+      ["male", "m", "l", "laki laki", "pria", "man"].includes(value),
+    )
+  ) {
+    return "bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-500/20";
+  }
+
+  return undefined;
+};
 
 const getStageBadgeMeta = (value = "") => {
   const status = String(value).trim().toLowerCase();
@@ -344,6 +368,48 @@ const RecruitmentBadge = ({
 const CenterCell = ({ children }) => (
   <div className="flex min-w-0 justify-center text-center">{children}</div>
 );
+
+const EducationDetails = ({ application = {} }) => {
+  const status =
+    application.education_status_display || application.education_status;
+  const normalizedStatus = String(
+    application.education_status || application.education_status_display || "",
+  )
+    .trim()
+    .toLowerCase();
+  const statusClassName = ["graduated", "lulusan", "lulus"].includes(
+    normalizedStatus,
+  )
+    ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+    : [
+          "student",
+          "siswa",
+          "mahasiswa",
+          "masih sekolah",
+          "masih kuliah",
+        ].includes(normalizedStatus)
+      ? "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30"
+      : undefined;
+
+  return (
+    <div className="min-w-0 space-y-1 break-words text-xs">
+      <RecruitmentBadge className="bg-violet-50 text-violet-700 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-200 dark:ring-violet-500/20">
+        {displayText(
+          application.education_level_display || application.education_level,
+        )}
+      </RecruitmentBadge>
+      <div className="text-slate-600 dark:text-slate-300">
+        {displayText(application.education_university)}
+      </div>
+      <div className="text-slate-500 dark:text-slate-400">
+        {displayText(application.education_major)}
+      </div>
+      <RecruitmentBadge className={statusClassName}>
+        {displayText(status)}
+      </RecruitmentBadge>
+    </div>
+  );
+};
 
 const getInitialFilters = () => ({
   filter_departement_id: "",
@@ -984,7 +1050,10 @@ const Rekruitmen = () => {
         Cell: (row) => (
           <CenterCell>
             <RecruitmentBadge
-              className={getGenderBadgeClass(row?.row?.original?.gender)}
+              className={getGenderBadgeClass(
+                row?.row?.original?.gender,
+                row?.cell?.value,
+              )}
             >
               {displayText(row?.cell?.value)}
             </RecruitmentBadge>
@@ -996,9 +1065,7 @@ const Rekruitmen = () => {
         accessor: "education_level_display",
         Cell: (row) => (
           <CenterCell>
-            <RecruitmentBadge className="bg-violet-50 text-violet-700 ring-violet-100 dark:bg-violet-500/10 dark:text-violet-200 dark:ring-violet-500/20">
-              {displayText(row?.cell?.value)}
-            </RecruitmentBadge>
+            <EducationDetails application={row?.row?.original} />
           </CenterCell>
         ),
       },
