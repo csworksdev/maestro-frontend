@@ -1660,7 +1660,7 @@ const Rekruitmen = () => {
         ),
       },
       {
-        Header: "Status",
+        Header: "Status Pelamar",
         accessor: "statusDisplay",
         width: "12%",
         Cell: ({ row }) => (

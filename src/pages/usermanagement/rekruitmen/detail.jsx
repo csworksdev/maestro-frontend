@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
 import Loading from "@/components/Loading";
 import { getApplicationById } from "@/axios/career/application";
 import {
@@ -44,6 +45,8 @@ const formatDate = (value) => {
 
 const displayValue = (value) => {
   if (Array.isArray(value)) return value.length ? value.join(", ") : "-";
+  if (value === true) return "Ya";
+  if (value === false) return "Tidak";
   if (value == null || value === "") return "-";
   return String(value);
 };
@@ -73,6 +76,25 @@ const ExternalLink = ({ href, children }) => {
     </a>
   );
 };
+
+const DetailSection = ({ title, description, icon, children, className = "" }) => (
+  <Card bodyClass="flex h-full flex-col p-0" className={className}>
+    <div className="flex items-start gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700 sm:px-6">
+      <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-primary-50 text-primary-500 dark:bg-primary-500/10 dark:text-primary-300">
+        <Icon icon={icon} width={20} />
+      </span>
+      <div>
+        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        <p className="mt-0.5 text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400">
+          {description}
+        </p>
+      </div>
+    </div>
+    <div className="flex flex-1 flex-col p-5 sm:p-6">{children}</div>
+  </Card>
+);
 
 const getErrorMessage = (error) =>
   error?.response?.data?.detail ||
@@ -192,78 +214,77 @@ const RekruitmenDetail = () => {
         </div>
       </div>
 
-      <Card
-        title={application?.name || "Detail Pelamar"}
-        subtitle={`${application?.job_title || "-"} - ${application?.branch_name || "-"}`}
-      >
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <InfoItem label="Nama Lengkap" value={application?.name} />
-          <InfoItem label="Nama Panggilan" value={application?.nickname} />
-          <InfoItem label="Email" value={application?.email} />
-          <InfoItem label="No. Telepon" value={application?.phone_number} />
-          <InfoItem label="WhatsApp">
-            <ExternalLink href={application?.whatsapp_link}>
-              {application?.phone_number || "Buka WhatsApp"}
-            </ExternalLink>
-          </InfoItem>
-          <InfoItem label="Instagram">
-            <ExternalLink href={application?.instagram_link}>
-              {application?.instagram || "Buka Instagram"}
-            </ExternalLink>
-          </InfoItem>
-          <InfoItem label="Gender" value={application?.gender_display} />
-          <InfoItem label="Usia" value={getAge(application?.birth_date)} />
-          <InfoItem label="Tempat Lahir" value={application?.birth_place} />
-          <InfoItem
-            label="Tanggal Lahir"
-            value={formatDate(application?.birth_date)}
-          />
-          <InfoItem
-            label="Status Pernikahan"
-            value={application?.marital_status_display}
-          />
-          <InfoItem label="Agama" value={application?.religion_display} />
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <Card title="Alamat">
-          <div className="space-y-4">
-            <InfoItem label="Alamat KTP" value={application?.address} />
-            <InfoItem label="Domisili" value={application?.domicile} />
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <DetailSection
+          title={application?.name || "Detail Pelamar"}
+          description={`${application?.job_title || "-"} - ${
+            application?.branch_name || "-"
+          }`}
+          icon="heroicons-outline:user-circle"
+          className="h-full xl:col-span-2"
+        >
+          <div className="grid flex-1 grid-cols-1 content-evenly gap-x-5 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+            <InfoItem label="Nama Lengkap" value={application?.name} />
+            <InfoItem label="Nama Panggilan" value={application?.nickname} />
             <InfoItem
-              label="Tinggi / Berat"
-              value={`${application?.body_height || "-"} cm / ${application?.body_weight || "-"} kg`}
+              label="Jenis Kelamin"
+              value={application?.gender_display}
+            />
+            <InfoItem label="Usia" value={getAge(application?.birth_date)} />
+            <InfoItem
+              label="Tanggal Lahir"
+              value={formatDate(application?.birth_date)}
+            />
+            <InfoItem label="Tempat Lahir" value={application?.birth_place} />
+            <InfoItem label="Agama" value={application?.religion_display} />
+            <InfoItem
+              label="Status Pernikahan"
+              value={application?.marital_status_display}
+            />
+            <InfoItem
+              label="Tinggi / Berat Badan"
+              value={`${application?.body_height || "-"} cm / ${
+                application?.body_weight || "-"
+              } kg`}
             />
           </div>
-        </Card>
+        </DetailSection>
 
-        <Card title="Pendidikan">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <InfoItem
-              label="Jenjang"
-              value={application?.education_level_display}
-            />
-            <InfoItem
-              label="Status"
-              value={application?.education_status_display}
-            />
-            <InfoItem
-              label="Universitas"
-              value={application?.education_university}
-            />
-            <InfoItem label="Jurusan" value={application?.education_major} />
-            <InfoItem
-              label="Tahun Lulus"
-              value={application?.education_graduation_year}
-            />
+        <DetailSection
+          title="Kontak"
+          description="Kanal komunikasi yang dapat dihubungi"
+          icon="heroicons-outline:phone"
+          className="h-full"
+        >
+          <div className="grid grid-cols-1 gap-5">
+            <InfoItem label="WhatsApp">
+              <ExternalLink href={application?.whatsapp_link}>
+                {application?.phone_number || "Buka WhatsApp"}
+              </ExternalLink>
+            </InfoItem>
+            <InfoItem label="No. Telepon" value={application?.phone_number} />
+            <InfoItem label="Email">
+              <ExternalLink href={application?.email ? `mailto:${application.email}` : ""}>
+                {application?.email}
+              </ExternalLink>
+            </InfoItem>
+            <InfoItem label="Instagram">
+              <ExternalLink href={application?.instagram_link}>
+                {application?.instagram || "Buka Instagram"}
+              </ExternalLink>
+            </InfoItem>
           </div>
-        </Card>
+        </DetailSection>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <Card title="Pengalaman & Preferensi">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <DetailSection
+          title="Karier & Lamaran"
+          description="Pengalaman, kemampuan, serta preferensi lamaran pelamar"
+          icon="heroicons-outline:briefcase"
+          className="h-full xl:col-span-2"
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <InfoItem
               label="Sistem Kerja"
               value={application?.contract_system_display}
@@ -276,12 +297,21 @@ const RekruitmenDetail = () => {
               label="Gaya Renang"
               value={application?.swimming_styles_display}
             />
-            <InfoItem label="Sumber Info" value={application?.source_display} />
-            <InfoItem label="Nama Sumber" value={application?.source_name} />
+            <InfoItem label="Sedang Bekerja" value={application?.is_working} />
+            <InfoItem
+              label="Kanal Informasi"
+              value={application?.source_display}
+            />
+            <InfoItem label="Detail Sumber" value={application?.source_name} />
           </div>
-        </Card>
+        </DetailSection>
 
-        <Card title="Dokumen">
+        <DetailSection
+          title="Dokumen"
+          description="Berkas pendukung yang dilampirkan pelamar"
+          icon="heroicons-outline:folder-open"
+          className="h-full"
+        >
           <div className="space-y-4">
             <InfoItem label="CV">
               <ExternalLink href={application?.upload_cv}>
@@ -305,10 +335,49 @@ const RekruitmenDetail = () => {
               </div>
             </div>
           </div>
-        </Card>
+        </DetailSection>
       </div>
 
-      <Card title="Tahapan Rekruitmen">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <DetailSection
+          title="Alamat"
+          description="Alamat identitas dan tempat tinggal saat ini"
+          icon="heroicons-outline:map-pin"
+        >
+          <div className="grid flex-1 content-evenly gap-y-4">
+            <InfoItem label="Domisili" value={application?.domicile} />
+            <InfoItem label="Alamat KTP" value={application?.address} />
+          </div>
+        </DetailSection>
+
+        <DetailSection
+          title="Pendidikan"
+          description="Riwayat pendidikan terakhir pelamar"
+          icon="heroicons-outline:academic-cap"
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <InfoItem
+              label="Jenjang"
+              value={application?.education_level_display}
+            />
+            <InfoItem
+              label="Status"
+              value={application?.education_status_display}
+            />
+            <InfoItem
+              label="Universitas"
+              value={application?.education_university}
+            />
+            <InfoItem label="Jurusan" value={application?.education_major} />
+            <InfoItem
+              label="Tahun Lulus"
+              value={application?.education_graduation_year}
+            />
+          </div>
+        </DetailSection>
+      </div>
+
+      <Card title="Tahapan Rekrutmen">
         {stages.length ? (
           <div className="space-y-3">
             {stages.map((stage, index) => (
