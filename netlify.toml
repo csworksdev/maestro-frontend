@@ -1,8 +1,11 @@
 [build]
-  command = "npm run build"
-  publish = "dist"   # <-- sesuaikan dengan folder hasil build kamu (Vite biasanya "dist", CRA biasanya "build")
+command = "npm run build"
+publish = "dist"   # <-- sesuaikan dengan folder hasil build kamu (Vite biasanya "dist", CRA biasanya "build")
+
+[build.environment]
+VITE_DEFAULT_SUBDOMAIN = "finance"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200

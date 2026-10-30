@@ -2,15 +2,12 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import LoginForm from "./common/login-coach";
 import Logo from "@/assets/images/logo/logo.png";
+import { getSubdomain } from "@/redux/slicers/subdomainSlice";
 
 const LoginCoach = () => {
   const currentYear = 2024;
   const hubLabel = useMemo(() => {
-    if (typeof window === "undefined") return "Maestro Hub";
-    const hostname = window.location.hostname;
-    const candidate = hostname.includes(".")
-      ? hostname.split(".")[0]
-      : hostname;
+    const candidate = getSubdomain();
     const base = candidate && candidate !== "localhost" ? candidate : "maestro";
     const formatted = base
       .split(/[-_]/)
