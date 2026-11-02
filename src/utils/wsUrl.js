@@ -1,3 +1,8 @@
+import {
+  DEV_DEPLOYMENT_API_URL,
+  isDevDeploymentHost,
+} from "@/utils/apiUrl";
+
 const ABSOLUTE_WS_REGEX = /^wss?:\/\//i;
 
 const stripTrailingSlash = (value = "") =>
@@ -31,6 +36,13 @@ const coerceWsProtocol = (value) => {
 };
 
 export const resolveWsBaseUrl = () => {
+  if (
+    typeof window !== "undefined" &&
+    isDevDeploymentHost(window.location?.hostname)
+  ) {
+    return DEV_DEPLOYMENT_API_URL.replace(/^http/i, "ws");
+  }
+
   const envValue = import.meta.env.VITE_API_WS;
   if (envValue && envValue.trim().length) {
     const normalized = coerceWsProtocol(envValue.trim());

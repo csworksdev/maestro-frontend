@@ -1,17 +1,15 @@
 import axios from "axios";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
+import {
+  resolveAccessApiBaseUrl,
+  resolveApiBaseUrl,
+} from "@/utils/apiUrl";
 import { logOut, setUser, useAuthStore } from "@/redux/slicers/authSlice";
 
 const ABSOLUTE_URL_REGEX = /^(https?:|data:|blob:)/i;
-const DEV_API_PROXY_PREFIX = "/__api";
-const DEV_ACCESS_API_PROXY_PREFIX = "/__access-api";
 const NGROK_SKIP_BROWSER_WARNING_HEADER = "ngrok-skip-browser-warning";
-const baseURL = import.meta.env.DEV
-  ? DEV_API_PROXY_PREFIX
-  : import.meta.env.VITE_API_URL;
-const accessMutationBaseURL = import.meta.env.DEV
-  ? DEV_ACCESS_API_PROXY_PREFIX
-  : import.meta.env.VITE_ACCESS_API_URL || import.meta.env.VITE_API_URL;
+const baseURL = resolveApiBaseUrl();
+const accessMutationBaseURL = resolveAccessApiBaseUrl();
 
 // Helper ambil token
 const getToken = () => {
