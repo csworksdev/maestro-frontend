@@ -1,11 +1,10 @@
 import { axiosConfig } from "../config";
+import { resolveApiBaseUrl } from "@/utils/apiUrl";
 
 const storageApiBaseUrl = String(
   import.meta.env.VITE_STORAGE_API_URL || "",
 ).replace(/\/$/, "");
-const careerExportApiBaseUrl = String(
-  import.meta.env.VITE_API_URL || "",
-).replace(/\/$/, "");
+const careerExportApiBaseUrl = resolveApiBaseUrl();
 
 const getCareerApiOptions = (options = {}) => ({
   ...options,
