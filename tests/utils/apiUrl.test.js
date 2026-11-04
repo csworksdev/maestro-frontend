@@ -4,6 +4,8 @@ import {
   isDevDeploymentHost,
   resolveAccessApiBaseUrl,
   resolveApiBaseUrl,
+  isLocalApiProxy,
+  validateApiBaseUrl,
 } from "@/utils/apiUrl";
 
 describe("API URL resolution", () => {
@@ -48,5 +50,33 @@ describe("API URL resolution", () => {
         envApiUrl: "https://api.maestroswim.com/",
       }),
     ).toBe("https://api.maestroswim.com");
+  });
+
+  it.each([false, true])("never uses local proxies on deployed hosts (DEV=%s)", (isViteDev) => {
+    expect(resolveApiBaseUrl({ hostname: "admin.dev.maestroswim.com", isViteDev, envApiUrl: "" }))
+      .toBe(DEV_DEPLOYMENT_API_URL);
+    expect(resolveAccessApiBaseUrl({ hostname: "admin.dev.maestroswim.com", isViteDev, envAccessApiUrl: "https://api.maestroswim.com" }))
+      .toBe(DEV_DEPLOYMENT_API_URL);
+    expect(isLocalApiProxy({ hostname: "preview.netlify.app", isViteDev })).toBe(false);
+  });
+
+  it("uses the DEV environment URL on Netlify preview hosts", () => {
+    expect(resolveApiBaseUrl({ hostname: "preview.netlify.app", isViteDev: true, envApiUrl: DEV_DEPLOYMENT_API_URL }))
+      .toBe(DEV_DEPLOYMENT_API_URL);
+  });
+
+  it.each(["", "/", "/__api", "api.example.com", "ftp://api.example.com", "https://api.example.com?token=x"])("rejects invalid deployed API URL %s", (envApiUrl) => {
+    expect(() => resolveApiBaseUrl({ hostname: "preview.netlify.app", isViteDev: false, envApiUrl })).toThrow();
+    expect(() => validateApiBaseUrl(envApiUrl)).toThrow();
+  });
+
+  it("rejects the frontend host as the API target", () => {
+    expect(() => resolveApiBaseUrl({ hostname: "preview.netlify.app", isViteDev: false, envApiUrl: "https://preview.netlify.app" })).toThrow(/backend/);
+  });
+
+  it("preserves production access URL overrides and fallback", () => {
+    const options = { hostname: "admin.maestroswim.com", isViteDev: false, envApiUrl: "https://api.maestroswim.com/" };
+    expect(resolveAccessApiBaseUrl({ ...options, envAccessApiUrl: "https://access.example.com/" })).toBe("https://access.example.com");
+    expect(resolveAccessApiBaseUrl({ ...options, envAccessApiUrl: "" })).toBe("https://api.maestroswim.com");
   });
 });

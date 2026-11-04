@@ -7,6 +7,7 @@
     "dev": "vite --mode development",
     "host": "vite --host",
     "build": "vite build --mode production",
+    "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "start-admin": "vite --host admin.localhost --port 3001",
     "start-coach": "vite --host coach.localhost --port 3002",

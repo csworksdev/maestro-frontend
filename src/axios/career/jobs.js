@@ -1,14 +1,15 @@
 import { axiosConfig } from "../config";
-import { resolveApiBaseUrl } from "@/utils/apiUrl";
+import { isLocalApiProxy, resolveApiBaseUrl } from "@/utils/apiUrl";
 
 const storageApiBaseUrl = String(
   import.meta.env.VITE_STORAGE_API_URL || "",
 ).replace(/\/$/, "");
 const careerExportApiBaseUrl = resolveApiBaseUrl();
+const useLocalProxy = isLocalApiProxy();
 
 const getCareerApiOptions = (options = {}) => ({
   ...options,
-  baseURL: import.meta.env.DEV
+  baseURL: useLocalProxy
     ? "/__career_export_api"
     : careerExportApiBaseUrl,
 });
@@ -115,14 +116,14 @@ export const uploadCareerApplicationAttachment = (file) => {
   formData.append("file", file);
   formData.append("folder", "career/applications/attachments");
 
-  const storageUrl = import.meta.env.DEV
+  const storageUrl = useLocalProxy
     ? "/__storage_api/api/storage/"
     : storageApiBaseUrl
       ? `${storageApiBaseUrl}/api/storage/`
       : "/api/storage/";
 
   return axiosConfig.post(storageUrl, formData, {
-    ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
+    ...(useLocalProxy ? { baseURL: window.location.origin } : {}),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -130,7 +131,7 @@ export const uploadCareerApplicationAttachment = (file) => {
 };
 
 export const deleteCareerApplicationAttachment = (fileKey) => {
-  const storageUrl = import.meta.env.DEV
+  const storageUrl = useLocalProxy
     ? "/__storage_api/api/storage/"
     : storageApiBaseUrl
       ? `${storageApiBaseUrl}/api/storage/`
@@ -140,7 +141,7 @@ export const deleteCareerApplicationAttachment = (fileKey) => {
   formData.append("file_key", fileKey);
 
   return axiosConfig.delete(storageUrl, {
-    ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
+    ...(useLocalProxy ? { baseURL: window.location.origin } : {}),
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",

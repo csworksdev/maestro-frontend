@@ -4,6 +4,17 @@ publish = "dist"   # <-- sesuaikan dengan folder hasil build kamu (Vite biasanya
 
 [build.environment]
 VITE_DEFAULT_SUBDOMAIN = "finance"
+# Public backend addresses are intentionally included in the browser bundle.
+SECRETS_SCAN_OMIT_KEYS = "VITE_API_URL,VITE_ACCESS_API_URL,VITE_API_WS"
+
+# Branch-specific settings also apply when dev is the site's production branch.
+[context.dev]
+command = "npm run build:dev"
+
+[context.dev.environment]
+VITE_API_URL = "https://api-dev.maestroswim.com"
+VITE_ACCESS_API_URL = "https://api-dev.maestroswim.com"
+VITE_API_WS = "wss://api-dev.maestroswim.com"
 
 [[redirects]]
 from = "/*"

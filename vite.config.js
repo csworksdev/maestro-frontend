@@ -4,9 +4,20 @@ import path from "path";
 import replace from "@rollup/plugin-replace";
 import viteCompression from "vite-plugin-compression";
 import { visualizer } from "rollup-plugin-visualizer";
+import { validateApiBaseUrl } from "./src/utils/apiUrl.js";
 
-export default defineConfig(({ mode = "production" }) => {
+export default defineConfig(({ mode = "production", command }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const isDevelopmentServer = command === "serve" && mode !== "production";
+  if (command === "build") {
+    validateApiBaseUrl(env.VITE_API_URL);
+    validateApiBaseUrl(env.VITE_ACCESS_API_URL || env.VITE_API_URL, "VITE_ACCESS_API_URL");
+    if (mode === "development" && [env.VITE_API_URL, env.VITE_ACCESS_API_URL].some(
+      (value) => value && new URL(value).hostname !== "api-dev.maestroswim.com",
+    )) {
+      throw new Error("Development deployment must use api-dev.maestroswim.com");
+    }
+  }
   const apiProxyTarget = env.VITE_API_URL;
   const storageProxyTarget = env.VITE_API_URL;
   const careerExportProxyTarget = env.VITE_API_URL;
@@ -21,8 +32,8 @@ export default defineConfig(({ mode = "production" }) => {
       replace({
         preventAssignment: true,
         values: {
-          __DEV__: JSON.stringify(mode !== "production"),
-          "process.env.NODE_ENV": JSON.stringify(mode),
+          __DEV__: JSON.stringify(isDevelopmentServer),
+          "process.env.NODE_ENV": JSON.stringify(isDevelopmentServer ? "development" : "production"),
         },
       }),
       react(),
