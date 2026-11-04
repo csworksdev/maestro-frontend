@@ -7,6 +7,11 @@ import { visualizer } from "rollup-plugin-visualizer";
 import { validateApiBaseUrl } from "./src/utils/apiUrl.js";
 
 export default defineConfig(({ mode = "production", command }) => {
+  // Vite 3 derives JSX's production flag from NODE_ENV or mode. A static DEV
+  // deployment uses development env files, but still needs production React/JSX.
+  if (command === "build") {
+    process.env.NODE_ENV = "production";
+  }
   const env = loadEnv(mode, process.cwd(), "");
   const isDevelopmentServer = command === "serve" && mode !== "production";
   if (command === "build") {
