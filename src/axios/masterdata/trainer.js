@@ -54,6 +54,12 @@ export const DeleteTrainer = async (id) => {
   }
 };
 
+export const resignTrainer = (trainerId, resignationDate) =>
+  axiosConfig.put(
+    `/api/trainer-resign/${encodeURIComponent(trainerId)}/`,
+    { resignation_date: resignationDate },
+  );
+
 export const getTrainerDocuments = (trainerId, params = {}) =>
   axiosConfig.get(getTrainerDocumentUrl(trainerId), { params });
 
