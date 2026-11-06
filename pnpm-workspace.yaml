@@ -1,3 +1,11 @@
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  core-js: set this to true or false
+  esbuild: set this to true or false
+  protobufjs: set this to true or false
+  re2: set this to true or false
+  swiper: set this to true or false
+  yarn: set this to true or false
 onlyBuiltDependencies:
   - core-js
   - protobufjs

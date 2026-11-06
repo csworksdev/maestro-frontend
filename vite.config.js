@@ -91,6 +91,17 @@ export default defineConfig(({ mode = "production", command }) => {
             });
           },
         },
+        "/__blog_api": {
+          target: apiProxyTarget,
+          changeOrigin: true,
+          secure: true,
+          rewrite: (proxyPath) => proxyPath.replace(/^\/__blog_api/, ""),
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyRequest) => {
+              proxyRequest.setHeader("ngrok-skip-browser-warning", "true");
+            });
+          },
+        },
         "/__trainer_document_files": {
           target: "https://media.maestroswim.com",
           changeOrigin: true,

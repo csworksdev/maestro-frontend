@@ -4,16 +4,6 @@ import { isLocalApiProxy, resolveApiBaseUrl } from "@/utils/apiUrl";
 const storageApiBaseUrl = String(
   import.meta.env.VITE_STORAGE_API_URL || "",
 ).replace(/\/$/, "");
-const careerExportApiBaseUrl = resolveApiBaseUrl();
-const useLocalProxy = isLocalApiProxy();
-
-const getCareerApiOptions = (options = {}) => ({
-  ...options,
-  baseURL: useLocalProxy
-    ? "/__career_export_api"
-    : careerExportApiBaseUrl,
-});
-
 export const getCareerJobs = (params) => {
   return axiosConfig.get("/api/career/jobs/", { params });
 };
@@ -72,17 +62,14 @@ export const getCareerDashboardBranches = (params, options = {}) => {
 };
 
 export const getCareerApplications = (params) => {
-  return axiosConfig.get(
-    "/api/career/applications/",
-    getCareerApiOptions({ params }),
-  );
+  return axiosConfig.get("/api/career/applications/", { params });
 };
 
 export const exportCareerApplications = (params) => {
-  return axiosConfig.get(
-    "/api/career/applications/export/",
-    getCareerApiOptions({ params, responseType: "blob" }),
-  );
+  return axiosConfig.get("/api/career/applications/export/", {
+    params,
+    responseType: "blob",
+  });
 };
 
 export const getCareerApplication = (id) => {
