@@ -76,6 +76,7 @@ const Table = ({
   fitToContainer = false,
   tableMinWidth,
   bodyCellAlign = "left",
+  comfortableBodyCellClassName = "",
   autoColumnMaxWidth = 320,
 }) => {
   const dispatch = useDispatch();
@@ -153,6 +154,10 @@ const Table = ({
       : "text-sm !px-4 !py-4";
   const bodyCellAlignClass =
     bodyCellAlign === "center" ? "text-center" : "text-left";
+  const bodyCellSpacingClass =
+    !fitToContainer && density === "comfortable"
+      ? comfortableBodyCellClassName
+      : "";
 
   const tableInstance = useTable(
     {
@@ -398,7 +403,7 @@ const Table = ({
       >
         {fixed ? (
           <td
-            className={`table-td text-nowrap align-middle ${cellDensityClass}`}
+            className={`table-td text-nowrap align-middle ${cellDensityClass} ${bodyCellSpacingClass}`}
           >
             {row.cells.at(-1).render("Cell")}
           </td>
@@ -413,7 +418,7 @@ const Table = ({
                   ...cell.column.autoWidthStyle,
                   textTransform: "none",
                 }}
-                className={`table-td whitespace-normal break-words align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass}`}
+                className={`table-td whitespace-normal break-words align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass} ${bodyCellSpacingClass}`}
               >
                 <div
                   className="max-w-full whitespace-normal break-words"
@@ -601,6 +606,8 @@ export default memo(Table, (prev, next) => {
     prev.fitToContainer === next.fitToContainer &&
     prev.tableMinWidth === next.tableMinWidth &&
     prev.bodyCellAlign === next.bodyCellAlign &&
+    prev.comfortableBodyCellClassName ===
+      next.comfortableBodyCellClassName &&
     prev.autoColumnMaxWidth === next.autoColumnMaxWidth &&
     prev.getRowClassName === next.getRowClassName
   );

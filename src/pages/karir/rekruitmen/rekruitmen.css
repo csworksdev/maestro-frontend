@@ -81,6 +81,11 @@
   display: none;
 }
 
+/* Keep the final row visually separated from the horizontal scrollbar. */
+.career-recruitment-page .responsive-table-main {
+  padding-bottom: 12px;
+}
+
 @container career-recruitment (min-width: 540px) {
   .career-recruitment-filter-grid,
   .career-recruitment-advanced-grid {

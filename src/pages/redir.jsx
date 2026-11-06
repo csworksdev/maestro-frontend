@@ -47,11 +47,12 @@ function Redir() {
 
         <div className="mt-8 max-w-2xl text-center">
           <h1 className="redir-fade redir-delay-2 text-3xl font-semibold text-white sm:text-4xl">
-            Portal sedang maintenance, app tetap jalan.
+            Welcome Abroad Coach!{" "}
           </h1>
           <p className="redir-fade redir-delay-3 mt-4 text-base text-white/75">
-            Temen-temen Pelatih silakan pakai aplikasi yang sudah di-share di
-            grup. Pilih platform di bawah ini untuk download.
+            Silakan pilih platform yang sesuai untuk mengunduh aplikasi resmi
+            Maestro Swim Coach Corner. Pastikan untuk mengikuti petunjuk
+            instalasi agar dapat menggunakan aplikasi dengan lancar.
           </p>
         </div>
 
@@ -112,7 +113,7 @@ function Redir() {
               >
                 <path d="M8.5 7.5a1 1 0 0 1 1.52-.86l6.5 4a1 1 0 0 1 0 1.72l-6.5 4A1 1 0 0 1 8.5 15.5z" />
               </svg>
-              Lihat tutorial instalasi
+              Lihat tutorial instalasi di iphone.
             </a>
           </div>
 
@@ -141,7 +142,7 @@ function Redir() {
               </div>
             </div>
             <a
-              href="https://media.maestroswim.com/apk/CoachCorner_v1.1.apk"
+              href="https://play.google.com/store/apps/details?id=com.maestroswim.coach&pcampaignid=web_share"
               target="_blank"
               rel="noreferrer"
               className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400/15 px-5 py-3 text-sm font-semibold text-cyan-50 ring-1 ring-cyan-300/30 transition hover:bg-cyan-400/25"
@@ -157,17 +158,11 @@ function Redir() {
               </svg>
               Download untuk Android
             </a>
-            <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">
-              Jika muncul warning, pilih "Install anyway" lalu lanjutkan.
-            </div>
           </div>
         </div>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-xs text-white/60">
           <span className="rounded-full border border-white/10 px-4 py-2">
             Butuh bantuan? Hubungi Chandra.
-          </span>
-          <span className="rounded-full border border-white/10 px-4 py-2">
-            Update terbaru akan dibagikan lewat grup resmi.
           </span>
         </div>
       </div>

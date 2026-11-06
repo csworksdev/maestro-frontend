@@ -5,21 +5,11 @@ import replace from "@rollup/plugin-replace";
 import viteCompression from "vite-plugin-compression";
 import { visualizer } from "rollup-plugin-visualizer";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode = "production" }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const apiProxyTarget =
-    mode === "development"
-      ? env.VITE_DEV_API_URL || env.VITE_API_URL
-      : env.VITE_API_URL;
-  const storageProxyTarget =
-    env.VITE_STORAGE_API_URL || "https://woven-affecting-accuracy.ngrok-free.dev";
-  const careerExportProxyTarget =
-    env.VITE_CAREER_API_URL ||
-    env.VITE_CAREER_EXPORT_API_URL ||
-    "https://woven-affecting-accuracy.ngrok-free.dev";
-  const blogApiProxyTarget =
-    env.VITE_BLOG_API_URL ||
-    "https://woven-affecting-accuracy.ngrok-free.dev";
+  const apiProxyTarget = env.VITE_API_URL;
+  const storageProxyTarget = env.VITE_API_URL;
+  const careerExportProxyTarget = env.VITE_API_URL;
 
   return {
     resolve: {
@@ -56,6 +46,11 @@ export default defineConfig(({ mode }) => {
           target: apiProxyTarget,
           changeOrigin: true,
           rewrite: (proxyPath) => proxyPath.replace(/^\/__api/, ""),
+        },
+        "/__access-api": {
+          target: env.VITE_ACCESS_API_URL || apiProxyTarget,
+          changeOrigin: true,
+          rewrite: (proxyPath) => proxyPath.replace(/^\/__access-api/, ""),
         },
         "/__storage_api": {
           target: storageProxyTarget,
