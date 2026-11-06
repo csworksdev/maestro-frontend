@@ -55,6 +55,11 @@ const Leave = lazy(() => import("@/pages/izin/admin/leave"));
 const FolloupPerpanjang = lazy(() => import("@/pages/perpanjangpaket/index"));
 const EditPromo = lazy(() => import("@/pages/masterdata/promo/edit"));
 const NotificationPage = lazy(() => import("@/pages/utility/notifications"));
+const Blogs = lazy(() => import("@/pages/blogs"));
+const BlogForm = lazy(() => import("@/pages/blogs/form"));
+const BlogMedia = lazy(() => import("@/pages/blogs/media"));
+const BlogTags = lazy(() => import("@/pages/blogs/tags"));
+const BlogCategories = lazy(() => import("@/pages/blogs/categories"));
 const RescheduleApprovedAdmin = lazy(
   () => import("@/pages/reschedule/admin/approved"),
 );
@@ -102,6 +107,12 @@ const routeAliases = [
   { path: "promo", element: <Promo /> },
   { path: "promo/add", element: <EditPromo /> },
   { path: "promo/Edit", element: <EditPromo /> },
+  { path: "blogs", element: <Blogs /> },
+  { path: "blogs/add", element: <BlogForm /> },
+  { path: "blogs/:blogId/edit", element: <BlogForm /> },
+  { path: "blogs/media", element: <BlogMedia /> },
+  { path: "blogs/tags", element: <BlogTags /> },
+  { path: "blogs/categories", element: <BlogCategories /> },
   { path: "order", element: <Order /> },
   { path: "order/detail", element: <DetailOrder /> },
   { path: "order/expired", element: <OrderExpired /> },
@@ -170,6 +181,14 @@ const AdminRoutes = () => {
           <Route index element={<Promo />} />
           <Route path="add" element={<EditPromo />} />
           <Route path="Edit" element={<EditPromo />} />
+        </Route>
+        <Route path="blogs">
+          <Route index element={<Blogs />} />
+          <Route path="add" element={<BlogForm />} />
+          <Route path=":blogId/edit" element={<BlogForm />} />
+          <Route path="media" element={<BlogMedia />} />
+          <Route path="tags" element={<BlogTags />} />
+          <Route path="categories" element={<BlogCategories />} />
         </Route>
         //#endregion
         {/*  */}
