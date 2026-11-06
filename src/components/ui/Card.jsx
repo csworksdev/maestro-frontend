@@ -16,7 +16,7 @@ const Card = ({
   return (
     <div
       className={`
-        card rounded-md bg-white dark:bg-slate-800   ${
+        card min-w-0 max-w-full rounded-md bg-white dark:bg-slate-800   ${
           skin === "bordered"
             ? " border border-slate-200 dark:border-slate-700"
             : "shadow-base"
@@ -34,7 +34,7 @@ const Card = ({
           {headerslot && <div className="card-header-slot">{headerslot}</div>}
         </header>
       )}
-      <main className={`card-body ${bodyClass}`}>{children}</main>
+      <main className={`card-body min-w-0 ${bodyClass}`}>{children}</main>
     </div>
   );
 };

@@ -2,15 +2,11 @@ import React, { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import Table from "@/components/globals/table/table";
 import Select from "@/components/ui/Select";
-import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import SkeletionTable from "@/components/skeleton/Table";
 import { Icon } from "@iconify/react";
 import Tooltip from "@/components/ui/Tooltip";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPeriodisasiAll } from "@/axios/referensi/periodisasi";
 import { getOrderReportList, payTrainerAll } from "@/axios/rekap/orderReport";
@@ -18,6 +14,7 @@ import { getRekapByTrainer } from "@/axios/rekap/bulanan";
 import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import { toProperCase } from "@/utils";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 
 // ─── Detail Modal Content ────────────────────────────────────────────────────
 
@@ -148,19 +145,9 @@ const DetailModalContent = ({ trainer, selectedPeriode }) => {
 
 const RekapPelatih = () => {
   const [selectedPeriode, setSelectedPeriode] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [submittedPeriode, setSubmittedPeriode] = useState(null);
   const [detailTrainer, setDetailTrainer] = useState(null);
-
-  const validationSchema = yup.object({
-    periode: yup.string().required("Periode wajib dipilih"),
-  });
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm({ resolver: yupResolver(validationSchema), mode: "all" });
 
   // ── Periode options ────────────────────────────────────────────────────────
   const periodeQuery = useQuery({
@@ -228,10 +215,6 @@ const RekapPelatih = () => {
         });
       }
     });
-  };
-
-  const onSubmit = () => {
-    setSubmittedPeriode(selectedPeriode);
   };
 
   const reportData = reportQuery.data ?? [];
@@ -311,40 +294,27 @@ const RekapPelatih = () => {
   return (
     <>
       <div className="grid grid-cols-1">
+        <FilterSidebar
+          open={isFilterOpen}
+          onOpen={() => setIsFilterOpen(true)}
+          onClose={() => setIsFilterOpen(false)}
+          title="Filter Rekap Pelatih"
+          activeCount={submittedPeriode ? 1 : 0}
+        >
+          <Select
+            name="periode-sidebar"
+            label="Periode"
+            placeholder="Pilih Periode"
+            value={selectedPeriode?.name || ""}
+            options={listPeriode.map((item) => ({ value: item.name, label: item.name }))}
+            onChange={(e) => {
+              const nextPeriode = listPeriode.find((p) => p.name === e.target.value) ?? null;
+              setSelectedPeriode(nextPeriode);
+              setSubmittedPeriode(nextPeriode);
+            }}
+          />
+        </FilterSidebar>
         <Card title="Rekap Pelatih">
-          {/* ── Filter Form ── */}
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-wrap gap-4 items-end mb-6"
-          >
-            <div className="w-60">
-              <Select
-                name="periode"
-                label="Periode"
-                placeholder="Pilih Periode"
-                register={register}
-                error={errors.periode?.message}
-                options={listPeriode.map((item) => ({
-                  value: item.name,
-                  label: item.name,
-                }))}
-                onChange={(e) => {
-                  setValue("periode", e.target.value);
-                  setSelectedPeriode(
-                    listPeriode.find((p) => p.name === e.target.value) ?? null,
-                  );
-                }}
-              />
-            </div>
-            <button
-              type="submit"
-              className="btn btn-dark h-9 px-5 py-1"
-              disabled={periodeQuery.isLoading}
-            >
-              Filter
-            </button>
-          </form>
-
           {/* ── Summary chips ── */}
           {reportData.length > 0 && (
             <div className="flex flex-wrap gap-4 mb-6">
@@ -388,7 +358,7 @@ const RekapPelatih = () => {
             <SkeletionTable />
           ) : !submittedPeriode ? (
             <p className="text-center py-10 text-gray-400">
-              Pilih periode lalu klik Filter untuk melihat data.
+              Pilih periode dari sidebar filter untuk melihat data.
             </p>
           ) : reportData.length === 0 ? (
             <p className="text-center py-10 text-gray-400">

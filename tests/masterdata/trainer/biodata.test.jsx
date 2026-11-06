@@ -67,12 +67,18 @@ vi.mock("@/components/ui/Textinput", () => ({
     defaultValue,
     type = "text",
     placeholder,
+    value,
+    readonly,
+    onChange,
   }) => (
     <label>
       {label}
       <input
         aria-label={label}
         defaultValue={defaultValue}
+        value={value}
+        readOnly={readonly}
+        onChange={onChange}
         placeholder={placeholder}
         type={type}
         {...(register ? register(name) : {})}
@@ -143,8 +149,10 @@ describe("Trainer biodata form", () => {
     const user = userEvent.setup();
     await screen.findByLabelText("Nama Trainer");
 
-    await user.type(screen.getByLabelText("Nama Trainer"), "Trainer A");
-    await user.type(screen.getByLabelText("Panggilan"), "TA");
+    await user.type(screen.getByLabelText("Nama Trainer"), "Arya Adi Wijaya");
+    expect(screen.getByLabelText("Panggilan")).toHaveValue("C. ARYA");
+    await user.clear(screen.getByLabelText("Panggilan"));
+    await user.type(screen.getByLabelText("Panggilan"), "COACH ARYA");
     await user.type(screen.getByLabelText("Phone"), "081234567890");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
     await user.type(screen.getByLabelText("Tanggal Lahir"), "1990-01-01");
@@ -160,8 +168,8 @@ describe("Trainer biodata form", () => {
 
     const [payload] = mockAddTrainer.mock.calls[0];
     expect(payload).toMatchObject({
-      fullname: "Trainer A",
-      nickname: "TA",
+      fullname: "Arya Adi Wijaya",
+      nickname: "COACH ARYA",
       phone: "081234567890",
       gender: "L",
       precentage_fee: 10,
@@ -239,6 +247,7 @@ describe("Trainer biodata form", () => {
     expect(payload).toMatchObject({
       trainer_id: 9,
       fullname: "Trainer Baru",
+      nickname: "C. TRAINER",
       phone: "081111111111",
       gender: "P",
       precentage_fee: 15,

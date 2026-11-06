@@ -24,6 +24,7 @@ const Textinput = ({
   msgTooltip,
   description,
   hasicon,
+  showValidationIcon = true,
   onChange,
   options,
   onFocus,
@@ -78,7 +79,7 @@ const Textinput = ({
             disabled={disabled}
             value={value} // Tambahkan value di sini
             id={id}
-            onChange={onChange}
+            onChange={onChange ?? registerProps.onChange}
             onKeyDown={handleKeyDown} // Add keydown event listener
           />
         )}
@@ -147,12 +148,12 @@ const Textinput = ({
             </span>
           )}
 
-          {error && (
+          {error && !hasicon && showValidationIcon && (
             <span className="text-danger-500">
               <Icon icon="heroicons-outline:information-circle" />
             </span>
           )}
-          {validate && (
+          {validate && !hasicon && showValidationIcon && (
             <span className="text-success-500">
               <Icon icon="bi:check-lg" />
             </span>

@@ -4,17 +4,20 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
-import Modal from "@/components/ui/Modal";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import Table from "@/components/globals/table/table";
 import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
 import {
   getBranches,
   createCareerApplicationTrainersBulk,
+  exportCareerApplications,
   getCareerApplications,
+  getCareerApplicationFormOptions,
   getCareerJobs,
   getDepartments,
   processCareerApplicationStage,
@@ -93,6 +96,88 @@ const getWhatsappHref = (phoneNumber) => {
   return `https://wa.me/${digits}`;
 };
 
+const isSafeDocumentLink = (value) => {
+  const link = String(value || "").trim();
+  return Boolean(link) && !/^(?:javascript|data):/i.test(link);
+};
+
+const EducationDetails = ({ application, compact = false }) => {
+  const level = application?.educationLevelDisplay || "-";
+  const status = application?.educationStatusDisplay || "-";
+  const university = application?.educationUniversity || "-";
+  const major = application?.educationMajor || "-";
+  const normalizedStatus = normalizeValue(
+    application?.educationStatus || application?.educationStatusDisplay,
+  );
+  const statusClassName = ["graduated", "lulusan", "lulus"].includes(
+    normalizedStatus,
+  )
+    ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+    : [
+          "student",
+          "siswa",
+          "mahasiswa",
+          "masih sekolah",
+          "masih kuliah",
+        ].includes(normalizedStatus)
+      ? "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30"
+      : "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700/60 dark:text-slate-300 dark:ring-slate-600";
+
+  return (
+    <div
+      className={`min-w-0 break-words ${
+        compact ? "space-y-0.5" : "space-y-1 text-xs"
+      }`}
+    >
+      <div className="font-semibold text-slate-800 dark:text-slate-100">
+        {level}
+      </div>
+      <div className="text-slate-600 dark:text-slate-300">{university}</div>
+      <div className="text-slate-500 dark:text-slate-400">{major}</div>
+      <span
+        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${statusClassName}`}
+      >
+        {status}
+      </span>
+    </div>
+  );
+};
+
+const getExportFilename = (response) => {
+  const disposition = response?.headers?.["content-disposition"] || "";
+  const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const regularFilename = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+  const date = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
+
+  try {
+    return decodeURIComponent(encodedFilename || regularFilename || "") ||
+      `rekruitmen-${date}.xlsx`;
+  } catch {
+    return regularFilename || `rekruitmen-${date}.xlsx`;
+  }
+};
+
+const downloadRecruitmentExcel = (response) => {
+  const blob =
+    response.data instanceof Blob
+      ? response.data
+      : new Blob([response.data], {
+          type: response.headers?.["content-type"] ||
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = getExportFilename(response);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
 const optionFromDepartment = (department) => ({
   value: department.department_id,
   label: department.name,
@@ -111,24 +196,26 @@ const optionFromJob = (job) => ({
       ? job.department.department_id || job.department.id
       : job.department,
   departmentName: job.department_name || job.department?.name,
+  branch:
+    job.branch_id ||
+    (typeof job.branch === "object"
+      ? job.branch.branch_id || job.branch.id
+      : job.branch),
+  branchName:
+    job.branch_name ||
+    (typeof job.branch === "object"
+      ? job.branch.name || job.branch.branch_name
+      : ""),
 });
+
+const formatJobWithBranch = (jobTitle, branchName) =>
+  [jobTitle, branchName]
+    .filter((value) => value && value !== "-")
+    .join(" - ") || "-";
 
 const normalizeOptions = (payload, mapper) => {
   const { results } = getPaginatedResults(payload);
   return results.map(mapper).filter((option) => option.value && option.label);
-};
-
-const mergeOptions = (baseOptions, dynamicOptions) => {
-  const seen = new Set();
-  return [...baseOptions, ...dynamicOptions].filter((option) => {
-    const key = normalizeValue(option.value);
-    if (!key || seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
 };
 
 const optionFromDisplayFields = (items, valueKey, labelKey) => {
@@ -145,6 +232,47 @@ const optionFromDisplayFields = (items, valueKey, labelKey) => {
         return false;
       }
 
+      seen.add(key);
+      return true;
+    });
+};
+
+const optionFromApiFields = (items, valueKey, labelKey) =>
+  optionFromDisplayFields(
+    items.map((item) => {
+      const rawValue = item?.[valueKey];
+      return {
+        value: typeof rawValue === "boolean" ? String(rawValue) : rawValue,
+        label:
+          item?.[labelKey] ||
+          (valueKey === "is_working"
+            ? toBoolean(rawValue) === true
+              ? "Ya"
+              : toBoolean(rawValue) === false
+                ? "Tidak"
+                : ""
+            : rawValue),
+      };
+    }),
+    "value",
+    "label",
+  );
+
+const normalizeFormOptions = (options) => {
+  if (!Array.isArray(options)) return [];
+  const seen = new Set();
+  return options
+    .map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: option?.value ?? "",
+            label: option?.label ?? option?.value ?? "",
+          },
+    )
+    .filter((option) => {
+      const key = normalizeValue(option.value);
+      if (!key || !option.label || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -208,82 +336,6 @@ const matchesSearch = (search, application) => {
   ].some((value) => normalizeValue(value).includes(searchText));
 };
 
-const genderOptions = [
-  { value: "male", label: "Laki-laki" },
-  { value: "female", label: "Perempuan" },
-];
-
-const maritalStatusOptions = [
-  { value: "single", label: "Belum Menikah" },
-  { value: "married", label: "Menikah" },
-  { value: "divorced", label: "Cerai" },
-  { value: "widowed", label: "Duda/Janda" },
-];
-
-const religionOptions = [
-  { value: "islam", label: "Islam" },
-  { value: "kristen", label: "Kristen" },
-  { value: "katolik", label: "Katolik" },
-  { value: "hindu", label: "Hindu" },
-  { value: "buddha", label: "Buddha" },
-  { value: "konghucu", label: "Konghucu" },
-];
-
-const educationLevelOptions = [
-  { value: "sma", label: "SMA" },
-  { value: "smk", label: "SMK" },
-  { value: "d1", label: "D1" },
-  { value: "d2", label: "D2" },
-  { value: "d3", label: "D3" },
-  { value: "d4", label: "D4" },
-  { value: "s1", label: "S1" },
-  { value: "s2", label: "S2" },
-  { value: "s3", label: "S3" },
-];
-
-const educationStatusOptions = [
-  { value: "student", label: "Mahasiswa" },
-  { value: "graduated", label: "Lulusan" },
-];
-
-const contractSystemOptions = [
-  { value: "fulltime", label: "Full Time" },
-  { value: "full_time", label: "Full Time" },
-  { value: "part_time", label: "Part Time" },
-  { value: "freelance", label: "Freelance" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "internship", label: "Internship" },
-];
-
-const applicationStatusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "Dalam Proses" },
-  { value: "accepted", label: "Lulus" },
-  { value: "rejected", label: "Tidak Lulus" },
-];
-
-const coachExperienceOptions = [
-  { value: "no_experience", label: "0 Tahun" },
-  { value: "less_than_1_year", label: "< 1 Tahun" },
-  { value: "1_year", label: "1 Tahun" },
-  { value: "2_years", label: "2 Tahun" },
-  { value: "more_than_3_years", label: "> 3 Tahun" },
-];
-
-const sourceOptions = [
-  { value: "instagram", label: "Instagram" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "website", label: "Website" },
-  { value: "referral", label: "Referral" },
-  { value: "jobstreet", label: "Jobstreet" },
-  { value: "other", label: "Lainnya" },
-];
-
-const workingOptions = [
-  { value: "true", label: "Ya" },
-  { value: "false", label: "Tidak" },
-];
-
 const badgeToneClass = {
   green:
     "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -300,14 +352,24 @@ const badgeToneClass = {
     "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200",
 };
 
-const genderTone = (gender) => {
-  const value = normalizeValue(gender);
+const genderTone = (gender, genderDisplay) => {
+  const values = [gender, genderDisplay]
+    .map((value) => normalizeValue(value).replace(/[_-]+/g, " "))
+    .filter(Boolean);
 
-  if (value === "female" || value === "perempuan") {
+  if (
+    values.some((value) =>
+      ["female", "f", "p", "perempuan", "wanita", "woman"].includes(value),
+    )
+  ) {
     return "pink";
   }
 
-  if (value === "male" || value === "laki-laki" || value === "laki laki") {
+  if (
+    values.some((value) =>
+      ["male", "m", "l", "laki laki", "pria", "man"].includes(value),
+    )
+  ) {
     return "blue";
   }
 
@@ -408,14 +470,16 @@ const Badge = ({ children, tone = "slate", icon }) => (
   </span>
 );
 
-const FilterSelect = ({ label, value, options, onChange }) => (
-  <label className="block">
-    <span className="mb-2 block text-sm font-semibold text-slate-600 dark:text-slate-300">
+const FilterSelect = ({ label, value, options, onChange, onOpen }) => (
+  <label className="career-recruitment-filter-row">
+    <span className="career-recruitment-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
       {label}
     </span>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      onPointerDown={onOpen}
+      onFocus={onOpen}
       className="h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
     >
       {options.map((option) => (
@@ -427,30 +491,93 @@ const FilterSelect = ({ label, value, options, onChange }) => (
   </label>
 );
 
-const CheckboxGroup = ({ title, options, selectedValues, onChange }) => (
-  <div className="border-t border-slate-100 pt-4 dark:border-slate-700">
-    <h4 className="mb-3 text-xs font-bold uppercase text-slate-500 dark:text-slate-300">
-      {title}
-    </h4>
-    <div className="space-y-3">
-      {options.map((option) => {
-        const checked = selectedValues.includes(option.value);
+const FilterDate = ({ label, value, onChange, min, max, onOpen }) => (
+  <label className="career-recruitment-filter-row">
+    <span className="career-recruitment-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
+      {label}
+    </span>
+    <input
+      type="date"
+      value={value}
+      min={min}
+      max={max}
+      onChange={(event) => onChange(event.target.value)}
+      onPointerDown={onOpen}
+      onFocus={onOpen}
+      className="h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+    />
+  </label>
+);
 
-        return (
-          <label
-            key={option.value}
-            className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-500 dark:text-slate-300"
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={() => onChange(option.value)}
-              className="h-5 w-5 rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
-            />
-            <span>{option.label}</span>
-          </label>
-        );
-      })}
+const CheckboxGroup = ({
+  id,
+  title,
+  options,
+  selectedValues,
+  onChange,
+  isOpen,
+  onToggle,
+}) => (
+  <div
+    className={`career-recruitment-filter-row ${
+      isOpen ? "career-recruitment-filter-row-open" : ""
+    }`}
+  >
+    <span className="career-recruitment-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
+      {title}
+    </span>
+    <div className="career-recruitment-multiselect min-w-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`${id}-options`}
+        className="flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-4 text-left text-sm font-medium text-slate-700 shadow-sm outline-none transition hover:border-primary-300 focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <span className="truncate">
+          {selectedValues.length
+            ? `${selectedValues.length} dipilih`
+            : `Semua ${title.toLowerCase()}`}
+        </span>
+        <Icon
+          icon="heroicons-outline:chevron-down"
+          width={17}
+          className={`career-recruitment-multiselect-chevron flex-none ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div
+          id={`${id}-options`}
+          className="career-recruitment-multiselect-options mt-2 max-h-60 w-full space-y-1 overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-md dark:border-slate-700 dark:bg-slate-900"
+        >
+          {options.length ? (
+            options.map((option) => {
+              const checked = selectedValues.includes(option.value);
+
+              return (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onChange(option.value)}
+                    className="h-5 w-5 flex-none rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            })
+          ) : (
+            <p className="px-2 py-3 text-sm text-slate-400">
+              Belum ada pilihan.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   </div>
 );
@@ -466,6 +593,8 @@ const Rekruitmen = () => {
   const [contractSystemFilter, setContractSystemFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [workingFilter, setWorkingFilter] = useState("");
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState([]);
   const [maritalStatusFilter, setMaritalStatusFilter] = useState([]);
   const [religionFilter, setReligionFilter] = useState([]);
@@ -478,8 +607,8 @@ const Rekruitmen = () => {
   const [selectedApplicationIds, setSelectedApplicationIds] = useState([]);
   const [selectedApplications, setSelectedApplications] = useState([]);
   const [selectionResetKey, setSelectionResetKey] = useState(0);
-  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [openFilterDropdown, setOpenFilterDropdown] = useState(null);
 
   const resetToFirstPage = () => {
     setPageIndex(0);
@@ -519,6 +648,24 @@ const Rekruitmen = () => {
       });
       return normalizeOptions(res.data, optionFromBranch);
     },
+  });
+
+  const applicationFilterValuesQuery = useQuery({
+    queryKey: ["careerApplicationFilterValues"],
+    queryFn: async () => {
+      const res = await getCareerApplications({ page: 1, page_size: 100 });
+      return getPaginatedResults(res?.data).results;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const applicationFormOptionsQuery = useQuery({
+    queryKey: ["careerApplicationFormOptions"],
+    queryFn: async () => {
+      const res = await getCareerApplicationFormOptions();
+      return res?.data?.data ?? res?.data ?? {};
+    },
+    staleTime: 30 * 60 * 1000,
   });
 
   const departmentOptions = departmentsQuery.data ?? [];
@@ -574,10 +721,11 @@ const Rekruitmen = () => {
   const activeFilterCount = [
     departmentFilter,
     jobFilter,
-    branchFilter,
     contractSystemFilter,
     statusFilter,
     workingFilter,
+    dateFromFilter,
+    dateToFilter,
     ...genderFilter,
     ...maritalStatusFilter,
     ...religionFilter,
@@ -600,6 +748,8 @@ const Rekruitmen = () => {
         contractSystemFilter,
         statusFilter,
         workingFilter,
+        dateFromFilter,
+        dateToFilter,
         genderFilter,
         maritalStatusFilter,
         religionFilter,
@@ -623,6 +773,8 @@ const Rekruitmen = () => {
         params.filter_contract_system = contractSystemFilter;
       if (statusFilter) params.filter_status = statusFilter;
       if (workingFilter) params.filter_is_working = workingFilter;
+      if (dateFromFilter) params.filter_date_from = dateFromFilter;
+      if (dateToFilter) params.filter_date_to = dateToFilter;
       if (genderFilter.length) params.filter_gender = genderFilter.join(",");
       if (maritalStatusFilter.length)
         params.filter_marital_status = maritalStatusFilter.join(",");
@@ -647,19 +799,22 @@ const Rekruitmen = () => {
 
     return payload.results.map((application) => {
       const latestStage = getCurrentApplicationStage(application.stages || []);
+      const jobTitle = application.job_title || jobLookup[application.job] || "-";
+      const branchName =
+        application.branch_name || branchLookup[application.branch] || "-";
 
       return {
         id: application.application_id,
         jobId: application.job,
-        jobTitle: application.job_title || jobLookup[application.job] || "-",
+        jobTitle,
+        jobDisplay: formatJobWithBranch(jobTitle, branchName),
         departmentId: application.department,
         departmentName:
           application.department_name ||
           departmentLookup[application.department] ||
           "-",
         branchId: application.branch,
-        branchName:
-          application.branch_name || branchLookup[application.branch] || "-",
+        branchName,
         name: application.name || "-",
         nickname: application.nickname || "",
         email: application.email || "-",
@@ -720,36 +875,94 @@ const Rekruitmen = () => {
         swimmingStylesDisplay: application.swimming_styles_display || [],
         sourceName: application.source_name,
         isWorking: toBoolean(application.is_working),
+        isWorkingDisplay:
+          toBoolean(application.is_working) === true
+            ? "Ya"
+            : toBoolean(application.is_working) === false
+              ? "Tidak"
+              : "-",
         isTrainer: toBoolean(application.is_trainer),
         raw: application,
       };
     });
   }, [applicationsQuery.data, branchLookup, departmentLookup, jobLookup]);
 
-  const dynamicOptions = useMemo(
-    () => ({
-      contractSystems: optionFromDisplayFields(
+  const backendFilterOptions = useMemo(() => {
+    const records = applicationFilterValuesQuery.data ?? [];
+    const formOptions = applicationFormOptionsQuery.data ?? {};
+    const fromFormOrApplications = (
+      formKey,
+      apiValueKey,
+      apiLabelKey,
+      mappedValueKey,
+      mappedLabelKey,
+    ) => {
+      const formValues = normalizeFormOptions(formOptions[formKey]);
+      if (formValues.length) return formValues;
+
+      const unfilteredValues = optionFromApiFields(
+        records,
+        apiValueKey,
+        apiLabelKey,
+      );
+      if (unfilteredValues.length) return unfilteredValues;
+
+      return optionFromDisplayFields(
         mappedApplications,
-        "contractSystem",
-        "contractSystemDisplay",
+        mappedValueKey,
+        mappedLabelKey,
+      );
+    };
+
+    return {
+      genders: fromFormOrApplications(
+        "gender", "gender", "gender_display", "gender", "genderDisplay",
       ),
-      statuses: optionFromDisplayFields(
-        mappedApplications,
-        "status",
-        "statusDisplay",
+      maritalStatuses: fromFormOrApplications(
+        "marital_status", "marital_status", "marital_status_display", "maritalStatus", "maritalStatusDisplay",
       ),
-      coachExperiences: optionFromDisplayFields(
-        mappedApplications,
-        "coachExperience",
-        "coachExperienceDisplay",
+      religions: fromFormOrApplications(
+        "religion", "religion", "religion_display", "religion", "religionDisplay",
       ),
-      sources: optionFromDisplayFields(
-        mappedApplications,
-        "source",
-        "sourceDisplay",
+      educationLevels: fromFormOrApplications(
+        "education_level", "education_level", "education_level_display", "educationLevel", "educationLevelDisplay",
       ),
-    }),
-    [mappedApplications],
+      educationStatuses: fromFormOrApplications(
+        "education_status", "education_status", "education_status_display", "educationStatus", "educationStatusDisplay",
+      ),
+      contractSystems: fromFormOrApplications(
+        "contract_system", "contract_system", "contract_system_display", "contractSystem", "contractSystemDisplay",
+      ),
+      statuses: optionFromApiFields(records, "status", "status_display").length
+        ? optionFromApiFields(records, "status", "status_display")
+        : optionFromDisplayFields(mappedApplications, "status", "statusDisplay"),
+      coachExperiences: fromFormOrApplications(
+        "coach_experience", "coach_experience", "coach_experience_display", "coachExperience", "coachExperienceDisplay",
+      ),
+      sources: fromFormOrApplications(
+        "job_source", "source", "source_display", "source", "sourceDisplay",
+      ),
+      working: [
+        { value: "true", label: "Ya" },
+        { value: "false", label: "Tidak" },
+      ],
+    };
+  }, [
+    applicationFilterValuesQuery.data,
+    applicationFormOptionsQuery.data,
+    mappedApplications,
+  ]);
+
+  const combinedJobOptions = useMemo(
+    () =>
+      filteredJobOptions.map((job) => ({
+        ...job,
+        label: formatJobWithBranch(
+          job.label,
+          job.branchName || branchLookup[job.branch],
+        ),
+      })),
+    [branchLookup, filteredJobOptions],
   );
 
   const listData = useMemo(() => {
@@ -786,7 +999,7 @@ const Rekruitmen = () => {
           contractSystemFilter,
           application.contractSystem,
           application.contractSystemDisplay,
-          contractSystemOptions.find(
+          backendFilterOptions.contractSystems.find(
             (option) => option.value === contractSystemFilter,
           )?.label,
         ) &&
@@ -794,7 +1007,7 @@ const Rekruitmen = () => {
           statusFilter,
           application.status,
           application.statusDisplay,
-          applicationStatusOptions.find(
+          backendFilterOptions.statuses.find(
             (option) => option.value === statusFilter,
           )?.label,
         ) &&
@@ -806,7 +1019,7 @@ const Rekruitmen = () => {
             : application.isWorking === false
               ? "Tidak"
               : "",
-          workingOptions.find((option) => option.value === workingFilter)
+          backendFilterOptions.working.find((option) => option.value === workingFilter)
             ?.label,
         ) &&
         matchesMultiOption(genderFilter, application.gender) &&
@@ -838,6 +1051,7 @@ const Rekruitmen = () => {
     statusFilter,
     branchFilter,
     branchOptions,
+    backendFilterOptions,
     coachExperienceFilter,
     contractSystemFilter,
     departmentFilter,
@@ -858,8 +1072,9 @@ const Rekruitmen = () => {
   const pageCount = Math.max(1, Math.ceil((listData.count || 0) / pageSize));
   const safePageIndex = Math.min(pageIndex, pageCount - 1);
 
-  const handleSearch = () => {
-    setSearchQuery(searchInput);
+  const handleSearch = (value = searchInput) => {
+    setSearchInput(value);
+    setSearchQuery(value);
     resetToFirstPage();
   };
 
@@ -871,6 +1086,17 @@ const Rekruitmen = () => {
   const handleDepartmentChange = (value) => {
     setDepartmentFilter(value);
     setJobFilter("");
+    setBranchFilter("");
+    resetToFirstPage();
+  };
+
+  const handleJobChange = (value) => {
+    const selectedJob = jobOptions.find(
+      (option) => String(option.value) === String(value),
+    );
+
+    setJobFilter(value);
+    setBranchFilter(value ? selectedJob?.branch || "" : "");
     resetToFirstPage();
   };
 
@@ -892,6 +1118,8 @@ const Rekruitmen = () => {
     setContractSystemFilter("");
     setStatusFilter("");
     setWorkingFilter("");
+    setDateFromFilter("");
+    setDateToFilter("");
     setGenderFilter([]);
     setMaritalStatusFilter([]);
     setReligionFilter([]);
@@ -899,7 +1127,16 @@ const Rekruitmen = () => {
     setEducationStatusFilter([]);
     setCoachExperienceFilter([]);
     setSourceFilter([]);
+    setOpenFilterDropdown(null);
     resetToFirstPage();
+  };
+
+  const closeMultiFilterDropdown = () => setOpenFilterDropdown(null);
+
+  const toggleFilterDropdown = (dropdownId) => {
+    setOpenFilterDropdown((current) =>
+      current === dropdownId ? null : dropdownId,
+    );
   };
 
   const handleSelectionChange = (selection) => {
@@ -1091,6 +1328,83 @@ const Rekruitmen = () => {
     },
   });
 
+  const exportApplicationsMutation = useMutation({
+    mutationFn: async () => {
+      const params = { page: 1, page_size: 20 };
+
+      if (searchQuery) params.search = searchQuery;
+      if (departmentFilter) params.filter_department_id = departmentFilter;
+      if (jobFilter) params.filter_job_id = jobFilter;
+      if (branchFilter) params.filter_branch_id = branchFilter;
+      if (contractSystemFilter)
+        params.filter_contract_system = contractSystemFilter;
+      if (statusFilter) params.filter_status = statusFilter;
+      if (workingFilter) params.filter_is_working = workingFilter;
+      if (dateFromFilter) params.filter_date_from = dateFromFilter;
+      if (dateToFilter) params.filter_date_to = dateToFilter;
+      if (genderFilter.length) params.filter_gender = genderFilter.join(",");
+      if (maritalStatusFilter.length)
+        params.filter_marital_status = maritalStatusFilter.join(",");
+      if (religionFilter.length)
+        params.filter_religion = religionFilter.join(",");
+      if (educationLevelFilter.length)
+        params.filter_education_level = educationLevelFilter.join(",");
+      if (educationStatusFilter.length)
+        params.filter_education_status = educationStatusFilter.join(",");
+      if (coachExperienceFilter.length)
+        params.filter_coach_experience = coachExperienceFilter.join(",");
+      if (sourceFilter.length) params.filter_source = sourceFilter.join(",");
+
+      return exportCareerApplications(params);
+    },
+    onSuccess: (response) => {
+      if (!response?.data || response.data.size === 0) {
+        Swal.fire(
+          "Tidak ada data",
+          "File export dari server tidak berisi data.",
+          "info",
+        );
+        return;
+      }
+
+      downloadRecruitmentExcel(response);
+      Swal.fire(
+        "Berhasil",
+        "File Excel data pelamar berhasil diunduh.",
+        "success",
+      );
+    },
+    onError: (error) => {
+      Swal.fire(
+        "Gagal",
+        getErrorMessage(error, "Data pelamar gagal diekspor."),
+        "error",
+      );
+    },
+  });
+
+  const handleExportApplications = () => {
+    if (exportApplicationsMutation.isPending) return;
+
+    Swal.fire({
+      title: "Export data pelamar?",
+      text: activeFilterCount
+        ? `File Excel akan berisi data pelamar sesuai ${activeFilterCount} filter yang sedang aktif.`
+        : "File Excel akan berisi seluruh data pelamar.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, export",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        exportApplicationsMutation.mutate();
+      }
+    });
+  };
+
   const handleCreateTrainersBulk = () => {
     if (!selectedApplications.length) {
       Swal.fire(
@@ -1246,12 +1560,12 @@ const Rekruitmen = () => {
       {
         Header: "Nama",
         accessor: "name",
-        width: "20%",
+        width: "24%",
         Cell: ({ row }) => (
-          <div className="flex max-w-full min-w-0 items-center justify-between gap-3 text-left">
+          <div className="flex max-w-full min-w-0 items-center justify-between gap-2 text-left">
             <div className="min-w-0 flex-1">
               <p
-                className="truncate whitespace-nowrap font-semibold text-slate-700 dark:text-slate-200"
+                className="break-words whitespace-normal font-semibold text-slate-700 dark:text-slate-200"
                 title={row.original.name}
               >
                 {row.original.name}
@@ -1264,7 +1578,7 @@ const Rekruitmen = () => {
                   }
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-1 block truncate whitespace-nowrap text-xs font-medium text-success-600 hover:underline"
+                  className="mt-1 block break-words whitespace-normal text-xs font-medium text-success-600 hover:underline"
                   onClick={(event) => event.stopPropagation()}
                   title={row.original.phoneNumber}
                 >
@@ -1286,23 +1600,54 @@ const Rekruitmen = () => {
       },
       {
         Header: "Loker",
-        accessor: "jobTitle",
-        width: "13%",
+        accessor: "jobDisplay",
+        width: "24%",
         Cell: ({ cell }) => <span>{cell.value}</span>,
-      },
-      {
-        Header: "Cabang",
-        accessor: "branchName",
-        width: "11%",
-        Cell: ({ cell }) => <Badge tone="blue">{cell.value}</Badge>,
       },
       {
         Header: "Gender",
         accessor: "genderDisplay",
         width: "11%",
         Cell: ({ cell, row }) => (
-          <Badge tone={genderTone(row.original.gender)}>{cell.value}</Badge>
+          <Badge
+            tone={genderTone(row.original.gender, row.original.genderDisplay)}
+          >
+            {cell.value}
+          </Badge>
         ),
+      },
+      {
+        Header: "Pendidikan",
+        accessor: "educationLevelDisplay",
+        width: "18%",
+        Cell: ({ row }) => <EducationDetails application={row.original} />,
+      },
+      {
+        Header: "Pengalaman",
+        accessor: "coachExperienceDisplay",
+        width: "13%",
+        Cell: ({ cell }) => <span>{cell.value || "-"}</span>,
+      },
+      {
+        Header: "CV",
+        accessor: "uploadCv",
+        width: "10%",
+        Cell: ({ cell }) =>
+          isSafeDocumentLink(cell.value) ? (
+            <a
+              href={cell.value}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"
+              title="Lihat CV"
+            >
+              <Icon icon="heroicons-outline:document-text" width={16} />
+              Lihat CV
+            </a>
+          ) : (
+            <span className="text-slate-400">-</span>
+          ),
       },
       {
         Header: "Status Pekerjaan",
@@ -1315,7 +1660,7 @@ const Rekruitmen = () => {
         ),
       },
       {
-        Header: "Status",
+        Header: "Status Pelamar",
         accessor: "statusDisplay",
         width: "12%",
         Cell: ({ row }) => (
@@ -1354,201 +1699,177 @@ const Rekruitmen = () => {
       { value: "", label: "Semua department" },
       ...departmentOptions,
     ],
-    jobs: [{ value: "", label: "Semua loker" }, ...filteredJobOptions],
-    branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
+    jobs: [{ value: "", label: "Semua loker" }, ...combinedJobOptions],
     contractSystems: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(contractSystemOptions, dynamicOptions.contractSystems),
+      ...backendFilterOptions.contractSystems,
     ],
     statuses: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(applicationStatusOptions, dynamicOptions.statuses),
+      ...backendFilterOptions.statuses,
     ],
-    working: [{ value: "", label: "Semua kondisi" }, ...workingOptions],
+    working: [{ value: "", label: "Semua kondisi" }, ...backendFilterOptions.working],
   };
 
   return (
     <div className="career-recruitment-page min-w-0 space-y-5">
-      <div className="career-recruitment-toolbar flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          onClick={() => setIsFilterModalOpen(true)}
-          className="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2.5 rounded-md border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-          aria-label={`Buka filter pelamar${activeFilterCount ? `, ${activeFilterCount} filter aktif` : ""}`}
-        >
-          <Icon icon="heroicons-outline:adjustments-horizontal" width={19} />
-          Filter
-          {activeFilterCount > 0 && (
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-600 px-1 text-[11px] font-bold text-white dark:bg-slate-500">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-
-        <div className="relative w-full sm:max-w-2xl">
-          <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-            <Icon icon="heroicons-outline:search" width={20} />
-          </div>
-          <input
-            type="search"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") handleSearch();
-            }}
-            placeholder="Pencarian"
-            aria-label="Cari pelamar"
-            className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-          />
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-          >
-            <Icon icon="heroicons-outline:search" width={16} />
-            Cari
-          </button>
-        </div>
+      <div className="career-recruitment-toolbar">
+        <Search
+          searchValue={searchInput}
+          handleSearch={handleSearch}
+          isLoading={applicationsQuery.isFetching}
+          placeholder="Cari pelamar"
+          align="left"
+        />
       </div>
 
-      <Modal
+      <FilterSidebar
         title="Filter Pelamar"
-        activeModal={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        className="max-w-5xl"
-        scrollContent
+        open={isFilterModalOpen}
+        onOpen={() => setIsFilterModalOpen(true)}
+        onClose={() => {
+          setIsFilterModalOpen(false);
+          setOpenFilterDropdown(null);
+        }}
+        activeCount={activeFilterCount}
+        widthClass="max-w-lg"
+        contentClassName="career-recruitment-filter-sidebar"
+        statusText={
+          activeFilterCount
+            ? `${activeFilterCount} filter aktif`
+            : "Belum ada filter aktif."
+        }
+        headerAction={
+          <button
+            type="button"
+            onClick={handleResetFilter}
+            className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md bg-slate-100 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+          >
+            <Icon icon="heroicons-outline:arrow-path" width={16} />
+            <span className="hidden min-[400px]:inline">Reset Filter</span>
+          </button>
+        }
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-400">
-                {activeFilterCount
-                  ? `${activeFilterCount} filter aktif`
-                  : "Gunakan filter untuk menyaring data pelamar."}
-              </p>
-            </div>
-            <div className="career-recruitment-filter-actions flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsAdvancedFiltersOpen((current) => !current)}
-                className="inline-flex min-h-[44px] min-w-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold leading-4 text-slate-600 transition hover:border-primary-200 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                aria-expanded={isAdvancedFiltersOpen}
-              >
-                <Icon icon="heroicons-outline:adjustments" width={16} />
-                {isAdvancedFiltersOpen
-                  ? "Sembunyikan Filter"
-                  : "Filter Lanjutan"}
-              </button>
-            </div>
-          </div>
-
-          <div className="career-recruitment-filter-grid grid min-w-0 grid-cols-1 gap-3">
+        <div className="career-recruitment-filter-content flex flex-col gap-4">
+          <div className="career-recruitment-filter-grid grid min-w-0 grid-cols-1 gap-4 pt-1">
+            <FilterDate
+              label="Tanggal Dari"
+              value={dateFromFilter}
+              max={dateToFilter || undefined}
+              onChange={handleFilterChange(setDateFromFilter)}
+              onOpen={closeMultiFilterDropdown}
+            />
+            <FilterDate
+              label="Tanggal Sampai"
+              value={dateToFilter}
+              min={dateFromFilter || undefined}
+              onChange={handleFilterChange(setDateToFilter)}
+              onOpen={closeMultiFilterDropdown}
+            />
             <FilterSelect
               label="Department"
               value={departmentFilter}
               options={selectOptions.departments}
               onChange={handleDepartmentChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Loker"
               value={jobFilter}
               options={selectOptions.jobs}
-              onChange={handleFilterChange(setJobFilter)}
-            />
-            <FilterSelect
-              label="Cabang"
-              value={branchFilter}
-              options={selectOptions.branches}
-              onChange={handleFilterChange(setBranchFilter)}
+              onChange={handleJobChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status Pekerjaan"
               value={contractSystemFilter}
               options={selectOptions.contractSystems}
               onChange={handleFilterChange(setContractSystemFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status"
               value={statusFilter}
               options={selectOptions.statuses}
               onChange={handleFilterChange(setStatusFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Sedang Bekerja"
               value={workingFilter}
               options={selectOptions.working}
               onChange={handleFilterChange(setWorkingFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
           </div>
 
-          {isAdvancedFiltersOpen && (
-            <div className="career-recruitment-advanced-grid grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-              <CheckboxGroup
-                title="Gender"
-                options={genderOptions}
-                selectedValues={genderFilter}
-                onChange={toggleMultiFilter(setGenderFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pernikahan"
-                options={maritalStatusOptions}
-                selectedValues={maritalStatusFilter}
-                onChange={toggleMultiFilter(setMaritalStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Agama"
-                options={religionOptions}
-                selectedValues={religionFilter}
-                onChange={toggleMultiFilter(setReligionFilter)}
-              />
-              <CheckboxGroup
-                title="Pendidikan"
-                options={educationLevelOptions}
-                selectedValues={educationLevelFilter}
-                onChange={toggleMultiFilter(setEducationLevelFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pendidikan"
-                options={educationStatusOptions}
-                selectedValues={educationStatusFilter}
-                onChange={toggleMultiFilter(setEducationStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Pengalaman Coach"
-                options={mergeOptions(
-                  coachExperienceOptions,
-                  dynamicOptions.coachExperiences,
-                )}
-                selectedValues={coachExperienceFilter}
-                onChange={toggleMultiFilter(setCoachExperienceFilter)}
-              />
-              <CheckboxGroup
-                title="Sumber"
-                options={mergeOptions(sourceOptions, dynamicOptions.sources)}
-                selectedValues={sourceFilter}
-                onChange={toggleMultiFilter(setSourceFilter)}
-              />
-            </div>
-          )}
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end dark:border-slate-700">
-            <button
-              type="button"
-              onClick={handleResetFilter}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
-            >
-              <Icon icon="heroicons-outline:arrow-path" width={17} />
-              Reset Filter
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsFilterModalOpen(false)}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary-500 px-5 text-sm font-bold text-white transition hover:bg-primary-600"
-            >
-              Terapkan Filter
-            </button>
+          <div className="career-recruitment-advanced-grid grid grid-cols-1 gap-4">
+            <CheckboxGroup
+              id="gender-filter"
+              title="Gender"
+              options={backendFilterOptions.genders}
+              selectedValues={genderFilter}
+              onChange={toggleMultiFilter(setGenderFilter)}
+              isOpen={openFilterDropdown === "gender"}
+              onToggle={() => toggleFilterDropdown("gender")}
+            />
+            <CheckboxGroup
+              id="marital-status-filter"
+              title="Status Pernikahan"
+              options={backendFilterOptions.maritalStatuses}
+              selectedValues={maritalStatusFilter}
+              onChange={toggleMultiFilter(setMaritalStatusFilter)}
+              isOpen={openFilterDropdown === "maritalStatus"}
+              onToggle={() => toggleFilterDropdown("maritalStatus")}
+            />
+            <CheckboxGroup
+              id="religion-filter"
+              title="Agama"
+              options={backendFilterOptions.religions}
+              selectedValues={religionFilter}
+              onChange={toggleMultiFilter(setReligionFilter)}
+              isOpen={openFilterDropdown === "religion"}
+              onToggle={() => toggleFilterDropdown("religion")}
+            />
+            <CheckboxGroup
+              id="education-level-filter"
+              title="Pendidikan"
+              options={backendFilterOptions.educationLevels}
+              selectedValues={educationLevelFilter}
+              onChange={toggleMultiFilter(setEducationLevelFilter)}
+              isOpen={openFilterDropdown === "educationLevel"}
+              onToggle={() => toggleFilterDropdown("educationLevel")}
+            />
+            <CheckboxGroup
+              id="education-status-filter"
+              title="Status Pendidikan"
+              options={backendFilterOptions.educationStatuses}
+              selectedValues={educationStatusFilter}
+              onChange={toggleMultiFilter(setEducationStatusFilter)}
+              isOpen={openFilterDropdown === "educationStatus"}
+              onToggle={() => toggleFilterDropdown("educationStatus")}
+            />
+            <CheckboxGroup
+              id="coach-experience-filter"
+              title="Pengalaman Coach"
+              options={backendFilterOptions.coachExperiences}
+              selectedValues={coachExperienceFilter}
+              onChange={toggleMultiFilter(setCoachExperienceFilter)}
+              isOpen={openFilterDropdown === "coachExperience"}
+              onToggle={() => toggleFilterDropdown("coachExperience")}
+            />
+            <CheckboxGroup
+              id="source-filter"
+              title="Sumber"
+              options={backendFilterOptions.sources}
+              selectedValues={sourceFilter}
+              onChange={toggleMultiFilter(setSourceFilter)}
+              isOpen={openFilterDropdown === "source"}
+              onToggle={() => toggleFilterDropdown("source")}
+            />
           </div>
         </div>
-      </Modal>
+      </FilterSidebar>
 
       <Card
         title="Rekruitmen"
@@ -1556,6 +1877,27 @@ const Rekruitmen = () => {
         className="career-recruitment-card min-w-0 overflow-hidden"
         headerslot={
           <div className="career-recruitment-bulk-actions flex min-w-0 flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleExportApplications}
+              disabled={exportApplicationsMutation.isPending}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-primary-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Icon
+                icon={
+                  exportApplicationsMutation.isPending
+                    ? "heroicons-outline:arrow-path"
+                    : "heroicons-outline:arrow-down-tray"
+                }
+                width={18}
+                className={
+                  exportApplicationsMutation.isPending ? "animate-spin" : ""
+                }
+              />
+              {exportApplicationsMutation.isPending
+                ? "Mengekspor..."
+                : "Export"}
+            </button>
             {selectedApplications.length > 0 && (
               <div className="mr-1 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <span>{selectedPendingCandidates.length} Pending</span>
@@ -1753,15 +2095,7 @@ const Rekruitmen = () => {
                           Loker
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.jobTitle}
-                        </dd>
-                      </div>
-                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                          Cabang
-                        </dt>
-                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.branchName}
+                          {application.jobDisplay}
                         </dd>
                       </div>
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
@@ -1769,7 +2103,14 @@ const Rekruitmen = () => {
                           Gender
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
-                          {application.genderDisplay}
+                          <Badge
+                            tone={genderTone(
+                              application.gender,
+                              application.genderDisplay,
+                            )}
+                          >
+                            {application.genderDisplay}
+                          </Badge>
                         </dd>
                       </div>
                       <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
@@ -1778,6 +2119,45 @@ const Rekruitmen = () => {
                         </dt>
                         <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
                           {application.contractSystemDisplay}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Pendidikan
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          <EducationDetails application={application} compact />
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Pengalaman
+                        </dt>
+                        <dd className="mt-1 break-words font-medium text-slate-700 dark:text-slate-200">
+                          {application.coachExperienceDisplay || "-"}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+                        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          CV
+                        </dt>
+                        <dd className="mt-1">
+                          {isSafeDocumentLink(application.uploadCv) ? (
+                            <a
+                              href={application.uploadCv}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"
+                            >
+                              <Icon
+                                icon="heroicons-outline:document-text"
+                                width={16}
+                              />
+                              Lihat CV
+                            </a>
+                          ) : (
+                            <span className="font-medium text-slate-400">-</span>
+                          )}
                         </dd>
                       </div>
                     </dl>
@@ -1812,7 +2192,9 @@ const Rekruitmen = () => {
                 onSelectionChange={handleSelectionChange}
                 actionColumnClass="w-36 min-w-[9rem]"
                 bodyCellAlign="center"
-                tableMinWidth="860px"
+                comfortableBodyCellClassName="!py-5"
+                tableMinWidth="1220px"
+                selectionColumnWidth={48}
               />
             </div>
 

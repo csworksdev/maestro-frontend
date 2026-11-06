@@ -9,6 +9,7 @@ import JadwalBaru from "./jadwal-baru";
 import Button from "@/components/ui/Button";
 import SpecializationList from "@/pages/referensi/trainerSpesialisasi/index";
 import SpecializationForm from "@/pages/referensi/trainerSpesialisasi/edit";
+import Dokumen from "./dokumen";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -26,6 +27,10 @@ const Edit = () => {
     {
       title: "Spesialisasi",
       icon: "heroicons-outline:puzzle-piece",
+    },
+    {
+      title: "Dokumen",
+      icon: "heroicons-outline:document-text",
     },
   ];
   const [selectedData, setSelectedData] = useState(data);
@@ -81,26 +86,18 @@ const Edit = () => {
           <Tab.Group>
             <Tab.List className="lg:space-x-8 md:space-x-4 space-x-0 rtl:space-x-reverse">
               {buttons.map((item, i) => (
-                <Tab key={i}>
-                  {({ selected }) => (
-                    <button
-                      className={` inline-flex items-start text-sm font-medium mb-7 capitalize bg-white dark:bg-slate-800 ring-0 foucs:ring-0 focus:outline-none px-2 transition duration-150 before:transition-all before:duration-150 relative before:absolute
-               before:left-1/2 before:bottom-[-6px] before:h-[1.5px]
-                before:bg-primary-500 before:-translate-x-1/2
-        
-        ${
-          selected
-            ? "text-primary-500 before:w-full"
-            : "text-slate-500 before:w-0 dark:text-slate-300"
-        }
-        `}
-                    >
-                      <span className="text-base relative top-[1px] ltr:mr-1 rtl:ml-1">
-                        <Icon icon={item.icon} />
-                      </span>
-                      {item.title}
-                    </button>
-                  )}
+                <Tab
+                  key={i}
+                  className={({ selected }) => `relative mb-7 inline-flex items-start bg-white px-2 text-sm font-medium capitalize ring-0 transition duration-150 before:absolute before:bottom-[-6px] before:left-1/2 before:h-[1.5px] before:-translate-x-1/2 before:bg-primary-500 before:transition-all before:duration-150 focus:outline-none dark:bg-slate-800 ${
+                    selected
+                      ? "text-primary-500 before:w-full"
+                      : "text-slate-500 before:w-0 dark:text-slate-300"
+                  }`}
+                >
+                  <span className="relative top-[1px] text-base ltr:mr-1 rtl:ml-1">
+                    <Icon icon={item.icon} />
+                  </span>
+                  {item.title}
                 </Tab>
               ))}
             </Tab.List>
@@ -135,6 +132,9 @@ const Edit = () => {
                     onCancel={handleSpecializationCancel}
                   />
                 )}
+              </Tab.Panel>
+              <Tab.Panel>
+                <Dokumen trainerId={selectedData.trainer_id} />
               </Tab.Panel>
             </Tab.Panels>
           </Tab.Group>

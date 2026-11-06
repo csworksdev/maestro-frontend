@@ -118,3 +118,23 @@
     @apply bg-white text-gray-900 cursor-pointer;
   }
 }
+
+/*
+ * Global overlay stack.
+ *
+ * The shared Headless UI modal currently uses z-index 99999. SweetAlert2 and
+ * React Toastify render in portals attached to <body>, so their library
+ * defaults (1060 and 9999) would otherwise put validation/feedback behind an
+ * open application modal.
+ */
+.swal2-container {
+  z-index: 110000 !important;
+}
+
+.Toastify {
+  --toastify-z-index: 120000;
+}
+
+.Toastify__toast-container {
+  z-index: var(--toastify-z-index) !important;
+}

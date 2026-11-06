@@ -8,6 +8,7 @@ import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
 import TableAction from "@/components/globals/table/tableAction";
 import Icon from "@/components/ui/Icon";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import { getExpenses, deleteExpense } from "@/axios/finance/expense";
 
 const pageSizes = [10, 20, 50];
@@ -26,6 +27,7 @@ const ExpensePage = () => {
   const [error, setError] = useState("");
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -59,14 +61,11 @@ const ExpensePage = () => {
   const handleChangeFilter = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+    setPageIndex(0);
   };
 
   const handleSearch = (value) => {
     setFilters((prev) => ({ ...prev, search: value }));
-    setPageIndex(0);
-  };
-
-  const applyFilters = () => {
     setPageIndex(0);
   };
 
@@ -232,12 +231,14 @@ const ExpensePage = () => {
         </div>
       )}
 
-      <Card
-        title="Filter"
-        subtitle="Cari pengeluaran berdasarkan kata kunci dan rentang tanggal"
-        className="border border-slate-100 shadow-md"
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Pengeluaran"
+        activeCount={Object.values(filters).filter(Boolean).length}
       >
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-4">
           <Textinput
             label="Cari"
             name="search"
@@ -260,22 +261,15 @@ const ExpensePage = () => {
             onChange={handleChangeFilter}
           />
         </div>
-        <div className="flex items-center justify-end gap-3">
+        <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
           <Button
-            className="bg-slate-100 text-slate-700 hover:bg-slate-200"
+            className="w-full bg-slate-100 text-slate-700 hover:bg-slate-200"
             onClick={resetFilters}
           >
-            Reset
-          </Button>
-          <Button
-            className="bg-primary-500 text-white shadow-md hover:bg-primary-600"
-            onClick={applyFilters}
-            isLoading={loading}
-          >
-            Terapkan
+            Reset Filter
           </Button>
         </div>
-      </Card>
+      </FilterSidebar>
 
       <Card
         title="Daftar Pengeluaran"

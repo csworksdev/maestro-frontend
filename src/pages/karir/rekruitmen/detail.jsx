@@ -256,9 +256,24 @@ const Field = ({ label, value, href }) => (
   </div>
 );
 
-const Section = ({ title, children }) => (
-  <Card title={title} bodyClass="p-5 sm:p-6">
-    {children}
+const Section = ({ title, description, icon, children, className = "" }) => (
+  <Card bodyClass="flex h-full flex-col p-0" className={className}>
+    <div className="flex items-start gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700 sm:px-6">
+      <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-primary-50 text-primary-500 dark:bg-primary-500/10 dark:text-primary-300">
+        <Icon icon={icon} width={20} />
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        {description ? (
+          <p className="mt-0.5 text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400">
+            {description}
+          </p>
+        ) : null}
+      </div>
+    </div>
+    <div className="flex flex-1 flex-col p-5 sm:p-6">{children}</div>
   </Card>
 );
 
@@ -302,9 +317,7 @@ const RekruitmenDetail = () => {
   );
   const currentApplicationStage = getCurrentApplicationStage(stages);
   const swimmingStyles = application?.swimming_styles_display?.join(", ");
-  const sourceText = application?.source_name
-    ? `${application.source_display || application.source} - ${application.source_name}`
-    : application?.source_display || application?.source;
+  const sourceText = application?.source_display || application?.source;
 
   const processApplicationMutation = useMutation({
     mutationFn: async () => {
@@ -563,61 +576,32 @@ const RekruitmenDetail = () => {
         </div>
       </div>
 
-      <Card bodyClass="p-0">
-        <div className="border-b border-slate-200 px-5 py-5 dark:border-slate-700 sm:px-6">
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            {application.name || "-"}
-          </h1>
-          <p className="mt-1 text-sm font-bold text-slate-500">
-            {application.job_title || "-"} - {application.branch_name || "-"}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-x-10 gap-y-6 p-5 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
-          <Field label="Nama Lengkap" value={application.name} />
-          <Field label="Nama Panggilan" value={application.nickname} />
-          <Field
-            label="Email"
-            value={application.email}
-            href={
-              application.email && application.email !== "-"
-                ? `mailto:${application.email}`
-                : undefined
-            }
-          />
-          <Field label="No. Telepon" value={application.phone_number} />
-          <Field
-            label="WhatsApp"
-            value={application.phone_number}
-            href={application.whatsapp_link}
-          />
-          <Field
-            label="Instagram"
-            value={application.instagram}
-            href={application.instagram_link}
-          />
-          <Field label="Gender" value={application.gender_display} />
-          <Field label="Usia" value={calculateAge(application.birth_date)} />
-          <Field label="Tempat Lahir" value={application.birth_place} />
-          <Field
-            label="Tanggal Lahir"
-            value={formatDate(application.birth_date)}
-          />
-          <Field
-            label="Status Pernikahan"
-            value={application.marital_status_display}
-          />
-          <Field label="Agama" value={application.religion_display} />
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <Section title="Alamat">
-          <div className="space-y-5">
-            <Field label="Alamat KTP" value={application.address} />
-            <Field label="Domisili" value={application.domicile} />
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <Section
+          title={application.name || "Detail Pelamar"}
+          description={`${application.job_title || "-"} - ${
+            application.branch_name || "-"
+          }`}
+          icon="heroicons-outline:user-circle"
+          className="h-full xl:col-span-2"
+        >
+          <div className="grid flex-1 grid-cols-1 content-evenly gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="Nama Lengkap" value={application.name} />
+            <Field label="Nama Panggilan" value={application.nickname} />
+            <Field label="Jenis Kelamin" value={application.gender_display} />
+            <Field label="Usia" value={calculateAge(application.birth_date)} />
             <Field
-              label="Tinggi / Berat"
+              label="Tanggal Lahir"
+              value={formatDate(application.birth_date)}
+            />
+            <Field label="Tempat Lahir" value={application.birth_place} />
+            <Field label="Agama" value={application.religion_display} />
+            <Field
+              label="Status Pernikahan"
+              value={application.marital_status_display}
+            />
+            <Field
+              label="Tinggi / Berat Badan"
               value={`${application.body_height || "-"} cm / ${
                 application.body_weight || "-"
               } kg`}
@@ -625,30 +609,45 @@ const RekruitmenDetail = () => {
           </div>
         </Section>
 
-        <Section title="Pendidikan">
-          <div className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2">
+        <Section
+          title="Kontak"
+          description="Kanal komunikasi yang dapat dihubungi"
+          icon="heroicons-outline:phone"
+          className="h-full"
+        >
+          <div className="grid grid-cols-1 gap-y-5">
             <Field
-              label="Jenjang"
-              value={application.education_level_display}
+              label="WhatsApp"
+              value={application.phone_number}
+              href={application.whatsapp_link}
+            />
+            <Field label="No. Telepon" value={application.phone_number} />
+            <Field
+              label="Email"
+              value={application.email}
+              href={
+                application.email && application.email !== "-"
+                  ? `mailto:${application.email}`
+                  : undefined
+              }
             />
             <Field
-              label="Status"
-              value={application.education_status_display}
-            />
-            <Field
-              label="Universitas"
-              value={application.education_university}
-            />
-            <Field label="Jurusan" value={application.education_major} />
-            <Field
-              label="Tahun Lulus"
-              value={application.education_graduation_year}
+              label="Instagram"
+              value={application.instagram}
+              href={application.instagram_link}
             />
           </div>
         </Section>
+      </div>
 
-        <Section title="Pengalaman & Preferensi">
-          <div className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <Section
+          title="Karier & Lamaran"
+          description="Pengalaman, kemampuan, serta preferensi lamaran pelamar"
+          icon="heroicons-outline:briefcase"
+          className="h-full xl:col-span-2"
+        >
+          <div className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
             <Field
               label="Sistem Kerja"
               value={application.contract_system_display}
@@ -658,13 +657,18 @@ const RekruitmenDetail = () => {
               value={application.coach_experience_display}
             />
             <Field label="Gaya Renang" value={swimmingStyles} />
-            <Field label="Sumber Info" value={sourceText} />
-            <Field label="Nama Sumber" value={application.source_name} />
             <Field label="Sedang Bekerja" value={application.is_working} />
+            <Field label="Kanal Informasi" value={sourceText} />
+            <Field label="Detail Sumber" value={application.source_name} />
           </div>
         </Section>
 
-        <Section title="Dokumen">
+        <Section
+          title="Dokumen"
+          description="Berkas pendukung yang dilampirkan pelamar"
+          icon="heroicons-outline:folder-open"
+          className="h-full"
+        >
           <div className="space-y-5">
             <Field label="CV" value="Lihat CV" href={application.upload_cv} />
             <div>
@@ -696,7 +700,50 @@ const RekruitmenDetail = () => {
         </Section>
       </div>
 
-      <Section title="Tahapan Rekruitmen">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <Section
+          title="Alamat"
+          description="Alamat identitas dan tempat tinggal saat ini"
+          icon="heroicons-outline:map-pin"
+        >
+          <div className="grid flex-1 content-evenly gap-y-5">
+            <Field label="Domisili" value={application.domicile} />
+            <Field label="Alamat KTP" value={application.address} />
+          </div>
+        </Section>
+
+        <Section
+          title="Pendidikan"
+          description="Riwayat pendidikan terakhir pelamar"
+          icon="heroicons-outline:academic-cap"
+        >
+          <div className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2">
+            <Field
+              label="Jenjang"
+              value={application.education_level_display}
+            />
+            <Field
+              label="Status"
+              value={application.education_status_display}
+            />
+            <Field
+              label="Universitas"
+              value={application.education_university}
+            />
+            <Field label="Jurusan" value={application.education_major} />
+            <Field
+              label="Tahun Lulus"
+              value={application.education_graduation_year}
+            />
+          </div>
+        </Section>
+      </div>
+
+      <Section
+        title="Tahapan Rekrutmen"
+        description="Riwayat progres dan hasil setiap tahap seleksi"
+        icon="heroicons-outline:queue-list"
+      >
         <div className="space-y-3">
           {stages.length ? (
             stages.map((stage) => {

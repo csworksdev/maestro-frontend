@@ -39,6 +39,12 @@ const normalizeContractType = (value, fallback = "freelance") => {
       : "hybrid";
 };
 
+export const createTrainerNickname = (fullname = "") => {
+  const firstName = String(fullname).trim().split(/\s+/)[0];
+
+  return firstName ? `C. ${firstName.toUpperCase()}` : "";
+};
+
 const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
@@ -62,10 +68,20 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm({
     resolver: yupResolver(FormValidationSchema),
     mode: "all",
   });
+
+  const fullname = watch("fullname", isUpdate ? data.fullname ?? "" : "");
+  const nickname = watch("nickname", isUpdate ? data.nickname ?? "" : "");
+
+  useEffect(() => {
+    setValue("nickname", createTrainerNickname(fullname), {
+      shouldValidate: Boolean(fullname),
+    });
+  }, [fullname, setValue]);
 
   useEffect(() => {
     const params = {
@@ -218,6 +234,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
           placeholder="Masukan Nama Trainer"
           register={register}
           error={errors.fullname?.message}
+          showValidationIcon={false}
           defaultValue={isUpdate ? data.fullname : ""}
           disabled={loading}
         />
@@ -228,7 +245,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
           placeholder="Masukan Panggilan"
           register={register}
           error={errors.nickname?.message}
-          defaultValue={isUpdate ? data.nickname : ""}
+          value={nickname}
           disabled={loading}
         />
         <Textinput

@@ -6,9 +6,11 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import Tooltip from "@/components/ui/Tooltip";
 import Table from "@/components/globals/table/table";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
@@ -20,6 +22,7 @@ import {
   editCareerStage,
   getBranches,
   getCareerApplications,
+  getCareerApplicationFormOptions,
   getCareerJobs,
   getCareerStages,
   getDepartments,
@@ -314,24 +317,26 @@ const optionFromJob = (job) => ({
       ? job.department.department_id || job.department.id
       : job.department,
   departmentName: job.department_name || job.department?.name,
+  branch:
+    job.branch_id ||
+    (typeof job.branch === "object"
+      ? job.branch.branch_id || job.branch.id
+      : job.branch),
+  branchName:
+    job.branch_name ||
+    (typeof job.branch === "object"
+      ? job.branch.name || job.branch.branch_name
+      : ""),
 });
+
+const formatJobWithBranch = (jobTitle, branchName) =>
+  [jobTitle, branchName]
+    .filter((value) => value && value !== "-")
+    .join(" - ") || "-";
 
 const normalizeOptions = (payload, mapper) => {
   const { results } = getPaginatedResults(payload);
   return results.map(mapper).filter((option) => option.value && option.label);
-};
-
-const mergeOptions = (baseOptions, dynamicOptions) => {
-  const seen = new Set();
-  return [...baseOptions, ...dynamicOptions].filter((option) => {
-    const key = normalizeValue(option.value);
-    if (!key || seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
 };
 
 const optionFromDisplayFields = (items, valueKey, labelKey) => {
@@ -348,6 +353,26 @@ const optionFromDisplayFields = (items, valueKey, labelKey) => {
         return false;
       }
 
+      seen.add(key);
+      return true;
+    });
+};
+
+const normalizeFormOptions = (options) => {
+  if (!Array.isArray(options)) return [];
+  const seen = new Set();
+  return options
+    .map((option) =>
+      typeof option === "string"
+        ? { value: option, label: option }
+        : {
+            value: option?.value ?? "",
+            label: option?.label ?? option?.value ?? "",
+          },
+    )
+    .filter((option) => {
+      const key = normalizeValue(option.value);
+      if (!key || !option.label || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -419,82 +444,6 @@ const stageToneClass = {
     "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300",
   teal: "border-teal-100 bg-teal-50 text-teal-600 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-300",
 };
-
-const genderOptions = [
-  { value: "male", label: "Laki-laki" },
-  { value: "female", label: "Perempuan" },
-];
-
-const maritalStatusOptions = [
-  { value: "single", label: "Belum Menikah" },
-  { value: "married", label: "Menikah" },
-  { value: "divorced", label: "Cerai" },
-  { value: "widowed", label: "Duda/Janda" },
-];
-
-const religionOptions = [
-  { value: "islam", label: "Islam" },
-  { value: "kristen", label: "Kristen" },
-  { value: "katolik", label: "Katolik" },
-  { value: "hindu", label: "Hindu" },
-  { value: "buddha", label: "Buddha" },
-  { value: "konghucu", label: "Konghucu" },
-];
-
-const educationLevelOptions = [
-  { value: "sma", label: "SMA" },
-  { value: "smk", label: "SMK" },
-  { value: "d1", label: "D1" },
-  { value: "d2", label: "D2" },
-  { value: "d3", label: "D3" },
-  { value: "d4", label: "D4" },
-  { value: "s1", label: "S1" },
-  { value: "s2", label: "S2" },
-  { value: "s3", label: "S3" },
-];
-
-const educationStatusOptions = [
-  { value: "student", label: "Mahasiswa" },
-  { value: "graduated", label: "Lulusan" },
-];
-
-const contractSystemOptions = [
-  { value: "fulltime", label: "Full Time" },
-  { value: "full_time", label: "Full Time" },
-  { value: "part_time", label: "Part Time" },
-  { value: "freelance", label: "Freelance" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "internship", label: "Internship" },
-];
-
-const applicationStatusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "Dalam Proses" },
-  { value: "accepted", label: "Lulus" },
-  { value: "rejected", label: "Tidak Lulus" },
-];
-
-const coachExperienceOptions = [
-  { value: "no_experience", label: "0 Tahun" },
-  { value: "less_than_1_year", label: "< 1 Tahun" },
-  { value: "1_year", label: "1 Tahun" },
-  { value: "2_years", label: "2 Tahun" },
-  { value: "more_than_3_years", label: "> 3 Tahun" },
-];
-
-const sourceOptions = [
-  { value: "instagram", label: "Instagram" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "website", label: "Website" },
-  { value: "referral", label: "Referral" },
-  { value: "jobstreet", label: "Jobstreet" },
-  { value: "other", label: "Lainnya" },
-];
-
-const workingOptions = [
-  { value: "true", label: "Ya" },
-  { value: "false", label: "Tidak" },
-];
 
 const getStageTone = (status) => {
   const value = normalizeValue(status);
@@ -585,14 +534,16 @@ const Badge = ({ children, tone = "slate", icon }) => (
   </span>
 );
 
-const FilterSelect = ({ label, value, options, onChange }) => (
-  <label className="block">
-    <span className="mb-2 block text-sm font-semibold text-slate-600 dark:text-slate-300">
+const FilterSelect = ({ label, value, options, onChange, onOpen }) => (
+  <label className="career-stages-filter-row">
+    <span className="career-stages-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
       {label}
     </span>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      onPointerDown={onOpen}
+      onFocus={onOpen}
       className="h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
     >
       {options.map((option) => (
@@ -604,30 +555,75 @@ const FilterSelect = ({ label, value, options, onChange }) => (
   </label>
 );
 
-const CheckboxGroup = ({ title, options, selectedValues, onChange }) => (
-  <div className="border-t border-slate-100 pt-4 dark:border-slate-700">
-    <h4 className="mb-3 text-xs font-bold uppercase text-slate-500 dark:text-slate-300">
+const CheckboxGroup = ({
+  id,
+  title,
+  options,
+  selectedValues,
+  onChange,
+  isOpen,
+  onToggle,
+}) => (
+  <div
+    className={`career-stages-filter-row ${
+      isOpen ? "career-stages-filter-row-open" : ""
+    }`}
+  >
+    <span className="career-stages-filter-label text-sm font-semibold text-slate-600 dark:text-slate-300">
       {title}
-    </h4>
-    <div className="space-y-3">
-      {options.map((option) => {
-        const checked = selectedValues.includes(option.value);
+    </span>
+    <div className="career-stages-multiselect min-w-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`${id}-options`}
+        className="flex h-12 w-full items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-4 text-left text-sm font-medium text-slate-700 shadow-sm outline-none transition hover:border-primary-300 focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <span className="truncate">
+          {selectedValues.length
+            ? `${selectedValues.length} dipilih`
+            : `Semua ${title.toLowerCase()}`}
+        </span>
+        <Icon
+          icon="heroicons-outline:chevron-down"
+          width={17}
+          className={`career-stages-multiselect-chevron flex-none ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div
+          id={`${id}-options`}
+          className="career-stages-multiselect-options mt-2 max-h-60 w-full space-y-1 overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-md dark:border-slate-700 dark:bg-slate-900"
+        >
+          {options.length ? (
+            options.map((option) => {
+              const checked = selectedValues.includes(option.value);
 
-        return (
-          <label
-            key={option.value}
-            className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-500 dark:text-slate-300"
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={() => onChange(option.value)}
-              className="h-5 w-5 rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
-            />
-            <span>{option.label}</span>
-          </label>
-        );
-      })}
+              return (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onChange(option.value)}
+                    className="h-5 w-5 flex-none rounded border-slate-200 text-primary-500 focus:ring-primary-500 dark:border-slate-700"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            })
+          ) : (
+            <p className="px-2 py-3 text-sm text-slate-400">
+              Belum ada pilihan.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   </div>
 );
@@ -701,7 +697,8 @@ const Tahapan = () => {
   const [sourceFilter, setSourceFilter] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [openFilterDropdown, setOpenFilterDropdown] = useState(null);
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [editingStage, setEditingStage] = useState(null);
   const [stageForm, setStageForm] = useState(emptyStageForm);
@@ -752,6 +749,15 @@ const Tahapan = () => {
       });
       return normalizeOptions(res.data, optionFromBranch);
     },
+  });
+
+  const applicationFormOptionsQuery = useQuery({
+    queryKey: ["careerApplicationFormOptions"],
+    queryFn: async () => {
+      const res = await getCareerApplicationFormOptions();
+      return res?.data?.data ?? res?.data ?? {};
+    },
+    staleTime: 30 * 60 * 1000,
   });
 
   const stagesQuery = useQuery({
@@ -982,17 +988,13 @@ const Tahapan = () => {
           contractSystemFilter,
           application.contractSystem,
           application.contractSystemDisplay,
-          contractSystemOptions.find(
-            (option) => option.value === contractSystemFilter,
-          )?.label,
+          undefined,
         ) &&
         matchesOption(
           statusFilter,
           application.applicationStatus,
           application.applicationStatusDisplay,
-          applicationStatusOptions.find(
-            (option) => option.value === statusFilter,
-          )?.label,
+          undefined,
         ) &&
         matchesOption(
           workingFilter,
@@ -1002,8 +1004,7 @@ const Tahapan = () => {
             : application.isWorking === false
               ? "Tidak"
               : "",
-          workingOptions.find((option) => option.value === workingFilter)
-            ?.label,
+          undefined,
         ) &&
         matchesMultiOption(genderFilter, application.gender) &&
         matchesMultiOption(maritalStatusFilter, application.maritalStatus) &&
@@ -1061,36 +1062,64 @@ const Tahapan = () => {
     return counts;
   }, [mappedApplications]);
 
-  const dynamicOptions = useMemo(
-    () => ({
-      contractSystems: optionFromDisplayFields(
-        mappedApplications,
-        "contractSystem",
-        "contractSystemDisplay",
-      ),
-      statuses: optionFromDisplayFields(
+  const applicationStatusOptions = useMemo(
+    () =>
+      optionFromDisplayFields(
         mappedApplications,
         "applicationStatus",
         "applicationStatusDisplay",
       ),
-      coachExperiences: optionFromDisplayFields(
-        mappedApplications,
+    [mappedApplications],
+  );
+
+  const formFilterOptions = useMemo(() => {
+    const options = applicationFormOptionsQuery.data ?? {};
+    const withFallback = (formKey, valueKey, labelKey) => {
+      const formValues = normalizeFormOptions(options[formKey]);
+      return formValues.length
+        ? formValues
+        : optionFromDisplayFields(mappedApplications, valueKey, labelKey);
+    };
+
+    return {
+      genders: withFallback("gender", "gender", "genderDisplay"),
+      maritalStatuses: withFallback(
+        "marital_status",
+        "maritalStatus",
+        "maritalStatusDisplay",
+      ),
+      religions: withFallback("religion", "religion", "religionDisplay"),
+      educationLevels: withFallback(
+        "education_level",
+        "educationLevel",
+        "educationLevelDisplay",
+      ),
+      educationStatuses: withFallback(
+        "education_status",
+        "educationStatus",
+        "educationStatusDisplay",
+      ),
+      contractSystems: withFallback(
+        "contract_system",
+        "contractSystem",
+        "contractSystemDisplay",
+      ),
+      coachExperiences: withFallback(
+        "coach_experience",
         "coachExperience",
         "coachExperienceDisplay",
       ),
-      sources: optionFromDisplayFields(
-        mappedApplications,
-        "source",
-        "sourceDisplay",
-      ),
-    }),
-    [mappedApplications],
-  );
+      sources: withFallback("job_source", "source", "sourceDisplay"),
+      working: [
+        { value: "true", label: "Ya" },
+        { value: "false", label: "Tidak" },
+      ],
+    };
+  }, [applicationFormOptionsQuery.data, mappedApplications]);
 
   const activeFilterCount = [
     departmentId,
     jobFilter,
-    branchFilter,
     contractSystemFilter,
     statusFilter,
     workingFilter,
@@ -1103,22 +1132,32 @@ const Tahapan = () => {
     ...sourceFilter,
   ].filter(Boolean).length;
 
+  const combinedJobOptions = filteredJobOptions.map((job) => ({
+    ...job,
+    label: formatJobWithBranch(
+      job.label,
+      job.branchName ||
+        branchOptions.find(
+          (branch) => String(branch.value) === String(job.branch),
+        )?.label,
+    ),
+  }));
+
   const selectOptions = {
     departments: [
       { value: "", label: "Pilih department" },
       ...departmentOptions,
     ],
-    jobs: [{ value: "", label: "Semua loker" }, ...filteredJobOptions],
-    branches: [{ value: "", label: "Semua cabang" }, ...branchOptions],
+    jobs: [{ value: "", label: "Semua loker" }, ...combinedJobOptions],
     contractSystems: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(contractSystemOptions, dynamicOptions.contractSystems),
+      ...formFilterOptions.contractSystems,
     ],
     statuses: [
       { value: "", label: "Semua status" },
-      ...mergeOptions(applicationStatusOptions, dynamicOptions.statuses),
+      ...applicationStatusOptions,
     ],
-    working: [{ value: "", label: "Semua kondisi" }, ...workingOptions],
+    working: [{ value: "", label: "Semua kondisi" }, ...formFilterOptions.working],
   };
 
   const pageCount = Math.max(
@@ -1148,18 +1187,30 @@ const Tahapan = () => {
     setDepartmentId(value);
     setActiveStageId("");
     setJobFilter("");
+    setBranchFilter("");
     setSearchInput("");
     setSearchQuery("");
     resetToFirstPage();
   };
 
-  const handleSearch = () => {
-    setSearchQuery(searchInput);
+  const handleSearch = (value = searchInput) => {
+    setSearchInput(value);
+    setSearchQuery(value);
     resetToFirstPage();
   };
 
   const handleFilterChange = (setter) => (value) => {
     setter(value);
+    resetToFirstPage();
+  };
+
+  const handleJobChange = (value) => {
+    const selectedJob = jobOptions.find(
+      (option) => String(option.value) === String(value),
+    );
+
+    setJobFilter(value);
+    setBranchFilter(value ? selectedJob?.branch || "" : "");
     resetToFirstPage();
   };
 
@@ -1189,7 +1240,16 @@ const Tahapan = () => {
     setEducationStatusFilter([]);
     setCoachExperienceFilter([]);
     setSourceFilter([]);
+    setOpenFilterDropdown(null);
     resetToFirstPage();
+  };
+
+  const closeMultiFilterDropdown = () => setOpenFilterDropdown(null);
+
+  const toggleFilterDropdown = (dropdownId) => {
+    setOpenFilterDropdown((current) =>
+      current === dropdownId ? null : dropdownId,
+    );
   };
 
   const closeStageModal = () => {
@@ -1944,132 +2004,140 @@ const Tahapan = () => {
 
   return (
     <div className="career-stages-page min-w-0 space-y-5">
-      <Card bodyClass="min-w-0 p-4 sm:p-5">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Filter Pelamar
-              </h3>
-              <p className="mt-1 text-sm font-semibold text-slate-400">
-                {activeFilterCount
-                  ? `${activeFilterCount} filter aktif`
-                  : "Pilih department untuk melihat pipeline tahapan rekrutmen."}
-              </p>
-            </div>
-            <div className="career-stages-filter-actions grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
-              <button
-                type="button"
-                onClick={() => setIsAdvancedFiltersOpen((current) => !current)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition hover:border-primary-200 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                aria-expanded={isAdvancedFiltersOpen}
-              >
-                <Icon icon="heroicons-outline:adjustments" width={16} />
-                {isAdvancedFiltersOpen
-                  ? "Sembunyikan Filter"
-                  : "Filter Lanjutan"}
-              </button>
-              <button
-                type="button"
-                onClick={handleResetFilter}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-slate-100 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
-              >
-                <Icon icon="heroicons-outline:arrow-path" width={16} />
-                Reset
-              </button>
-            </div>
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => {
+          setIsFilterOpen(false);
+          setOpenFilterDropdown(null);
+        }}
+        title="Filter Tahapan"
+        activeCount={activeFilterCount}
+        widthClass="max-w-lg"
+        contentClassName="career-stages-filter-sidebar"
+      >
+        <div className="career-stages-filter-content flex flex-col gap-4">
+          <div className="career-stages-filter-sticky flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p className="text-sm font-semibold text-slate-400">
+              {activeFilterCount
+                ? `${activeFilterCount} filter aktif`
+                : "Belum ada filter aktif."}
+            </p>
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="inline-flex min-h-[44px] flex-none items-center justify-center gap-2 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+            >
+              <Icon icon="heroicons-outline:arrow-path" width={17} />
+              Reset Filter
+            </button>
           </div>
 
-          <div className="career-stages-filter-grid grid grid-cols-1 gap-3">
+          <div className="career-stages-filter-grid grid grid-cols-1 gap-4 pt-1">
             <FilterSelect
               label="Department"
               value={departmentId}
               options={selectOptions.departments}
               onChange={handleDepartmentChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Loker"
               value={jobFilter}
               options={selectOptions.jobs}
-              onChange={handleFilterChange(setJobFilter)}
-            />
-            <FilterSelect
-              label="Cabang"
-              value={branchFilter}
-              options={selectOptions.branches}
-              onChange={handleFilterChange(setBranchFilter)}
+              onChange={handleJobChange}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status Pekerjaan"
               value={contractSystemFilter}
               options={selectOptions.contractSystems}
               onChange={handleFilterChange(setContractSystemFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Status"
               value={statusFilter}
               options={selectOptions.statuses}
               onChange={handleFilterChange(setStatusFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
             <FilterSelect
               label="Sedang Bekerja"
               value={workingFilter}
               options={selectOptions.working}
               onChange={handleFilterChange(setWorkingFilter)}
+              onOpen={closeMultiFilterDropdown}
             />
           </div>
 
-          {isAdvancedFiltersOpen && (
-            <div className="career-stages-advanced-grid grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-              <CheckboxGroup
-                title="Gender"
-                options={genderOptions}
-                selectedValues={genderFilter}
-                onChange={toggleMultiFilter(setGenderFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pernikahan"
-                options={maritalStatusOptions}
-                selectedValues={maritalStatusFilter}
-                onChange={toggleMultiFilter(setMaritalStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Agama"
-                options={religionOptions}
-                selectedValues={religionFilter}
-                onChange={toggleMultiFilter(setReligionFilter)}
-              />
-              <CheckboxGroup
-                title="Pendidikan"
-                options={educationLevelOptions}
-                selectedValues={educationLevelFilter}
-                onChange={toggleMultiFilter(setEducationLevelFilter)}
-              />
-              <CheckboxGroup
-                title="Status Pendidikan"
-                options={educationStatusOptions}
-                selectedValues={educationStatusFilter}
-                onChange={toggleMultiFilter(setEducationStatusFilter)}
-              />
-              <CheckboxGroup
-                title="Pengalaman Coach"
-                options={mergeOptions(
-                  coachExperienceOptions,
-                  dynamicOptions.coachExperiences,
-                )}
-                selectedValues={coachExperienceFilter}
-                onChange={toggleMultiFilter(setCoachExperienceFilter)}
-              />
-              <CheckboxGroup
-                title="Sumber"
-                options={mergeOptions(sourceOptions, dynamicOptions.sources)}
-                selectedValues={sourceFilter}
-                onChange={toggleMultiFilter(setSourceFilter)}
-              />
-            </div>
-          )}
+          <div className="career-stages-advanced-grid grid grid-cols-1 gap-4">
+            <CheckboxGroup
+              id="stage-gender-filter"
+              title="Gender"
+              options={formFilterOptions.genders}
+              selectedValues={genderFilter}
+              onChange={toggleMultiFilter(setGenderFilter)}
+              isOpen={openFilterDropdown === "gender"}
+              onToggle={() => toggleFilterDropdown("gender")}
+            />
+            <CheckboxGroup
+              id="stage-marital-status-filter"
+              title="Status Pernikahan"
+              options={formFilterOptions.maritalStatuses}
+              selectedValues={maritalStatusFilter}
+              onChange={toggleMultiFilter(setMaritalStatusFilter)}
+              isOpen={openFilterDropdown === "maritalStatus"}
+              onToggle={() => toggleFilterDropdown("maritalStatus")}
+            />
+            <CheckboxGroup
+              id="stage-religion-filter"
+              title="Agama"
+              options={formFilterOptions.religions}
+              selectedValues={religionFilter}
+              onChange={toggleMultiFilter(setReligionFilter)}
+              isOpen={openFilterDropdown === "religion"}
+              onToggle={() => toggleFilterDropdown("religion")}
+            />
+            <CheckboxGroup
+              id="stage-education-level-filter"
+              title="Pendidikan"
+              options={formFilterOptions.educationLevels}
+              selectedValues={educationLevelFilter}
+              onChange={toggleMultiFilter(setEducationLevelFilter)}
+              isOpen={openFilterDropdown === "educationLevel"}
+              onToggle={() => toggleFilterDropdown("educationLevel")}
+            />
+            <CheckboxGroup
+              id="stage-education-status-filter"
+              title="Status Pendidikan"
+              options={formFilterOptions.educationStatuses}
+              selectedValues={educationStatusFilter}
+              onChange={toggleMultiFilter(setEducationStatusFilter)}
+              isOpen={openFilterDropdown === "educationStatus"}
+              onToggle={() => toggleFilterDropdown("educationStatus")}
+            />
+            <CheckboxGroup
+              id="stage-coach-experience-filter"
+              title="Pengalaman Coach"
+              options={formFilterOptions.coachExperiences}
+              selectedValues={coachExperienceFilter}
+              onChange={toggleMultiFilter(setCoachExperienceFilter)}
+              isOpen={openFilterDropdown === "coachExperience"}
+              onToggle={() => toggleFilterDropdown("coachExperience")}
+            />
+            <CheckboxGroup
+              id="stage-source-filter"
+              title="Sumber"
+              options={formFilterOptions.sources}
+              selectedValues={sourceFilter}
+              onChange={toggleMultiFilter(setSourceFilter)}
+              isOpen={openFilterDropdown === "source"}
+              onToggle={() => toggleFilterDropdown("source")}
+            />
+          </div>
         </div>
-      </Card>
+      </FilterSidebar>
 
       <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
         <Card
@@ -2187,32 +2255,15 @@ const Tahapan = () => {
           }
         >
           <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full min-w-0 max-w-xl flex-1">
-              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon icon="heroicons-outline:search" width={20} />
-              </div>
-              <input
-                type="search"
-                value={searchInput}
+            <div className="w-full min-w-0 max-w-[460px] flex-1">
+              <Search
+                searchValue={searchInput}
+                handleSearch={handleSearch}
+                isLoading={applicationsQuery.isFetching}
                 disabled={!departmentId || !activeStageId}
-                onChange={(event) => setSearchInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
                 placeholder="Cari pelamar"
-                className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:disabled:bg-slate-800"
+                align="left"
               />
-              <button
-                type="button"
-                onClick={handleSearch}
-                disabled={!departmentId || !activeStageId}
-                className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Icon icon="heroicons-outline:search" width={16} />
-                Cari
-              </button>
             </div>
 
             <div className="rounded-md bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-300">

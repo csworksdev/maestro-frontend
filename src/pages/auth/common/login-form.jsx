@@ -50,19 +50,21 @@ const LoginForm = () => {
       if (response.data) {
         // Simpan token ke store global
         setUser({ refresh, access, data, rememberMe: NewData.rememberMe });
-        const accessResult = await loadAuthenticatedAccess({ force: true });
 
-        if (!accessResult || accessResult.accessError) {
-          logOut();
-          await Swal.fire({
-            icon: "error",
-            title: "Backend access belum terhubung",
-            text:
-              accessResult?.accessErrorMessage ||
-              "Gagal memuat menu atau permission dari backend. Silakan coba lagi.",
-          });
-          return;
-        }
+        // Muat akses pengguna (menu dan permission) setelah login berhasil tapi belum dipake
+        // const accessResult = await loadAuthenticatedAccess({ force: true });
+
+        // if (!accessResult || accessResult.accessError) {
+        //   logOut();
+        //   await Swal.fire({
+        //     icon: "error",
+        //     title: "Backend access belum terhubung",
+        //     text:
+        //       accessResult?.accessErrorMessage ||
+        //       "Gagal memuat menu atau permission dari backend. Silakan coba lagi.",
+        //   });
+        //   return;
+        // }
 
         // ✅ Simpan presence default
         localStorage.setItem(

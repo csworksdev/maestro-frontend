@@ -11,6 +11,7 @@ import Table from "@/components/globals/table/table";
 import Icon from "@/components/ui/Icon";
 import PaginationComponent from "@/components/globals/table/pagination";
 import { buildWsUrl } from "@/utils/wsUrl";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -89,6 +90,7 @@ const ApprovedRescheduleTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const socketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const wsEndpoint = useMemo(() => {
@@ -109,6 +111,15 @@ const ApprovedRescheduleTable = ({
 
     return `/ws/reschedule/?${params.toString()}`;
   }, [pageIndex, pageSize, studentFilter, trainerFilter]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setStudentFilter(studentFilterInput);
+      setTrainerFilter(trainerFilterInput);
+      setPageIndex(0);
+    }, 350);
+    return () => clearTimeout(timeout);
+  }, [studentFilterInput, trainerFilterInput]);
 
   const applyReschedulePayload = useCallback(
     (message) => {
@@ -244,12 +255,6 @@ const ApprovedRescheduleTable = ({
     };
   }, [closeSocket, connectSocket]);
 
-  const handleApplyFilter = () => {
-    setStudentFilter(studentFilterInput);
-    setTrainerFilter(trainerFilterInput);
-    setPageIndex(0);
-  };
-
   const handleResetFilter = () => {
     setStudentFilterInput("");
     setTrainerFilterInput("");
@@ -354,6 +359,27 @@ const ApprovedRescheduleTable = ({
 
   return (
     <div className="space-y-5">
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Reschedule"
+        activeCount={[studentFilter, trainerFilter].filter(Boolean).length}
+      >
+        <div className="flex flex-col gap-4">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Siswa
+            <input value={studentFilterInput} onChange={(event) => setStudentFilterInput(event.target.value)} placeholder="Nama siswa" className="form-control mt-2" />
+          </label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Pelatih
+            <input value={trainerFilterInput} onChange={(event) => setTrainerFilterInput(event.target.value)} placeholder="Nama pelatih" className="form-control mt-2" />
+          </label>
+          <button type="button" onClick={handleResetFilter} className="btn btn-light mt-2 w-full">
+            Reset Filter
+          </button>
+        </div>
+      </FilterSidebar>
       {showSummary && (
         <Card
           title={title}
@@ -411,61 +437,6 @@ const ApprovedRescheduleTable = ({
         subtitle={showSummary ? undefined : subtitle}
         headerslot={
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="relative">
-              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon icon="heroicons-outline:user" className="h-4 w-4" />
-              </span>
-              <input
-                value={studentFilterInput}
-                onChange={(event) => setStudentFilterInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleApplyFilter();
-                  }
-                }}
-                placeholder="Filter siswa"
-                className="h-9 w-44 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-300 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              />
-            </div>
-
-            <div className="relative">
-              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon
-                  icon="heroicons-outline:academic-cap"
-                  className="h-4 w-4"
-                />
-              </span>
-              <input
-                value={trainerFilterInput}
-                onChange={(event) => setTrainerFilterInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleApplyFilter();
-                  }
-                }}
-                placeholder="Filter pelatih"
-                className="h-9 w-44 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-300 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleApplyFilter}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary-500 px-3 text-sm font-medium text-white transition hover:bg-primary-600"
-            >
-              <Icon icon="heroicons-outline:funnel" className="h-4 w-4" />
-              Terapkan
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResetFilter}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-primary-200 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <Icon icon="heroicons-outline:x-mark" className="h-4 w-4" />
-              Reset
-            </button>
-
             <button
               type="button"
               onClick={fetchReschedule}

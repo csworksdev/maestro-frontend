@@ -15,8 +15,75 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.career-recruitment-filter-sidebar .career-recruitment-filter-grid,
+.career-recruitment-filter-sidebar .career-recruitment-advanced-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.career-recruitment-filter-sidebar {
+  container: recruitment-filter / inline-size;
+}
+
+.career-recruitment-filter-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.42fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.career-recruitment-filter-row-open {
+  align-items: start;
+}
+
+.career-recruitment-filter-row-open > .career-recruitment-filter-label {
+  padding-top: 14px;
+}
+
+.career-recruitment-filter-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.career-recruitment-filter-content {
+  padding-block: 0 16px;
+}
+
+.career-recruitment-multiselect-chevron {
+  transition: transform 150ms ease;
+}
+
+.career-recruitment-multiselect-options {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) transparent;
+}
+
+.career-recruitment-filter-sidebar label,
+.career-recruitment-filter-sidebar select,
+.career-recruitment-filter-sidebar input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@container recruitment-filter (max-width: 430px) {
+  .career-recruitment-filter-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .career-recruitment-filter-row-open > .career-recruitment-filter-label {
+    padding-top: 0;
+  }
+
+}
+
 .career-recruitment-table-hint {
   display: none;
+}
+
+/* Keep the final row visually separated from the horizontal scrollbar. */
+.career-recruitment-page .responsive-table-main {
+  padding-bottom: 12px;
 }
 
 @container career-recruitment (min-width: 540px) {

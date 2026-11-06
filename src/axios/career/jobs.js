@@ -1,11 +1,15 @@
 import { axiosConfig } from "../config";
+import { resolveApiBaseUrl } from "@/utils/apiUrl";
 
 const storageApiBaseUrl = String(
   import.meta.env.VITE_STORAGE_API_URL || ""
 ).replace(/\/$/, "");
-
 export const getCareerJobs = (params) => {
   return axiosConfig.get("/api/career/jobs/", { params });
+};
+
+export const getCareerApplicationFormOptions = () => {
+  return axiosConfig.get("/career/jobs/form/");
 };
 
 export const getCareerJob = (id) => {
@@ -61,6 +65,13 @@ export const getCareerApplications = (params) => {
   return axiosConfig.get("/api/career/applications/", { params });
 };
 
+export const exportCareerApplications = (params) => {
+  return axiosConfig.get("/api/career/applications/export/", {
+    params,
+    responseType: "blob",
+  });
+};
+
 export const getCareerApplication = (id) => {
   return axiosConfig.get(`/api/career/applications/${id}/`);
 };
@@ -95,14 +106,13 @@ export const uploadCareerApplicationAttachment = (file) => {
   const storageUrl = import.meta.env.DEV
     ? "/__storage_api/api/storage/"
     : storageApiBaseUrl
-    ? `${storageApiBaseUrl}/api/storage/`
-    : "/api/storage/";
+      ? `${storageApiBaseUrl}/api/storage/`
+      : "/api/storage/";
 
   return axiosConfig.post(storageUrl, formData, {
     ...(import.meta.env.DEV ? { baseURL: window.location.origin } : {}),
     headers: {
       "Content-Type": "multipart/form-data",
-      "ngrok-skip-browser-warning": "true",
     },
   });
 };
@@ -111,8 +121,8 @@ export const deleteCareerApplicationAttachment = (fileKey) => {
   const storageUrl = import.meta.env.DEV
     ? "/__storage_api/api/storage/"
     : storageApiBaseUrl
-    ? `${storageApiBaseUrl}/api/storage/`
-    : "/api/storage/";
+      ? `${storageApiBaseUrl}/api/storage/`
+      : "/api/storage/";
 
   const formData = new FormData();
   formData.append("file_key", fileKey);
@@ -122,7 +132,6 @@ export const deleteCareerApplicationAttachment = (fileKey) => {
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
-      "ngrok-skip-browser-warning": "true",
     },
   });
 };

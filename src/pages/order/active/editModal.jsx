@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Icons from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
-import Select from "@/components/ui/Select";
+// import Select from "@/components/ui/Select";
 import Textinput from "@/components/ui/Textinput";
 import { toProperCase } from "@/utils";
 import React from "react";
@@ -17,6 +17,7 @@ import Swal from "sweetalert2";
 import Flatpickr from "react-flatpickr";
 import { DateTime } from "luxon";
 
+/*
 const Hari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 
 const Jam = [
@@ -34,6 +35,7 @@ const Jam = [
   "17.00",
   "18.00",
 ];
+*/
 const params = {
   page: 1,
   page_size: 100,
@@ -56,8 +58,8 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
   const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [selectedKolam, setSelectedKolam] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedHari, setSelectedHari] = useState(null);
-  const [selectedJam, setSelectedJam] = useState(null);
+  // const [selectedHari, setSelectedHari] = useState(null);
+  // const [selectedJam, setSelectedJam] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
@@ -234,6 +236,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
             )}
         </div>
       </Card>
+      {/*
       <Card title={"Ganti Hari"}>
         <div className="grid grid-cols-[auto,1fr,auto,auto,1fr,auto] gap-4 items-center">
           <label className="text-sm text-gray-700">Dari</label>
@@ -273,6 +276,7 @@ const EditModal = ({ defaultOrder, onClose = null, isEdit = () => {} }) => {
           )}
         </div>
       </Card>
+      */}
     </div>
   );
 };

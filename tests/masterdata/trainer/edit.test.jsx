@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import Edit from "../../../src/pages/masterdata/trainer/edit";
 
@@ -79,6 +80,27 @@ vi.mock("@/pages/referensi/trainerSpesialisasi/edit", () => ({
   ),
 }));
 
+vi.mock("@/axios/masterdata/trainer", () => ({
+  getTrainerDocuments: vi.fn().mockResolvedValue({ data: { data: {} } }),
+  uploadTrainerDocuments: vi.fn(),
+}));
+
+const renderEdit = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <Edit />
+    </QueryClientProvider>,
+  );
+};
+
 describe("Trainer edit page", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
@@ -89,7 +111,7 @@ describe("Trainer edit page", () => {
   });
 
   it("navigates back when clicking kembali", async () => {
-    render(<Edit />);
+    renderEdit();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Kembali" }));
@@ -98,7 +120,7 @@ describe("Trainer edit page", () => {
   });
 
   it("switches specialization mode", async () => {
-    render(<Edit />);
+    renderEdit();
 
     const user = userEvent.setup();
     expect(screen.getByText("SpecList")).toBeInTheDocument();

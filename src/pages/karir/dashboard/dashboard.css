@@ -245,6 +245,49 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* The dashboard container remains desktop-sized while this content lives in a
+   narrow drawer, so the drawer needs its own explicit responsive layout. */
+.career-dashboard-filter-sidebar .cd-filter-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.career-dashboard-filter-sidebar .cd-filter-heading {
+  align-items: flex-start;
+  flex-direction: column;
+}
+.career-dashboard-filter-sidebar .cd-filter-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 14px;
+}
+.career-dashboard-filter-sidebar .cd-filter-field {
+  min-width: 0;
+  font-size: 12px;
+}
+.career-dashboard-filter-sidebar .cd-filter-field > span {
+  overflow-wrap: anywhere;
+}
+.career-dashboard-filter-sidebar .cd-filter-field input,
+.career-dashboard-filter-sidebar .cd-filter-field select {
+  min-width: 0;
+  padding-inline: 12px;
+  font-size: 13px;
+}
+.career-dashboard-filter-sidebar .cd-filter-actions {
+  grid-column: 1 / -1;
+  justify-content: stretch;
+}
+.career-dashboard-filter-sidebar .cd-filter-actions > button {
+  width: 100%;
+}
+@media (max-width: 520px) {
+  .career-dashboard-filter-sidebar .cd-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .cd-filter-error,
 .cd-filter-hint {
   margin-top: 12px !important;

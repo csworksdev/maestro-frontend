@@ -21,3 +21,9 @@
     @apply h-min;
   }
 }
+
+@media (max-width: 639px) {
+  .reschedule-list-card .card-header {
+    @apply flex-col items-stretch gap-3;
+  }
+}

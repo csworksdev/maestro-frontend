@@ -1,28 +1,34 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import ReactQuill from "react-quill";
-import DOMPurify from "dompurify";
-import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 import Table from "@/components/globals/table/table";
 import TableAction from "@/components/globals/table/tableAction";
 import PaginationComponent from "@/components/globals/table/pagination";
+import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
 import {
+  hasCareerRichText,
+  isCareerRichTextPreserved,
+  sanitizeCareerRichText,
+} from "@/utils/careerRichText";
+import {
   addCareerJob,
   deleteCareerJob,
   editCareerJob,
+  getCareerJob,
   getBranches,
   getCareerJobs,
   getDepartments,
   updateCareerJobStatus,
 } from "@/axios/career/jobs";
+import CareerRichTextField from "./CareerRichTextField";
 import "./loker.css";
 
 const emptyForm = {
@@ -43,73 +49,16 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const stripHtml = (value) =>
-  String(value || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const serializeRichText = (value) =>
-  DOMPurify.sanitize(String(value || ""), {
-    USE_PROFILES: { html: true },
-  })
-    .replace(/<p><br\s*\/?><\/p>/gi, "<br>")
-    .trim();
-
-const richTextModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ color: [] }, { background: [] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ align: [] }, "blockquote"],
-    ["link"],
-    ["clean"],
-  ],
-};
-
-const richTextFormats = [
-  "header",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "color",
-  "background",
-  "list",
-  "bullet",
-  "align",
-  "blockquote",
-  "link",
-];
-
-const RichTextField = ({ label, value, onChange, placeholder }) => (
-  <div className="career-rich-text-field">
-    <span className="form-label">{label}</span>
-    <ReactQuill
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={richTextModules}
-      formats={richTextFormats}
-      placeholder={placeholder}
-      className="career-rich-text-editor"
-    />
-  </div>
-);
-
 const RichTextContent = ({ value, emptyText = "-" }) => {
-  const safeHtml = DOMPurify.sanitize(String(value || ""), {
-    USE_PROFILES: { html: true },
-  });
+  const safeHtml = sanitizeCareerRichText(value);
 
-  if (!stripHtml(safeHtml)) {
+  if (!hasCareerRichText(safeHtml)) {
     return <span>{emptyText}</span>;
   }
 
   return (
     <div
-      className="ql-editor career-rich-text-preview"
+      className="career-rich-text-preview"
       dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );
@@ -151,6 +100,11 @@ const getPaginatedResults = (payload) => {
   }
 
   return { count: 0, results: [] };
+};
+
+const getJobRecord = (response) => {
+  const payload = response?.data ?? response;
+  return payload?.data ?? payload?.result ?? payload;
 };
 
 const getId = (item, type) => {
@@ -230,15 +184,20 @@ const matchesSelectedOption = ({
 
 const Loker = () => {
   const formRef = useRef(null);
+  const descriptionEditorRef = useRef(null);
+  const requirementsEditorRef = useRef(null);
+  const benefitsEditorRef = useRef(null);
   const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+  const [isEditLoading, setIsEditLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
   const departmentsQuery = useQuery({
@@ -310,7 +269,30 @@ const Loker = () => {
       }
 
       const res = await getCareerJobs(params);
-      return getPaginatedResults(res.data);
+      const paginatedJobs = getPaginatedResults(res.data);
+      const detailResults = await Promise.allSettled(
+        paginatedJobs.results.map(async (job) => {
+          const jobId = job?.job_id || getId(job, "job");
+
+          if (!jobId) {
+            return job;
+          }
+
+          const detail = getJobRecord(await getCareerJob(jobId));
+          return detail && typeof detail === "object"
+            ? { ...job, ...detail }
+            : job;
+        }),
+      );
+
+      return {
+        ...paginatedJobs,
+        results: detailResults.map((result, index) =>
+          result.status === "fulfilled"
+            ? result.value
+            : paginatedJobs.results[index],
+        ),
+      };
     },
     keepPreviousData: true,
   });
@@ -401,8 +383,46 @@ const Loker = () => {
   };
 
   const addCareerJobMutation = useMutation({
-    mutationFn: addCareerJob,
-    onSuccess: () => {
+    mutationFn: async (data) => {
+      const created = getJobRecord(await addCareerJob(data));
+      const id = getId(created, "job");
+      if (!id) return { id: null, verificationError: true, changedFields: [] };
+
+      let saved;
+      try {
+        saved = getJobRecord(await getCareerJob(id));
+      } catch {
+        return { id, verificationError: true, changedFields: [] };
+      }
+      const changedFields = ["description", "requirements", "benefits"].filter(
+        (field) => !isCareerRichTextPreserved(data[field], saved?.[field]),
+      );
+      return { id, changedFields };
+    },
+    onSuccess: ({ id, changedFields, verificationError }) => {
+      if (!id) {
+        closeModal();
+        resetToFirstPage();
+        invalidateJobs();
+        Swal.fire(
+          "Penyimpanan perlu dicek",
+          "Loker dibuat, tetapi respons server tidak menyertakan ID untuk memeriksa format teks. Buka kembali loker dari daftar.",
+          "warning",
+        );
+        return;
+      }
+      if (changedFields.length || verificationError) {
+        setEditingJob({ id });
+        invalidateJobs();
+        Swal.fire(
+          verificationError ? "Penyimpanan perlu dicek" : "Format belum tersimpan",
+          verificationError
+            ? "Loker dibuat, tetapi isi terbaru belum dapat diperiksa. Editor tetap terbuka agar teks Anda aman."
+            : `Server mengubah format ${changedFields.join(", ")}. Editor tetap terbuka untuk memperbarui loker yang sama.`,
+          verificationError ? "warning" : "error",
+        );
+        return;
+      }
       closeModal();
       resetToFirstPage();
       invalidateJobs();
@@ -418,13 +438,55 @@ const Loker = () => {
   });
 
   const editCareerJobMutation = useMutation({
-    mutationFn: ({ id, data }) => editCareerJob(id, data),
+    mutationFn: async ({ id, data }) => {
+      await editCareerJob(id, data);
+      let savedJob;
+      try {
+        savedJob = getJobRecord(await getCareerJob(id));
+      } catch {
+        const error = new Error("Isi terbaru belum dapat diperiksa.");
+        error.code = "CAREER_VERIFICATION_FAILED";
+        throw error;
+      }
+      const fields = ["description", "requirements", "benefits"];
+      const changedFields = fields.filter(
+        (field) =>
+          !isCareerRichTextPreserved(data[field], savedJob?.[field]),
+      );
+
+      if (changedFields.length) {
+        const error = new Error("Format teks berubah setelah disimpan di server.");
+        error.code = "CAREER_FORMAT_CHANGED";
+        error.changedFields = changedFields;
+        throw error;
+      }
+
+      return savedJob;
+    },
     onSuccess: () => {
       closeModal();
       invalidateJobs();
       Swal.fire("Berhasil", "Loker berhasil diperbarui.", "success");
     },
     onError: (error) => {
+      if (error?.code === "CAREER_VERIFICATION_FAILED") {
+        invalidateJobs();
+        Swal.fire(
+          "Penyimpanan perlu dicek",
+          "Perubahan telah dikirim, tetapi isi terbaru belum dapat diperiksa. Editor tetap terbuka agar teks Anda aman.",
+          "warning",
+        );
+        return;
+      }
+      if (error?.code === "CAREER_FORMAT_CHANGED") {
+        invalidateJobs();
+        Swal.fire(
+          "Format belum tersimpan",
+          `Server mengubah format ${error.changedFields.join(", ")}. Editor tetap terbuka agar teks Anda tidak hilang.`,
+          "error",
+        );
+        return;
+      }
       Swal.fire(
         "Gagal",
         getErrorMessage(error, "Loker gagal diperbarui."),
@@ -463,14 +525,109 @@ const Loker = () => {
     },
   });
 
+  const duplicateCareerJobMutation = useMutation({
+    mutationFn: async (job) => {
+      const detail = getJobRecord(await getCareerJob(job.id));
+      const latest = { ...job.raw, ...detail };
+      const originalTitle = latest.title || job.title || "Loker";
+      const payload = {
+        department:
+          latest.department_id ||
+          getId(latest.department, "department") ||
+          job.departmentId,
+        branch:
+          latest.branch_id ||
+          getId(latest.branch, "branch") ||
+          job.branchId,
+        title: `${originalTitle} (Salinan)`,
+        slug: `${slugify(originalTitle)}-salinan-${Date.now()}`,
+        description: sanitizeCareerRichText(
+          latest.description || job.description,
+        ),
+        requirements: sanitizeCareerRichText(
+          latest.requirements || job.requirements,
+        ),
+        benefits: sanitizeCareerRichText(latest.benefits || job.benefits),
+        status: "draft",
+      };
+      const missingSourceFields = [
+        "description",
+        "requirements",
+        "benefits",
+      ].filter((field) => !hasCareerRichText(payload[field]));
+
+      if (missingSourceFields.length) {
+        const error = new Error(
+          `Data sumber ${missingSourceFields.join(", ")} kosong dan tidak dapat diduplikat.`,
+        );
+        error.code = "DUPLICATE_SOURCE_INCOMPLETE";
+        throw error;
+      }
+
+      const created = getJobRecord(await addCareerJob(payload));
+      const duplicatedJobId = getId(created, "job");
+
+      if (!duplicatedJobId) {
+        const error = new Error(
+          "Server tidak mengembalikan ID loker hasil duplikasi.",
+        );
+        error.code = "DUPLICATE_ID_MISSING";
+        throw error;
+      }
+
+      let savedJob = getJobRecord(await getCareerJob(duplicatedJobId));
+      const richTextFields = ["description", "requirements", "benefits"];
+      const needsRecovery = richTextFields.some(
+        (field) =>
+          !hasCareerRichText(savedJob?.[field]) ||
+          !isCareerRichTextPreserved(payload[field], savedJob?.[field]),
+      );
+
+      if (needsRecovery) {
+        await editCareerJob(duplicatedJobId, payload);
+        savedJob = getJobRecord(await getCareerJob(duplicatedJobId));
+      }
+
+      const incompleteFields = richTextFields.filter(
+        (field) =>
+          !hasCareerRichText(savedJob?.[field]) ||
+          !isCareerRichTextPreserved(payload[field], savedJob?.[field]),
+      );
+
+      if (incompleteFields.length) {
+        const error = new Error(
+          `Isi ${incompleteFields.join(", ")} belum tersimpan lengkap.`,
+        );
+        error.code = "DUPLICATE_CONTENT_INCOMPLETE";
+        throw error;
+      }
+
+      return savedJob;
+    },
+    onSuccess: () => {
+      resetToFirstPage();
+      invalidateJobs();
+      Swal.fire("Berhasil", "Loker berhasil diduplikat sebagai Draft.", "success");
+    },
+    onError: (error) => {
+      Swal.fire(
+        "Gagal menduplikat loker",
+        getErrorMessage(error, "Loker belum dapat diduplikat."),
+        "error",
+      );
+    },
+  });
+
   const isMutating =
     addCareerJobMutation.isPending ||
     editCareerJobMutation.isPending ||
+    duplicateCareerJobMutation.isPending ||
     deleteCareerJobMutation.isPending ||
     updateStatusMutation.isPending;
 
-  const handleSearch = () => {
-    setSearchQuery(searchInput);
+  const handleSearch = (value = searchInput) => {
+    setSearchInput(value);
+    setSearchQuery(value);
     resetToFirstPage();
   };
 
@@ -488,47 +645,67 @@ const Loker = () => {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (job) => {
-    setEditingJob(job);
-    setForm({
-      department: job.departmentId,
-      branch: job.branchId,
-      title: job.title === "-" ? "" : job.title,
-      slug: job.slug,
-      description: job.description,
-      requirements: job.requirements,
-      benefits: job.benefits,
-      status: job.status,
-    });
-    setIsModalOpen(true);
+  const openEditModal = async (job) => {
+    if (isEditLoading) return;
+    try {
+      setIsEditLoading(true);
+      const detail = getJobRecord(await getCareerJob(job.id));
+      const latest = { ...job.raw, ...detail };
+      setEditingJob(job);
+      setForm({
+        department: latest.department_id || getId(latest.department, "department") || job.departmentId,
+        branch: latest.branch_id || getId(latest.branch, "branch") || job.branchId,
+        title: latest.title || "",
+        slug: latest.slug || "",
+        description: latest.description || "",
+        requirements: latest.requirements || "",
+        benefits: latest.benefits || "",
+        status: latest.status || job.status,
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      Swal.fire(
+        "Gagal memuat loker",
+        getErrorMessage(error, "Data terbaru loker belum dapat dimuat."),
+        "error",
+      );
+    } finally {
+      setIsEditLoading(false);
+    }
   };
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const buildPayload = () => ({
+  const buildPayload = (richValues) => ({
     department: form.department,
     branch: form.branch,
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
     // React Quill values are persisted as HTML strings so formatting remains
     // available to every frontend consuming the career jobs API.
-    description: serializeRichText(form.description),
-    requirements: serializeRichText(form.requirements),
-    benefits: serializeRichText(form.benefits),
+    description: sanitizeCareerRichText(richValues.description),
+    requirements: sanitizeCareerRichText(richValues.requirements),
+    benefits: sanitizeCareerRichText(richValues.benefits),
     status: form.status,
   });
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    const richValues = {
+      description: descriptionEditorRef.current?.getHTML() ?? form.description,
+      requirements: requirementsEditorRef.current?.getHTML() ?? form.requirements,
+      benefits: benefitsEditorRef.current?.getHTML() ?? form.benefits,
+    };
+
     const emptyRichTextFields = [
-      ["Deskripsi", form.description],
-      ["Requirements", form.requirements],
-      ["Benefits", form.benefits],
+      ["Deskripsi", richValues.description],
+      ["Requirements", richValues.requirements],
+      ["Benefits", richValues.benefits],
     ]
-      .filter(([, value]) => !stripHtml(value))
+      .filter(([, value]) => !hasCareerRichText(value))
       .map(([label]) => label);
 
     if (emptyRichTextFields.length) {
@@ -540,7 +717,7 @@ const Loker = () => {
       return;
     }
 
-    const payload = buildPayload();
+    const payload = buildPayload(richValues);
 
     if (editingJob) {
       editCareerJobMutation.mutate({ id: editingJob.id, data: payload });
@@ -590,6 +767,23 @@ const Loker = () => {
     });
   };
 
+  const handleDuplicate = (job) => {
+    Swal.fire({
+      title: "Duplikat loker?",
+      text: `Salinan “${job.title}” akan dibuat sebagai Draft.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#7c3aed",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, duplikat",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        duplicateCareerJobMutation.mutate(job);
+      }
+    });
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -619,7 +813,7 @@ const Loker = () => {
         accessor: "description",
         width: "42%",
         Cell: ({ cell }) => (
-          <div className="w-full max-w-[min(42rem,100%)] text-left text-slate-600 dark:text-slate-300">
+          <div className="career-loker-description-cell w-full text-start text-slate-600 dark:text-slate-300">
             <RichTextContent value={cell.value} />
           </div>
         ),
@@ -647,6 +841,7 @@ const Loker = () => {
         Header: "Action",
         accessor: "action",
         id: "action",
+        width: "104px",
         sticky: "right",
         Cell: ({ row }) => {
           const job = row.original;
@@ -656,14 +851,21 @@ const Loker = () => {
               icon: "heroicons:pencil-square",
               onClick: () => openEditModal(job),
               className:
-                "!border-sky-100 !bg-sky-50 !text-sky-600 hover:!border-sky-200 hover:!bg-sky-100 hover:!text-sky-700 dark:!border-sky-500/20 dark:!bg-sky-500/10 dark:!text-sky-300 dark:hover:!bg-sky-500/20",
+                "!h-9 !w-9 !rounded-lg !border-sky-100 !bg-sky-50 !text-sky-600 hover:!border-sky-200 hover:!bg-sky-100 hover:!text-sky-700 dark:!border-sky-500/20 dark:!bg-sky-500/10 dark:!text-sky-300 dark:hover:!bg-sky-500/20",
+            },
+            {
+              name: "Duplikat",
+              icon: "heroicons-outline:document-duplicate",
+              onClick: () => handleDuplicate(job),
+              className:
+                "!h-9 !w-9 !rounded-lg !border-violet-100 !bg-violet-50 !text-violet-600 hover:!border-violet-200 hover:!bg-violet-100 hover:!text-violet-700 dark:!border-violet-500/20 dark:!bg-violet-500/10 dark:!text-violet-300 dark:hover:!bg-violet-500/20",
             },
             {
               name: "Delete",
               icon: "heroicons-outline:trash",
               onClick: () => handleDelete(job),
               className:
-                "!border-danger-100 !bg-danger-50 !text-danger-600 hover:!border-danger-200 hover:!bg-danger-100 hover:!text-danger-700 dark:!border-danger-500/20 dark:!bg-danger-500/10 dark:!text-danger-300 dark:hover:!bg-danger-500/20",
+                "!h-9 !w-9 !rounded-lg !border-danger-100 !bg-danger-50 !text-danger-600 hover:!border-danger-200 hover:!bg-danger-100 hover:!text-danger-700 dark:!border-danger-500/20 dark:!bg-danger-500/10 dark:!text-danger-300 dark:hover:!bg-danger-500/20",
             },
             {
               name: job.status === "published" ? "Jadikan Draft" : "Publish",
@@ -674,13 +876,13 @@ const Loker = () => {
               onClick: () => handleToggleStatus(job),
               className:
                 job.status === "published"
-                  ? "!border-amber-100 !bg-amber-50 !text-amber-600 hover:!border-amber-200 hover:!bg-amber-100 hover:!text-amber-700 dark:!border-amber-500/20 dark:!bg-amber-500/10 dark:!text-amber-300 dark:hover:!bg-amber-500/20"
-                  : "!border-success-100 !bg-success-50 !text-success-600 hover:!border-success-200 hover:!bg-success-100 hover:!text-success-700 dark:!border-success-500/20 dark:!bg-success-500/10 dark:!text-success-300 dark:hover:!bg-success-500/20",
+                  ? "!h-9 !w-9 !rounded-lg !border-amber-100 !bg-amber-50 !text-amber-600 hover:!border-amber-200 hover:!bg-amber-100 hover:!text-amber-700 dark:!border-amber-500/20 dark:!bg-amber-500/10 dark:!text-amber-300 dark:hover:!bg-amber-500/20"
+                  : "!h-9 !w-9 !rounded-lg !border-success-100 !bg-success-50 !text-success-600 hover:!border-success-200 hover:!bg-success-100 hover:!text-success-700 dark:!border-success-500/20 dark:!bg-success-500/10 dark:!text-success-300 dark:hover:!bg-success-500/20",
             },
           ];
 
           return (
-            <div className="flex items-center justify-center gap-2">
+            <div className="mx-auto grid w-fit grid-cols-2 place-items-center gap-1.5">
               {actions.map((action) => (
                 <TableAction key={action.name} action={action} row={{ row }} />
               ))}
@@ -697,6 +899,25 @@ const Loker = () => {
 
   return (
     <div className="career-loker-page grid min-w-0 grid-cols-1">
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Loker"
+        activeCount={[departmentFilter, branchFilter].filter(Boolean).length}
+      >
+        <div className="flex flex-col gap-4">
+          <select value={departmentFilter} onChange={(event) => { setDepartmentFilter(event.target.value); resetToFirstPage(); }} className={`${filterSelectClass} w-full`} aria-label="Filter department">
+            <option value="">Semua department</option>
+            {departmentOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <select value={branchFilter} onChange={(event) => { setBranchFilter(event.target.value); resetToFirstPage(); }} className={`${filterSelectClass} w-full`} aria-label="Filter cabang">
+            <option value="">Semua cabang</option>
+            {branchOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <button type="button" onClick={handleResetFilter} className="btn btn-light w-full">Reset Filter</button>
+        </div>
+      </FilterSidebar>
       <Card
         title="Loker"
         bodyClass="p-4 sm:p-6"
@@ -710,75 +931,14 @@ const Loker = () => {
           />
         }
       >
-        <div className="mb-6 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_minmax(220px,1fr)_minmax(220px,1fr)_minmax(170px,0.75fr)]">
-          <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
-            <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-              <Icon icon="heroicons-outline:search" width={20} />
-            </div>
-            <input
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  handleSearch();
-                }
-              }}
-              placeholder="Cari loker"
-              className="h-12 w-full rounded-full border border-slate-200 bg-white pl-12 pr-28 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            />
-            <button
-              type="button"
-              onClick={handleSearch}
-              className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-5 text-xs font-bold uppercase text-white shadow-sm transition hover:bg-primary-600"
-            >
-              <Icon icon="heroicons-outline:search" width={16} />
-              Cari
-            </button>
-          </div>
-
-          <select
-            value={departmentFilter}
-            onChange={(event) => {
-              setDepartmentFilter(event.target.value);
-              resetToFirstPage();
-            }}
-            className={`${filterSelectClass} w-full min-w-0`}
-            aria-label="Filter department"
-          >
-            <option value="">Semua department</option>
-            {departmentOptions.map((department) => (
-              <option key={department.value} value={department.value}>
-                {department.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={branchFilter}
-            onChange={(event) => {
-              setBranchFilter(event.target.value);
-              resetToFirstPage();
-            }}
-            className={`${filterSelectClass} w-full min-w-0`}
-            aria-label="Filter cabang"
-          >
-            <option value="">Semua cabang</option>
-            {branchOptions.map((branch) => (
-              <option key={branch.value} value={branch.value}>
-                {branch.label}
-              </option>
-            ))}
-          </select>
-
-          <button
-            type="button"
-            onClick={handleResetFilter}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-slate-100 px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 sm:col-span-2 xl:col-span-1"
-          >
-            <Icon icon="heroicons-outline:arrow-path" width={18} />
-            Reset Filter
-          </button>
+        <div className="mb-1">
+          <Search
+            searchValue={searchInput}
+            handleSearch={handleSearch}
+            isLoading={jobsQuery.isFetching}
+            placeholder="Cari loker"
+            align="left"
+          />
         </div>
 
         {!jobsQuery.isError &&
@@ -856,7 +1016,7 @@ const Loker = () => {
                       </div>
                     </dl>
 
-                    <div className="mt-3 break-words text-xs text-slate-500 dark:text-slate-300">
+                    <div className="career-loker-description-cell mt-3 break-words text-xs text-slate-500 dark:text-slate-300">
                       <RichTextContent
                         value={job.description}
                         emptyText="Belum ada deskripsi."
@@ -867,11 +1027,23 @@ const Loker = () => {
                       <button
                         type="button"
                         onClick={() => openEditModal(job)}
-                        disabled={isMutating}
+                        disabled={isMutating || isEditLoading}
                         className="career-loker-mobile-action border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300"
                       >
                         <Icon icon="heroicons:pencil-square" width={17} />
                         <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicate(job)}
+                        disabled={isMutating}
+                        className="career-loker-mobile-action border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300"
+                      >
+                        <Icon
+                          icon="heroicons-outline:document-duplicate"
+                          width={17}
+                        />
+                        <span>Duplikat</span>
                       </button>
                       <button
                         type="button"
@@ -914,8 +1086,9 @@ const Loker = () => {
                 listData={listData}
                 listColumn={columns}
                 isAction
-                actionColumnClass="w-44 min-w-[11rem]"
-                tableMinWidth="780px"
+                actionColumnClass="w-24 min-w-[6rem]"
+                tableMinWidth="960px"
+                bodyCellAlign="center"
               />
             </div>
 
@@ -1036,21 +1209,24 @@ const Loker = () => {
             </label>
           </div>
 
-          <RichTextField
+          <CareerRichTextField
+            ref={descriptionEditorRef}
             label="Deskripsi"
             value={form.description}
             onChange={(value) => updateForm("description", value)}
             placeholder="Tuliskan deskripsi pekerjaan."
           />
 
-          <RichTextField
+          <CareerRichTextField
+            ref={requirementsEditorRef}
             label="Requirements"
             value={form.requirements}
             onChange={(value) => updateForm("requirements", value)}
             placeholder="Tuliskan requirement pekerjaan."
           />
 
-          <RichTextField
+          <CareerRichTextField
+            ref={benefitsEditorRef}
             label="Benefits"
             value={form.benefits}
             onChange={(value) => updateForm("benefits", value)}

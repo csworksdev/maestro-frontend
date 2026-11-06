@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useGlobalFilter } from "@/contexts/GlobalFilterContext";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 
 const months = [
   "Jan",
@@ -24,6 +25,7 @@ const GlobalChartFilter = () => {
   const [year, setYear] = useState(
     filter.filter_year || new Date().getFullYear(),
   );
+  const [isOpen, setIsOpen] = useState(false);
 
   // keep local -> global in sync
   useEffect(() => {
@@ -132,13 +134,15 @@ const GlobalChartFilter = () => {
   };
 
   return (
-    <div className="mb-4 p-4 bg-white rounded shadow-sm">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Filter</h3>
-      </div>
-
-      <div className="mt-3 flex flex-col md:flex-row md:items-center md:gap-6 gap-3">
-        <div className="flex items-center gap-3 flex-wrap">
+    <FilterSidebar
+      open={isOpen}
+      onOpen={() => setIsOpen(true)}
+      onClose={() => setIsOpen(false)}
+      title="Filter Dashboard"
+      activeCount={3}
+    >
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3">
           {["week", "month", "quarter", "semester", "year"].map((t) => (
             <label key={t} className="inline-flex items-center gap-2">
               <input
@@ -161,9 +165,9 @@ const GlobalChartFilter = () => {
           ))}
         </div>
 
-        <div className="flex-1">{renderValueInput()}</div>
+        <div>{renderValueInput()}</div>
       </div>
-    </div>
+    </FilterSidebar>
   );
 };
 

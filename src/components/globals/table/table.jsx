@@ -58,6 +58,9 @@ const IndeterminateCheckbox = React.forwardRef(
   },
 );
 
+const toCssSize = (value) =>
+  typeof value === "number" ? `${value}px` : value;
+
 const Table = ({
   tableId,
   listData,
@@ -69,9 +72,12 @@ const Table = ({
   onSelectionChange,
   getRowClassName,
   actionColumnClass = "w-36 min-w-[9rem]",
+  selectionColumnWidth = 48,
   fitToContainer = false,
   tableMinWidth,
   bodyCellAlign = "left",
+  comfortableBodyCellClassName = "",
+  autoColumnMaxWidth = 320,
 }) => {
   const dispatch = useDispatch();
   const density = useSelector(
@@ -86,8 +92,12 @@ const Table = ({
           col.id ??
           (typeof col.accessor === "string" ? col.accessor : `col_${index}`),
         width: col.width || 120,
+        autoWidthStyle: {
+          minWidth: toCssSize(col.minWidth),
+          maxWidth: toCssSize(col.maxWidth ?? autoColumnMaxWidth),
+        },
       })),
-    [listColumn],
+    [listColumn, autoColumnMaxWidth],
   );
 
   const data = useMemo(() => listData?.results ?? [], [listData]);
@@ -126,19 +136,28 @@ const Table = ({
       ),
     [columns, hiddenColumnIds, isColumnLocked],
   );
+  const responsiveMinWidth = Math.max(
+    640,
+    visibleColumns.reduce((width, column) => width + Math.max(Number(column.minWidth || column.width) || 120, 150), 0) +
+      (isCheckbox ? selectionColumnWidth : 0),
+  );
 
   const headerDensityClass = fitToContainer
-    ? "text-[11px] !px-3 !py-3"
+    ? "text-[11px] !px-2 !py-3"
     : density === "compact"
-      ? "text-[11px] !px-4 !py-3"
-      : "text-xs !px-6 !py-4";
+      ? "text-[11px] !px-3 !py-3"
+      : "text-xs !px-4 !py-4";
   const cellDensityClass = fitToContainer
-    ? "text-xs !px-3 !py-3"
+    ? "text-xs !px-2 !py-3"
     : density === "compact"
-      ? "text-xs !px-4 !py-2.5"
-      : "text-sm !px-6 !py-4";
+      ? "text-xs !px-3 !py-2.5"
+      : "text-sm !px-4 !py-4";
   const bodyCellAlignClass =
     bodyCellAlign === "center" ? "text-center" : "text-left";
+  const bodyCellSpacingClass =
+    !fitToContainer && density === "comfortable"
+      ? comfortableBodyCellClassName
+      : "";
 
   const tableInstance = useTable(
     {
@@ -161,6 +180,9 @@ const Table = ({
         hooks.visibleColumns.push((cols) => [
           {
             id: "selection",
+            width: selectionColumnWidth,
+            minWidth: selectionColumnWidth,
+            maxWidth: selectionColumnWidth,
             Header: ({ getToggleAllRowsSelectedProps, rows }) => (
               <IndeterminateCheckbox
                 {...getToggleAllRowsSelectedProps()}
@@ -333,15 +355,21 @@ const Table = ({
             return (
               <th
                 {...col.getHeaderProps(col.getSortByToggleProps())}
-                className={`table-th text-center text-wrap bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
+                style={col.autoWidthStyle}
+                className={`table-th whitespace-normal break-words text-center bg-slate-50 dark:bg-slate-900 ${headerDensityClass} ${
                   col.canSort
                     ? "cursor-pointer select-none hover:text-slate-900 dark:hover:text-slate-100"
                     : ""
                 }`}
                 key={col.id}
               >
-                <div className="inline-flex items-center justify-center gap-1.5">
-                  <span>{col.render("Header")}</span>
+                <div
+                  className="inline-flex max-w-full items-center justify-center gap-1.5 whitespace-normal break-words"
+                  style={col.autoWidthStyle}
+                >
+                  <span className="min-w-0 break-words">
+                    {col.render("Header")}
+                  </span>
                   {sortIcon}
                 </div>
               </th>
@@ -375,7 +403,7 @@ const Table = ({
       >
         {fixed ? (
           <td
-            className={`table-td text-nowrap align-middle ${cellDensityClass}`}
+            className={`table-td text-nowrap align-middle ${cellDensityClass} ${bodyCellSpacingClass}`}
           >
             {row.cells.at(-1).render("Cell")}
           </td>
@@ -386,10 +414,18 @@ const Table = ({
               <td
                 key={key}
                 {...restCellProps}
-                style={{ textTransform: "none" }}
-                className={`table-td text-wrap align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass}`}
+                style={{
+                  ...cell.column.autoWidthStyle,
+                  textTransform: "none",
+                }}
+                className={`table-td whitespace-normal break-words align-middle transition-colors ${cellDensityClass} ${bodyCellAlignClass} ${bodyCellSpacingClass}`}
               >
-                {cell.render("Cell")}
+                <div
+                  className="max-w-full whitespace-normal break-words"
+                  style={cell.column.autoWidthStyle}
+                >
+                  {cell.render("Cell")}
+                </div>
               </td>
             );
           })
@@ -400,7 +436,7 @@ const Table = ({
 
   return (
     // <Card noborder className="overflow-hidden" bodyClass="p-4 sm:p-5">
-    <div className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+    <div className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
@@ -506,16 +542,23 @@ const Table = ({
           </Dropdown>
         </div>
       </div>
-      <div className="flex">
+      <div
+        className="responsive-table-viewport"
+        style={{
+          "--responsive-table-min-width": `${responsiveMinWidth}px`,
+          "--responsive-table-total-min-width": `${responsiveMinWidth + (isAction ? 144 : 0)}px`,
+        }}
+      >
+        <div className="responsive-table-track flex">
         {/* Main Table */}
         <div
-          className={`min-w-0 flex-grow scrollable-body ${
+          className={`responsive-table-main min-w-0 flex-grow scrollable-body ${
             fitToContainer ? "overflow-x-hidden" : "overflow-x-auto"
           }`}
         >
           <table
             {...getTableProps()}
-            className="table w-full table-fixed divide-y divide-slate-100 dark:divide-slate-700"
+            className="table w-full table-auto divide-y divide-slate-100 dark:divide-slate-700"
             style={{ minWidth: fitToContainer ? undefined : tableMinWidth }}
           >
             <thead className="border-b border-slate-100 dark:border-slate-800">
@@ -545,6 +588,7 @@ const Table = ({
             </table>
           </div>
         )}
+        </div>
       </div>
     </div>
     // </Card>
@@ -562,6 +606,9 @@ export default memo(Table, (prev, next) => {
     prev.fitToContainer === next.fitToContainer &&
     prev.tableMinWidth === next.tableMinWidth &&
     prev.bodyCellAlign === next.bodyCellAlign &&
+    prev.comfortableBodyCellClassName ===
+      next.comfortableBodyCellClassName &&
+    prev.autoColumnMaxWidth === next.autoColumnMaxWidth &&
     prev.getRowClassName === next.getRowClassName
   );
 });

@@ -14,6 +14,7 @@ import clsx from "clsx";
 import Table from "@/components/globals/table/table";
 import Flatpickr from "react-flatpickr";
 import Button from "@/components/ui/Button";
+import FilterSidebar from "@/components/ui/FilterSidebar";
 
 const XenditBalance = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const XenditBalance = () => {
   const [copiedRowId, setCopiedRowId] = useState(null);
   const today = new Date();
   const [picker3, setPicker3] = useState([today, today]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const lineTypeOrder = {
     VAT: 1,
@@ -272,6 +274,31 @@ const XenditBalance = () => {
 
   return (
     <div className="w-full flex flex-col gap-5 justify-start">
+      <FilterSidebar
+        open={isFilterOpen}
+        onOpen={() => setIsFilterOpen(true)}
+        onClose={() => setIsFilterOpen(false)}
+        title="Filter Riwayat Saldo"
+        activeCount={picker3?.length === 2 ? 1 : 0}
+      >
+        <label className="form-label" htmlFor="range-picker">
+          Rentang Tanggal
+        </label>
+        <Flatpickr
+          value={picker3}
+          id="range-picker"
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={setPicker3}
+          options={{
+            maxDate: "today",
+            dateFormat: "Y-m-d",
+            mode: "range",
+            defaultDate: [new Date(), new Date()],
+            altInput: true,
+            altFormat: "d/m/Y",
+          }}
+        />
+      </FilterSidebar>
       <div className="min-w-[320px] max-w-md w-full">
         <Card
           title="Saldo Tersedia"
@@ -308,30 +335,8 @@ const XenditBalance = () => {
           <Loading />
         ) : (
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-3 gap-4 items-end mb-6">
-              <div className="col-start-1">
-                <label className="form-label" htmlFor="range-picker">
-                  Filter Tanggal
-                </label>
-                <Flatpickr
-                  value={picker3}
-                  id="range-picker"
-                  // readonly
-                  className="w-full py-2 px-3 border border-gray-300 rounded-md bg-white text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onChange={(date) => {
-                    setPicker3(date);
-                  }}
-                  options={{
-                    maxDate: "today",
-                    dateFormat: "Y-m-d",
-                    mode: "range",
-                    defaultDate: [new Date(), new Date()],
-                    altInput: true,
-                    altFormat: "d/m/Y",
-                  }}
-                />
-              </div>
-              <div className="col-start-3">
+            <div className="mb-6 flex justify-end">
+              <div className="w-full max-w-md">
                 <Search searchValue={searchQuery} handleSearch={handleSearch} />
               </div>
             </div>
