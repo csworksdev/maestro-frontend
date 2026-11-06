@@ -76,7 +76,7 @@ export default defineConfig(({ mode = "production" }) => {
           },
         },
         "/__blog_api": {
-          target: blogApiProxyTarget,
+          target: apiProxyTarget,
           changeOrigin: true,
           secure: true,
           rewrite: (proxyPath) => proxyPath.replace(/^\/__blog_api/, ""),
