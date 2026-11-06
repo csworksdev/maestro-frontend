@@ -20,6 +20,8 @@ import Modal from "@/components/ui/Modal";
 import DefaultAvatar from "@/assets/images/all-img/user.png";
 import { buildWsUrl } from "@/utils/wsUrl";
 
+const TRAINER_QUERY_ROOT = ["trainer"];
+
 const getTrainerAvatar = (trainer) => {
   const avatar =
     trainer?.avatar ||
@@ -228,7 +230,7 @@ const Trainer = () => {
   const queryClient = useQueryClient();
 
   const trainerQuery = useQuery({
-    queryKey: ["trainer", { pageIndex, pageSize, searchQuery }],
+    queryKey: [...TRAINER_QUERY_ROOT, { pageIndex, pageSize, searchQuery }],
     queryFn: async () => {
       const params = {
         page: pageIndex + 1,
@@ -314,7 +316,7 @@ const Trainer = () => {
   const deleteMutation = useMutation({
     mutationFn: (id) => DeleteTrainer(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["trainer"] });
+      queryClient.invalidateQueries({ queryKey: TRAINER_QUERY_ROOT });
     },
   });
 
@@ -400,7 +402,7 @@ const Trainer = () => {
         trainerId: resignTrainer?.trainer_id,
         resignationDate: resignDate,
       });
-      await queryClient.invalidateQueries({ queryKey: ["trainer"] });
+      await queryClient.invalidateQueries({ queryKey: TRAINER_QUERY_ROOT });
       closeResignModal();
       Swal.fire({
         title: "Resign berhasil",
