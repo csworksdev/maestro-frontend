@@ -3,7 +3,11 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { DeleteTrainer, getTrainerAll } from "@/axios/masterdata/trainer";
+import {
+  DeleteTrainer,
+  getTrainerAll,
+  resignTrainer as resignTrainerRequest,
+} from "@/axios/masterdata/trainer";
 import { DateTime } from "luxon";
 import Search from "@/components/globals/table/search";
 import PaginationComponent from "@/components/globals/table/pagination";
@@ -12,6 +16,7 @@ import { toProperCase } from "@/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { setLoading, useLoadingStore } from "@/redux/slicers/loadingSlice";
 import Icon from "@/components/ui/Icon";
+import Modal from "@/components/ui/Modal";
 import DefaultAvatar from "@/assets/images/all-img/user.png";
 import { buildWsUrl } from "@/utils/wsUrl";
 
@@ -216,6 +221,8 @@ const Trainer = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [resignTrainer, setResignTrainer] = useState(null);
+  const [resignDate, setResignDate] = useState("");
   const [scheduleWorkTypes, setScheduleWorkTypes] = useState({});
   const scheduleSocketRef = useRef(null);
   const queryClient = useQueryClient();
@@ -311,6 +318,11 @@ const Trainer = () => {
     },
   });
 
+  const resignMutation = useMutation({
+    mutationFn: ({ trainerId, resignationDate }) =>
+      resignTrainerRequest(trainerId, resignationDate),
+  });
+
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
@@ -343,6 +355,78 @@ const Trainer = () => {
         data: e,
       },
     });
+  };
+
+  const closeResignModal = () => {
+    setResignTrainer(null);
+    setResignDate("");
+  };
+
+  const handleResignSubmit = async (event) => {
+    event.preventDefault();
+    if (!resignDate) {
+      Swal.fire({
+        title: "Tanggal belum diisi",
+        text: "Silakan pilih tanggal resign terlebih dahulu.",
+        icon: "warning",
+        confirmButtonColor: "#22c55e",
+      });
+      return;
+    }
+
+    const formattedResignDate = DateTime.fromISO(resignDate)
+      .setLocale("id")
+      .toFormat("dd LLLL yyyy");
+    const trainerName =
+      toProperCase(resignTrainer?.fullname || "") || "Pelatih ini";
+    const confirmation = await Swal.fire({
+      title: "Konfirmasi resign",
+      text: `Yakin ${trainerName} resign pada ${formattedResignDate}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#22c55e",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, simpan",
+      cancelButtonText: "Batal",
+      didOpen: () => {
+        Swal.getContainer()?.style.setProperty("z-index", "100000");
+      },
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      await resignMutation.mutateAsync({
+        trainerId: resignTrainer?.trainer_id,
+        resignationDate: resignDate,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["trainer"] });
+      closeResignModal();
+      Swal.fire({
+        title: "Resign berhasil",
+        text: `${trainerName} tercatat resign pada ${formattedResignDate}.`,
+        icon: "success",
+        confirmButtonColor: "#22c55e",
+      });
+    } catch (error) {
+      const responseData = error?.response?.data;
+      const errorMessage =
+        responseData?.message ||
+        responseData?.detail ||
+        (typeof responseData === "string" ? responseData : null) ||
+        error?.message ||
+        "Data resign gagal disimpan. Silakan coba lagi.";
+
+      Swal.fire({
+        title: "Resign gagal",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonColor: "#22c55e",
+        didOpen: () => {
+          Swal.getContainer()?.style.setProperty("z-index", "100000");
+        },
+      });
+    }
   };
 
   return (
@@ -474,23 +558,34 @@ const Trainer = () => {
                           />
                         </div>
 
-                        <div className="mt-auto flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
+                        <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
                           <button
                             type="button"
-                            onClick={() => handleEdit(trainer)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
-                            aria-label={`Edit ${trainerName}`}
+                            onClick={() => setResignTrainer(trainer)}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded border border-blue-500/20 bg-blue-500/10 px-3 text-sm font-medium text-blue-600 transition-colors hover:border-blue-500/30 hover:bg-blue-500/20 dark:border-blue-400/30 dark:bg-blue-500/15 dark:text-blue-400 dark:hover:bg-blue-500/25"
+                            aria-label={`Resign ${trainerName}`}
                           >
-                            <Icon icon="heroicons:pencil-square" />
+                            <Icon icon="heroicons-outline:arrow-left-on-rectangle" />
+                            Resign
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(trainer)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded bg-danger-500 bg-opacity-20 text-danger-500 hover:bg-opacity-100 hover:text-white"
-                            aria-label={`Hapus ${trainerName}`}
-                          >
-                            <Icon icon="heroicons-outline:trash" />
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(trainer)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                              aria-label={`Edit ${trainerName}`}
+                            >
+                              <Icon icon="heroicons:pencil-square" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(trainer)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded bg-danger-500 bg-opacity-20 text-danger-500 hover:bg-opacity-100 hover:text-white"
+                              aria-label={`Hapus ${trainerName}`}
+                            >
+                              <Icon icon="heroicons-outline:trash" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -516,6 +611,50 @@ const Trainer = () => {
           </>
         )}
       </Card>
+      <Modal
+        activeModal={Boolean(resignTrainer)}
+        onClose={closeResignModal}
+        title="Resign Pelatih"
+        className="max-w-md"
+        centered
+      >
+        <form onSubmit={handleResignSubmit}>
+          <p className="mb-5 text-sm text-slate-600 dark:text-slate-300">
+            Tentukan tanggal resign untuk{" "}
+            <span className="font-semibold text-slate-900 dark:text-white">
+              {toProperCase(resignTrainer?.fullname || "") || "pelatih ini"}
+            </span>
+            .
+          </p>
+          <label htmlFor="trainer-resign-date" className="form-label">
+            Tanggal Resign <span className="text-danger-500">*</span>
+          </label>
+          <input
+            id="trainer-resign-date"
+            type="date"
+            value={resignDate}
+            onChange={(event) => setResignDate(event.target.value)}
+            className="form-control"
+            required
+            autoFocus
+          />
+          <div className="mt-6 flex justify-end gap-3">
+            <Button
+              type="button"
+              text="Batal"
+              className="btn-outline-secondary"
+              onClick={closeResignModal}
+            />
+            <Button
+              type="submit"
+              text="Simpan"
+              className="btn-success"
+              disabled={!resignDate || resignMutation.isPending}
+              isLoading={resignMutation.isPending}
+            />
+          </div>
+        </form>
+      </Modal>
       {previewAvatar && (
         <div
           className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 p-4"

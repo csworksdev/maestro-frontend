@@ -4,6 +4,28 @@ const DEV_DEPLOYMENT_HOST_SUFFIX = ".dev.maestroswim.com";
 
 const stripTrailingSlash = (value = "") => value.replace(/\/+$/, "");
 
+// A Vite mode is not evidence that a deployed static site has a proxy.
+export const isLocalApiProxy = ({
+  hostname = typeof window !== "undefined" ? window.location.hostname : "",
+  isViteDev = import.meta.env.DEV,
+} = {}) => isViteDev && (
+  hostname === "localhost" || hostname.endsWith(".localhost") ||
+  hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]"
+);
+
+export const validateApiBaseUrl = (value, name = "VITE_API_URL") => {
+  const normalized = stripTrailingSlash(String(value || "").trim());
+  try {
+    const url = new URL(normalized);
+    if (!/^https?:$/.test(url.protocol) || url.username || url.password || url.search || url.hash) {
+      throw new Error("Invalid API URL");
+    }
+  } catch {
+    throw new Error(`${name} must be an absolute HTTP(S) API URL`);
+  }
+  return normalized;
+};
+
 export const isDevDeploymentHost = (hostname = "") =>
   hostname.toLowerCase().endsWith(DEV_DEPLOYMENT_HOST_SUFFIX);
 
@@ -12,7 +34,7 @@ export const resolveApiBaseUrl = ({
   isViteDev = import.meta.env.DEV,
   envApiUrl = import.meta.env.VITE_API_URL,
 } = {}) => {
-  if (isViteDev) {
+  if (isLocalApiProxy({ hostname, isViteDev })) {
     return "/__api";
   }
 
@@ -20,7 +42,11 @@ export const resolveApiBaseUrl = ({
     return DEV_DEPLOYMENT_API_URL;
   }
 
-  return stripTrailingSlash(String(envApiUrl || ""));
+  const baseUrl = validateApiBaseUrl(envApiUrl);
+  if (new URL(baseUrl).hostname === hostname) {
+    throw new Error("VITE_API_URL must point to the backend, not the frontend host");
+  }
+  return baseUrl;
 };
 
 export const resolveAccessApiBaseUrl = ({
@@ -29,7 +55,7 @@ export const resolveAccessApiBaseUrl = ({
   envAccessApiUrl = import.meta.env.VITE_ACCESS_API_URL,
   envApiUrl = import.meta.env.VITE_API_URL,
 } = {}) => {
-  if (isViteDev) {
+  if (isLocalApiProxy({ hostname, isViteDev })) {
     return "/__access-api";
   }
 
@@ -37,5 +63,9 @@ export const resolveAccessApiBaseUrl = ({
     return DEV_DEPLOYMENT_API_URL;
   }
 
-  return stripTrailingSlash(String(envAccessApiUrl || envApiUrl || ""));
+  return resolveApiBaseUrl({
+    hostname,
+    isViteDev,
+    envApiUrl: envAccessApiUrl || envApiUrl,
+  });
 };

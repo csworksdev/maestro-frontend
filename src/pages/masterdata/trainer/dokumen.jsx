@@ -16,6 +16,7 @@ import {
   getTrainerDocuments,
   updateTrainerDocument,
 } from "@/axios/masterdata/trainer";
+import { isLocalApiProxy } from "@/utils/apiUrl";
 import { downloadBlob } from "@/utils/blob-download";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -67,7 +68,7 @@ const getFileValidationMessage = (file) => {
 };
 
 const getDocumentDownloadUrl = (fileUrl) => {
-  if (!import.meta.env.DEV) return fileUrl;
+  if (!isLocalApiProxy()) return fileUrl;
 
   try {
     const url = new URL(fileUrl);

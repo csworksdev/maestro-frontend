@@ -1,6 +1,7 @@
 import axios from "axios";
 import { AUTH_COOKIE_KEYS, getCookie } from "@/utils/authCookies";
 import {
+  isLocalApiProxy,
   resolveAccessApiBaseUrl,
   resolveApiBaseUrl,
 } from "@/utils/apiUrl";
@@ -8,6 +9,7 @@ import { logOut, setUser, useAuthStore } from "@/redux/slicers/authSlice";
 
 const ABSOLUTE_URL_REGEX = /^(https?:|data:|blob:)/i;
 const NGROK_SKIP_BROWSER_WARNING_HEADER = "ngrok-skip-browser-warning";
+const useLocalProxy = isLocalApiProxy();
 const baseURL = resolveApiBaseUrl();
 const accessMutationBaseURL = resolveAccessApiBaseUrl();
 
@@ -239,7 +241,7 @@ const applyAuthInterceptors = (client) => {
   client.interceptors.request.use(
     (config) => {
       if (
-        import.meta.env.DEV &&
+        useLocalProxy &&
         typeof config.url === "string" &&
         config.url &&
         !config.url.startsWith("/") &&
@@ -248,7 +250,7 @@ const applyAuthInterceptors = (client) => {
         config.url = `/${config.url}`;
       }
 
-      if (import.meta.env.DEV) {
+      if (useLocalProxy) {
         config.headers = config.headers || {};
         config.headers[NGROK_SKIP_BROWSER_WARNING_HEADER] = "true";
       }
