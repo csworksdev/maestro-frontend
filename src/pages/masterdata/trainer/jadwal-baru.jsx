@@ -40,6 +40,35 @@ import {
 // Validation schema
 const FormValidationSchema = yup.object({}).required();
 
+export const getResponseList = (response) => {
+  const payload = response?.data;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
+export const sortPools = (pools = []) =>
+  [...pools].sort((a, b) => {
+    const branchComparison = String(a?.branch_name ?? "").localeCompare(
+      String(b?.branch_name ?? ""),
+    );
+    return (
+      branchComparison ||
+      String(a?.name ?? "").localeCompare(String(b?.name ?? ""))
+    );
+  });
+
+const createInitialSchedule = (trainerId) =>
+  mockDataJadwal.map((schedule) => ({
+    ...schedule,
+    trainer_id: trainerId,
+    datahari: schedule.datahari.map((day) => ({
+      ...day,
+      data: day.data.map((time) => ({ ...time })),
+    })),
+  }));
+
 const Checkbox = ({
   name,
   label,
@@ -161,6 +190,7 @@ const JadwalBaru = ({ data }) => {
   const navigate = useNavigate();
   const [listData, setListData] = useState([]);
   const [isNewTrainer, setIsNewTrainer] = useState(false);
+  const [scheduleLoadError, setScheduleLoadError] = useState("");
 
   const {
     register,
@@ -254,14 +284,22 @@ const JadwalBaru = ({ data }) => {
       const trainerScheduleResponse = await GetTrainerScheduleV2(
         data.trainer_id
       );
-      if (trainerScheduleResponse.data.length === 0) {
+      if (!trainerScheduleResponse) {
+        throw new Error("Respons jadwal pelatih tidak tersedia.");
+      }
+
+      const schedules = getResponseList(trainerScheduleResponse);
+      if (schedules.length === 0) {
         setIsNewTrainer(true);
         setInitJadwal();
       } else {
-        mergeJadwal(trainerScheduleResponse.data);
+        mergeJadwal(schedules);
       }
     } catch (error) {
       console.error(error);
+      setScheduleLoadError(
+        "Jadwal gagal dimuat. Silakan muat ulang halaman atau coba kembali.",
+      );
     }
   };
 
@@ -269,7 +307,7 @@ const JadwalBaru = ({ data }) => {
     const fetchPools = async () => {
       try {
         const response = await GetTrainerPool(data.trainer_id);
-        const pools = response.data.map((pool) => ({
+        const pools = getResponseList(response).map((pool) => ({
           value: pool.pool,
           label: pool.pool_name,
         }));
@@ -281,17 +319,26 @@ const JadwalBaru = ({ data }) => {
       }
     };
 
-    if (data?.trainer_id) {
-      fetchPools();
-      loadReference();
-      setListData((prevListData) =>
-        prevListData.map((item) => ({
-          ...item,
-          trainer_id: data.trainer_id, // Set the trainer_id dynamically
-        }))
-      );
-    }
-  }, []);
+    const loadPage = async () => {
+      if (!data?.trainer_id) {
+        setScheduleLoadError("ID pelatih tidak tersedia.");
+        setLoading(false);
+        return;
+      }
+
+      setListData(createInitialSchedule(data.trainer_id));
+
+      await Promise.allSettled([
+        fetchPools(),
+        loadReference(),
+        getTrainerScheduleByTrainerNew(data.trainer_id),
+        handleInitJadwal(),
+      ]);
+      setLoading(false);
+    };
+
+    loadPage();
+  }, [data?.trainer_id]);
 
   const loadReference = async () => {
     try {
@@ -304,31 +351,15 @@ const JadwalBaru = ({ data }) => {
         return res;
       });
 
-      const kolamOption = kolamResponse.data.results
-        .sort(
-          (a, b) =>
-            a.branch_name.localeCompare(b.branch_name) ||
-            a.name.localeCompare(b.name)
-        )
+      const kolamOption = sortPools(getResponseList(kolamResponse))
         .map((item) => ({
           value: item.pool_id,
           // label: item.branch_name + " - " + item.name,
           label: item.name,
         }));
       setKolamOption(kolamOption);
-
-      const jadwalOption = await getTrainerScheduleByTrainerNew(
-        data.trainer_id
-      );
-
-      mockDataJadwal[0].trainer_id = data.trainer_id;
-      setListData(mockDataJadwal);
-
-      handleInitJadwal();
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -482,9 +513,9 @@ const JadwalBaru = ({ data }) => {
   const loadOptions = async (inputValue, callback) => {
     try {
       const response = await GetTrainerPool(data.trainer_id);
-      const pools = response.data.results.map((pool) => ({
-        value: pool.pool_id,
-        label: pool.name,
+      const pools = getResponseList(response).map((pool) => ({
+        value: pool.pool ?? pool.pool_id,
+        label: pool.pool_name ?? pool.name,
       }));
       callback(pools);
     } catch (error) {
@@ -532,6 +563,11 @@ const JadwalBaru = ({ data }) => {
 
       {/* Hari */}
       <Card title="Jadwal Pelatih">
+        {scheduleLoadError && (
+          <div className="mb-4 rounded-md bg-danger-500 bg-opacity-10 px-4 py-3 text-sm text-danger-500">
+            {scheduleLoadError}
+          </div>
+        )}
         {isSubmitting && (
           <div className="loading-overlay">
             <Loading /> {/* Show loading indicator during submission */}
@@ -541,6 +577,7 @@ const JadwalBaru = ({ data }) => {
           <div className="grid grid-cols-1 gap-4">
             {listData.map((item, i) => (
               <CardJadwal
+                key={item.trainer_id || i}
                 params={item.datahari}
                 onChange={(e) => handleChangeJadwal(e)}
                 onChangeAll={(e) => handleChangeJadwalAll(e)}
