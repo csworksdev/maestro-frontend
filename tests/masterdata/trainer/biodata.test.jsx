@@ -154,6 +154,10 @@ describe("Trainer biodata form", () => {
     await user.clear(screen.getByLabelText("Panggilan"));
     await user.type(screen.getByLabelText("Panggilan"), "COACH ARYA");
     await user.type(screen.getByLabelText("Phone"), "081234567890");
+    await user.type(
+      screen.getByLabelText("Email"),
+      "rivancodes@gmail.com",
+    );
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
     await user.type(screen.getByLabelText("Tanggal Lahir"), "1990-01-01");
     await user.type(screen.getByLabelText("Tanggal Registrasi"), "2024-01-05");
@@ -171,6 +175,7 @@ describe("Trainer biodata form", () => {
       fullname: "Arya Adi Wijaya",
       nickname: "COACH ARYA",
       phone: "081234567890",
+      email: "rivancodes@gmail.com",
       gender: "L",
       precentage_fee: 10,
       is_active: false,
@@ -182,8 +187,8 @@ describe("Trainer biodata form", () => {
 
     await waitFor(() => {
       expect(mockSwalFire).toHaveBeenCalledWith(
-        "Added!",
-        "Your file has been added.",
+        "Berhasil!",
+        "Trainer berhasil ditambahkan.",
         "success",
       );
     });
@@ -211,6 +216,7 @@ describe("Trainer biodata form", () => {
           fullname: "Trainer Lama",
           nickname: "TL",
           phone: "089876543210",
+          email: "trainer.lama@example.com",
           gender: "P",
           dob: "1989-01-01",
           reg_date: "2024-01-01",
@@ -230,6 +236,8 @@ describe("Trainer biodata form", () => {
     await user.type(screen.getByLabelText("Nama Trainer"), "Trainer Baru");
     await user.clear(screen.getByLabelText("Phone"));
     await user.type(screen.getByLabelText("Phone"), "081111111111");
+    await user.clear(screen.getByLabelText("Email"));
+    await user.type(screen.getByLabelText("Email"), "rivancodes@gmail.com");
     await user.clear(screen.getByLabelText("Bagi Hasil"));
     await user.type(screen.getByLabelText("Bagi Hasil"), "15");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "P");
@@ -249,6 +257,7 @@ describe("Trainer biodata form", () => {
       fullname: "Trainer Baru",
       nickname: "C. TRAINER",
       phone: "081111111111",
+      email: "rivancodes@gmail.com",
       gender: "P",
       precentage_fee: 15,
       is_active: true,
@@ -260,8 +269,8 @@ describe("Trainer biodata form", () => {
 
     await waitFor(() => {
       expect(mockSwalFire).toHaveBeenCalledWith(
-        "Edited!",
-        "Your file has been edited.",
+        "Berhasil!",
+        "Data trainer berhasil diperbarui.",
         "success",
       );
     });
@@ -271,5 +280,38 @@ describe("Trainer biodata form", () => {
         expect.objectContaining(payload),
       );
     });
+  });
+
+  it("shows the API error and restores the submit button", async () => {
+    mockGetCabangAll.mockResolvedValue({
+      data: { results: [{ branch_id: 1, name: "Cabang A" }] },
+    });
+    mockAddTrainer.mockRejectedValue({
+      response: {
+        data: { email: ["Email sudah digunakan."] },
+      },
+    });
+    mockSwalFire.mockResolvedValue({});
+
+    render(<Biodata isupdate="false" data={{}} />);
+
+    const user = userEvent.setup();
+    await screen.findByLabelText("Nama Trainer");
+    await user.type(screen.getByLabelText("Nama Trainer"), "Trainer Baru");
+    await user.type(screen.getByLabelText("Email"), "trainer@example.com");
+    await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
+    await user.type(screen.getByLabelText("Bagi Hasil"), "10");
+
+    await user.click(screen.getByRole("button", { name: /Add Trainer/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "email: Email sudah digunakan.",
+    );
+    expect(mockSwalFire).toHaveBeenCalledWith(
+      "Gagal!",
+      "email: Email sudah digunakan.",
+      "error",
+    );
+    expect(screen.getByRole("button", { name: /Add Trainer/i })).toBeEnabled();
   });
 });

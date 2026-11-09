@@ -13,6 +13,7 @@ import Radio from "@/components/ui/Radio";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import Card from "@/components/ui/Card";
 import Textinput from "@/components/ui/Textinput";
+import Button from "@/components/ui/Button";
 
 const contractTypeOptions = [
   { value: "fulltime", label: "Fulltime" },
@@ -45,6 +46,31 @@ export const createTrainerNickname = (fullname = "") => {
   return firstName ? `C. ${firstName.toUpperCase()}` : "";
 };
 
+export const getTrainerSubmitError = (error) => {
+  const responseData = error?.response?.data;
+  const candidate =
+    responseData?.message ??
+    responseData?.detail ??
+    responseData?.error ??
+    responseData;
+
+  if (typeof candidate === "string" && candidate.trim()) {
+    return candidate;
+  }
+
+  if (candidate && typeof candidate === "object") {
+    const fieldMessages = Object.entries(candidate).flatMap(([field, value]) => {
+      const messages = Array.isArray(value) ? value : [value];
+      return messages
+        .filter((message) => typeof message === "string" && message.trim())
+        .map((message) => `${field}: ${message}`);
+    });
+    if (fieldMessages.length) return fieldMessages.join("\n");
+  }
+
+  return error?.message || "Terjadi kesalahan. Silakan coba kembali.";
+};
+
 const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
@@ -53,11 +79,18 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const [contractTypeOption, setContractTypeOption] = useState("freelance");
   const [branchOption, setBranchOption] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const FormValidationSchema = yup
     .object({
       fullname: yup.string().required("Nama Trainer is required"),
       nickname: yup.string().required("Panggilan is required"),
+      email: yup
+        .string()
+        .trim()
+        .email("Format email tidak valid")
+        .required("Email is required"),
       gender: yup.string().required("Jenis Kelamin is required"),
       precentage_fee: yup.number().required("Bagi Hasil is required"),
     })
@@ -157,18 +190,24 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
 
   const handleAdd = async (data) => {
     const res = await AddTrainer(data);
-    if (res.status) {
-      await Swal.fire("Added!", "Your file has been added.", "success");
-      updatedData?.(data);
+    const isSuccess =
+      res?.status === true || (res?.status >= 200 && res?.status < 300);
+    if (!isSuccess) {
+      throw new Error("Trainer gagal ditambahkan.");
     }
+    await Swal.fire("Berhasil!", "Trainer berhasil ditambahkan.", "success");
+    updatedData?.(data);
   };
 
   const handleUpdate = async (data) => {
     const res = await EditTrainer(data.trainer_id, data);
-    if (res.status) {
-      await Swal.fire("Edited!", "Your file has been edited.", "success");
-      updatedData?.(data);
+    const isSuccess =
+      res?.status === true || (res?.status >= 200 && res?.status < 300);
+    if (!isSuccess) {
+      throw new Error("Trainer gagal diperbarui.");
     }
+    await Swal.fire("Berhasil!", "Data trainer berhasil diperbarui.", "success");
+    updatedData?.(data);
   };
 
   const handleOption = (e) => {
@@ -181,7 +220,9 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     setContractTypeOption(e.target.value);
   };
 
-  const onSubmit = (newData) => {
+  const onSubmit = async (newData) => {
+    setSubmitError("");
+    setIsSubmitting(true);
     const contractType = normalizeContractType(
       contractTypeOption,
       mobileOption,
@@ -189,6 +230,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     const updatedData = {
       ...data,
       fullname: newData.fullname,
+      email: newData.email.trim(),
       dob: newData.dob
         ? DateTime.fromJSDate(newData.dob).toFormat("yyyy-MM-dd")
         : "",
@@ -209,11 +251,23 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       nik: "-",
     };
 
-    if (isUpdate) {
-      handleUpdate(updatedData);
-    } else {
-      handleAdd(updatedData);
+    try {
+      if (isUpdate) {
+        await handleUpdate(updatedData);
+      } else {
+        await handleAdd(updatedData);
+      }
+    } catch (error) {
+      const message = getTrainerSubmitError(error);
+      setSubmitError(message);
+      await Swal.fire("Gagal!", message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const onInvalid = () => {
+    setSubmitError("Periksa kembali data yang wajib diisi atau belum valid.");
   };
 
   if (loading) {
@@ -226,7 +280,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
 
   return (
     <Card title="Biodata">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
         <Textinput
           name="fullname"
           label="Nama Trainer"
@@ -246,6 +300,16 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
           register={register}
           error={errors.nickname?.message}
           value={nickname}
+          disabled={loading}
+        />
+        <Textinput
+          name="email"
+          label="Email"
+          type="email"
+          placeholder="Masukan email pelatih"
+          register={register}
+          error={errors.email?.message}
+          defaultValue={isUpdate ? data.email ?? "" : ""}
           disabled={loading}
         />
         <Textinput
@@ -384,22 +448,32 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
             />
           ))}
         </div>
+        {submitError && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="whitespace-pre-line rounded-md bg-danger-500 bg-opacity-10 px-4 py-3 text-sm text-danger-500"
+          >
+            {submitError}
+          </div>
+        )}
         <div className="ltr:text-right rtl:text-left space-x-3">
           <button
             type="button"
             className="btn text-center"
             onClick={handleCancel}
-            disabled={loading}
+            disabled={loading || isSubmitting}
           >
             Batal
           </button>
-          <button
+          <Button
             type="submit"
-            className="btn btn-dark text-center"
-            disabled={loading}
-          >
-            {isUpdate ? "Update" : "Add"} Trainer
-          </button>
+            text={`${isUpdate ? "Update" : "Add"} Trainer`}
+            isLoading={isSubmitting}
+            disabled={loading || isSubmitting}
+            className="btn-dark text-white"
+            loadingClass="text-white"
+          />
         </div>
       </form>
     </Card>

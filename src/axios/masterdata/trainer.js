@@ -35,6 +35,7 @@ export const AddTrainer = async (data) => {
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
+    throw error;
   }
 };
 
@@ -44,6 +45,7 @@ export const EditTrainer = async (id, data) => {
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
+    throw error;
   }
 };
 
