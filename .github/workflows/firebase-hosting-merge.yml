@@ -28,6 +28,22 @@ jobs:
           version: 10.17.1
           run_install: false
 
+      - name: Validate frontend environment
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "::error::VITE_API_URL is empty or unavailable"
+            exit 1
+          fi
+      
+          if [[ ! "$VITE_API_URL" =~ ^https?:// ]]; then
+            echo "::error::VITE_API_URL must start with http:// or https://"
+            exit 1
+          fi
+      
+          echo "VITE_API_URL validation passed"
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
