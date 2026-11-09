@@ -12,7 +12,7 @@ jobs:
   build_and_test:
     name: Build and Test
     runs-on: ubuntu-latest
-    environment: production
+    environment: .env.production
     timeout-minutes: 20
 
     env:
