@@ -1,6 +1,10 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
-import { CJGetPool } from "@/axios/schedule/cekJadwal";
+import {
+  CJCompletedSchedule,
+  CJGetBranchDay,
+  CJGetPool,
+} from "@/axios/schedule/cekJadwal";
 import Card from "@/components/ui/Card";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import PoolLoader from "@/components/PoolLoader";
@@ -24,6 +28,7 @@ import ApprovedRescheduleTable from "@/components/custom/ApprovedRescheduleTable
 import Select from "react-select";
 import { toProperCase } from "@/utils";
 import { buildWsUrl } from "@/utils/wsUrl";
+import { isDevDeploymentHost } from "@/utils/apiUrl";
 import { PerpanjangOrder } from "@/axios/masterdata/order";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import { useQuery } from "@tanstack/react-query";
@@ -31,11 +36,44 @@ import ScheduleTable from "./components/ScheduleTable";
 import {
   buildCompletedScheduleIndex,
   extractPayloadList,
+  getDeviceTodayIndex,
   getCompletedOrderKey,
   getTrainerWorkStatus,
 } from "./utils/scheduleHelpers";
+import {
+  createScheduleCacheKey,
+  createScheduleOwnerScope,
+  pruneScheduleCache,
+  readScheduleCache,
+  writeScheduleCache,
+} from "@/utils/scheduleCache";
 
 const CreateInvoice = lazy(() => import("./addJadwal"));
+const CACHE_REVALIDATION_WAIT_MS = 20;
+const WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS = 2000;
+
+const getCacheForRevalidation = (cachePromise) =>
+  Promise.race([
+    cachePromise,
+    new Promise((resolve) =>
+      setTimeout(() => resolve(null), CACHE_REVALIDATION_WAIT_MS),
+    ),
+  ]);
+
+const getResponseUpdatedAt = (response) => {
+  const apiTimestamp = response?.data?.updated_at;
+  if (apiTimestamp) return apiTimestamp;
+
+  const lastModified = response?.headers?.["last-modified"];
+  if (lastModified) {
+    const parsedTimestamp = Date.parse(lastModified);
+    if (Number.isFinite(parsedTimestamp)) {
+      return new Date(parsedTimestamp).toISOString();
+    }
+  }
+
+  return new Date().toISOString();
+};
 
 const CekJadwal = () => {
   const daysOfWeek = [
@@ -48,15 +86,38 @@ const CekJadwal = () => {
     { name: "Minggu", data: [], total: 0 },
   ];
 
-  const { user_id } = useAuthStore((state) => state.data);
+  const authData = useAuthStore((state) => state.data);
+  const user_id = authData?.user_id;
+  const scheduleCacheOwner = useMemo(
+    () =>
+      createScheduleOwnerScope({
+        userId: user_id,
+        tenantId:
+          authData?.tenant_id ??
+          authData?.tenantId ??
+          authData?.company_id ??
+          authData?.organization_id,
+      }),
+    [
+      authData?.company_id,
+      authData?.organization_id,
+      authData?.tenant_id,
+      authData?.tenantId,
+      user_id,
+    ],
+  );
   const [tabHari, setTabHari] = useState(() =>
     daysOfWeek.map((day) => ({ ...day })),
   );
   const [poolOption, setPoolOption] = useState([]);
   const [selectedPool, setSelectedPool] = useState(-1);
-  const [selectedIndex, setSelectedIndex] = useState();
+  const [selectedIndex, setSelectedIndex] = useState(() =>
+    getDeviceTodayIndex(),
+  );
   const [selectedBranch, setSelectedBranch] = useState(null);
-  const [selectedDay, setSelectedDay] = useState();
+  const [selectedDay, setSelectedDay] = useState(
+    () => daysOfWeek[getDeviceTodayIndex()]?.name,
+  );
   const [filterPelatih, setFilterPelatih] = useState([]);
   const [filteredPelatih, setFilteredPelatih] = useState("");
   const [filteredGender, setFilteredGender] = useState("");
@@ -70,12 +131,20 @@ const CekJadwal = () => {
   const [reloadDone, setReloadDone] = useState(false);
   const [checked, setChecked] = useState(true);
   const [isScheduleLoading, setIsScheduleLoading] = useState(false);
+  const [isScheduleSyncing, setIsScheduleSyncing] = useState(false);
+  const [scheduleSyncError, setScheduleSyncError] = useState(false);
+  const [scheduleLastUpdated, setScheduleLastUpdated] = useState(null);
   const [completedSchedules, setCompletedSchedules] = useState([]);
   const [isCompletedScheduleLoading, setIsCompletedScheduleLoading] =
     useState(false);
   const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
   const completedScheduleSocketRef = useRef(null);
+  const scheduleRequestRef = useRef({ id: 0, controller: null });
+  const completedScheduleRequestRef = useRef({ id: 0, controller: null });
+  const useScheduleRestFallback =
+    typeof window !== "undefined" &&
+    isDevDeploymentHost(window.location.hostname);
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -99,8 +168,9 @@ const CekJadwal = () => {
   });
 
   useEffect(() => {
-    const storedIndex = localStorage.getItem("ScheduleSelected");
-    setSelectedIndex(parseInt(storedIndex, 10) || 0);
+    // Nilai lama tidak lagi dipakai agar setiap pembukaan halaman dimulai dari hari ini.
+    localStorage.removeItem("ScheduleSelected");
+    pruneScheduleCache();
   }, []);
 
   const branchQuery = useQuery({
@@ -119,7 +189,8 @@ const CekJadwal = () => {
           label: item.name,
         }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const memoizedBranchOptions = useMemo(
@@ -151,6 +222,8 @@ const CekJadwal = () => {
         }));
     },
     enabled: !!selectedBranch,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const selectedBranchOption = useMemo(
@@ -242,9 +315,11 @@ const CekJadwal = () => {
     }
 
     const defaultPool = pools[0];
+    const todayIndex = getDeviceTodayIndex();
+    const todayName = daysOfWeek[todayIndex]?.name;
     setSelectedPool(0);
-    setSelectedIndex(0);
-    setSelectedDay(daysOfWeek[0]?.name);
+    setSelectedIndex(todayIndex);
+    setSelectedDay(todayName);
 
     const updatedTabHari = daysOfWeek.map((day) => {
       const dayData = defaultPool.data?.[day.name] ?? {
@@ -261,10 +336,9 @@ const CekJadwal = () => {
     setTabHari(updatedTabHari);
 
     if (selectedBranch) {
-      const defaultDay = daysOfWeek[0]?.name;
-      if (defaultDay) {
-        loadSchedule(selectedBranch, defaultPool.value, defaultDay);
-        loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
+      if (todayName) {
+        loadSchedule(selectedBranch, defaultPool.value, todayName);
+        loadCompletedSchedule(selectedBranch, defaultPool.value, todayName);
       }
       loadProduct(defaultPool.value);
     }
@@ -331,9 +405,13 @@ const CekJadwal = () => {
     };
   };
 
-  const applyScheduleData = (scheduleData = []) => {
+  const applyScheduleData = (scheduleData = [], dayName = selectedDayName) => {
+    const selectedDayBase = {
+      ...BaseJadwal,
+      datahari: BaseJadwal.datahari.filter((day) => day.hari === dayName),
+    };
     const data = scheduleData.map((element) =>
-      fillBaseJadwalWithData({ ...BaseJadwal }, element),
+      fillBaseJadwalWithData(selectedDayBase, element),
     );
 
     setFilterPelatih(
@@ -385,8 +463,25 @@ const CekJadwal = () => {
     }
   };
 
-  const loadCompletedSchedule = (_selectedBranch, poolName, dayName) => {
+  const cancelPendingScheduleRequests = () => {
+    scheduleRequestRef.current.id += 1;
+    scheduleRequestRef.current.controller?.abort();
+    scheduleRequestRef.current.controller = null;
+
+    completedScheduleRequestRef.current.id += 1;
+    completedScheduleRequestRef.current.controller?.abort();
+    completedScheduleRequestRef.current.controller = null;
+  };
+
+  const loadCompletedSchedule = async (
+    _selectedBranch,
+    poolName,
+    dayName,
+  ) => {
     closeCompletedScheduleSocket();
+    completedScheduleRequestRef.current.controller?.abort();
+    const requestId = completedScheduleRequestRef.current.id + 1;
+    completedScheduleRequestRef.current = { id: requestId, controller: null };
 
     if (!_selectedBranch || !poolName || !dayName) {
       setCompletedSchedules([]);
@@ -395,24 +490,130 @@ const CekJadwal = () => {
     }
 
     setIsCompletedScheduleLoading(true);
+    const cacheKey = createScheduleCacheKey({
+      owner: scheduleCacheOwner,
+      type: "completed",
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+    });
+    let cached = null;
+    let hasFreshData = false;
+    const cachePromise = readScheduleCache(
+      cacheKey,
+      scheduleCacheOwner,
+    ).then((entry) => {
+      cached = entry;
+      if (
+        entry?.data &&
+        !hasFreshData &&
+        completedScheduleRequestRef.current.id === requestId
+      ) {
+        setCompletedSchedules(entry.data);
+        setIsCompletedScheduleLoading(false);
+      }
+      return entry;
+    });
 
-    const endpoint = `/ws/completed-schedule/?branch=${_selectedBranch}&pool=${poolName}&day=${dayName}`;
+    const loadFromRest = async () => {
+      const cacheForRequest =
+        cached || (await getCacheForRevalidation(cachePromise));
+      const controller = new AbortController();
+      completedScheduleRequestRef.current.controller = controller;
+      try {
+        const response = await CJCompletedSchedule(
+          _selectedBranch,
+          poolName,
+          dayName,
+          { signal: controller.signal, etag: cacheForRequest?.etag },
+        );
+        if (completedScheduleRequestRef.current.id !== requestId) return;
+
+        const payload =
+          response.status === 304 && cacheForRequest
+            ? cacheForRequest.data
+            : extractPayloadList(response);
+        hasFreshData = true;
+        setCompletedSchedules(payload);
+        await writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "completed",
+          data: payload,
+          etag: response.headers?.etag || cacheForRequest?.etag,
+          updatedAt: getResponseUpdatedAt(response),
+        });
+      } catch (error) {
+        if (error?.code === "ERR_CANCELED") return;
+        console.error("Completed schedule REST fallback error:", error);
+        if (
+          !cached &&
+          !cacheForRequest &&
+          completedScheduleRequestRef.current.id === requestId
+        ) {
+          setCompletedSchedules([]);
+        }
+      } finally {
+        if (completedScheduleRequestRef.current.id === requestId) {
+          completedScheduleRequestRef.current.controller = null;
+          setIsCompletedScheduleLoading(false);
+        }
+      }
+    };
+
+    if (useScheduleRestFallback) {
+      loadFromRest();
+      return;
+    }
+
+    const websocketParams = new URLSearchParams({
+      branch: String(_selectedBranch),
+      pool: String(poolName),
+      day: String(dayName),
+    });
+    const endpoint = `/ws/completed-schedule/?${websocketParams.toString()}`;
     const wsUrl = buildWsUrl(endpoint);
 
     if (!wsUrl) {
       console.error("Unable to resolve completed schedule WebSocket URL");
-      setCompletedSchedules([]);
-      setIsCompletedScheduleLoading(false);
+      loadFromRest();
       return;
     }
 
     const ws = new WebSocket(wsUrl);
+    let hasReceivedMessage = false;
+    let restFallbackStarted = false;
+    const startRestFallback = () => {
+      if (restFallbackStarted) return;
+      restFallbackStarted = true;
+      loadFromRest();
+    };
+    const initialResponseTimer = setTimeout(() => {
+      if (
+        !hasReceivedMessage &&
+        completedScheduleRequestRef.current.id === requestId
+      ) {
+        closeCompletedScheduleSocket();
+        startRestFallback();
+      }
+    }, WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS);
     completedScheduleSocketRef.current = ws;
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        setCompletedSchedules(extractPayloadList({ data: message }));
+        hasReceivedMessage = true;
+        hasFreshData = true;
+        clearTimeout(initialResponseTimer);
+        const payload = extractPayloadList({ data: message });
+        if (completedScheduleRequestRef.current.id !== requestId) return;
+        setCompletedSchedules(payload);
+        writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "completed",
+          data: payload,
+        });
       } catch (error) {
         console.error(
           "Failed to parse completed schedule websocket payload:",
@@ -429,36 +630,143 @@ const CekJadwal = () => {
     ws.onerror = (error) => {
       console.error("Completed schedule websocket error:", error);
       if (completedScheduleSocketRef.current === ws) {
-        setCompletedSchedules([]);
-        setIsCompletedScheduleLoading(false);
+        clearTimeout(initialResponseTimer);
+        closeCompletedScheduleSocket();
+        startRestFallback();
       }
     };
 
     ws.onclose = () => {
       if (completedScheduleSocketRef.current === ws) {
+        clearTimeout(initialResponseTimer);
         completedScheduleSocketRef.current = null;
+        if (!hasReceivedMessage) startRestFallback();
       }
     };
   };
 
   const loadSchedule = async (_selectedBranch, poolName, dayName) => {
-    if (!poolName || !dayName) {
+    closeScheduleSocket();
+    scheduleRequestRef.current.controller?.abort();
+    const requestId = scheduleRequestRef.current.id + 1;
+    scheduleRequestRef.current = { id: requestId, controller: null };
+
+    if (!_selectedBranch || !poolName || !dayName) {
+      setJadwal([]);
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
       return;
     }
 
     setIsScheduleLoading(true);
-    closeScheduleSocket();
+    setIsScheduleSyncing(true);
+    setScheduleSyncError(false);
+    const cacheKey = createScheduleCacheKey({
+      owner: scheduleCacheOwner,
+      type: "schedule",
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+    });
+    setJadwal([]);
+    let cached = null;
+    let hasFreshData = false;
+    const cachePromise = readScheduleCache(
+      cacheKey,
+      scheduleCacheOwner,
+    ).then((entry) => {
+      cached = entry;
+      if (
+        entry?.data &&
+        !hasFreshData &&
+        scheduleRequestRef.current.id === requestId
+      ) {
+        applyScheduleData(entry.data, dayName);
+        setScheduleLastUpdated(entry.updatedAt);
+        setIsScheduleLoading(false);
+      }
+      return entry;
+    });
 
-    const endpoint = `/ws/schedule/?branch=${_selectedBranch}&pool=${poolName}&day=${dayName}`;
+    const loadFromRest = async () => {
+      const cacheForRequest =
+        cached || (await getCacheForRevalidation(cachePromise));
+      const controller = new AbortController();
+      scheduleRequestRef.current.controller = controller;
+      try {
+        const response = await CJGetBranchDay(
+          _selectedBranch,
+          poolName,
+          dayName,
+          { signal: controller.signal, etag: cacheForRequest?.etag },
+        );
+        if (scheduleRequestRef.current.id !== requestId) return;
+
+        const payload =
+          response.status === 304 && cacheForRequest
+            ? cacheForRequest.data
+            : extractPayloadList(response);
+        hasFreshData = true;
+        applyScheduleData(payload, dayName);
+        setScheduleSyncError(false);
+        const updatedAt = getResponseUpdatedAt(response);
+        setScheduleLastUpdated(updatedAt);
+        await writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "schedule",
+          data: payload,
+          etag: response.headers?.etag || cacheForRequest?.etag,
+          updatedAt,
+        });
+      } catch (error) {
+        if (error?.code === "ERR_CANCELED") return;
+        console.error("Schedule REST fallback error:", error);
+        if (scheduleRequestRef.current.id === requestId) {
+          setScheduleSyncError(true);
+        }
+      } finally {
+        if (scheduleRequestRef.current.id === requestId) {
+          scheduleRequestRef.current.controller = null;
+          setIsScheduleLoading(false);
+          setIsScheduleSyncing(false);
+        }
+      }
+    };
+
+    if (useScheduleRestFallback) {
+      await loadFromRest();
+      return;
+    }
+
+    const websocketParams = new URLSearchParams({
+      branch: String(_selectedBranch),
+      pool: String(poolName),
+      day: String(dayName),
+    });
+    const endpoint = `/ws/schedule/?${websocketParams.toString()}`;
     const wsUrl = buildWsUrl(endpoint);
 
     if (!wsUrl) {
       console.error("Unable to resolve schedule WebSocket URL");
-      setIsScheduleLoading(false);
+      await loadFromRest();
       return;
     }
 
     const ws = new WebSocket(wsUrl);
+    let hasReceivedMessage = false;
+    let restFallbackStarted = false;
+    const startRestFallback = () => {
+      if (restFallbackStarted) return;
+      restFallbackStarted = true;
+      loadFromRest();
+    };
+    const initialResponseTimer = setTimeout(() => {
+      if (!hasReceivedMessage && scheduleRequestRef.current.id === requestId) {
+        closeScheduleSocket();
+        startRestFallback();
+      }
+    }, WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS);
     scheduleSocketRef.current = ws;
 
     ws.onmessage = (event) => {
@@ -477,28 +785,53 @@ const CekJadwal = () => {
           return;
         }
 
-        applyScheduleData(payload);
+        hasReceivedMessage = true;
+        hasFreshData = true;
+        clearTimeout(initialResponseTimer);
+        if (scheduleRequestRef.current.id !== requestId) return;
+        applyScheduleData(payload, dayName);
+        setScheduleSyncError(false);
+        const updatedAt =
+          message?.updated_at || message?.last_updated || new Date().toISOString();
+        setScheduleLastUpdated(updatedAt);
+        writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "schedule",
+          data: payload,
+          updatedAt,
+        });
       } catch (error) {
         console.error("Failed to parse schedule websocket payload:", error);
       } finally {
-        setIsScheduleLoading(false);
+        if (scheduleRequestRef.current.id === requestId) {
+          setIsScheduleLoading(false);
+          setIsScheduleSyncing(false);
+        }
       }
     };
 
     ws.onerror = (error) => {
       console.error("Schedule websocket error:", error);
-      setIsScheduleLoading(false);
+      if (scheduleSocketRef.current === ws) {
+        clearTimeout(initialResponseTimer);
+        closeScheduleSocket();
+        startRestFallback();
+      }
     };
 
     ws.onclose = () => {
       if (scheduleSocketRef.current === ws) {
+        clearTimeout(initialResponseTimer);
         scheduleSocketRef.current = null;
+        if (!hasReceivedMessage) startRestFallback();
       }
     };
   };
 
   useEffect(() => {
     return () => {
+      cancelPendingScheduleRequests();
       closeScheduleSocket();
       closeCompletedScheduleSocket();
     };
@@ -527,6 +860,7 @@ const CekJadwal = () => {
   }, [selectedIndex]);
 
   const handleBranchChange = (option) => {
+    cancelPendingScheduleRequests();
     closeScheduleSocket();
     closeCompletedScheduleSocket();
 
@@ -540,20 +874,27 @@ const CekJadwal = () => {
       setSelectedDay(undefined);
       setCompletedSchedules([]);
       setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(false);
+      setScheduleLastUpdated(null);
       setIsCompletedScheduleLoading(false);
       return;
     }
 
     setSelectedBranch(option.value);
-    setSelectedIndex(0);
+    const todayIndex = getDeviceTodayIndex();
+    setSelectedIndex(todayIndex);
     setPoolOption([]);
     setSelectedPool(-1);
     setTabHari(daysOfWeek.map((day) => ({ ...day })));
-    setSelectedDay(undefined);
+    setSelectedDay(daysOfWeek[todayIndex]?.name);
     setFilterPelatih([]);
     setFilteredPelatih("");
     setCompletedSchedules([]);
     setIsScheduleLoading(false);
+    setIsScheduleSyncing(false);
+    setScheduleSyncError(false);
+    setScheduleLastUpdated(null);
     setIsCompletedScheduleLoading(false);
   };
 
@@ -705,6 +1046,13 @@ const CekJadwal = () => {
           <PoolLoader size="sm" />
           Memuat jadwal...
         </div>
+      );
+    }
+
+    if (scheduleSyncError && (!jadwal || jadwal.length === 0)) {
+      return renderEmptyState(
+        "Jadwal gagal dimuat",
+        "Koneksi ke server bermasalah dan belum ada data tersimpan untuk pilihan ini.",
       );
     }
 
