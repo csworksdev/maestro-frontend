@@ -51,6 +51,48 @@ import {
 const CreateInvoice = lazy(() => import("./addJadwal"));
 const CACHE_REVALIDATION_WAIT_MS = 20;
 const WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS = 2000;
+const LAST_SELECTION_STORAGE_PREFIX = "CekJadwalLastSelection";
+
+const getLastSelectionStorageKey = (userId) =>
+  userId ? `${LAST_SELECTION_STORAGE_PREFIX}:${userId}` : "";
+
+const readLastScheduleSelection = (userId) => {
+  const storageKey = getLastSelectionStorageKey(userId);
+  if (!storageKey || typeof window === "undefined") return null;
+
+  try {
+    const storedValue = window.localStorage.getItem(storageKey);
+    return storedValue ? JSON.parse(storedValue) : null;
+  } catch (error) {
+    console.warn("Pilihan terakhir Cek Jadwal tidak dapat dibaca:", error);
+    window.localStorage.removeItem(storageKey);
+    return null;
+  }
+};
+
+const writeLastScheduleSelection = (userId, selection) => {
+  const storageKey = getLastSelectionStorageKey(userId);
+  if (!storageKey || typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        branchId: selection?.branchId ?? null,
+        poolId: selection?.poolId ?? null,
+      }),
+    );
+  } catch (error) {
+    console.warn("Pilihan terakhir Cek Jadwal tidak dapat disimpan:", error);
+  }
+};
+
+const hasSameId = (left, right) =>
+  left !== null &&
+  left !== undefined &&
+  right !== null &&
+  right !== undefined &&
+  String(left) === String(right);
 
 const getCacheForRevalidation = (cachePromise) =>
   Promise.race([
@@ -200,9 +242,19 @@ const CekJadwal = () => {
 
   useEffect(() => {
     if (!selectedBranch && memoizedBranchOptions.length > 0) {
-      setSelectedBranch(memoizedBranchOptions[0].value);
+      const savedSelection = readLastScheduleSelection(user_id);
+      const savedBranch = memoizedBranchOptions.find((option) =>
+        hasSameId(option.value, savedSelection?.branchId),
+      );
+      const nextBranch = savedBranch ?? memoizedBranchOptions[0];
+
+      setSelectedBranch(nextBranch.value);
+      writeLastScheduleSelection(user_id, {
+        branchId: nextBranch.value,
+        poolId: savedBranch ? savedSelection?.poolId : null,
+      });
     }
-  }, [memoizedBranchOptions, selectedBranch]);
+  }, [memoizedBranchOptions, selectedBranch, user_id]);
 
   const poolQuery = useQuery({
     queryKey: ["cekJadwal", "pools", selectedBranch],
@@ -314,15 +366,24 @@ const CekJadwal = () => {
       return;
     }
 
-    const defaultPool = pools[0];
+    const savedSelection = readLastScheduleSelection(user_id);
+    const savedPoolIndex = hasSameId(savedSelection?.branchId, selectedBranch)
+      ? pools.findIndex((pool) => hasSameId(pool.value, savedSelection?.poolId))
+      : -1;
+    const activePoolIndex = savedPoolIndex >= 0 ? savedPoolIndex : 0;
+    const activePool = pools[activePoolIndex];
     const todayIndex = getDeviceTodayIndex();
     const todayName = daysOfWeek[todayIndex]?.name;
-    setSelectedPool(0);
+    setSelectedPool(activePoolIndex);
     setSelectedIndex(todayIndex);
     setSelectedDay(todayName);
+    writeLastScheduleSelection(user_id, {
+      branchId: selectedBranch,
+      poolId: activePool.value,
+    });
 
     const updatedTabHari = daysOfWeek.map((day) => {
-      const dayData = defaultPool.data?.[day.name] ?? {
+      const dayData = activePool.data?.[day.name] ?? {
         total: 0,
         data: {},
       };
@@ -337,12 +398,12 @@ const CekJadwal = () => {
 
     if (selectedBranch) {
       if (todayName) {
-        loadSchedule(selectedBranch, defaultPool.value, todayName);
-        loadCompletedSchedule(selectedBranch, defaultPool.value, todayName);
+        loadSchedule(selectedBranch, activePool.value, todayName);
+        loadCompletedSchedule(selectedBranch, activePool.value, todayName);
       }
-      loadProduct(defaultPool.value);
+      loadProduct(activePool.value);
     }
-  }, [poolQuery.data, selectedBranch]);
+  }, [poolQuery.data, selectedBranch, user_id]);
 
   const loadBranchOptions = useCallback(
     (inputValue) => {
@@ -865,6 +926,10 @@ const CekJadwal = () => {
     closeCompletedScheduleSocket();
 
     if (!option) {
+      writeLastScheduleSelection(user_id, {
+        branchId: null,
+        poolId: null,
+      });
       setSelectedBranch(null);
       setPoolOption([]);
       setSelectedPool(-1);
@@ -882,6 +947,10 @@ const CekJadwal = () => {
     }
 
     setSelectedBranch(option.value);
+    writeLastScheduleSelection(user_id, {
+      branchId: option.value,
+      poolId: null,
+    });
     const todayIndex = getDeviceTodayIndex();
     setSelectedIndex(todayIndex);
     setPoolOption([]);
@@ -906,6 +975,10 @@ const CekJadwal = () => {
       }
 
       setSelectedPool(index);
+      writeLastScheduleSelection(user_id, {
+        branchId: selectedBranch,
+        poolId: pool.value,
+      });
 
       const updatedTabHari = daysOfWeek.map((item) => {
         const newData = pool.data?.[item.name] ?? { data: {}, total: 0 };
