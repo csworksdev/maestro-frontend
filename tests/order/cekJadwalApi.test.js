@@ -9,7 +9,10 @@ import {
   createScheduleOwnerScope,
   sanitizeScheduleCacheData,
 } from "../../src/utils/scheduleCache";
-import { getDeviceTodayIndex } from "../../src/pages/order/cekJadwal/utils/scheduleHelpers";
+import {
+  buildScheduleWebSocketEndpoint,
+  getDeviceTodayIndex,
+} from "../../src/pages/order/cekJadwal/utils/scheduleHelpers";
 
 const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }));
 
@@ -55,6 +58,30 @@ describe("cek jadwal filtered API", () => {
         params: { branch: "branch-1", pool: "pool-2", day: "Selasa" },
       }),
     );
+  });
+
+  it("membentuk endpoint websocket jadwal dengan token", () => {
+    const endpoint = buildScheduleWebSocketEndpoint({
+      branch: "branch-1",
+      pool: "Pool Utama",
+      day: "Senin",
+      token: "access+/=token",
+    });
+
+    expect(endpoint).toBe(
+      "/ws/schedule/?branch=branch-1&pool=Pool+Utama&day=Senin&token=access%2B%2F%3Dtoken",
+    );
+  });
+
+  it("tidak membentuk endpoint websocket jadwal tanpa token", () => {
+    expect(
+      buildScheduleWebSocketEndpoint({
+        branch: "branch-1",
+        pool: "pool-2",
+        day: "Senin",
+        token: "",
+      }),
+    ).toBeNull();
   });
 
   it("memisahkan cache berdasarkan jenis, cabang, kolam, dan hari", () => {

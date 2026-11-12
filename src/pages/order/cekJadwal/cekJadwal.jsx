@@ -35,6 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 import ScheduleTable from "./components/ScheduleTable";
 import {
   buildCompletedScheduleIndex,
+  buildScheduleWebSocketEndpoint,
   extractPayloadList,
   getDeviceTodayIndex,
   getCompletedOrderKey,
@@ -129,6 +130,7 @@ const CekJadwal = () => {
   ];
 
   const authData = useAuthStore((state) => state.data);
+  const accessToken = useAuthStore((state) => state.access);
   const user_id = authData?.user_id;
   const scheduleCacheOwner = useMemo(
     () =>
@@ -800,12 +802,21 @@ const CekJadwal = () => {
       return;
     }
 
-    const websocketParams = new URLSearchParams({
-      branch: String(_selectedBranch),
-      pool: String(poolName),
-      day: String(dayName),
+    const endpoint = buildScheduleWebSocketEndpoint({
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+      token: accessToken,
     });
-    const endpoint = `/ws/schedule/?${websocketParams.toString()}`;
+
+    if (!endpoint) {
+      console.error(
+        "Unable to open schedule WebSocket without an access token",
+      );
+      await loadFromRest();
+      return;
+    }
+
     const wsUrl = buildWsUrl(endpoint);
 
     if (!wsUrl) {
