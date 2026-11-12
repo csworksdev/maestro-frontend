@@ -36,19 +36,19 @@ const coerceWsProtocol = (value) => {
 };
 
 export const resolveWsBaseUrl = () => {
-  if (
-    typeof window !== "undefined" &&
-    isDevDeploymentHost(window.location?.hostname)
-  ) {
-    return DEV_DEPLOYMENT_API_URL.replace(/^http/i, "ws");
-  }
-
   const envValue = import.meta.env.VITE_API_WS;
   if (envValue && envValue.trim().length) {
     const normalized = coerceWsProtocol(envValue.trim());
     if (normalized) {
       return normalized;
     }
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    isDevDeploymentHost(window.location?.hostname)
+  ) {
+    return DEV_DEPLOYMENT_API_URL.replace(/^http/i, "ws");
   }
 
   if (typeof window !== "undefined" && window.location) {

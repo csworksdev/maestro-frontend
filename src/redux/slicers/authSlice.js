@@ -15,6 +15,7 @@ import {
   setAccessCache,
 } from "@/utils/accessControl";
 import { normalizeUserRoles } from "@/utils/authRoles";
+import { clearScheduleCache } from "@/utils/scheduleCache";
 import { useSubdomainStore } from "./subdomainSlice";
 
 const defaultUserData = {
@@ -133,6 +134,27 @@ export const useAuthStore = create((set, get) => ({
     const rememberPreference = payload.rememberMe ?? get().rememberMe ?? true;
     const subdomain = useSubdomainStore.getState().subdomain;
     const currentState = get();
+    const currentUserId = currentState.data?.user_id;
+    const nextUserId = payload.data?.user_id ?? currentUserId;
+    const currentTenantId =
+      currentState.data?.tenant_id ??
+      currentState.data?.tenantId ??
+      currentState.data?.company_id ??
+      currentState.data?.organization_id;
+    const nextTenantId =
+      payload.data?.tenant_id ??
+      payload.data?.tenantId ??
+      payload.data?.company_id ??
+      payload.data?.organization_id ??
+      currentTenantId;
+
+    if (
+      (currentUserId && nextUserId && currentUserId !== nextUserId) ||
+      (currentTenantId && nextTenantId && currentTenantId !== nextTenantId)
+    ) {
+      void clearScheduleCache();
+    }
+
     const access = payload.access ?? currentState.access ?? "";
     const refresh = payload.refresh ?? currentState.refresh ?? "";
     const extractedRoleIds = extractRoleIds(payload.data);
@@ -242,6 +264,7 @@ export const useAuthStore = create((set, get) => ({
   can: (permission) => hasPermission(get().permissionCodes, permission),
   canAny: (permissions) => hasAnyPermission(get().permissionCodes, permissions),
   logOut: () => {
+    void clearScheduleCache();
     clearAuthCookies();
     clearAccessCache();
     clearClientStorage();

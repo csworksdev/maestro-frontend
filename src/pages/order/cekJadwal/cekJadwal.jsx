@@ -30,12 +30,63 @@ import { useQuery } from "@tanstack/react-query";
 import ScheduleTable from "./components/ScheduleTable";
 import {
   buildCompletedScheduleIndex,
+  buildScheduleWebSocketEndpoint,
   extractPayloadList,
+  getDeviceTodayIndex,
   getCompletedOrderKey,
   getTrainerWorkStatus,
 } from "./utils/scheduleHelpers";
+import {
+  createScheduleCacheKey,
+  createScheduleOwnerScope,
+  pruneScheduleCache,
+  readScheduleCache,
+  writeScheduleCache,
+} from "@/utils/scheduleCache";
 
 const CreateInvoice = lazy(() => import("./addJadwal"));
+const LAST_SELECTION_STORAGE_PREFIX = "CekJadwalLastSelection";
+
+const getLastSelectionStorageKey = (userId) =>
+  userId ? `${LAST_SELECTION_STORAGE_PREFIX}:${userId}` : "";
+
+const readLastScheduleSelection = (userId) => {
+  const storageKey = getLastSelectionStorageKey(userId);
+  if (!storageKey || typeof window === "undefined") return null;
+
+  try {
+    const storedValue = window.localStorage.getItem(storageKey);
+    return storedValue ? JSON.parse(storedValue) : null;
+  } catch (error) {
+    console.warn("Pilihan terakhir Cek Jadwal tidak dapat dibaca:", error);
+    window.localStorage.removeItem(storageKey);
+    return null;
+  }
+};
+
+const writeLastScheduleSelection = (userId, selection) => {
+  const storageKey = getLastSelectionStorageKey(userId);
+  if (!storageKey || typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        branchId: selection?.branchId ?? null,
+        poolId: selection?.poolId ?? null,
+      }),
+    );
+  } catch (error) {
+    console.warn("Pilihan terakhir Cek Jadwal tidak dapat disimpan:", error);
+  }
+};
+
+const hasSameId = (left, right) =>
+  left !== null &&
+  left !== undefined &&
+  right !== null &&
+  right !== undefined &&
+  String(left) === String(right);
 
 const CekJadwal = () => {
   const daysOfWeek = [
@@ -48,15 +99,39 @@ const CekJadwal = () => {
     { name: "Minggu", data: [], total: 0 },
   ];
 
-  const { user_id } = useAuthStore((state) => state.data);
+  const authData = useAuthStore((state) => state.data);
+  const accessToken = useAuthStore((state) => state.access);
+  const user_id = authData?.user_id;
+  const scheduleCacheOwner = useMemo(
+    () =>
+      createScheduleOwnerScope({
+        userId: user_id,
+        tenantId:
+          authData?.tenant_id ??
+          authData?.tenantId ??
+          authData?.company_id ??
+          authData?.organization_id,
+      }),
+    [
+      authData?.company_id,
+      authData?.organization_id,
+      authData?.tenant_id,
+      authData?.tenantId,
+      user_id,
+    ],
+  );
   const [tabHari, setTabHari] = useState(() =>
     daysOfWeek.map((day) => ({ ...day })),
   );
   const [poolOption, setPoolOption] = useState([]);
   const [selectedPool, setSelectedPool] = useState(-1);
-  const [selectedIndex, setSelectedIndex] = useState();
+  const [selectedIndex, setSelectedIndex] = useState(() =>
+    getDeviceTodayIndex(),
+  );
   const [selectedBranch, setSelectedBranch] = useState(null);
-  const [selectedDay, setSelectedDay] = useState();
+  const [selectedDay, setSelectedDay] = useState(
+    () => daysOfWeek[getDeviceTodayIndex()]?.name,
+  );
   const [filterPelatih, setFilterPelatih] = useState([]);
   const [filteredPelatih, setFilteredPelatih] = useState("");
   const [filteredGender, setFilteredGender] = useState("");
@@ -70,12 +145,17 @@ const CekJadwal = () => {
   const [reloadDone, setReloadDone] = useState(false);
   const [checked, setChecked] = useState(true);
   const [isScheduleLoading, setIsScheduleLoading] = useState(false);
+  const [isScheduleSyncing, setIsScheduleSyncing] = useState(false);
+  const [scheduleSyncError, setScheduleSyncError] = useState(false);
+  const [scheduleLastUpdated, setScheduleLastUpdated] = useState(null);
   const [completedSchedules, setCompletedSchedules] = useState([]);
   const [isCompletedScheduleLoading, setIsCompletedScheduleLoading] =
     useState(false);
   const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
   const completedScheduleSocketRef = useRef(null);
+  const scheduleRequestRef = useRef({ id: 0 });
+  const completedScheduleRequestRef = useRef({ id: 0 });
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -99,8 +179,9 @@ const CekJadwal = () => {
   });
 
   useEffect(() => {
-    const storedIndex = localStorage.getItem("ScheduleSelected");
-    setSelectedIndex(parseInt(storedIndex, 10) || 0);
+    // Nilai lama tidak lagi dipakai agar setiap pembukaan halaman dimulai dari hari ini.
+    localStorage.removeItem("ScheduleSelected");
+    pruneScheduleCache();
   }, []);
 
   const branchQuery = useQuery({
@@ -119,7 +200,8 @@ const CekJadwal = () => {
           label: item.name,
         }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const memoizedBranchOptions = useMemo(
@@ -129,9 +211,19 @@ const CekJadwal = () => {
 
   useEffect(() => {
     if (!selectedBranch && memoizedBranchOptions.length > 0) {
-      setSelectedBranch(memoizedBranchOptions[0].value);
+      const savedSelection = readLastScheduleSelection(user_id);
+      const savedBranch = memoizedBranchOptions.find((option) =>
+        hasSameId(option.value, savedSelection?.branchId),
+      );
+      const nextBranch = savedBranch ?? memoizedBranchOptions[0];
+
+      setSelectedBranch(nextBranch.value);
+      writeLastScheduleSelection(user_id, {
+        branchId: nextBranch.value,
+        poolId: savedBranch ? savedSelection?.poolId : null,
+      });
     }
-  }, [memoizedBranchOptions, selectedBranch]);
+  }, [memoizedBranchOptions, selectedBranch, user_id]);
 
   const poolQuery = useQuery({
     queryKey: ["cekJadwal", "pools", selectedBranch],
@@ -151,6 +243,8 @@ const CekJadwal = () => {
         }));
     },
     enabled: !!selectedBranch,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const selectedBranchOption = useMemo(
@@ -241,13 +335,24 @@ const CekJadwal = () => {
       return;
     }
 
-    const defaultPool = pools[0];
-    setSelectedPool(0);
-    setSelectedIndex(0);
-    setSelectedDay(daysOfWeek[0]?.name);
+    const savedSelection = readLastScheduleSelection(user_id);
+    const savedPoolIndex = hasSameId(savedSelection?.branchId, selectedBranch)
+      ? pools.findIndex((pool) => hasSameId(pool.value, savedSelection?.poolId))
+      : -1;
+    const activePoolIndex = savedPoolIndex >= 0 ? savedPoolIndex : 0;
+    const activePool = pools[activePoolIndex];
+    const todayIndex = getDeviceTodayIndex();
+    const todayName = daysOfWeek[todayIndex]?.name;
+    setSelectedPool(activePoolIndex);
+    setSelectedIndex(todayIndex);
+    setSelectedDay(todayName);
+    writeLastScheduleSelection(user_id, {
+      branchId: selectedBranch,
+      poolId: activePool.value,
+    });
 
     const updatedTabHari = daysOfWeek.map((day) => {
-      const dayData = defaultPool.data?.[day.name] ?? {
+      const dayData = activePool.data?.[day.name] ?? {
         total: 0,
         data: {},
       };
@@ -261,14 +366,13 @@ const CekJadwal = () => {
     setTabHari(updatedTabHari);
 
     if (selectedBranch) {
-      const defaultDay = daysOfWeek[0]?.name;
-      if (defaultDay) {
-        loadSchedule(selectedBranch, defaultPool.value, defaultDay);
-        loadCompletedSchedule(selectedBranch, defaultPool.value, defaultDay);
+      if (todayName) {
+        loadSchedule(selectedBranch, activePool.value, todayName);
+        loadCompletedSchedule(selectedBranch, activePool.value, todayName);
       }
-      loadProduct(defaultPool.value);
+      loadProduct(activePool.value);
     }
-  }, [poolQuery.data, selectedBranch]);
+  }, [poolQuery.data, selectedBranch, user_id]);
 
   const loadBranchOptions = useCallback(
     (inputValue) => {
@@ -331,9 +435,13 @@ const CekJadwal = () => {
     };
   };
 
-  const applyScheduleData = (scheduleData = []) => {
+  const applyScheduleData = (scheduleData = [], dayName = selectedDayName) => {
+    const selectedDayBase = {
+      ...BaseJadwal,
+      datahari: BaseJadwal.datahari.filter((day) => day.hari === dayName),
+    };
     const data = scheduleData.map((element) =>
-      fillBaseJadwalWithData({ ...BaseJadwal }, element),
+      fillBaseJadwalWithData(selectedDayBase, element),
     );
 
     setFilterPelatih(
@@ -385,8 +493,20 @@ const CekJadwal = () => {
     }
   };
 
-  const loadCompletedSchedule = (_selectedBranch, poolName, dayName) => {
+  const cancelPendingScheduleRequests = () => {
+    scheduleRequestRef.current.id += 1;
+
+    completedScheduleRequestRef.current.id += 1;
+  };
+
+  const loadCompletedSchedule = async (
+    _selectedBranch,
+    poolName,
+    dayName,
+  ) => {
     closeCompletedScheduleSocket();
+    const requestId = completedScheduleRequestRef.current.id + 1;
+    completedScheduleRequestRef.current = { id: requestId };
 
     if (!_selectedBranch || !poolName || !dayName) {
       setCompletedSchedules([]);
@@ -395,24 +515,66 @@ const CekJadwal = () => {
     }
 
     setIsCompletedScheduleLoading(true);
+    const cacheKey = createScheduleCacheKey({
+      owner: scheduleCacheOwner,
+      type: "completed",
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+    });
+    let hasFreshData = false;
+    readScheduleCache(
+      cacheKey,
+      scheduleCacheOwner,
+    ).then((entry) => {
+      if (
+        entry?.data &&
+        !hasFreshData &&
+        completedScheduleRequestRef.current.id === requestId
+      ) {
+        setCompletedSchedules(entry.data);
+        setIsCompletedScheduleLoading(false);
+      }
+      return entry;
+    });
 
-    const endpoint = `/ws/completed-schedule/?branch=${_selectedBranch}&pool=${poolName}&day=${dayName}`;
+    const websocketParams = new URLSearchParams({
+      branch: String(_selectedBranch),
+      pool: String(poolName),
+      day: String(dayName),
+    });
+    const endpoint = `/ws/completed-schedule/?${websocketParams.toString()}`;
     const wsUrl = buildWsUrl(endpoint);
 
     if (!wsUrl) {
       console.error("Unable to resolve completed schedule WebSocket URL");
-      setCompletedSchedules([]);
       setIsCompletedScheduleLoading(false);
       return;
     }
 
-    const ws = new WebSocket(wsUrl);
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("Unable to open completed schedule WebSocket:", error);
+      setIsCompletedScheduleLoading(false);
+      return;
+    }
     completedScheduleSocketRef.current = ws;
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        setCompletedSchedules(extractPayloadList({ data: message }));
+        hasFreshData = true;
+        const payload = extractPayloadList({ data: message });
+        if (completedScheduleRequestRef.current.id !== requestId) return;
+        setCompletedSchedules(payload);
+        writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "completed",
+          data: payload,
+        });
       } catch (error) {
         console.error(
           "Failed to parse completed schedule websocket payload:",
@@ -429,7 +591,7 @@ const CekJadwal = () => {
     ws.onerror = (error) => {
       console.error("Completed schedule websocket error:", error);
       if (completedScheduleSocketRef.current === ws) {
-        setCompletedSchedules([]);
+        closeCompletedScheduleSocket();
         setIsCompletedScheduleLoading(false);
       }
     };
@@ -437,28 +599,88 @@ const CekJadwal = () => {
     ws.onclose = () => {
       if (completedScheduleSocketRef.current === ws) {
         completedScheduleSocketRef.current = null;
+        setIsCompletedScheduleLoading(false);
       }
     };
   };
 
   const loadSchedule = async (_selectedBranch, poolName, dayName) => {
-    if (!poolName || !dayName) {
+    closeScheduleSocket();
+    const requestId = scheduleRequestRef.current.id + 1;
+    scheduleRequestRef.current = { id: requestId };
+
+    if (!_selectedBranch || !poolName || !dayName) {
+      setJadwal([]);
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
       return;
     }
 
     setIsScheduleLoading(true);
-    closeScheduleSocket();
+    setIsScheduleSyncing(true);
+    setScheduleSyncError(false);
+    const cacheKey = createScheduleCacheKey({
+      owner: scheduleCacheOwner,
+      type: "schedule",
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+    });
+    setJadwal([]);
+    let hasFreshData = false;
+    readScheduleCache(
+      cacheKey,
+      scheduleCacheOwner,
+    ).then((entry) => {
+      if (
+        entry?.data &&
+        !hasFreshData &&
+        scheduleRequestRef.current.id === requestId
+      ) {
+        applyScheduleData(entry.data, dayName);
+        setScheduleLastUpdated(entry.updatedAt);
+        setIsScheduleLoading(false);
+      }
+      return entry;
+    });
 
-    const endpoint = `/ws/schedule/?branch=${_selectedBranch}&pool=${poolName}&day=${dayName}`;
+    const endpoint = buildScheduleWebSocketEndpoint({
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+      token: accessToken,
+    });
+
+    if (!endpoint) {
+      console.error(
+        "Unable to open schedule WebSocket without an access token",
+      );
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(true);
+      return;
+    }
+
     const wsUrl = buildWsUrl(endpoint);
 
     if (!wsUrl) {
       console.error("Unable to resolve schedule WebSocket URL");
       setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(true);
       return;
     }
 
-    const ws = new WebSocket(wsUrl);
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("Unable to open schedule WebSocket:", error);
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(true);
+      return;
+    }
     scheduleSocketRef.current = ws;
 
     ws.onmessage = (event) => {
@@ -477,28 +699,53 @@ const CekJadwal = () => {
           return;
         }
 
-        applyScheduleData(payload);
+        hasFreshData = true;
+        if (scheduleRequestRef.current.id !== requestId) return;
+        applyScheduleData(payload, dayName);
+        setScheduleSyncError(false);
+        const updatedAt =
+          message?.updated_at || message?.last_updated || new Date().toISOString();
+        setScheduleLastUpdated(updatedAt);
+        writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "schedule",
+          data: payload,
+          updatedAt,
+        });
       } catch (error) {
         console.error("Failed to parse schedule websocket payload:", error);
       } finally {
-        setIsScheduleLoading(false);
+        if (scheduleRequestRef.current.id === requestId) {
+          setIsScheduleLoading(false);
+          setIsScheduleSyncing(false);
+        }
       }
     };
 
     ws.onerror = (error) => {
       console.error("Schedule websocket error:", error);
-      setIsScheduleLoading(false);
+      if (scheduleSocketRef.current === ws) {
+        closeScheduleSocket();
+        setIsScheduleLoading(false);
+        setIsScheduleSyncing(false);
+        setScheduleSyncError(true);
+      }
     };
 
     ws.onclose = () => {
       if (scheduleSocketRef.current === ws) {
         scheduleSocketRef.current = null;
+        setIsScheduleLoading(false);
+        setIsScheduleSyncing(false);
+        setScheduleSyncError(true);
       }
     };
   };
 
   useEffect(() => {
     return () => {
+      cancelPendingScheduleRequests();
       closeScheduleSocket();
       closeCompletedScheduleSocket();
     };
@@ -527,10 +774,15 @@ const CekJadwal = () => {
   }, [selectedIndex]);
 
   const handleBranchChange = (option) => {
+    cancelPendingScheduleRequests();
     closeScheduleSocket();
     closeCompletedScheduleSocket();
 
     if (!option) {
+      writeLastScheduleSelection(user_id, {
+        branchId: null,
+        poolId: null,
+      });
       setSelectedBranch(null);
       setPoolOption([]);
       setSelectedPool(-1);
@@ -540,20 +792,31 @@ const CekJadwal = () => {
       setSelectedDay(undefined);
       setCompletedSchedules([]);
       setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(false);
+      setScheduleLastUpdated(null);
       setIsCompletedScheduleLoading(false);
       return;
     }
 
     setSelectedBranch(option.value);
-    setSelectedIndex(0);
+    writeLastScheduleSelection(user_id, {
+      branchId: option.value,
+      poolId: null,
+    });
+    const todayIndex = getDeviceTodayIndex();
+    setSelectedIndex(todayIndex);
     setPoolOption([]);
     setSelectedPool(-1);
     setTabHari(daysOfWeek.map((day) => ({ ...day })));
-    setSelectedDay(undefined);
+    setSelectedDay(daysOfWeek[todayIndex]?.name);
     setFilterPelatih([]);
     setFilteredPelatih("");
     setCompletedSchedules([]);
     setIsScheduleLoading(false);
+    setIsScheduleSyncing(false);
+    setScheduleSyncError(false);
+    setScheduleLastUpdated(null);
     setIsCompletedScheduleLoading(false);
   };
 
@@ -565,6 +828,10 @@ const CekJadwal = () => {
       }
 
       setSelectedPool(index);
+      writeLastScheduleSelection(user_id, {
+        branchId: selectedBranch,
+        poolId: pool.value,
+      });
 
       const updatedTabHari = daysOfWeek.map((item) => {
         const newData = pool.data?.[item.name] ?? { data: {}, total: 0 };
@@ -705,6 +972,13 @@ const CekJadwal = () => {
           <PoolLoader size="sm" />
           Memuat jadwal...
         </div>
+      );
+    }
+
+    if (scheduleSyncError && (!jadwal || jadwal.length === 0)) {
+      return renderEmptyState(
+        "Jadwal gagal dimuat",
+        "Koneksi ke server bermasalah dan belum ada data tersimpan untuk pilihan ini.",
       );
     }
 

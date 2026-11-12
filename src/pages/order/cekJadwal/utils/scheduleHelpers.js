@@ -19,6 +19,29 @@ export const columnHeader = [
   "19.00",
 ];
 
+// Date#getDay mengikuti kalender dan timezone lokal perangkat pengguna.
+// Konversi dari Minggu=0 menjadi urutan tab Senin=0 ... Minggu=6.
+export const getDeviceTodayIndex = (date = new Date()) =>
+  (date.getDay() + 6) % 7;
+
+export const buildScheduleWebSocketEndpoint = ({
+  branch,
+  pool,
+  day,
+  token,
+}) => {
+  if (!branch || !pool || !day || !token) return null;
+
+  const params = new URLSearchParams({
+    branch: String(branch),
+    pool: String(pool),
+    day: String(day),
+    token: String(token),
+  });
+
+  return `/ws/schedule/?${params.toString()}`;
+};
+
 export const checkProduct = (product = "") => {
   switch (true) {
     case product.includes("14"):
