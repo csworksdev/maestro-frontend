@@ -1,10 +1,6 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
-import {
-  CJCompletedSchedule,
-  CJGetBranchDay,
-  CJGetPool,
-} from "@/axios/schedule/cekJadwal";
+import { CJGetPool } from "@/axios/schedule/cekJadwal";
 import Card from "@/components/ui/Card";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import PoolLoader from "@/components/PoolLoader";
@@ -28,7 +24,6 @@ import ApprovedRescheduleTable from "@/components/custom/ApprovedRescheduleTable
 import Select from "react-select";
 import { toProperCase } from "@/utils";
 import { buildWsUrl } from "@/utils/wsUrl";
-import { isDevDeploymentHost } from "@/utils/apiUrl";
 import { PerpanjangOrder } from "@/axios/masterdata/order";
 import { useAuthStore } from "@/redux/slicers/authSlice";
 import { useQuery } from "@tanstack/react-query";
@@ -50,8 +45,6 @@ import {
 } from "@/utils/scheduleCache";
 
 const CreateInvoice = lazy(() => import("./addJadwal"));
-const CACHE_REVALIDATION_WAIT_MS = 20;
-const WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS = 2000;
 const LAST_SELECTION_STORAGE_PREFIX = "CekJadwalLastSelection";
 
 const getLastSelectionStorageKey = (userId) =>
@@ -94,29 +87,6 @@ const hasSameId = (left, right) =>
   right !== null &&
   right !== undefined &&
   String(left) === String(right);
-
-const getCacheForRevalidation = (cachePromise) =>
-  Promise.race([
-    cachePromise,
-    new Promise((resolve) =>
-      setTimeout(() => resolve(null), CACHE_REVALIDATION_WAIT_MS),
-    ),
-  ]);
-
-const getResponseUpdatedAt = (response) => {
-  const apiTimestamp = response?.data?.updated_at;
-  if (apiTimestamp) return apiTimestamp;
-
-  const lastModified = response?.headers?.["last-modified"];
-  if (lastModified) {
-    const parsedTimestamp = Date.parse(lastModified);
-    if (Number.isFinite(parsedTimestamp)) {
-      return new Date(parsedTimestamp).toISOString();
-    }
-  }
-
-  return new Date().toISOString();
-};
 
 const CekJadwal = () => {
   const daysOfWeek = [
@@ -184,11 +154,8 @@ const CekJadwal = () => {
   const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
   const completedScheduleSocketRef = useRef(null);
-  const scheduleRequestRef = useRef({ id: 0, controller: null });
-  const completedScheduleRequestRef = useRef({ id: 0, controller: null });
-  const useScheduleRestFallback =
-    typeof window !== "undefined" &&
-    isDevDeploymentHost(window.location.hostname);
+  const scheduleRequestRef = useRef({ id: 0 });
+  const completedScheduleRequestRef = useRef({ id: 0 });
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -528,12 +495,8 @@ const CekJadwal = () => {
 
   const cancelPendingScheduleRequests = () => {
     scheduleRequestRef.current.id += 1;
-    scheduleRequestRef.current.controller?.abort();
-    scheduleRequestRef.current.controller = null;
 
     completedScheduleRequestRef.current.id += 1;
-    completedScheduleRequestRef.current.controller?.abort();
-    completedScheduleRequestRef.current.controller = null;
   };
 
   const loadCompletedSchedule = async (
@@ -542,9 +505,8 @@ const CekJadwal = () => {
     dayName,
   ) => {
     closeCompletedScheduleSocket();
-    completedScheduleRequestRef.current.controller?.abort();
     const requestId = completedScheduleRequestRef.current.id + 1;
-    completedScheduleRequestRef.current = { id: requestId, controller: null };
+    completedScheduleRequestRef.current = { id: requestId };
 
     if (!_selectedBranch || !poolName || !dayName) {
       setCompletedSchedules([]);
@@ -560,13 +522,11 @@ const CekJadwal = () => {
       pool: poolName,
       day: dayName,
     });
-    let cached = null;
     let hasFreshData = false;
-    const cachePromise = readScheduleCache(
+    readScheduleCache(
       cacheKey,
       scheduleCacheOwner,
     ).then((entry) => {
-      cached = entry;
       if (
         entry?.data &&
         !hasFreshData &&
@@ -578,57 +538,6 @@ const CekJadwal = () => {
       return entry;
     });
 
-    const loadFromRest = async () => {
-      const cacheForRequest =
-        cached || (await getCacheForRevalidation(cachePromise));
-      const controller = new AbortController();
-      completedScheduleRequestRef.current.controller = controller;
-      try {
-        const response = await CJCompletedSchedule(
-          _selectedBranch,
-          poolName,
-          dayName,
-          { signal: controller.signal, etag: cacheForRequest?.etag },
-        );
-        if (completedScheduleRequestRef.current.id !== requestId) return;
-
-        const payload =
-          response.status === 304 && cacheForRequest
-            ? cacheForRequest.data
-            : extractPayloadList(response);
-        hasFreshData = true;
-        setCompletedSchedules(payload);
-        await writeScheduleCache({
-          key: cacheKey,
-          owner: scheduleCacheOwner,
-          type: "completed",
-          data: payload,
-          etag: response.headers?.etag || cacheForRequest?.etag,
-          updatedAt: getResponseUpdatedAt(response),
-        });
-      } catch (error) {
-        if (error?.code === "ERR_CANCELED") return;
-        console.error("Completed schedule REST fallback error:", error);
-        if (
-          !cached &&
-          !cacheForRequest &&
-          completedScheduleRequestRef.current.id === requestId
-        ) {
-          setCompletedSchedules([]);
-        }
-      } finally {
-        if (completedScheduleRequestRef.current.id === requestId) {
-          completedScheduleRequestRef.current.controller = null;
-          setIsCompletedScheduleLoading(false);
-        }
-      }
-    };
-
-    if (useScheduleRestFallback) {
-      loadFromRest();
-      return;
-    }
-
     const websocketParams = new URLSearchParams({
       branch: String(_selectedBranch),
       pool: String(poolName),
@@ -639,35 +548,24 @@ const CekJadwal = () => {
 
     if (!wsUrl) {
       console.error("Unable to resolve completed schedule WebSocket URL");
-      loadFromRest();
+      setIsCompletedScheduleLoading(false);
       return;
     }
 
-    const ws = new WebSocket(wsUrl);
-    let hasReceivedMessage = false;
-    let restFallbackStarted = false;
-    const startRestFallback = () => {
-      if (restFallbackStarted) return;
-      restFallbackStarted = true;
-      loadFromRest();
-    };
-    const initialResponseTimer = setTimeout(() => {
-      if (
-        !hasReceivedMessage &&
-        completedScheduleRequestRef.current.id === requestId
-      ) {
-        closeCompletedScheduleSocket();
-        startRestFallback();
-      }
-    }, WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS);
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("Unable to open completed schedule WebSocket:", error);
+      setIsCompletedScheduleLoading(false);
+      return;
+    }
     completedScheduleSocketRef.current = ws;
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        hasReceivedMessage = true;
         hasFreshData = true;
-        clearTimeout(initialResponseTimer);
         const payload = extractPayloadList({ data: message });
         if (completedScheduleRequestRef.current.id !== requestId) return;
         setCompletedSchedules(payload);
@@ -693,26 +591,23 @@ const CekJadwal = () => {
     ws.onerror = (error) => {
       console.error("Completed schedule websocket error:", error);
       if (completedScheduleSocketRef.current === ws) {
-        clearTimeout(initialResponseTimer);
         closeCompletedScheduleSocket();
-        startRestFallback();
+        setIsCompletedScheduleLoading(false);
       }
     };
 
     ws.onclose = () => {
       if (completedScheduleSocketRef.current === ws) {
-        clearTimeout(initialResponseTimer);
         completedScheduleSocketRef.current = null;
-        if (!hasReceivedMessage) startRestFallback();
+        setIsCompletedScheduleLoading(false);
       }
     };
   };
 
   const loadSchedule = async (_selectedBranch, poolName, dayName) => {
     closeScheduleSocket();
-    scheduleRequestRef.current.controller?.abort();
     const requestId = scheduleRequestRef.current.id + 1;
-    scheduleRequestRef.current = { id: requestId, controller: null };
+    scheduleRequestRef.current = { id: requestId };
 
     if (!_selectedBranch || !poolName || !dayName) {
       setJadwal([]);
@@ -732,13 +627,11 @@ const CekJadwal = () => {
       day: dayName,
     });
     setJadwal([]);
-    let cached = null;
     let hasFreshData = false;
-    const cachePromise = readScheduleCache(
+    readScheduleCache(
       cacheKey,
       scheduleCacheOwner,
     ).then((entry) => {
-      cached = entry;
       if (
         entry?.data &&
         !hasFreshData &&
@@ -751,57 +644,6 @@ const CekJadwal = () => {
       return entry;
     });
 
-    const loadFromRest = async () => {
-      const cacheForRequest =
-        cached || (await getCacheForRevalidation(cachePromise));
-      const controller = new AbortController();
-      scheduleRequestRef.current.controller = controller;
-      try {
-        const response = await CJGetBranchDay(
-          _selectedBranch,
-          poolName,
-          dayName,
-          { signal: controller.signal, etag: cacheForRequest?.etag },
-        );
-        if (scheduleRequestRef.current.id !== requestId) return;
-
-        const payload =
-          response.status === 304 && cacheForRequest
-            ? cacheForRequest.data
-            : extractPayloadList(response);
-        hasFreshData = true;
-        applyScheduleData(payload, dayName);
-        setScheduleSyncError(false);
-        const updatedAt = getResponseUpdatedAt(response);
-        setScheduleLastUpdated(updatedAt);
-        await writeScheduleCache({
-          key: cacheKey,
-          owner: scheduleCacheOwner,
-          type: "schedule",
-          data: payload,
-          etag: response.headers?.etag || cacheForRequest?.etag,
-          updatedAt,
-        });
-      } catch (error) {
-        if (error?.code === "ERR_CANCELED") return;
-        console.error("Schedule REST fallback error:", error);
-        if (scheduleRequestRef.current.id === requestId) {
-          setScheduleSyncError(true);
-        }
-      } finally {
-        if (scheduleRequestRef.current.id === requestId) {
-          scheduleRequestRef.current.controller = null;
-          setIsScheduleLoading(false);
-          setIsScheduleSyncing(false);
-        }
-      }
-    };
-
-    if (useScheduleRestFallback) {
-      await loadFromRest();
-      return;
-    }
-
     const endpoint = buildScheduleWebSocketEndpoint({
       branch: _selectedBranch,
       pool: poolName,
@@ -813,7 +655,9 @@ const CekJadwal = () => {
       console.error(
         "Unable to open schedule WebSocket without an access token",
       );
-      await loadFromRest();
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(true);
       return;
     }
 
@@ -821,24 +665,22 @@ const CekJadwal = () => {
 
     if (!wsUrl) {
       console.error("Unable to resolve schedule WebSocket URL");
-      await loadFromRest();
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(true);
       return;
     }
 
-    const ws = new WebSocket(wsUrl);
-    let hasReceivedMessage = false;
-    let restFallbackStarted = false;
-    const startRestFallback = () => {
-      if (restFallbackStarted) return;
-      restFallbackStarted = true;
-      loadFromRest();
-    };
-    const initialResponseTimer = setTimeout(() => {
-      if (!hasReceivedMessage && scheduleRequestRef.current.id === requestId) {
-        closeScheduleSocket();
-        startRestFallback();
-      }
-    }, WEBSOCKET_INITIAL_RESPONSE_TIMEOUT_MS);
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("Unable to open schedule WebSocket:", error);
+      setIsScheduleLoading(false);
+      setIsScheduleSyncing(false);
+      setScheduleSyncError(true);
+      return;
+    }
     scheduleSocketRef.current = ws;
 
     ws.onmessage = (event) => {
@@ -857,9 +699,7 @@ const CekJadwal = () => {
           return;
         }
 
-        hasReceivedMessage = true;
         hasFreshData = true;
-        clearTimeout(initialResponseTimer);
         if (scheduleRequestRef.current.id !== requestId) return;
         applyScheduleData(payload, dayName);
         setScheduleSyncError(false);
@@ -886,17 +726,19 @@ const CekJadwal = () => {
     ws.onerror = (error) => {
       console.error("Schedule websocket error:", error);
       if (scheduleSocketRef.current === ws) {
-        clearTimeout(initialResponseTimer);
         closeScheduleSocket();
-        startRestFallback();
+        setIsScheduleLoading(false);
+        setIsScheduleSyncing(false);
+        setScheduleSyncError(true);
       }
     };
 
     ws.onclose = () => {
       if (scheduleSocketRef.current === ws) {
-        clearTimeout(initialResponseTimer);
         scheduleSocketRef.current = null;
-        if (!hasReceivedMessage) startRestFallback();
+        setIsScheduleLoading(false);
+        setIsScheduleSyncing(false);
+        setScheduleSyncError(true);
       }
     };
   };
