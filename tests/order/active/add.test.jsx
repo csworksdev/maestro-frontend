@@ -332,14 +332,7 @@ describe("Add order page", () => {
       company_percentage: 80,
     });
 
-    await waitFor(() => {
-      expect(mockAddOrderDetail).toHaveBeenCalled();
-      expect(mockUpdateTrainerSchedule).toHaveBeenCalledWith({
-        coach: "trainer-1",
-        day: "Senin",
-        time: "09.00",
-        is_free: false,
-      });
-    });
+    expect(mockAddOrderDetail).not.toHaveBeenCalled();
+    expect(mockUpdateTrainerSchedule).not.toHaveBeenCalled();
   });
 });

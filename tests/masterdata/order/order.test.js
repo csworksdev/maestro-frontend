@@ -90,7 +90,7 @@ describe("order api", () => {
     });
   });
 
-  it("posts order data", async () => {
+  it("posts order data to the v2 endpoint", async () => {
     const response = { status: 201 };
     mockPost.mockResolvedValue(response);
 
@@ -98,7 +98,7 @@ describe("order api", () => {
     const result = await AddOrder(payload);
 
     expect(result).toBe(response);
-    expect(mockPost).toHaveBeenCalledWith("/api/order/", payload);
+    expect(mockPost).toHaveBeenCalledWith("/api/order/v2/", payload);
   });
 
   it("updates order data", async () => {

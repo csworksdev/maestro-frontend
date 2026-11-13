@@ -24,7 +24,8 @@ export const columnHeader = [
 export const getDeviceTodayIndex = (date = new Date()) =>
   (date.getDay() + 6) % 7;
 
-export const buildScheduleWebSocketEndpoint = ({
+const buildAuthenticatedScheduleWebSocketEndpoint = ({
+  path,
   branch,
   pool,
   day,
@@ -39,8 +40,20 @@ export const buildScheduleWebSocketEndpoint = ({
     token: String(token),
   });
 
-  return `/ws/schedule/?${params.toString()}`;
+  return `${path}?${params.toString()}`;
 };
+
+export const buildScheduleWebSocketEndpoint = (params) =>
+  buildAuthenticatedScheduleWebSocketEndpoint({
+    ...params,
+    path: "/ws/schedule/",
+  });
+
+export const buildCompletedScheduleWebSocketEndpoint = (params) =>
+  buildAuthenticatedScheduleWebSocketEndpoint({
+    ...params,
+    path: "/ws/completed-schedule/",
+  });
 
 export const checkProduct = (product = "") => {
   switch (true) {

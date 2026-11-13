@@ -17,8 +17,6 @@ import {
   searchSiswa,
 } from "@/axios/masterdata/siswa";
 import Loading from "@/components/Loading";
-import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
-import { AddOrderScheduleV2 } from "@/axios/schedule/orderSchedule";
 import { AddOrder } from "@/axios/masterdata/order";
 import { XenditCreatePaymentLink } from "@/axios/xendit";
 import { toProperCase, toNormalizePhone } from "@/utils";
@@ -347,49 +345,7 @@ const AddJadwal = ({
           const res = await AddOrder(updatedData);
 
           if (res) {
-            // ⬇️ KUMPULKAN SEMUA PROMISE DARI AddOrderDetail
-            const orderDetailPromises = [];
-
-            updatedData.students.forEach((student) => {
-              for (let i = 0; i < product.meetings; i++) {
-                const temp = {
-                  order: res.data.order_id,
-                  day: inputValue.day,
-                  time: inputValue.time,
-                  price_per_meet: Math.floor(
-                    (product.price * parseInt(inputValue.trainer_percentage)) /
-                      100 /
-                      product.meetings,
-                  ),
-                  schedule_date: DateTime.now()
-                    .plus({ days: 7 * (i + 1) })
-                    .toFormat("yyyy-MM-dd"),
-                  student: student.student_id,
-                  meet: i + 1,
-                  is_presence: false,
-                  presence_by_id: inputValue.trainer.trainer_id,
-                };
-
-                orderDetailPromises.push(AddOrderDetail(temp)); // tanpa await
-              }
-            });
-
-            await Promise.all(orderDetailPromises); // baru dijalankan bareng-bareng
-
-            // ✅ BARU LANJUTKAN KE AddOrderScheduleV2
-            const params = {
-              branch: inputValue.branch,
-              pool: inputValue.pool.value,
-              trainer: inputValue.trainer.trainer_id,
-              order: res.data.order_id, // ini typo sebelumnya: res.order_id (harusnya res.data.order_id)
-              day: inputValue.day,
-              time: inputValue.time,
-              is_free: true,
-            };
-            let data = await AddOrderScheduleV2(params);
-            if (data.data.status === "success") {
-              completedOrders += 1;
-            }
+            completedOrders += 1;
           }
         }
         // else {
