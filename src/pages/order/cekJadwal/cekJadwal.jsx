@@ -30,6 +30,7 @@ import { useQuery } from "@tanstack/react-query";
 import ScheduleTable from "./components/ScheduleTable";
 import {
   buildCompletedScheduleIndex,
+  buildCompletedScheduleWebSocketEndpoint,
   buildScheduleWebSocketEndpoint,
   extractPayloadList,
   getDeviceTodayIndex,
@@ -154,6 +155,7 @@ const CekJadwal = () => {
   const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
   const completedScheduleSocketRef = useRef(null);
+  const previousAccessTokenRef = useRef(accessToken);
   const scheduleRequestRef = useRef({ id: 0 });
   const completedScheduleRequestRef = useRef({ id: 0 });
 
@@ -538,12 +540,21 @@ const CekJadwal = () => {
       return entry;
     });
 
-    const websocketParams = new URLSearchParams({
-      branch: String(_selectedBranch),
-      pool: String(poolName),
-      day: String(dayName),
+    const endpoint = buildCompletedScheduleWebSocketEndpoint({
+      branch: _selectedBranch,
+      pool: poolName,
+      day: dayName,
+      token: accessToken,
     });
-    const endpoint = `/ws/completed-schedule/?${websocketParams.toString()}`;
+
+    if (!endpoint) {
+      console.error(
+        "Unable to open completed schedule WebSocket without an access token",
+      );
+      setIsCompletedScheduleLoading(false);
+      return;
+    }
+
     const wsUrl = buildWsUrl(endpoint);
 
     if (!wsUrl) {
@@ -750,6 +761,20 @@ const CekJadwal = () => {
       closeCompletedScheduleSocket();
     };
   }, []);
+
+  useEffect(() => {
+    if (previousAccessTokenRef.current === accessToken) return;
+    previousAccessTokenRef.current = accessToken;
+
+    const pool = poolOption[selectedPool];
+    const dayName = daysOfWeek[selectedIndex]?.name;
+    if (!accessToken || !selectedBranch || !pool?.value || !dayName) return;
+
+    // WebSocket authentication is fixed at connection time. Reconnect both
+    // streams whenever token refresh replaces the access token.
+    loadSchedule(selectedBranch, pool.value, dayName);
+    loadCompletedSchedule(selectedBranch, pool.value, dayName);
+  }, [accessToken]);
 
   useEffect(() => {
     if (reloadDone) {

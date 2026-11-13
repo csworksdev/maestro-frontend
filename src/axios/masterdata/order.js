@@ -60,10 +60,11 @@ export const FindAvailableTrainer = async (data) => {
 };
 export const AddOrder = async (data) => {
   try {
-    let response = await axiosConfig.post(getSubdomain() + "/order/", data);
+    let response = await axiosConfig.post("/api/order/v2/", data);
     return response;
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error creating order:", error);
+    throw error;
   }
 };
 

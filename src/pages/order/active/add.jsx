@@ -25,7 +25,6 @@ import {
 } from "@/axios/masterdata/siswa";
 import { getKolamByBranch } from "@/axios/referensi/kolam";
 import { AddOrderDetail } from "@/axios/masterdata/orderDetail";
-import { UpdateTrainerSchedule } from "@/axios/masterdata/trainerSchedule";
 import { getCabangAll } from "@/axios/referensi/cabang";
 import { hari, jam, gender } from "@/constant/jadwal-default";
 import Textarea from "@/components/ui/Textarea";
@@ -177,47 +176,7 @@ const Add = () => {
         if (res) {
           Swal.fire("Added!", "Your order has been added.", "success").then(
             () => {
-              const product = productData.find(
-                (item) => item.product_id === data.product
-              );
-              const trainer = trainerList.find(
-                (i) => i.trainer_id === data.trainer
-              );
-
-              selectedStudents.map((student) => {
-                const temp = orderDetail.map((item, index) => {
-                  item.order = res.data.order_id;
-                  item.day = filterTrainerByDay;
-                  item.time = filterTrainerByTime;
-                  item.price_per_meet =
-                    (data.price * parseInt(trainer.precentage_fee)) /
-                    100 /
-                    product.meetings;
-                  item.schedule_date = DateTime.fromISO(data.start_date)
-                    .plus({ days: 7 * (index + 1) })
-                    .toFormat("yyyy-MM-dd");
-                  item.student = student.value;
-                  return item;
-                });
-
-                for (let index = 0; index < temp.length; index++) {
-                  AddOrderDetail(temp[index], data).then((addres) => {
-                    if (addres.status === "success") {
-                      console.log("finished");
-                    }
-                  });
-                }
-              });
-
-              const params = {
-                coach: data.trainer,
-                day: filterTrainerByDay,
-                time: filterTrainerByTime,
-                is_free: false,
-              };
-              UpdateTrainerSchedule(params).then(() => {
-                navigate(-1);
-              });
+              navigate(-1);
             }
           );
         }
