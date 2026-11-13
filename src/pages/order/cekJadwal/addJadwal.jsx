@@ -98,6 +98,7 @@ const AddJadwal = ({
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [isSplitInvoice, setIsSplitInvoice] = useState(false);
   const [isInvoice, setIsInvoice] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // fetch old students
   const [defaultStudentOptions, setDefaultStudentOptions] = useState([]);
@@ -339,7 +340,7 @@ const AddJadwal = ({
                     student_id: student.student_id,
                     is_new: student.is_new,
                   })),
-            invoice_id: invoiceExternalId,
+            invoice_id: null,
           };
 
           const res = await AddOrder(updatedData);
@@ -426,6 +427,9 @@ const AddJadwal = ({
   };
 
   const onSubmit = async (newData) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
       const newStudents = await submitNewStudent();
       const allStudents = [...selectedStudents, ...newStudents];
@@ -465,6 +469,8 @@ const AddJadwal = ({
       await createInvoice({ ...newData, updatedStudents });
     } catch (err) {
       console.error("Gagal submit atau membuat invoice:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1480,7 +1486,8 @@ const AddJadwal = ({
             <Button
               type="submit"
               className="btn btn-dark"
-              disabled={selectedProduct.length === 0}
+              isLoading={isSubmitting}
+              disabled={selectedProduct.length === 0 || isSubmitting}
             >
               Buat Order
             </Button>
