@@ -22,11 +22,6 @@ import Swal from "sweetalert2";
 import AsyncSelect from "react-select/async";
 import Badge from "@/components/ui/Badge";
 import {
-  AddTrainerScheduleNew,
-  EditTrainerScheduleNew,
-  getTrainerScheduleByTrainerNew,
-} from "@/axios/masterdata/trainerScheduleNew";
-import {
   AddTrainerPool,
   DeleteTrainerPool,
   GetTrainerPool,
@@ -193,8 +188,6 @@ const JadwalBaru = ({ data }) => {
   const [scheduleLoadError, setScheduleLoadError] = useState("");
 
   const {
-    register,
-    formState: { errors },
     handleSubmit,
   } = useForm({
     resolver: yupResolver(FormValidationSchema),
@@ -331,7 +324,6 @@ const JadwalBaru = ({ data }) => {
       await Promise.allSettled([
         fetchPools(),
         loadReference(),
-        getTrainerScheduleByTrainerNew(data.trainer_id),
         handleInitJadwal(),
       ]);
       setLoading(false);
@@ -360,21 +352,6 @@ const JadwalBaru = ({ data }) => {
       setKolamOption(kolamOption);
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  const onSubmit = async (newData, eventnewData) => {
-    event.preventDefault();
-    if (data.trainer_id !== "") {
-      let response = await EditTrainerScheduleNew(data.trainer_id, listData[0]);
-      if (response) {
-        Swal.fire("Failed!", "Your file failed to update.", "error");
-      }
-    } else {
-      let response = await AddTrainerScheduleNew(listData[0]);
-      if (response) {
-        Swal.fire("Updated!", "Your file has been updated.", "success");
-      }
     }
   };
 
@@ -573,7 +550,7 @@ const JadwalBaru = ({ data }) => {
             <Loading /> {/* Show loading indicator during submission */}
           </div>
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             {listData.map((item, i) => (
               <CardJadwal
@@ -584,7 +561,7 @@ const JadwalBaru = ({ data }) => {
               />
             ))}
           </div>
-        </form>
+        </div>
       </Card>
     </div>
   );
