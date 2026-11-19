@@ -5,7 +5,9 @@ const getTrainerDocumentUrl = (trainerId) =>
 const getTrainerDocumentDetailUrl = (trainerId, documentId) =>
   `${getTrainerDocumentUrl(trainerId)}${encodeURIComponent(documentId)}/`;
 const getTrainerResignUrl = (trainerId) =>
-  `/api/trainer-resign/${encodeURIComponent(trainerId)}/`;
+  `/api/trainer/${encodeURIComponent(trainerId)}/resign/`;
+const getTrainerResetPasswordUrl = (trainerId) =>
+  `/api/trainer/${encodeURIComponent(trainerId)}/reset-password/`;
 
 export const getTrainerAll = async (data) => {
   try {
@@ -61,6 +63,11 @@ export const DeleteTrainer = async (id) => {
 export const resignTrainer = (trainerId, resignationDate) =>
   axiosConfig.put(getTrainerResignUrl(trainerId), {
     resignation_date: resignationDate,
+  });
+
+export const resetTrainerPassword = (trainerId, newPassword) =>
+  axiosConfig.put(getTrainerResetPasswordUrl(trainerId), {
+    new_password: newPassword,
   });
 
 export const getTrainerDocuments = (trainerId, params = {}) =>

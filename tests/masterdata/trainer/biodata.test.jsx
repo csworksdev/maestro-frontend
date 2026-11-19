@@ -150,9 +150,8 @@ describe("Trainer biodata form", () => {
     await screen.findByLabelText("Nama Trainer");
 
     await user.type(screen.getByLabelText("Nama Trainer"), "Arya Adi Wijaya");
-    expect(screen.getByLabelText("Panggilan")).toHaveValue("C. ARYA");
-    await user.clear(screen.getByLabelText("Panggilan"));
-    await user.type(screen.getByLabelText("Panggilan"), "COACH ARYA");
+    expect(screen.getByLabelText("Nama Akuntansi (Untuk keperluan rekapan)")).toHaveValue("C. ARYA");
+    await user.type(screen.getByLabelText("Username/Nama Panggilan"), "arya");
     await user.type(screen.getByLabelText("Phone"), "081234567890");
     await user.type(
       screen.getByLabelText("Email"),
@@ -173,7 +172,8 @@ describe("Trainer biodata form", () => {
     const [payload] = mockAddTrainer.mock.calls[0];
     expect(payload).toMatchObject({
       fullname: "Arya Adi Wijaya",
-      nickname: "COACH ARYA",
+      nickname: "C. ARYA",
+      username: "arya",
       phone: "081234567890",
       email: "rivancodes@gmail.com",
       gender: "L",
@@ -215,6 +215,7 @@ describe("Trainer biodata form", () => {
           trainer_id: 9,
           fullname: "Trainer Lama",
           nickname: "TL",
+          username: "trainer.lama",
           phone: "089876543210",
           email: "trainer.lama@example.com",
           gender: "P",
@@ -256,6 +257,7 @@ describe("Trainer biodata form", () => {
       trainer_id: 9,
       fullname: "Trainer Baru",
       nickname: "C. TRAINER",
+      username: "trainer.lama",
       phone: "081111111111",
       email: "rivancodes@gmail.com",
       gender: "P",
@@ -298,6 +300,10 @@ describe("Trainer biodata form", () => {
     const user = userEvent.setup();
     await screen.findByLabelText("Nama Trainer");
     await user.type(screen.getByLabelText("Nama Trainer"), "Trainer Baru");
+    await user.type(
+      screen.getByLabelText("Username/Nama Panggilan"),
+      "trainer.baru",
+    );
     await user.type(screen.getByLabelText("Email"), "trainer@example.com");
     await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
     await user.type(screen.getByLabelText("Bagi Hasil"), "10");

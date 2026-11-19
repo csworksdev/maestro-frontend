@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import {
   DeleteTrainer,
   getTrainerAll,
+  resetTrainerPassword,
   resignTrainer as resignTrainerRequest,
 } from "@/axios/masterdata/trainer";
 import { DateTime } from "luxon";
@@ -87,6 +88,13 @@ const formatTrainerCapacity = (capacity) => {
   if (capacity === null || capacity === undefined || capacity === "") return "-";
   return `${capacity} Jam / Minggu`;
 };
+
+const getTrainerUsername = (trainer) =>
+  trainer?.username ||
+  trainer?.user?.username ||
+  trainer?.user_username ||
+  trainer?.account?.username ||
+  "Username belum tersedia";
 
 const normalizeLookupKey = (value) => {
   if (value === null || value === undefined) return "";
@@ -225,6 +233,10 @@ const Trainer = () => {
   const [previewAvatar, setPreviewAvatar] = useState(null);
   const [resignTrainer, setResignTrainer] = useState(null);
   const [resignDate, setResignDate] = useState("");
+  const [resetPasswordTrainer, setResetPasswordTrainer] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [scheduleWorkTypes, setScheduleWorkTypes] = useState({});
   const scheduleSocketRef = useRef(null);
   const queryClient = useQueryClient();
@@ -325,6 +337,11 @@ const Trainer = () => {
       resignTrainerRequest(trainerId, resignationDate),
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ trainerId, password }) =>
+      resetTrainerPassword(trainerId, password),
+  });
+
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
@@ -362,6 +379,85 @@ const Trainer = () => {
   const closeResignModal = () => {
     setResignTrainer(null);
     setResignDate("");
+  };
+
+  const closeResetPasswordModal = () => {
+    setResetPasswordTrainer(null);
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+  };
+
+  const handleResetPasswordSubmit = async (event) => {
+    event.preventDefault();
+
+    if (newPassword.length < 8) {
+      Swal.fire({
+        title: "Password terlalu pendek",
+        text: "Password baru minimal terdiri dari 8 karakter.",
+        icon: "warning",
+        confirmButtonColor: "#22c55e",
+        didOpen: () => {
+          Swal.getContainer()?.style.setProperty("z-index", "100000");
+        },
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Swal.fire({
+        title: "Konfirmasi tidak sesuai",
+        text: "Password baru dan konfirmasi password harus sama.",
+        icon: "warning",
+        confirmButtonColor: "#22c55e",
+        didOpen: () => {
+          Swal.getContainer()?.style.setProperty("z-index", "100000");
+        },
+      });
+      return;
+    }
+
+    const trainerName =
+      toProperCase(resetPasswordTrainer?.fullname || "") || "Pelatih";
+    const confirmation = await Swal.fire({
+      title: "Konfirmasi reset password",
+      text: `Yakin ingin mereset password ${trainerName}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#f59e0b",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, reset password",
+      cancelButtonText: "Batal",
+      didOpen: () => {
+        Swal.getContainer()?.style.setProperty("z-index", "100000");
+      },
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      await resetPasswordMutation.mutateAsync({
+        trainerId: resetPasswordTrainer?.trainer_id,
+        password: newPassword,
+      });
+      closeResetPasswordModal();
+      await Swal.fire({
+        title: "Password berhasil direset",
+        text: `Password ${trainerName} sudah berhasil diperbarui dan dapat langsung digunakan untuk login ke aplikasi Coach Corner`,
+        icon: "success",
+        confirmButtonColor: "#22c55e",
+      });
+    } catch {
+      await Swal.fire({
+        title: "Password belum berhasil direset",
+        text: "Terjadi kendala saat memperbarui password. Silakan coba kembali beberapa saat lagi.",
+        icon: "error",
+        confirmButtonColor: "#22c55e",
+        didOpen: () => {
+          Swal.getContainer()?.style.setProperty("z-index", "100000");
+        },
+      });
+    }
   };
 
   const handleResignSubmit = async (event) => {
@@ -573,6 +669,15 @@ const Trainer = () => {
                           <div className="flex gap-2">
                             <button
                               type="button"
+                              onClick={() => setResetPasswordTrainer(trainer)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded bg-amber-500/15 text-amber-600 transition-colors hover:bg-amber-500 hover:text-white dark:text-amber-400"
+                              aria-label={`Reset password ${trainerName}`}
+                              title="Reset password"
+                            >
+                              <Icon icon="heroicons-outline:key" />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => handleEdit(trainer)}
                               className="inline-flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
                               aria-label={`Edit ${trainerName}`}
@@ -653,6 +758,111 @@ const Trainer = () => {
               className="btn-success"
               disabled={!resignDate || resignMutation.isPending}
               isLoading={resignMutation.isPending}
+            />
+          </div>
+        </form>
+      </Modal>
+      <Modal
+        activeModal={Boolean(resetPasswordTrainer)}
+        onClose={closeResetPasswordModal}
+        title="Reset Password Pelatih"
+        className="max-w-md"
+        centered
+      >
+        <form onSubmit={handleResetPasswordSubmit}>
+          <div className="mb-4">
+            <label htmlFor="trainer-username" className="form-label">
+              Username
+            </label>
+            <div className="relative">
+              <Icon
+                icon="heroicons-outline:user"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                id="trainer-username"
+                type="text"
+                value={getTrainerUsername(resetPasswordTrainer)}
+                className="form-control bg-slate-100 pl-10 dark:bg-slate-700"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="trainer-new-password" className="form-label">
+              Password Baru <span className="text-danger-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                id="trainer-new-password"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                className="form-control pr-11"
+                placeholder="Minimal 8 karakter"
+                minLength={8}
+                required
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                aria-label={
+                  showPassword ? "Sembunyikan password" : "Tampilkan password"
+                }
+              >
+                <Icon
+                  icon={
+                    showPassword
+                      ? "heroicons-outline:eye-slash"
+                      : "heroicons-outline:eye"
+                  }
+                />
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="trainer-confirm-password" className="form-label">
+              Konfirmasi Password <span className="text-danger-500">*</span>
+            </label>
+            <input
+              id="trainer-confirm-password"
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="form-control"
+              placeholder="Ulangi password baru"
+              minLength={8}
+              required
+            />
+            {confirmPassword && newPassword !== confirmPassword && (
+              <p className="mt-1.5 text-xs text-danger-500">
+                Konfirmasi password belum sesuai.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <Button
+              type="button"
+              text="Batal"
+              className="btn-outline-secondary"
+              onClick={closeResetPasswordModal}
+            />
+            <Button
+              type="submit"
+              text="Reset Password"
+              className="btn-warning"
+              disabled={
+                resetPasswordMutation.isPending ||
+                newPassword.length < 8 ||
+                confirmPassword.length < 8 ||
+                newPassword !== confirmPassword
+              }
+              isLoading={resetPasswordMutation.isPending}
             />
           </div>
         </form>

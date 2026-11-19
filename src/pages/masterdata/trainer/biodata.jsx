@@ -85,7 +85,8 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const FormValidationSchema = yup
     .object({
       fullname: yup.string().required("Nama Trainer is required"),
-      nickname: yup.string().required("Panggilan is required"),
+      nickname: yup.string().required("Nama Akuntansi is required"),
+      username: yup.string().required("Username/Nama Panggilan is required"),
       email: yup
         .string()
         .trim()
@@ -108,7 +109,10 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   });
 
   const fullname = watch("fullname", isUpdate ? data.fullname ?? "" : "");
-  const nickname = watch("nickname", isUpdate ? data.nickname ?? "" : "");
+  const nickname = watch(
+    "nickname",
+    isUpdate ? data.nickname ?? createTrainerNickname(data.fullname) : "",
+  );
 
   useEffect(() => {
     setValue("nickname", createTrainerNickname(fullname), {
@@ -243,6 +247,7 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       contract_type_display: contractType,
       is_active: selectOption,
       nickname: newData.nickname,
+      username: newData.username,
       bank_account: newData.bank_account,
       reg_date: newData.reg_date
         ? DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd")
@@ -294,12 +299,27 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
         />
         <Textinput
           name="nickname"
-          label="Panggilan"
+          label="Nama Akuntansi (Untuk keperluan rekapan)"
+          classLabel="form-label normal-case"
           type="text"
-          placeholder="Masukan Panggilan"
+          placeholder="Masukan Nama Akuntansi"
           register={register}
           error={errors.nickname?.message}
           value={nickname}
+          disabled={loading}
+        />
+        <Textinput
+          name="username"
+          label="Username/Nama Panggilan"
+          type="text"
+          placeholder="Masukan Username atau Nama Panggilan"
+          register={register}
+          error={errors.username?.message}
+          defaultValue={
+            isUpdate
+              ? data.username ?? data.user?.username ?? data.user_username ?? ""
+              : ""
+          }
           disabled={loading}
         />
         <Textinput
