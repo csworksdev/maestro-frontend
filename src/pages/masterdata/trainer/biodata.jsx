@@ -4,7 +4,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
-import { AddTrainer, EditTrainer } from "@/axios/masterdata/trainer";
+import {
+  AddTrainer,
+  EditTrainer,
+  getTrainerAll,
+} from "@/axios/masterdata/trainer";
 import Select from "@/components/ui/Select";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/material_green.css";
@@ -71,6 +75,95 @@ export const getTrainerSubmitError = (error) => {
   return error?.message || "Terjadi kesalahan. Silakan coba kembali.";
 };
 
+export const getCreatedTrainer = (response, submittedData) => {
+  const responseData = response?.data;
+  const candidates = [
+    responseData?.data,
+    responseData?.result,
+    responseData?.trainer,
+    responseData,
+  ];
+  const createdTrainer = candidates.find(
+    (candidate) =>
+      candidate &&
+      typeof candidate === "object" &&
+      !Array.isArray(candidate) &&
+      (candidate.trainer_id != null || candidate.id != null),
+  );
+
+  if (!createdTrainer) {
+    const location = response?.headers?.location ?? response?.headers?.Location;
+    const locationId = String(location ?? "").match(/\/trainer\/([^/]+)\/?$/)?.[1];
+
+    return locationId
+      ? { ...submittedData, trainer_id: decodeURIComponent(locationId) }
+      : submittedData;
+  }
+
+  return {
+    ...submittedData,
+    ...createdTrainer,
+    trainer_id: createdTrainer.trainer_id ?? createdTrainer.id,
+  };
+};
+
+const getTrainerList = (response) => {
+  const payload = response?.data;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.results)) return payload.data.results;
+  return [];
+};
+
+export const resolveCreatedTrainer = async (response, submittedData) => {
+  const trainerFromResponse = getCreatedTrainer(response, submittedData);
+  if (trainerFromResponse?.trainer_id != null) return trainerFromResponse;
+
+  const lookupValues = [submittedData.username, submittedData.email].filter(
+    Boolean,
+  );
+
+  for (const search of lookupValues) {
+    const lookupResponse = await getTrainerAll({
+      page: 1,
+      page_size: 20,
+      search,
+    });
+    const normalizedUsername = String(submittedData.username ?? "")
+      .trim()
+      .toLowerCase();
+    const normalizedEmail = String(submittedData.email ?? "")
+      .trim()
+      .toLowerCase();
+    const trainer = getTrainerList(lookupResponse).find((item) => {
+      const username = String(
+        item?.username ?? item?.user?.username ?? item?.user_username ?? "",
+      )
+        .trim()
+        .toLowerCase();
+      const email = String(item?.email ?? item?.user?.email ?? "")
+        .trim()
+        .toLowerCase();
+
+      return (
+        (normalizedUsername && username === normalizedUsername) ||
+        (normalizedEmail && email === normalizedEmail)
+      );
+    });
+
+    if (trainer) {
+      return {
+        ...submittedData,
+        ...trainer,
+        trainer_id: trainer.trainer_id ?? trainer.id,
+      };
+    }
+  }
+
+  return trainerFromResponse;
+};
+
 const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
   const navigate = useNavigate();
   const isUpdate = isupdate === "true";
@@ -86,7 +179,9 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     .object({
       fullname: yup.string().required("Nama Trainer is required"),
       nickname: yup.string().required("Nama Akuntansi is required"),
-      username: yup.string().required("Username/Nama Panggilan is required"),
+      username: isUpdate
+        ? yup.string().notRequired()
+        : yup.string().required("Username/Nama Panggilan is required"),
       email: yup
         .string()
         .trim()
@@ -199,8 +294,14 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
     if (!isSuccess) {
       throw new Error("Trainer gagal ditambahkan.");
     }
+    const createdTrainer = await resolveCreatedTrainer(res, data);
+    if (createdTrainer?.trainer_id == null) {
+      throw new Error(
+        "Trainer berhasil dibuat, tetapi ID pelatih belum dapat disinkronkan. Silakan kembali ke daftar pelatih lalu buka kembali data ini.",
+      );
+    }
     await Swal.fire("Berhasil!", "Trainer berhasil ditambahkan.", "success");
-    updatedData?.(data);
+    updatedData?.(createdTrainer);
   };
 
   const handleUpdate = async (data) => {
@@ -247,7 +348,9 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
       contract_type_display: contractType,
       is_active: selectOption,
       nickname: newData.nickname,
-      username: newData.username,
+      username: isUpdate
+        ? data.username ?? data.user?.username ?? data.user_username ?? ""
+        : newData.username,
       bank_account: newData.bank_account,
       reg_date: newData.reg_date
         ? DateTime.fromJSDate(newData.reg_date).toFormat("yyyy-MM-dd")
@@ -320,7 +423,8 @@ const Biodata = ({ isupdate = "false", data = {}, updatedData }) => {
               ? data.username ?? data.user?.username ?? data.user_username ?? ""
               : ""
           }
-          disabled={loading}
+          disabled={loading || isUpdate}
+          className={isUpdate ? "cursor-not-allowed bg-slate-100" : ""}
         />
         <Textinput
           name="email"

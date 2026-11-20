@@ -8,6 +8,7 @@ import {
   deleteTrainerDocument,
   getTrainerAll,
   getTrainerAllNew,
+  resetTrainerPassword,
 } from "../../../src/axios/masterdata/trainer";
 
 const { mockGet, mockPost, mockPut, mockDelete } = vi.hoisted(() => ({
@@ -90,6 +91,18 @@ describe("trainer api", () => {
 
     expect(result).toBe(response);
     expect(mockDelete).toHaveBeenCalledWith("/api/trainer/3/");
+  });
+
+  it("resets trainer password using the backend default password contract", async () => {
+    const response = { status: 200 };
+    mockPut.mockResolvedValue(response);
+
+    const result = await resetTrainerPassword(9);
+
+    expect(result).toBe(response);
+    expect(mockPut).toHaveBeenCalledWith("/api/trainer/9/reset-password/", {
+      new_password: "MaestroBisa",
+    });
   });
 
   it("uses the configured production API for trainer documents", async () => {

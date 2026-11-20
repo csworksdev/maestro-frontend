@@ -43,11 +43,25 @@ vi.mock("@/components/ui/Button", () => ({
 }));
 
 vi.mock("../../../src/pages/masterdata/trainer/biodata", () => ({
-  default: () => <div>Biodata</div>,
+  default: ({ isupdate, updatedData }) => (
+    <div>
+      <span>Biodata-{isupdate}</span>
+      <button
+        type="button"
+        onClick={() => updatedData({ trainer_id: 27, fullname: "Trainer Baru" })}
+      >
+        Simulate Create
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock("../../../src/pages/masterdata/trainer/jadwal-baru", () => ({
-  default: () => <div>JadwalBaru</div>,
+  default: ({ data }) => <div>JadwalBaru-{data?.trainer_id ?? "empty"}</div>,
+}));
+
+vi.mock("../../../src/pages/masterdata/trainer/dokumen", () => ({
+  default: ({ trainerId }) => <div>Dokumen-{trainerId ?? "empty"}</div>,
 }));
 
 vi.mock("@/pages/referensi/trainerSpesialisasi/index", () => ({
@@ -130,5 +144,19 @@ describe("Trainer edit page", () => {
 
     await user.click(screen.getByRole("button", { name: "Cancel Spec" }));
     expect(screen.getByText("SpecList")).toBeInTheDocument();
+  });
+
+  it("sends the newly created trainer to the schedule tab", async () => {
+    mockLocation.state = { isupdate: "false", data: {} };
+    renderEdit();
+
+    expect(screen.getByText("Biodata-false")).toBeInTheDocument();
+    expect(screen.getByText("JadwalBaru-empty")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Simulate Create" }));
+
+    expect(screen.getByText("Biodata-true")).toBeInTheDocument();
+    expect(screen.getByText("JadwalBaru-27")).toBeInTheDocument();
   });
 });

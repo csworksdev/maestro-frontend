@@ -1,9 +1,10 @@
 import { axiosConfig } from "../config";
-import { isLocalApiProxy, resolveApiBaseUrl } from "@/utils/apiUrl";
+import { isLocalApiProxy } from "@/utils/apiUrl";
 
 const storageApiBaseUrl = String(
   import.meta.env.VITE_STORAGE_API_URL || "",
 ).replace(/\/$/, "");
+const useLocalProxy = isLocalApiProxy();
 export const getCareerJobs = (params) => {
   return axiosConfig.get("/api/career/jobs/", { params });
 };

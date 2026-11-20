@@ -241,6 +241,10 @@ const AdminRoutes = () => {
             element={<RekruitmenDetail />}
           />
           <Route path="tahapan" element={<Tahapan />} />
+          <Route
+            path="tahapan/:applicationId"
+            element={<RekruitmenDetail />}
+          />
         </Route>
         //#endregion
         {/* Followup Perpanjang */}

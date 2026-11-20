@@ -8,9 +8,10 @@ import Trainer from "../../../src/pages/masterdata/trainer/index";
 
 const mockNavigate = vi.fn();
 
-const { mockDeleteTrainer, mockGetTrainerAll } = vi.hoisted(() => ({
+const { mockDeleteTrainer, mockGetTrainerAll, mockResetTrainerPassword } = vi.hoisted(() => ({
   mockDeleteTrainer: vi.fn(),
   mockGetTrainerAll: vi.fn(),
+  mockResetTrainerPassword: vi.fn(),
 }));
 
 const mockSwalFire = vi.fn();
@@ -33,6 +34,8 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@/axios/masterdata/trainer", () => ({
   DeleteTrainer: (...args) => mockDeleteTrainer(...args),
   getTrainerAll: (...args) => mockGetTrainerAll(...args),
+  resetTrainerPassword: (...args) => mockResetTrainerPassword(...args),
+  resignTrainer: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -63,7 +66,18 @@ vi.mock("@/components/ui/Card", () => ({
 }));
 
 vi.mock("@/components/ui/Button", () => ({
-  default: ({ children }) => <div>{children}</div>,
+  default: ({ text, children, isLoading: _isLoading, ...props }) => (
+    <button {...props}>{text || children}</button>
+  ),
+}));
+
+vi.mock("@/components/ui/Modal", () => ({
+  default: ({ activeModal, title, children }) =>
+    activeModal ? (
+      <div role="dialog" aria-label={title}>
+        {children}
+      </div>
+    ) : null,
 }));
 
 vi.mock("@/components/skeleton/Table", () => ({
@@ -91,6 +105,7 @@ describe("Trainer list page", () => {
     mockNavigate.mockReset();
     mockDeleteTrainer.mockReset();
     mockGetTrainerAll.mockReset();
+    mockResetTrainerPassword.mockReset();
     mockSwalFire.mockReset();
     mockInvalidateQueries.mockReset();
     mockUseQuery.mockReset();
@@ -152,6 +167,8 @@ describe("Trainer list page", () => {
               mutateOptions?.onError?.(error);
             });
         },
+        mutateAsync: (variables) => options.mutationFn(variables),
+        isPending: false,
       };
     });
   });
@@ -212,6 +229,58 @@ describe("Trainer list page", () => {
         }),
       },
     });
+  });
+
+  it("shows reset password confirmation without password fields", async () => {
+    mockResetTrainerPassword.mockResolvedValue({ status: 200 });
+    mockSwalFire
+      .mockResolvedValueOnce({ isConfirmed: true })
+      .mockResolvedValueOnce({});
+    render(<Trainer />);
+
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Reset password Trainer A" }),
+    );
+
+    expect(
+      screen.getByText(
+        "Apakah Anda yakin ingin mereset password Trainer A?",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Password Baru/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/Konfirmasi Password/i),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Reset Password" }));
+    await waitFor(() => {
+      expect(mockResetTrainerPassword).toHaveBeenCalledWith(11);
+    });
+    expect(mockResetTrainerPassword.mock.calls[0]).toHaveLength(1);
+    expect(mockSwalFire).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        text: "Apakah Anda yakin ingin mereset password Trainer A?",
+        showCancelButton: true,
+        confirmButtonText: "Reset Password",
+        cancelButtonText: "Batal",
+      }),
+    );
+  });
+
+  it("does not call reset password API when confirmation is cancelled", async () => {
+    mockSwalFire.mockResolvedValueOnce({ isConfirmed: false });
+    render(<Trainer />);
+
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Reset password Trainer A" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Reset Password" }));
+
+    await waitFor(() => expect(mockSwalFire).toHaveBeenCalled());
+    expect(mockResetTrainerPassword).not.toHaveBeenCalled();
   });
 
   it("deletes trainer after confirmation", async () => {

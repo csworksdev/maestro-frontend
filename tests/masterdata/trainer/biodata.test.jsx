@@ -7,10 +7,11 @@ import Biodata from "../../../src/pages/masterdata/trainer/biodata";
 
 const mockNavigate = vi.fn();
 
-const { mockAddTrainer, mockEditTrainer, mockGetCabangAll } = vi.hoisted(
+const { mockAddTrainer, mockEditTrainer, mockGetTrainerAll, mockGetCabangAll } = vi.hoisted(
   () => ({
     mockAddTrainer: vi.fn(),
     mockEditTrainer: vi.fn(),
+    mockGetTrainerAll: vi.fn(),
     mockGetCabangAll: vi.fn(),
   }),
 );
@@ -28,6 +29,7 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@/axios/masterdata/trainer", () => ({
   AddTrainer: (...args) => mockAddTrainer(...args),
   EditTrainer: (...args) => mockEditTrainer(...args),
+  getTrainerAll: (...args) => mockGetTrainerAll(...args),
 }));
 
 vi.mock("@/axios/referensi/cabang", () => ({
@@ -128,6 +130,7 @@ describe("Trainer biodata form", () => {
     mockNavigate.mockReset();
     mockAddTrainer.mockReset();
     mockEditTrainer.mockReset();
+    mockGetTrainerAll.mockReset();
     mockGetCabangAll.mockReset();
     mockSwalFire.mockReset();
   });
@@ -141,7 +144,10 @@ describe("Trainer biodata form", () => {
     mockGetCabangAll.mockResolvedValue({
       data: { results: [{ branch_id: 1, name: "Cabang A" }] },
     });
-    mockAddTrainer.mockResolvedValue({ status: true });
+    mockAddTrainer.mockResolvedValue({
+      status: true,
+      data: { trainer_id: 27, fullname: "Arya Adi Wijaya" },
+    });
     mockSwalFire.mockResolvedValue({});
 
     render(<Biodata isupdate="false" data={{}} updatedData={updatedData} />);
@@ -195,7 +201,7 @@ describe("Trainer biodata form", () => {
 
     await waitFor(() => {
       expect(updatedData).toHaveBeenCalledWith(
-        expect.objectContaining(payload),
+        expect.objectContaining({ ...payload, trainer_id: 27 }),
       );
     });
   });
@@ -280,6 +286,46 @@ describe("Trainer biodata form", () => {
     await waitFor(() => {
       expect(updatedData).toHaveBeenCalledWith(
         expect.objectContaining(payload),
+      );
+    });
+  });
+
+  it("fetches the created trainer when the create response has no id", async () => {
+    const updatedData = vi.fn();
+    mockGetCabangAll.mockResolvedValue({ data: { results: [] } });
+    mockAddTrainer.mockResolvedValue({ status: 201, data: { status: true } });
+    mockGetTrainerAll.mockResolvedValue({
+      data: {
+        results: [
+          {
+            trainer_id: 31,
+            username: "trainer.baru",
+            email: "trainer@example.com",
+          },
+        ],
+      },
+    });
+    mockSwalFire.mockResolvedValue({});
+
+    render(<Biodata isupdate="false" data={{}} updatedData={updatedData} />);
+    const user = userEvent.setup();
+    await screen.findByLabelText("Nama Trainer");
+    await user.type(screen.getByLabelText("Nama Trainer"), "Trainer Baru");
+    await user.type(
+      screen.getByLabelText("Username/Nama Panggilan"),
+      "trainer.baru",
+    );
+    await user.type(screen.getByLabelText("Email"), "trainer@example.com");
+    await user.selectOptions(screen.getByLabelText("Jenis Kelamin"), "L");
+    await user.type(screen.getByLabelText("Bagi Hasil"), "10");
+    await user.click(screen.getByRole("button", { name: /Add Trainer/i }));
+
+    await waitFor(() => {
+      expect(mockGetTrainerAll).toHaveBeenCalledWith(
+        expect.objectContaining({ search: "trainer.baru" }),
+      );
+      expect(updatedData).toHaveBeenCalledWith(
+        expect.objectContaining({ trainer_id: 31 }),
       );
     });
   });

@@ -14,6 +14,7 @@ import {
   sortStages,
 } from "./stageConfig";
 import { processApplicationStage } from "./stageProcess";
+import { resolveProductionMediaUrl } from "@/utils/mediaUrl";
 
 const getAge = (birthDate) => {
   if (!birthDate) return "-";
@@ -67,7 +68,7 @@ const ExternalLink = ({ href, children }) => {
 
   return (
     <a
-      href={href}
+      href={resolveProductionMediaUrl(href)}
       target="_blank"
       rel="noreferrer"
       className="text-primary-600 hover:underline"
