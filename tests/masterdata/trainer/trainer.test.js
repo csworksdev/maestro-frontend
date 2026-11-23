@@ -93,16 +93,14 @@ describe("trainer api", () => {
     expect(mockDelete).toHaveBeenCalledWith("/api/trainer/3/");
   });
 
-  it("resets trainer password using the backend default password contract", async () => {
+  it("resets trainer password without exposing it in the request body", async () => {
     const response = { status: 200 };
     mockPut.mockResolvedValue(response);
 
     const result = await resetTrainerPassword(9);
 
     expect(result).toBe(response);
-    expect(mockPut).toHaveBeenCalledWith("/api/trainer/9/reset-password/", {
-      new_password: "MaestroBisa",
-    });
+    expect(mockPut).toHaveBeenCalledWith("/api/trainer/9/reset-password/");
   });
 
   it("uses the configured production API for trainer documents", async () => {

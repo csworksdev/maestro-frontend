@@ -8,7 +8,6 @@ const getTrainerResignUrl = (trainerId) =>
   `/api/trainer/${encodeURIComponent(trainerId)}/resign/`;
 const getTrainerResetPasswordUrl = (trainerId) =>
   `/api/trainer/${encodeURIComponent(trainerId)}/reset-password/`;
-const DEFAULT_TRAINER_PASSWORD = "MaestroBisa";
 
 export const getTrainerAll = async (data) => {
   try {
@@ -67,9 +66,7 @@ export const resignTrainer = (trainerId, resignationDate) =>
   });
 
 export const resetTrainerPassword = (trainerId) =>
-  axiosConfig.put(getTrainerResetPasswordUrl(trainerId), {
-    new_password: DEFAULT_TRAINER_PASSWORD,
-  });
+  axiosConfig.put(getTrainerResetPasswordUrl(trainerId));
 
 export const getTrainerDocuments = (trainerId, params = {}) =>
   axiosConfig.get(getTrainerDocumentUrl(trainerId), { params });
