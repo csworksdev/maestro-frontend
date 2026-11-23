@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import {
   DeleteTrainer,
   getTrainerAll,
+  resetTrainerPassword,
   resignTrainer as resignTrainerRequest,
 } from "@/axios/masterdata/trainer";
 import { DateTime } from "luxon";
@@ -225,6 +226,8 @@ const Trainer = () => {
   const [previewAvatar, setPreviewAvatar] = useState(null);
   const [resignTrainer, setResignTrainer] = useState(null);
   const [resignDate, setResignDate] = useState("");
+  const [resetPasswordTrainer, setResetPasswordTrainer] = useState(null);
+  const [resetPasswordError, setResetPasswordError] = useState("");
   const [scheduleWorkTypes, setScheduleWorkTypes] = useState({});
   const scheduleSocketRef = useRef(null);
   const queryClient = useQueryClient();
@@ -325,6 +328,10 @@ const Trainer = () => {
       resignTrainerRequest(trainerId, resignationDate),
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: (trainerId) => resetTrainerPassword(trainerId),
+  });
+
   const handleDelete = (e) => {
     Swal.fire({
       title: "Are you sure?",
@@ -362,6 +369,56 @@ const Trainer = () => {
   const closeResignModal = () => {
     setResignTrainer(null);
     setResignDate("");
+  };
+
+  const closeResetPasswordModal = () => {
+    setResetPasswordTrainer(null);
+    setResetPasswordError("");
+  };
+
+  const handleResetPassword = async () => {
+    const trainerId = resetPasswordTrainer?.trainer_id;
+    if (trainerId == null || resetPasswordMutation.isPending) return;
+
+    setResetPasswordError("");
+    const trainerName =
+      toProperCase(resetPasswordTrainer?.fullname || "") || "Pelatih";
+    const confirmation = await Swal.fire({
+      title: "Konfirmasi Reset Password",
+      text: `Apakah Anda yakin ingin mereset password ${trainerName}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#f59e0b",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Reset Password",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      didOpen: () => {
+        Swal.getContainer()?.style.setProperty("z-index", "100000");
+      },
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      await resetPasswordMutation.mutateAsync(trainerId);
+      closeResetPasswordModal();
+      await Swal.fire({
+        title: "Password berhasil direset",
+        text: `Password ${trainerName} berhasil dikembalikan ke password default.`,
+        icon: "success",
+        confirmButtonColor: "#22c55e",
+      });
+    } catch (error) {
+      const responseMessage =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error;
+      setResetPasswordError(
+        responseMessage ||
+          "Password belum berhasil direset. Silakan coba kembali beberapa saat lagi.",
+      );
+    }
   };
 
   const handleResignSubmit = async (event) => {
@@ -573,6 +630,15 @@ const Trainer = () => {
                           <div className="flex gap-2">
                             <button
                               type="button"
+                              onClick={() => setResetPasswordTrainer(trainer)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded bg-amber-500/15 text-amber-600 transition-colors hover:bg-amber-500 hover:text-white dark:text-amber-400"
+                              aria-label={`Reset password ${trainerName}`}
+                              title="Reset password"
+                            >
+                              <Icon icon="heroicons-outline:key" />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => handleEdit(trainer)}
                               className="inline-flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
                               aria-label={`Edit ${trainerName}`}
@@ -656,6 +722,46 @@ const Trainer = () => {
             />
           </div>
         </form>
+      </Modal>
+      <Modal
+        activeModal={Boolean(resetPasswordTrainer)}
+        onClose={closeResetPasswordModal}
+        title="Reset Password Pelatih"
+        className="max-w-md"
+        centered
+      >
+        <div>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Apakah Anda yakin ingin mereset password {toProperCase(
+              resetPasswordTrainer?.fullname || "",
+            ) || "pelatih ini"}?
+          </p>
+          {resetPasswordError && (
+            <p
+              role="alert"
+              className="mt-3 rounded-md bg-danger-500/10 px-3 py-2 text-sm text-danger-500"
+            >
+              {resetPasswordError}
+            </p>
+          )}
+
+          <div className="mt-6 flex justify-end gap-3">
+            <Button
+              type="button"
+              text="Batal"
+              className="btn-outline-secondary"
+              onClick={closeResetPasswordModal}
+            />
+            <Button
+              type="button"
+              text="Reset Password"
+              className="btn-warning"
+              onClick={handleResetPassword}
+              disabled={resetPasswordMutation.isPending}
+              isLoading={resetPasswordMutation.isPending}
+            />
+          </div>
+        </div>
       </Modal>
       {previewAvatar && (
         <div

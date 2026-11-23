@@ -12,6 +12,7 @@ import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
+import { resolveProductionMediaUrl } from "@/utils/mediaUrl";
 import {
   getBranches,
   createCareerApplicationTrainersBulk,
@@ -1635,7 +1636,7 @@ const Rekruitmen = () => {
         Cell: ({ cell }) =>
           isSafeDocumentLink(cell.value) ? (
             <a
-              href={cell.value}
+              href={resolveProductionMediaUrl(cell.value)}
               target="_blank"
               rel="noreferrer"
               onClick={(event) => event.stopPropagation()}
@@ -2144,7 +2145,9 @@ const Rekruitmen = () => {
                         <dd className="mt-1">
                           {isSafeDocumentLink(application.uploadCv) ? (
                             <a
-                              href={application.uploadCv}
+                              href={resolveProductionMediaUrl(
+                                application.uploadCv,
+                              )}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600 transition hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"

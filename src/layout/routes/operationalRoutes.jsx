@@ -174,6 +174,10 @@ const OpxRoutes = () => {
             element={<RekruitmenDetail />}
           />
           <Route path="tahapan" element={<Tahapan />} />
+          <Route
+            path="tahapan/:applicationId"
+            element={<RekruitmenDetail />}
+          />
         </Route>
         <Route index path="notifications" element={<NotificationPage />} />
         <Route path="*" element={<ErrorPage />} />

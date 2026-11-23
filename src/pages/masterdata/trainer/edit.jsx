@@ -4,7 +4,6 @@ import { Icon } from "@iconify/react";
 import React, { useState } from "react";
 import Biodata from "./biodata";
 import { useLocation, useNavigate } from "react-router-dom";
-import Jadwal from "./jadwal";
 import JadwalBaru from "./jadwal-baru";
 import Button from "@/components/ui/Button";
 import SpecializationList from "@/pages/referensi/trainerSpesialisasi/index";
@@ -34,6 +33,7 @@ const Edit = () => {
     },
   ];
   const [selectedData, setSelectedData] = useState(data);
+  const [isUpdateMode, setIsUpdateMode] = useState(isupdate === "true");
   const [specMode, setSpecMode] = useState("list"); // list | form
   const [specData, setSpecData] = useState({});
   const [specIsUpdate, setSpecIsUpdate] = useState(false);
@@ -41,6 +41,9 @@ const Edit = () => {
   const [specSelectedList, setSpecSelectedList] = useState([]);
   const updateData = (params) => {
     setSelectedData(params);
+    if (params?.trainer_id != null) {
+      setIsUpdateMode(true);
+    }
   };
 
   const handleSpecializationAdd = (payload) => {
@@ -104,7 +107,7 @@ const Edit = () => {
             <Tab.Panels>
               <Tab.Panel>
                 <Biodata
-                  isupdate={isupdate}
+                  isupdate={isUpdateMode ? "true" : "false"}
                   data={selectedData}
                   updatedData={updateData}
                 />

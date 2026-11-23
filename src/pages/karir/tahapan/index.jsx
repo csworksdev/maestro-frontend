@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -14,6 +14,7 @@ import Search from "@/components/globals/table/search";
 import SkeletionTable from "@/components/skeleton/Table";
 import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import getErrorMessage from "@/utils/careerErrorMessage";
+import { resolveProductionMediaUrl } from "@/utils/mediaUrl";
 import "./tahapan.css";
 import {
   addCareerStage,
@@ -50,13 +51,23 @@ const customFieldTypes = [
   { value: "upload", label: "Upload" },
 ];
 
+const createCustomFieldTypeValue = (label) =>
+  String(label || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
 const MEDIA_BASE_URL = "https://media.maestroswim.com";
 const MAX_UPLOAD_BYTES = 900 * 1024;
 
 const getMediaUrl = (fileKey) => {
   if (!fileKey) return "";
-  if (/^https?:\/\//i.test(fileKey)) return fileKey;
-  return `${MEDIA_BASE_URL}/${String(fileKey).replace(/^\/+/, "")}`;
+  return resolveProductionMediaUrl(
+    /^https?:\/\//i.test(fileKey)
+      ? fileKey
+      : `${MEDIA_BASE_URL}/${String(fileKey).replace(/^\/+/, "")}`,
+  );
 };
 
 const normalizeStoredFile = (value) => {
@@ -79,7 +90,7 @@ const normalizeStoredFile = (value) => {
       const markerIndex = text.indexOf(marker);
       return {
         key: markerIndex >= 0 ? text.slice(markerIndex + 1) : "",
-        url: text,
+        url: getMediaUrl(text),
       };
     }
 
@@ -99,7 +110,9 @@ const normalizeStoredFile = (value) => {
     const nestedUrl =
       rawUrl && typeof rawUrl === "object" ? normalizeStoredFile(rawUrl) : null;
     const key = nestedKey?.key || nestedUrl?.key || String(rawKey || "").trim();
-    const url = nestedUrl?.url || nestedKey?.url || String(rawUrl || "").trim();
+    const url = getMediaUrl(
+      nestedUrl?.url || nestedKey?.url || String(rawUrl || "").trim(),
+    );
 
     const normalized = {
       key: key === "[object Object]" ? "" : key,
@@ -124,6 +137,36 @@ const normalizeStoredFile = (value) => {
   }
 
   return { key: "", url: "" };
+};
+
+const normalizeStoredFileList = (value) => {
+  if (!value) return [];
+
+  let files = Array.isArray(value) ? value : [value];
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (text.startsWith("[") && text.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(text);
+        files = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        files = [value];
+      }
+    }
+  }
+
+  return files
+    .map((file) => normalizeStoredFile(file).url)
+    .filter(Boolean);
+};
+
+const normalizeCustomDataValue = (field, value) => {
+  if (field?.type !== "upload") {
+    return value == null ? "" : String(value);
+  }
+
+  const storedFile = normalizeStoredFile(value);
+  return storedFile.key || storedFile.url || "";
 };
 
 const hasCustomFieldValue = (value) => {
@@ -267,6 +310,13 @@ const normalizeValue = (value) =>
   String(value || "")
     .trim()
     .toLowerCase();
+
+const formatCustomDataLabel = (value) =>
+  String(value || "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 
 const toBoolean = (value) =>
   value === true ||
@@ -485,14 +535,24 @@ const getStageIcon = (status) => {
   return "heroicons-outline:minus-circle";
 };
 
-const genderTone = (gender) => {
-  const value = normalizeValue(gender);
+const genderTone = (...genderValues) => {
+  const values = genderValues
+    .map((gender) => normalizeValue(gender).replace(/[_-]+/g, " "))
+    .filter(Boolean);
 
-  if (value === "female" || value === "perempuan") {
+  if (
+    values.some((value) =>
+      ["female", "perempuan", "wanita", "woman", "women"].includes(value),
+    )
+  ) {
     return "pink";
   }
 
-  if (value === "male" || value === "laki-laki" || value === "laki laki") {
+  if (
+    values.some((value) =>
+      ["male", "laki laki", "pria", "lelaki", "man", "men"].includes(value),
+    )
+  ) {
     return "blue";
   }
 
@@ -628,7 +688,14 @@ const CheckboxGroup = ({
   </div>
 );
 
-const ActionTooltipButton = ({ tooltip, icon, className, onClick }) => (
+const ActionTooltipButton = ({
+  tooltip,
+  icon,
+  className,
+  onClick,
+  disabled = false,
+  isLoading = false,
+}) => (
   <Tooltip
     content={tooltip}
     placement="top"
@@ -638,10 +705,16 @@ const ActionTooltipButton = ({ tooltip, icon, className, onClick }) => (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-md border text-xs font-bold shadow-sm transition ${className}`}
+      disabled={disabled || isLoading}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-md border text-xs font-bold shadow-sm transition disabled:cursor-wait disabled:opacity-60 ${className}`}
       aria-label={tooltip}
+      aria-busy={isLoading}
     >
-      <Icon icon={icon} width={16} />
+      <Icon
+        icon={isLoading ? "heroicons-outline:arrow-path" : icon}
+        width={16}
+        className={isLoading ? "animate-spin" : ""}
+      />
     </button>
   </Tooltip>
 );
@@ -673,14 +746,29 @@ const matchesSearch = (search, application) => {
 };
 
 const isValidUrl = (value) => /^https?:\/\//i.test(String(value || ""));
+const DEFAULT_OPX_DEPARTMENT_NAME = "Operational & Coaching";
+
+export const findDefaultOpxDepartmentId = (departments = []) =>
+  departments.find(
+    (department) =>
+      normalizeValue(department?.label) ===
+      normalizeValue(DEFAULT_OPX_DEPARTMENT_NAME),
+  )?.value ?? "";
 
 const Tahapan = () => {
   const stageFormRef = useRef(null);
   const processFormRef = useRef(null);
+  const hasInitializedDepartmentRef = useRef(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
-  const [departmentId, setDepartmentId] = useState("");
-  const [activeStageId, setActiveStageId] = useState("");
+  const restoredTahapanState = location.state?.tahapanState;
+  const [departmentId, setDepartmentId] = useState(
+    restoredTahapanState?.departmentId || "",
+  );
+  const [activeStageId, setActiveStageId] = useState(
+    restoredTahapanState?.activeStageId || "",
+  );
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [jobFilter, setJobFilter] = useState("");
@@ -702,6 +790,8 @@ const Tahapan = () => {
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [editingStage, setEditingStage] = useState(null);
   const [stageForm, setStageForm] = useState(emptyStageForm);
+  const [newCustomFieldType, setNewCustomFieldType] = useState("");
+  const [createdCustomFieldTypes, setCreatedCustomFieldTypes] = useState([]);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [processingApplication, setProcessingApplication] = useState(null);
   const [processForm, setProcessForm] = useState(emptyProcessForm);
@@ -846,6 +936,34 @@ const Tahapan = () => {
   const departmentOptions = departmentsQuery.data ?? [];
   const jobOptions = jobsOptionsQuery.data ?? [];
   const branchOptions = branchesQuery.data ?? [];
+  const defaultDepartmentId = findDefaultOpxDepartmentId(departmentOptions);
+
+  useEffect(() => {
+    if (departmentId) {
+      hasInitializedDepartmentRef.current = true;
+      return;
+    }
+
+    if (
+      hasInitializedDepartmentRef.current ||
+      departmentsQuery.isLoading ||
+      !departmentOptions.length
+    ) {
+      return;
+    }
+
+    hasInitializedDepartmentRef.current = true;
+    if (defaultDepartmentId) {
+      setDepartmentId(defaultDepartmentId);
+      setActiveStageId("");
+      setPageIndex(0);
+    }
+  }, [
+    defaultDepartmentId,
+    departmentId,
+    departmentOptions.length,
+    departmentsQuery.isLoading,
+  ]);
 
   const filteredJobOptions = useMemo(() => {
     if (!departmentId) {
@@ -870,6 +988,29 @@ const Tahapan = () => {
     (department) => department.value === departmentId,
   );
   const stages = stagesQuery.data?.results ?? [];
+  const availableCustomFieldTypes = useMemo(() => {
+    const options = [...customFieldTypes];
+    const knownValues = new Set(options.map((option) => option.value));
+    const discoveredTypes = [
+      ...stages.flatMap((stage) => stage.customFields || []),
+      ...createdCustomFieldTypes,
+    ];
+
+    discoveredTypes.forEach((item) => {
+      const value = String(item?.value ?? item?.type ?? "").trim();
+      if (!value || knownValues.has(value)) return;
+      knownValues.add(value);
+      options.push({
+        value,
+        label:
+          item?.value && item?.label
+            ? item.label
+            : formatCustomDataLabel(value),
+      });
+    });
+
+    return options;
+  }, [createdCustomFieldTypes, stages]);
   const activeStage = stages.find((stage) => stage.id === activeStageId);
   const normalizedActiveStageName = normalizeValue(activeStage?.name).replace(
     /[_-]+/g,
@@ -941,10 +1082,20 @@ const Tahapan = () => {
         source: application.source,
         sourceDisplay: application.source_display || application.source || "-",
         isWorking: toBoolean(application.is_working),
-        uploadCv: application.upload_cv,
-        uploadSertificates: Array.isArray(application.upload_sertificates)
-          ? application.upload_sertificates
-          : [],
+        uploadCv: normalizeStoredFile(
+          application.upload_cv ??
+            application.cv ??
+            application.cv_url ??
+            application.resume ??
+            application.resume_url ??
+            application.documents?.cv,
+        ).url,
+        uploadSertificates: normalizeStoredFileList(
+          application.upload_sertificates ??
+            application.upload_certificates ??
+            application.certificates ??
+            application.documents?.certificates,
+        ),
         applicationStatus: application.status,
         applicationStatusDisplay:
           application.status_display || application.status || "-",
@@ -1174,14 +1325,17 @@ const Tahapan = () => {
     };
   }, [applicantsByStage, pageSize, safePageIndex]);
 
-  const invalidatePipeline = () => {
-    queryClient.invalidateQueries({ queryKey: ["careerApplications"] });
-    queryClient.invalidateQueries({ queryKey: ["careerApplication"] });
-  };
+  const invalidatePipeline = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["careerApplications"] }),
+      queryClient.invalidateQueries({ queryKey: ["careerApplication"] }),
+    ]);
 
-  const invalidateStages = () => {
-    queryClient.invalidateQueries({ queryKey: ["careerStages"] });
-  };
+  const invalidateStages = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["careerStages"] }),
+      queryClient.invalidateQueries({ queryKey: ["careerStageDefinitions"] }),
+    ]);
 
   const handleDepartmentChange = (value) => {
     setDepartmentId(value);
@@ -1224,7 +1378,7 @@ const Tahapan = () => {
   };
 
   const handleResetFilter = () => {
-    setDepartmentId("");
+    setDepartmentId(defaultDepartmentId);
     setActiveStageId("");
     setSearchInput("");
     setSearchQuery("");
@@ -1256,6 +1410,7 @@ const Tahapan = () => {
     setIsStageModalOpen(false);
     setEditingStage(null);
     setStageForm(emptyStageForm);
+    setNewCustomFieldType("");
   };
 
   const openCreateStageModal = () => {
@@ -1317,9 +1472,9 @@ const Tahapan = () => {
 
   const addStageMutation = useMutation({
     mutationFn: (data) => addCareerStage(departmentId, data),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await invalidateStages();
       closeStageModal();
-      invalidateStages();
       Swal.fire("Berhasil", "Tahapan berhasil ditambahkan.", "success");
     },
     onError: (error) => {
@@ -1334,9 +1489,9 @@ const Tahapan = () => {
   const editStageMutation = useMutation({
     mutationFn: ({ stageId, data }) =>
       editCareerStage(departmentId, stageId, data),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await invalidateStages();
       closeStageModal();
-      invalidateStages();
       Swal.fire("Berhasil", "Tahapan berhasil diperbarui.", "success");
     },
     onError: (error) => {
@@ -1350,9 +1505,18 @@ const Tahapan = () => {
 
   const deleteStageMutation = useMutation({
     mutationFn: (stageId) => deleteCareerStage(departmentId, stageId),
-    onSuccess: () => {
+    onMutate: () => {
+      Swal.fire({
+        title: "Menghapus tahapan...",
+        text: "Mohon tunggu hingga data selesai diperbarui.",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      });
+    },
+    onSuccess: async () => {
       setActiveStageId("");
-      invalidateStages();
+      await invalidateStages();
       Swal.fire("Berhasil", "Tahapan berhasil dihapus.", "success");
     },
     onError: (error) => {
@@ -1379,9 +1543,9 @@ const Tahapan = () => {
 
       return processCareerApplicationStage(application.id, payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await invalidatePipeline();
       closeProcessModal();
-      invalidatePipeline();
       Swal.fire("Berhasil", "Tahapan pelamar berhasil diproses.", "success");
     },
     onError: (error) => {
@@ -1396,7 +1560,7 @@ const Tahapan = () => {
   const customDataMutation = useMutation({
     mutationFn: ({ applicationId, stageId, customData }) =>
       saveCareerApplicationStageCustomData(applicationId, stageId, customData),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       setCustomDataDrafts((current) => {
         const next = { ...current };
         variables.draftKeys?.forEach((draftKey) => {
@@ -1404,8 +1568,9 @@ const Tahapan = () => {
         });
         return next;
       });
+      await invalidatePipeline();
       closeCustomDataModal();
-      invalidatePipeline();
+      Swal.fire("Berhasil", "Data tahapan berhasil disimpan.", "success");
     },
   });
 
@@ -1514,7 +1679,7 @@ const Tahapan = () => {
         },
       );
       handleCustomDataChange(application, field, "");
-      invalidatePipeline();
+      await invalidatePipeline();
       setCustomFileUploads((current) => {
         const next = { ...current };
         delete next[draftKey];
@@ -1596,12 +1761,11 @@ const Tahapan = () => {
           if (!uploadData.file_key) {
             throw new Error("Response upload tidak memiliki file_key.");
           }
-          value = {
-            key: uploadData.file_key,
-            url: uploadData.file_url || getMediaUrl(uploadData.file_key),
-          };
+          value = uploadData.file_key;
           uploadedFileKeys.push(uploadData.file_key);
         }
+
+        value = normalizeCustomDataValue(field, value);
 
         const hasValue = hasCustomFieldValue(value);
         if (field.required && !hasValue) {
@@ -1672,6 +1836,48 @@ const Tahapan = () => {
     }));
   };
 
+  const handleCreateCustomFieldType = () => {
+    const label = newCustomFieldType.trim();
+    const value = createCustomFieldTypeValue(label);
+
+    if (!label || !value) {
+      Swal.fire("Nama tipe belum valid", "Masukkan nama tipe baru.", "info");
+      return;
+    }
+
+    const existingType = availableCustomFieldTypes.find(
+      (option) => normalizeValue(option.value) === normalizeValue(value),
+    );
+    if (existingType) {
+      Swal.fire(
+        "Tipe sudah tersedia",
+        `${existingType.label} sudah ada di dalam dropdown.`,
+        "info",
+      );
+      return;
+    }
+
+    setCreatedCustomFieldTypes((current) => [...current, { value, label }]);
+    setStageForm((current) => {
+      if (!current.custom_fields.length) {
+        return {
+          ...current,
+          custom_fields: [createCustomFieldDraft({ type: value })],
+        };
+      }
+
+      return {
+        ...current,
+        custom_fields: current.custom_fields.map((field, index) =>
+          index === current.custom_fields.length - 1
+            ? { ...field, type: value }
+            : field,
+        ),
+      };
+    });
+    setNewCustomFieldType("");
+  };
+
   const handleSubmitStage = (event) => {
     event.preventDefault();
     const payload = {
@@ -1727,6 +1933,10 @@ const Tahapan = () => {
             accessor: "customFieldValues",
             width: 290,
             Cell: ({ row }) => {
+              const isSavingRow =
+                customDataMutation.isPending &&
+                customDataMutation.variables?.applicationId ===
+                  row.original.id;
               const filledFieldCount = customFields.filter((field) =>
                 hasCustomFieldValue(
                   row.original.customFieldValues?.[field.key],
@@ -1744,13 +1954,14 @@ const Tahapan = () => {
                   <button
                     type="button"
                     onClick={() => openCustomDataModal(row.original)}
+                    disabled={isSavingRow}
                     title={
                       hasCustomData ? "Edit data tahapan" : "Isi data tahapan"
                     }
                     aria-label={
                       hasCustomData ? "Edit data tahapan" : "Isi data tahapan"
                     }
-                    className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-left transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
+                    className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-left transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-wait disabled:opacity-70 ${
                       hasCustomData
                         ? "border-success-200 bg-success-50 text-success-700 hover:border-success-300 hover:bg-success-100 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300 dark:hover:bg-success-500/20"
                         : "border-primary-200 bg-primary-50 text-primary-700 hover:border-primary-300 hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
@@ -1758,15 +1969,22 @@ const Tahapan = () => {
                   >
                     <Icon
                       icon={
-                        hasCustomData
+                        isSavingRow
+                          ? "heroicons-outline:arrow-path"
+                          : hasCustomData
                           ? "heroicons-outline:pencil-alt"
                           : "heroicons-outline:plus"
                       }
                       width={15}
+                      className={isSavingRow ? "animate-spin" : ""}
                     />
                     <span>
                       <span className="block text-xs font-bold">
-                        {hasCustomData ? "Edit Data" : "Isi Data"}
+                        {isSavingRow
+                          ? "Menyimpan..."
+                          : hasCustomData
+                            ? "Edit Data"
+                            : "Isi Data"}
                       </span>
                       <span className="block text-[10px] font-semibold opacity-70">
                         {hasCustomData
@@ -1775,17 +1993,32 @@ const Tahapan = () => {
                       </span>
                     </span>
                   </button>
-                  {savedFields.length ? (
-                    <div className="w-full min-w-0 space-y-1 rounded-md bg-slate-50 px-2.5 py-2 text-left dark:bg-slate-800/70">
+                  {isSavingRow ? (
+                    <div
+                      className="flex w-full min-w-0 items-center justify-center gap-2 rounded-md bg-primary-50 px-3 py-3 text-xs font-semibold text-primary-600 dark:bg-primary-500/10 dark:text-primary-300"
+                      role="status"
+                    >
+                      <Icon
+                        icon="heroicons-outline:arrow-path"
+                        width={16}
+                        className="animate-spin"
+                      />
+                      Memperbarui hasil data...
+                    </div>
+                  ) : savedFields.length ? (
+                    <div className="w-full min-w-0 space-y-2 rounded-md bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/70">
                       {savedFields.map((field) => {
                         const { text, href } = getCustomFieldDisplay(
                           row.original.customFieldValues[field.key],
                         );
 
                         return (
-                          <div key={field.key} className="min-w-0">
+                          <div
+                            key={field.key}
+                            className="flex min-w-0 flex-col items-center"
+                          >
                             <p
-                              className="truncate text-[9px] font-bold uppercase tracking-wide text-slate-400"
+                              className="truncate text-center text-[9px] font-bold uppercase tracking-wide text-slate-400"
                               title={field.label}
                             >
                               {field.label}
@@ -1796,14 +2029,14 @@ const Tahapan = () => {
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(event) => event.stopPropagation()}
-                                className="block max-w-full truncate text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-300"
+                                className="block max-w-full break-all text-center text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-300"
                                 title={text}
                               >
                                 {text}
                               </a>
                             ) : (
                               <p
-                                className="break-words text-[11px] font-semibold text-slate-600 dark:text-slate-300"
+                                className="max-w-full break-words text-center text-[11px] font-semibold text-slate-600 dark:text-slate-300"
                                 title={text}
                               >
                                 {text}
@@ -1844,7 +2077,7 @@ const Tahapan = () => {
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   {hasCv && (
                     <a
-                      href={cvLink}
+                      href={getMediaUrl(cvLink)}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(event) => event.stopPropagation()}
@@ -1858,7 +2091,7 @@ const Tahapan = () => {
                   {certificateLinks.map((link, index) => (
                     <a
                       key={`${link}-${index}`}
-                      href={link}
+                      href={getMediaUrl(link)}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(event) => event.stopPropagation()}
@@ -1923,14 +2156,23 @@ const Tahapan = () => {
         Header: "Cabang",
         accessor: "branchName",
         width: 140,
-        Cell: ({ cell }) => <Badge tone="blue">{cell.value}</Badge>,
+        Cell: ({ cell }) => (
+          <span className="font-semibold text-slate-600 dark:text-slate-300">
+            {cell.value}
+          </span>
+        ),
       },
       {
         Header: "Gender",
         accessor: "genderDisplay",
         width: 120,
         Cell: ({ row }) => (
-          <Badge tone={genderTone(row.original.gender)}>
+          <Badge
+            tone={genderTone(
+              row.original.gender,
+              row.original.genderDisplay,
+            )}
+          >
             {row.original.genderDisplay}
           </Badge>
         ),
@@ -1963,8 +2205,28 @@ const Tahapan = () => {
         accessor: "action",
         id: "action",
         sticky: "right",
-        Cell: ({ row }) => (
-          <div className="flex items-center justify-center gap-2">
+        Cell: ({ row }) => {
+          const isProcessingRow =
+            processApplicationMutation.isPending &&
+            processApplicationMutation.variables?.application?.id ===
+              row.original.id;
+
+          return (
+            <div className="flex items-center justify-center gap-2">
+              {isProcessingRow ? (
+                <span
+                  className="inline-flex min-h-9 items-center gap-2 rounded-md bg-primary-50 px-3 text-xs font-bold text-primary-600 dark:bg-primary-500/10 dark:text-primary-300"
+                  role="status"
+                >
+                  <Icon
+                    icon="heroicons-outline:arrow-path"
+                    width={16}
+                    className="animate-spin"
+                  />
+                  Memproses...
+                </span>
+              ) : (
+                <>
             <ActionTooltipButton
               icon="heroicons-outline:check-circle"
               tooltip="Lanjut"
@@ -1980,18 +2242,32 @@ const Tahapan = () => {
             <ActionTooltipButton
               icon="heroicons-outline:eye"
               tooltip="Detail"
-              onClick={() => navigate(`/karir/rekruitmen/${row.original.id}`)}
+              onClick={() =>
+                navigate(`/karir/tahapan/${row.original.id}`, {
+                  state: {
+                    tahapanState: { departmentId, activeStageId },
+                  },
+                })
+              }
               className="border-slate-200 bg-slate-50 text-slate-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600"
             />
-          </div>
-        ),
+                </>
+              )}
+            </div>
+          );
+        },
       },
     ];
   }, [
     activeStage?.customFields,
     activeStageId,
+    customDataMutation.isPending,
+    customDataMutation.variables,
     customDataDrafts,
+    departmentId,
     navigate,
+    processApplicationMutation.isPending,
+    processApplicationMutation.variables,
     showDocumentColumn,
   ]);
   const tahapanTableMinWidth = activeStage?.customFields?.length
@@ -2226,7 +2502,7 @@ const Tahapan = () => {
             <button
               type="button"
               onClick={() => openEditStageModal(activeStage)}
-              disabled={!activeStage}
+              disabled={!activeStage || isStageMutating}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-sky-100 bg-sky-50 text-xs font-bold text-sky-600 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Icon icon="heroicons:pencil-square" width={16} />
@@ -2235,7 +2511,7 @@ const Tahapan = () => {
             <button
               type="button"
               onClick={() => handleDeleteStage(activeStage)}
-              disabled={!activeStage}
+              disabled={!activeStage || isStageMutating}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-danger-100 bg-danger-50 text-xs font-bold text-danger-600 transition hover:bg-danger-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Icon icon="heroicons-outline:trash" width={16} />
@@ -2270,6 +2546,21 @@ const Tahapan = () => {
               {applicantsByStage.count} pelamar di tahap ini
             </div>
           </div>
+
+          {applicationsQuery.isFetching && !applicationsQuery.isLoading ? (
+            <div
+              className="mb-5 flex items-center justify-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-4 py-3 text-xs font-bold text-primary-600 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"
+              role="status"
+              aria-live="polite"
+            >
+              <Icon
+                icon="heroicons-outline:arrow-path"
+                width={17}
+                className="animate-spin"
+              />
+              Memperbarui data tahapan...
+            </div>
+          ) : null}
 
           {!stagesQuery.isError &&
             !applicationsQuery.isError &&
@@ -2335,6 +2626,14 @@ const Tahapan = () => {
               <div className="space-y-3 md:hidden">
                 {pagedApplicants.results.map((application) => {
                   const customFields = activeStage?.customFields || [];
+                  const isSavingCustomData =
+                    customDataMutation.isPending &&
+                    customDataMutation.variables?.applicationId ===
+                      application.id;
+                  const isProcessingApplication =
+                    processApplicationMutation.isPending &&
+                    processApplicationMutation.variables?.application?.id ===
+                      application.id;
                   const filledFieldCount = customFields.filter((field) =>
                     hasCustomFieldValue(
                       application.customFieldValues?.[field.key],
@@ -2398,8 +2697,15 @@ const Tahapan = () => {
                           <dt className="font-semibold text-slate-400">
                             Gender
                           </dt>
-                          <dd className="mt-1 font-bold text-slate-600 dark:text-slate-300">
-                            {application.genderDisplay}
+                          <dd className="mt-1">
+                            <Badge
+                              tone={genderTone(
+                                application.gender,
+                                application.genderDisplay,
+                              )}
+                            >
+                              {application.genderDisplay}
+                            </Badge>
                           </dd>
                         </div>
                         <div className="min-w-0">
@@ -2418,24 +2724,32 @@ const Tahapan = () => {
                             <button
                               type="button"
                               onClick={() => openCustomDataModal(application)}
-                              className={`inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border px-3 text-xs font-bold ${hasCustomData ? "border-success-200 bg-success-50 text-success-700" : "border-primary-200 bg-primary-50 text-primary-700"}`}
+                              disabled={isSavingCustomData}
+                              className={`inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border px-3 text-xs font-bold disabled:cursor-wait disabled:opacity-70 ${hasCustomData ? "border-success-200 bg-success-50 text-success-700" : "border-primary-200 bg-primary-50 text-primary-700"}`}
                             >
                               <Icon
                                 icon={
-                                  hasCustomData
+                                  isSavingCustomData
+                                    ? "heroicons-outline:arrow-path"
+                                    : hasCustomData
                                     ? "heroicons-outline:pencil-alt"
                                     : "heroicons-outline:plus"
                                 }
                                 width={15}
+                                className={
+                                  isSavingCustomData ? "animate-spin" : ""
+                                }
                               />
-                              {hasCustomData
+                              {isSavingCustomData
+                                ? "Menyimpan data..."
+                                : hasCustomData
                                 ? `Data ${filledFieldCount}/${customFields.length}`
                                 : "Isi data"}
                             </button>
                           )}
                           {showDocumentColumn && hasCv && (
                             <a
-                              href={application.uploadCv}
+                              href={getMediaUrl(application.uploadCv)}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 text-xs font-bold text-primary-600"
@@ -2451,7 +2765,7 @@ const Tahapan = () => {
                             certificateLinks.map((link, index) => (
                               <a
                                 key={`${link}-${index}`}
-                                href={link}
+                                href={getMediaUrl(link)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 text-xs font-bold text-emerald-600"
@@ -2468,6 +2782,19 @@ const Tahapan = () => {
                         </div>
                       )}
 
+                      {isProcessingApplication ? (
+                        <div
+                          className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary-50 px-3 text-xs font-bold text-primary-600 dark:bg-primary-500/10 dark:text-primary-300"
+                          role="status"
+                        >
+                          <Icon
+                            icon="heroicons-outline:arrow-path"
+                            width={17}
+                            className="animate-spin"
+                          />
+                          Memproses tahapan...
+                        </div>
+                      ) : (
                       <div className="mt-4 grid grid-cols-3 gap-2">
                         <button
                           type="button"
@@ -2493,7 +2820,11 @@ const Tahapan = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            navigate(`/karir/rekruitmen/${application.id}`)
+                            navigate(`/karir/tahapan/${application.id}`, {
+                              state: {
+                                tahapanState: { departmentId, activeStageId },
+                              },
+                            })
                           }
                           className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                         >
@@ -2501,6 +2832,7 @@ const Tahapan = () => {
                           Detail
                         </button>
                       </div>
+                      )}
                     </article>
                   );
                 })}
@@ -2552,7 +2884,9 @@ const Tahapan = () => {
 
       <Modal
         activeModal={isStageModalOpen}
-        onClose={closeStageModal}
+        onClose={() => {
+          if (!isStageMutating) closeStageModal();
+        }}
         title={editingStage ? "Edit Tahapan" : "Tambah Tahapan"}
         className="career-stages-modal max-w-2xl"
         centered
@@ -2645,6 +2979,33 @@ const Tahapan = () => {
               </button>
             </div>
 
+            <div className="flex flex-col gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800 sm:flex-row sm:items-end">
+              <label className="min-w-0 flex-1">
+                <span className="form-label">Buat tipe baru</span>
+                <input
+                  type="text"
+                  value={newCustomFieldType}
+                  onChange={(event) => setNewCustomFieldType(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleCreateCustomFieldType();
+                    }
+                  }}
+                  className="form-control h-10"
+                  placeholder="Contoh: Nomor, Link, Catatan"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleCreateCustomFieldType}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-slate-700 px-4 text-xs font-bold text-white hover:bg-slate-800"
+              >
+                <Icon icon="heroicons-outline:plus" width={16} />
+                Buat Tipe
+              </button>
+            </div>
+
             {stageForm.custom_fields.length === 0 ? (
               <p className="rounded-md bg-slate-50 px-3 py-3 text-xs font-semibold text-slate-400 dark:bg-slate-800">
                 Belum ada form tambahan.
@@ -2702,7 +3063,7 @@ const Tahapan = () => {
                       }
                       className="form-control h-10"
                     >
-                      {customFieldTypes.map((type) => (
+                      {availableCustomFieldTypes.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label}
                         </option>
@@ -2740,7 +3101,11 @@ const Tahapan = () => {
 
       <Modal
         activeModal={isCustomDataModalOpen}
-        onClose={closeCustomDataModal}
+        onClose={() => {
+          if (!customDataMutation.isPending && !isSubmittingCustomData) {
+            closeCustomDataModal();
+          }
+        }}
         title="Data Tahapan"
         className="career-stages-modal max-w-3xl"
         centered
@@ -2770,9 +3135,19 @@ const Tahapan = () => {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
             {activeStage?.customFields?.map((field) => {
-              const isDateField = field.type === "date";
-              const isTimeField = field.type === "time";
-              const isUploadField = field.type === "upload";
+              const normalizedFieldType = normalizeValue(field.type);
+              const isDateField = normalizedFieldType === "date";
+              const isTimeField = normalizedFieldType === "time";
+              const isUploadField = normalizedFieldType === "upload";
+              const isTextField = normalizedFieldType === "text";
+              const isLinkField = ["link", "url"].includes(
+                normalizedFieldType,
+              );
+              const fieldTypeLabel =
+                availableCustomFieldTypes.find(
+                  (option) =>
+                    normalizeValue(option.value) === normalizedFieldType,
+                )?.label || formatCustomDataLabel(field.type || "text");
               const usesNativePicker = isDateField || isTimeField;
               const value =
                 customDataApplication?.customFieldValues?.[field.key];
@@ -2795,7 +3170,9 @@ const Tahapan = () => {
               return (
                 <div
                   key={field.key}
-                  className="block min-w-0 rounded-md border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                  className={`block min-w-0 rounded-md border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${
+                    isTextField ? "md:col-span-full" : ""
+                  }`}
                 >
                   <span className="mb-2 flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1 text-xs font-bold text-slate-600 dark:text-slate-300">
                     <span
@@ -2806,13 +3183,7 @@ const Tahapan = () => {
                       {field.required ? " *" : ""}
                     </span>
                     <span className="flex-none rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-400 dark:bg-slate-800">
-                      {isDateField
-                        ? "Tanggal"
-                        : isTimeField
-                          ? "Jam"
-                          : isUploadField
-                            ? "Upload"
-                            : "Teks"}
+                      {fieldTypeLabel}
                     </span>
                   </span>
                   {isUploadField ? (
@@ -2918,11 +3289,33 @@ const Tahapan = () => {
                         </p>
                       ) : null}
                     </div>
+                  ) : isTextField ? (
+                    <textarea
+                      value={fieldValue}
+                      onChange={(event) =>
+                        customDataApplication &&
+                        handleCustomDataChange(
+                          customDataApplication,
+                          field,
+                          event.target.value,
+                        )
+                      }
+                      placeholder={`Masukkan ${field.label.toLowerCase()}`}
+                      className="form-control career-stage-custom-textarea block min-h-[132px] w-full min-w-0 resize-y rounded-md px-3 py-3 text-sm leading-6"
+                      rows={5}
+                      required={field.required}
+                    />
                   ) : (
                     <div className="relative">
                       <input
                         type={
-                          isDateField ? "date" : isTimeField ? "time" : "text"
+                          isDateField
+                            ? "date"
+                            : isTimeField
+                              ? "time"
+                              : isLinkField
+                                ? "url"
+                                : "text"
                         }
                         value={fieldValue}
                         onChange={(event) =>
@@ -2943,7 +3336,11 @@ const Tahapan = () => {
                             openNativePicker(event.currentTarget);
                           }
                         }}
-                        placeholder={`Masukkan ${field.label.toLowerCase()}`}
+                        placeholder={
+                          isLinkField
+                            ? "https://contoh.com"
+                            : `Masukkan ${field.label.toLowerCase()}`
+                        }
                         className={`form-control career-stage-custom-input h-11 w-full min-w-0 rounded-md text-sm [color-scheme:light] dark:[color-scheme:dark] ${
                           usesNativePicker ? "cursor-pointer pr-11" : ""
                         }`}
@@ -2984,7 +3381,9 @@ const Tahapan = () => {
 
       <Modal
         activeModal={isProcessModalOpen}
-        onClose={closeProcessModal}
+        onClose={() => {
+          if (!processApplicationMutation.isPending) closeProcessModal();
+        }}
         title={
           processForm.action === "reject"
             ? "Tolak Pelamar"

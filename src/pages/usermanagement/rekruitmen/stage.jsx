@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
+import { resolveProductionMediaUrl } from "@/utils/mediaUrl";
 import Loading from "@/components/Loading";
 import Search from "@/components/globals/table/search";
 import Table from "@/components/globals/table/table";
@@ -149,7 +150,7 @@ const CvLink = ({ href }) => {
 
   return (
     <a
-      href={href}
+      href={resolveProductionMediaUrl(href)}
       target="_blank"
       rel="noreferrer"
       className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-50 px-2.5 py-1.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-100 transition hover:bg-sky-100 hover:text-sky-800 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-500/20 dark:hover:bg-sky-500/20"

@@ -1,6 +1,6 @@
 import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import Card from "@/components/ui/Card";
 import Icon from "@/components/ui/Icon";
@@ -8,19 +8,19 @@ import CareerErrorState from "@/pages/karir/components/CareerErrorState";
 import {
   createCareerApplicationTrainer,
   getCareerApplication,
+  getCareerStages,
   processCareerApplicationStage,
   startCareerApplication,
 } from "@/axios/career/jobs";
 import getErrorMessage from "@/utils/careerErrorMessage";
+import { resolveProductionMediaUrl } from "@/utils/mediaUrl";
 
 const normalizeHref = (value) => {
   if (!value) {
     return "";
   }
 
-  const text = String(value);
-  const markdownUrl = text.match(/\((https?:\/\/[^)]+)\)/);
-  return markdownUrl?.[1] || text;
+  return resolveProductionMediaUrl(value);
 };
 
 const normalizeValue = (value) =>
@@ -110,15 +110,46 @@ const formatCustomDataLabel = (value) =>
     .trim()
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+const getPayloadResults = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.results)) return payload.data.results;
+  return [];
+};
+
+const getDepartmentId = (application) => {
+  const department = application?.department || application?.job?.department;
+
+  if (department && typeof department === "object") {
+    return department.department_id || department.id || "";
+  }
+
+  return department || application?.department_id || "";
+};
+
+const getStageCustomFields = (stage) => {
+  const fields =
+    stage?.custom_fields ||
+    stage?.stage_custom_fields ||
+    stage?.custom_field_definitions ||
+    stage?.stage_detail?.custom_fields ||
+    [];
+
+  return Array.isArray(fields) ? fields : [];
+};
+
 const isUrl = (value) => /^https?:\/\//i.test(String(value || ""));
 
 const MEDIA_BASE_URL = "https://media.maestroswim.com";
 const isStoredFileKey = (value) =>
   /^(?:\/?career\/|\/?file\/)/i.test(String(value || ""));
 const getStoredFileUrl = (value) =>
-  isUrl(value)
-    ? value
-    : `${MEDIA_BASE_URL}/${String(value || "").replace(/^\/+/, "")}`;
+  resolveProductionMediaUrl(
+    isUrl(value)
+      ? value
+      : `${MEDIA_BASE_URL}/${String(value || "").replace(/^\/+/, "")}`,
+  );
 
 const normalizeStoredFile = (value) => {
   if (!value) return { key: "", url: "" };
@@ -298,8 +329,18 @@ const ActionButton = ({ tone, icon, children, onClick, disabled }) => {
 
 const RekruitmenDetail = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { applicationId } = useParams();
   const queryClient = useQueryClient();
+  const returnPath = location.pathname.startsWith("/karir/tahapan/")
+    ? "/karir/tahapan"
+    : "/karir/rekruitmen";
+  const handleBack = () =>
+    navigate(returnPath, {
+      state: location.state?.tahapanState
+        ? { tahapanState: location.state.tahapanState }
+        : undefined,
+    });
 
   const applicationQuery = useQuery({
     queryKey: ["careerApplication", applicationId],
@@ -311,6 +352,22 @@ const RekruitmenDetail = () => {
   });
 
   const application = applicationQuery.data || {};
+  const departmentId = getDepartmentId(application);
+  const stageDefinitionsQuery = useQuery({
+    queryKey: ["careerStageDefinitions", { departmentId }],
+    queryFn: async () => {
+      const res = await getCareerStages(departmentId, {
+        page: 1,
+        page_size: 100,
+        ordering: "stage_order",
+      });
+      return getPayloadResults(res.data);
+    },
+    enabled: Boolean(departmentId),
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+  const stageDefinitions = getPayloadResults(stageDefinitionsQuery.data);
   const certificateLinks = application?.upload_sertificates || [];
   const stages = [...(application?.stages || [])].sort(
     (a, b) => (a.stage_order || 0) - (b.stage_order || 0),
@@ -497,7 +554,7 @@ const RekruitmenDetail = () => {
       <div className="space-y-5">
         <button
           type="button"
-          onClick={() => navigate("/karir/rekruitmen")}
+          onClick={handleBack}
           className="inline-flex h-12 items-center gap-2 rounded-md bg-primary-500 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-primary-600"
         >
           <Icon icon="heroicons-outline:arrow-uturn-left" width={18} />
@@ -518,7 +575,7 @@ const RekruitmenDetail = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          onClick={() => navigate("/karir/rekruitmen")}
+          onClick={handleBack}
           className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary-500 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-primary-600 sm:w-auto"
         >
           <Icon icon="heroicons-outline:arrow-uturn-left" width={18} />
@@ -748,9 +805,36 @@ const RekruitmenDetail = () => {
           {stages.length ? (
             stages.map((stage) => {
               const tone = getStageTone(stage.status);
-              const customDataEntries = Object.entries(
-                getStageCustomData(stage),
-              ).filter(
+              const stageId = getStageId(stage);
+              const stageDefinition = stageDefinitions.find(
+                (item) =>
+                  String(item?.stage_id || item?.id || "") === String(stageId),
+              );
+              const definitionFields = getStageCustomFields(stageDefinition);
+              const configuredFields = definitionFields.length
+                ? definitionFields
+                : getStageCustomFields(stage);
+              const customFieldLabels = new Map(
+                configuredFields
+                  .filter((field) => field?.key && field?.label)
+                  .map((field) => [normalizeValue(field.key), field.label]),
+              );
+              const stageCustomData = getStageCustomData(stage);
+              const customDataByKey = new Map(
+                Object.entries(stageCustomData).map(([key, value]) => [
+                  normalizeValue(key),
+                  value,
+                ]),
+              );
+              const rawCustomDataEntries = configuredFields.length
+                ? configuredFields
+                    .filter((field) => field?.key)
+                    .map((field) => [
+                      field.key,
+                      customDataByKey.get(normalizeValue(field.key)),
+                    ])
+                : Object.entries(stageCustomData);
+              const customDataEntries = rawCustomDataEntries.filter(
                 ([, value]) =>
                   value !== null &&
                   value !== undefined &&
@@ -768,10 +852,10 @@ const RekruitmenDetail = () => {
                     </h4>
                     <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 dark:bg-slate-800">
                       <p className="text-[10px] font-bold uppercase text-slate-400">
-                        Catatan
+                        Catatan Lebih
                       </p>
                       <p className="mt-1 whitespace-pre-wrap break-words text-xs font-semibold text-slate-600 dark:text-slate-200">
-                        {stage.notes || "Belum ada catatan"}
+                        {stage.notes || "Belum ada catatan lebih."}
                       </p>
                     </div>
                     {customDataEntries.length ? (
@@ -792,7 +876,8 @@ const RekruitmenDetail = () => {
                               className="min-w-0 rounded-md bg-slate-50 px-3 py-2 dark:bg-slate-800"
                             >
                               <p className="text-[10px] font-bold uppercase text-slate-400">
-                                {formatCustomDataLabel(key)}
+                                {customFieldLabels.get(normalizeValue(key)) ||
+                                  formatCustomDataLabel(key)}
                               </p>
                               {isFileValue ||
                               isUrl(textValue) ||
