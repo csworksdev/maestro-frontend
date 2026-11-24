@@ -21,7 +21,19 @@ describe("roleMenuPreviewStorage", () => {
       expect.arrayContaining([
         expect.objectContaining({ isHeadr: true, title: "Dashboard" }),
         expect.objectContaining({ title: "Daily", link: "daily" }),
+      ]),
+    );
+    expect(opxMenus).not.toEqual(
+      expect.arrayContaining([
         expect.objectContaining({ title: "Order", link: "order" }),
+      ]),
+    );
+    expect(opxMenus).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "Rekap Bulanan",
+          link: "rekap-bulanan",
+        }),
       ]),
     );
     expect(dashboardDivider).toMatchObject({ menu_type: "DIVIDER" });

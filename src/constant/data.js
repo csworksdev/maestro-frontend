@@ -412,16 +412,6 @@ export const menuOpx = [
     icon: "heroicons-outline:heart",
     link: "spesialisasi",
   },
-  {
-    title: "Order",
-    icon: "heroicons-outline:shopping-bag",
-    link: "order",
-  },
-  {
-    title: "Rekap Bulanan",
-    icon: "heroicons-outline:calendar-days",
-    link: "rekap-bulanan",
-  },
   // {
   //   title: "User",
   //   icon: "heroicons-outline:users",

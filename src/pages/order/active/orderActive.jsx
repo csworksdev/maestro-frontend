@@ -363,7 +363,7 @@ const OrderActive = ({ is_finished = null }) => {
 
   const actionBlueprints = [
     {
-      name: "detail",
+      name: "Detail Paket",
       icon: "heroicons-outline:eye",
       intent: "success",
       handler: handleDetail,
@@ -412,6 +412,11 @@ const OrderActive = ({ is_finished = null }) => {
   const actionsAdmin = buildActions(
     actionBlueprints.filter((action) =>
       ["Perpanjang Paket", "Atur Frekuensi"].includes(action.name),
+    ),
+  );
+  const finishedActions = buildActions(
+    actionBlueprints.filter((action) =>
+      ["Detail Paket", "Perpanjang Paket"].includes(action.name),
     ),
   );
 
@@ -687,10 +692,26 @@ const OrderActive = ({ is_finished = null }) => {
       sticky: "right",
       Cell: (row) => {
         if (row?.row?.original?.is_finish === true) {
+          const canManageFinishedOrder = [
+            "Superuser",
+            "Finance",
+            "Admin",
+          ].includes(roles);
+
           return (
-            <span className="inline-flex items-center rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">
-              Order selesai
-            </span>
+            <div className="flex flex-wrap justify-center items-center gap-2">
+              <span className="inline-flex items-center rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                Order selesai
+              </span>
+              {canManageFinishedOrder &&
+                finishedActions.map((action, index) => (
+                  <TableAction
+                    key={action.id || action.name || index}
+                    action={action}
+                    row={row}
+                  />
+                ))}
+            </div>
           );
         } else {
           if (roles == "Superuser" || roles == "Finance") {
@@ -745,11 +766,7 @@ const OrderActive = ({ is_finished = null }) => {
     },
   ];
 
-  const fixColumn = () => {
-    let newData = [...COLUMNS];
-    if (is_finished === true) newData.splice(-1);
-    return newData;
-  };
+  const fixColumn = () => [...COLUMNS];
 
   const updatedListData = (newData) => {
     let data = [...listData.results];
