@@ -1,6 +1,9 @@
 import { getProdukPool } from "@/axios/masterdata/produk";
 import { getCabangAll } from "@/axios/referensi/cabang";
-import { CJGetPool } from "@/axios/schedule/cekJadwal";
+import {
+  CJGetBranchDay,
+  CJGetPool,
+} from "@/axios/schedule/cekJadwal";
 import Card from "@/components/ui/Card";
 import { BaseJadwal } from "@/constant/cekJadwal";
 import PoolLoader from "@/components/PoolLoader";
@@ -32,10 +35,13 @@ import {
   buildCompletedScheduleIndex,
   buildCompletedScheduleWebSocketEndpoint,
   buildScheduleWebSocketEndpoint,
+  buildTrainerTotalOrderWebSocketEndpoint,
   extractPayloadList,
   getDeviceTodayIndex,
   getCompletedOrderKey,
   getTrainerWorkStatus,
+  isOtherPoolConflict,
+  mergeScheduleWithTrainerTotals,
 } from "./utils/scheduleHelpers";
 import {
   createScheduleCacheKey,
@@ -154,10 +160,13 @@ const CekJadwal = () => {
     useState(false);
   const [breadcrumbActionsRoot, setBreadcrumbActionsRoot] = useState(null);
   const scheduleSocketRef = useRef(null);
+  const trainerTotalOrderSocketRef = useRef(null);
   const completedScheduleSocketRef = useRef(null);
   const previousAccessTokenRef = useRef(accessToken);
   const scheduleRequestRef = useRef({ id: 0 });
   const completedScheduleRequestRef = useRef({ id: 0 });
+  const trainerTotalOrderRef = useRef([]);
+  const latestScheduleRef = useRef({ data: [], dayName: "" });
 
   const [inputValue, setInputValue] = useState({
     order_date: DateTime.now().toFormat("yyyy-MM-dd"),
@@ -438,11 +447,17 @@ const CekJadwal = () => {
   };
 
   const applyScheduleData = (scheduleData = [], dayName = selectedDayName) => {
+    latestScheduleRef.current = { data: scheduleData, dayName };
+    const scheduleWithGlobalTrainerData = mergeScheduleWithTrainerTotals(
+      scheduleData,
+      trainerTotalOrderRef.current,
+      dayName,
+    );
     const selectedDayBase = {
       ...BaseJadwal,
       datahari: BaseJadwal.datahari.filter((day) => day.hari === dayName),
     };
-    const data = scheduleData.map((element) =>
+    const data = scheduleWithGlobalTrainerData.map((element) =>
       fillBaseJadwalWithData(selectedDayBase, element),
     );
 
@@ -473,6 +488,65 @@ const CekJadwal = () => {
     ) {
       ws.close(1000);
     }
+  };
+
+  const closeTrainerTotalOrderSocket = () => {
+    if (!trainerTotalOrderSocketRef.current) return;
+
+    const ws = trainerTotalOrderSocketRef.current;
+    trainerTotalOrderSocketRef.current = null;
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onerror = null;
+    ws.onclose = null;
+
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
+      ws.close(1000);
+    }
+  };
+
+  const loadTrainerTotalOrders = () => {
+    closeTrainerTotalOrderSocket();
+    const endpoint = buildTrainerTotalOrderWebSocketEndpoint({
+      token: accessToken,
+    });
+    const wsUrl = endpoint ? buildWsUrl(endpoint) : null;
+    if (!wsUrl) return;
+
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("Unable to open trainer total order WebSocket:", error);
+      return;
+    }
+    trainerTotalOrderSocketRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const payload = extractPayloadList({ data: JSON.parse(event.data) });
+        trainerTotalOrderRef.current = payload;
+        const latestSchedule = latestScheduleRef.current;
+        if (latestSchedule.dayName) {
+          applyScheduleData(latestSchedule.data, latestSchedule.dayName);
+        }
+      } catch (error) {
+        console.error("Failed to parse trainer total order payload:", error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("Trainer total order websocket error:", error);
+    };
+
+    ws.onclose = () => {
+      if (trainerTotalOrderSocketRef.current === ws) {
+        trainerTotalOrderSocketRef.current = null;
+      }
+    };
   };
 
   const closeCompletedScheduleSocket = () => {
@@ -639,6 +713,44 @@ const CekJadwal = () => {
     });
     setJadwal([]);
     let hasFreshData = false;
+    const applyAuthoritativeSchedule = async (fallbackPayload = null) => {
+      try {
+        const response = await CJGetBranchDay(
+          _selectedBranch,
+          poolName,
+          dayName,
+        );
+        const payload = extractPayloadList(response);
+        if (scheduleRequestRef.current.id !== requestId) return false;
+
+        hasFreshData = true;
+        applyScheduleData(payload, dayName);
+        setScheduleSyncError(false);
+        const updatedAt =
+          response?.headers?.["last-modified"] || new Date().toISOString();
+        setScheduleLastUpdated(updatedAt);
+        writeScheduleCache({
+          key: cacheKey,
+          owner: scheduleCacheOwner,
+          type: "schedule",
+          data: payload,
+          updatedAt,
+        });
+        return true;
+      } catch (error) {
+        console.error("Failed to fetch authoritative schedule:", error);
+        if (
+          fallbackPayload &&
+          scheduleRequestRef.current.id === requestId
+        ) {
+          hasFreshData = true;
+          applyScheduleData(fallbackPayload, dayName);
+          return true;
+        }
+        return false;
+      }
+    };
+
     readScheduleCache(
       cacheKey,
       scheduleCacheOwner,
@@ -653,6 +765,13 @@ const CekJadwal = () => {
         setIsScheduleLoading(false);
       }
       return entry;
+    });
+
+    applyAuthoritativeSchedule().finally(() => {
+      if (scheduleRequestRef.current.id === requestId) {
+        setIsScheduleLoading(false);
+        setIsScheduleSyncing(false);
+      }
     });
 
     const endpoint = buildScheduleWebSocketEndpoint({
@@ -694,7 +813,7 @@ const CekJadwal = () => {
     }
     scheduleSocketRef.current = ws;
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
       try {
         const message = JSON.parse(event.data);
         const payload = Array.isArray(message)
@@ -710,20 +829,8 @@ const CekJadwal = () => {
           return;
         }
 
-        hasFreshData = true;
         if (scheduleRequestRef.current.id !== requestId) return;
-        applyScheduleData(payload, dayName);
-        setScheduleSyncError(false);
-        const updatedAt =
-          message?.updated_at || message?.last_updated || new Date().toISOString();
-        setScheduleLastUpdated(updatedAt);
-        writeScheduleCache({
-          key: cacheKey,
-          owner: scheduleCacheOwner,
-          type: "schedule",
-          data: payload,
-          updatedAt,
-        });
+        await applyAuthoritativeSchedule(payload);
       } catch (error) {
         console.error("Failed to parse schedule websocket payload:", error);
       } finally {
@@ -758,9 +865,16 @@ const CekJadwal = () => {
     return () => {
       cancelPendingScheduleRequests();
       closeScheduleSocket();
+      closeTrainerTotalOrderSocket();
       closeCompletedScheduleSocket();
     };
   }, []);
+
+  useEffect(() => {
+    if (!accessToken) return undefined;
+    loadTrainerTotalOrders();
+    return closeTrainerTotalOrderSocket;
+  }, [accessToken]);
 
   useEffect(() => {
     if (previousAccessTokenRef.current === accessToken) return;
@@ -1045,6 +1159,25 @@ const CekJadwal = () => {
   };
 
   const handleModal = useCallback(({ pool, jadwal, trainer, hari, jam }) => {
+    const selectedDaySchedule = trainer?.datahari?.find(
+      (item) => item?.hari === hari,
+    );
+    const selectedSlot = selectedDaySchedule?.data?.find(
+      (item) => item?.jam === jam,
+    );
+    const hasOtherPoolConflict = selectedSlot?.orders?.some((order) =>
+      isOtherPoolConflict(order, pool),
+    );
+
+    if (hasOtherPoolConflict) {
+      Swal.fire(
+        "Jadwal bentrok",
+        "Pelatih sudah memiliki jadwal di kolam lain pada hari dan jam ini.",
+        "warning",
+      );
+      return;
+    }
+
     setDetailModalVisible(true);
     loadProduct(pool.value);
     setInputValue((prevParams) => ({

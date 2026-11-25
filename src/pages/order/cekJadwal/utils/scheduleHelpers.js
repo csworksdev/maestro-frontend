@@ -55,6 +55,13 @@ export const buildCompletedScheduleWebSocketEndpoint = (params) =>
     path: "/ws/completed-schedule/",
   });
 
+export const buildTrainerTotalOrderWebSocketEndpoint = ({ token }) => {
+  if (!token) return null;
+  return `/ws/trainer-total-order/?${new URLSearchParams({
+    token: String(token),
+  }).toString()}`;
+};
+
 export const checkProduct = (product = "") => {
   switch (true) {
     case product.includes("14"):
@@ -92,6 +99,50 @@ export const normalizeScheduleTime = (time) => {
 export const normalizeLookupKey = (value) => {
   if (value === null || value === undefined) return "";
   return String(value).trim().toLowerCase();
+};
+
+const getPoolKeys = (entry) => {
+  const pool =
+    entry?.pool && typeof entry.pool === "object" ? entry.pool : null;
+  const values = [
+    entry?.pool_id,
+    entry?.poolId,
+    typeof entry?.pool === "string" ? entry.pool : null,
+    entry?.pool_name,
+    entry?.poolName,
+    entry?.label,
+    entry?.value,
+    pool?.pool_id,
+    pool?.poolId,
+    pool?.id,
+    pool?.name,
+    pool?.label,
+    pool?.value,
+  ];
+
+  return Array.from(new Set(values.map(normalizeLookupKey).filter(Boolean)));
+};
+
+// Any order owned by another pool blocks the trainer at the same day and time.
+// Do not inspect meeting dates here: active cross-pool orders can contain real
+// attendance dates instead of the null-only placeholder used by older payloads.
+export const isOtherPoolConflict = (order, selectedPool) => {
+  if (!order?.order_id) return false;
+
+  if (typeof order.is_other_pool === "boolean") {
+    return order.is_other_pool;
+  }
+
+  if (typeof order.isOtherPool === "boolean") {
+    return order.isOtherPool;
+  }
+
+  const orderPoolKeys = getPoolKeys(order);
+  const selectedPoolKeys = getPoolKeys(selectedPool);
+  const belongsToSelectedPool = orderPoolKeys.some((key) =>
+    selectedPoolKeys.includes(key),
+  );
+  return orderPoolKeys.length > 0 && !belongsToSelectedPool;
 };
 
 export const getTrainerWorkStatus = (trainer) =>
@@ -155,6 +206,72 @@ export const getTrainerKeys = (entry) => {
   ];
 
   return Array.from(new Set(values.map(normalizeLookupKey).filter(Boolean)));
+};
+
+const getDaySlots = (trainer, dayName) => {
+  const day = trainer?.datahari?.find(
+    (item) => normalizeLookupKey(item?.hari) === normalizeLookupKey(dayName),
+  );
+  if (!day?.data) return {};
+
+  if (!Array.isArray(day.data)) return day.data;
+
+  return Object.fromEntries(
+    day.data.map((slot) => [slot?.jam, slot?.orders ?? []]).filter(([jam]) => jam),
+  );
+};
+
+export const mergeScheduleWithTrainerTotals = (
+  scheduleTrainers = [],
+  trainerTotals = [],
+  dayName,
+) => {
+  const globalByTrainerKey = new Map();
+  trainerTotals.forEach((trainer) => {
+    getTrainerKeys(trainer).forEach((key) => globalByTrainerKey.set(key, trainer));
+  });
+
+  return scheduleTrainers.map((trainer) => {
+    const globalTrainer = getTrainerKeys(trainer)
+      .map((key) => globalByTrainerKey.get(key))
+      .find(Boolean);
+    if (!globalTrainer) return trainer;
+
+    const localSlots = getDaySlots(trainer, dayName);
+    const globalSlots = getDaySlots(globalTrainer, dayName);
+    const mergedSlots = { ...localSlots };
+
+    Object.entries(globalSlots).forEach(([time, globalOrders]) => {
+      const localOrders = Array.isArray(mergedSlots[time])
+        ? mergedSlots[time]
+        : [];
+      const incomingOrders = Array.isArray(globalOrders) ? globalOrders : [];
+      const seenOrderIds = new Set(
+        localOrders.map((order) => order?.order_id).filter(Boolean).map(String),
+      );
+      mergedSlots[time] = [
+        ...localOrders,
+        ...incomingOrders.filter((order) => {
+          if (!order?.order_id) return false;
+          const key = String(order.order_id);
+          if (seenOrderIds.has(key)) return false;
+          seenOrderIds.add(key);
+          return true;
+        }),
+      ];
+    });
+
+    return {
+      ...trainer,
+      total_order: globalTrainer.total_order ?? trainer.total_order,
+      datahari: [
+        ...(trainer.datahari ?? []).filter(
+          (day) => normalizeLookupKey(day?.hari) !== normalizeLookupKey(dayName),
+        ),
+        { hari: dayName, data: mergedSlots },
+      ],
+    };
+  });
 };
 
 export const extractPayloadList = (response) => {

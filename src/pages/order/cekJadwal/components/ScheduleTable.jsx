@@ -17,6 +17,7 @@ import {
   getStudentNames,
   getTrainerWorkStatus,
   getTrainerWorkStatusClassName,
+  isOtherPoolConflict,
 } from "../utils/scheduleHelpers";
 
 const STATUS_MAP = {
@@ -499,16 +500,12 @@ const ScheduleSlot = React.memo(
       );
     }
 
-    const isOtherPoolSlot = (slot) =>
-      slot.order_id &&
-      slot.pool_name !== pool.label &&
-      Array.isArray(slot.p) &&
-      slot.p.every((item) => item.tgl === null);
-
     const samePoolOrders = orders.filter(
       (slot) => slot.order_id && slot.pool_name === pool.label,
     );
-    const otherPoolOrders = orders.filter(isOtherPoolSlot);
+    const otherPoolOrders = orders.filter((slot) =>
+      isOtherPoolConflict(slot, pool),
+    );
     const otherPoolNames = Array.from(
       new Set(otherPoolOrders.map((slot) => slot.pool_name).filter(Boolean)),
     );
@@ -536,17 +533,18 @@ const ScheduleSlot = React.memo(
           />
         )}
 
-        {orders[orders.length - 1]?.is_pending_reschedule ? (
-          <PendingReschedule />
-        ) : (
-          <EmptyScheduleButton
-            pool={pool}
-            trainer={trainer}
-            hari={timeSlot.hari}
-            jam={slotObj.jam}
-            onCreateOrder={onCreateOrder}
-          />
-        )}
+        {otherPoolOrders.length === 0 &&
+          (orders[orders.length - 1]?.is_pending_reschedule ? (
+            <PendingReschedule />
+          ) : (
+            <EmptyScheduleButton
+              pool={pool}
+              trainer={trainer}
+              hari={timeSlot.hari}
+              jam={slotObj.jam}
+              onCreateOrder={onCreateOrder}
+            />
+          ))}
       </div>
     );
   },
