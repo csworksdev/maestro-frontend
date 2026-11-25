@@ -117,7 +117,7 @@ const Layout = () => {
         roles == "Coach" ? (
           <MobileFooterCoach />
         ) : (
-          <MobileFooterAdmin />
+          <MobileFooterAdmin role={roles} />
         )
       ) : // <Footer className={width > breakpoints.xl ? switchHeaderClass() : ""} />
       null}
